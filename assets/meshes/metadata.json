@@ -1,0 +1,17 @@
+{
+    "wedge_ship.obj": {
+        "name": "Wedge Ship",
+        "tags": ["sci-fi", "player", "starter"],
+        "description": "A basic, versatile starter ship."
+    },
+    "wedge_ship_mk2.obj": {
+        "name": "Wedge Ship Mk2 (Broken)",
+        "tags": ["corrupted", "needs-review"],
+        "description": "This mesh file is known to be corrupted and is used for testing the viewer's error handling."
+    },
+    "sun.obj": {
+        "name": "Sun",
+        "tags": ["celestial", "star"],
+        "description": "A simple representation of a sun, used for lighting and background."
+    }
+}

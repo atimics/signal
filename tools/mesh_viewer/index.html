@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesh Viewer & Data Pipeline</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+        #sidebar {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            background-color: #252526;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+        #sidebar-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+        }
+        #add-mesh-btn {
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 0 10px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        #add-mesh-btn:hover {
+            background-color: #444;
+        }
+        #mesh-list-container {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        #mesh-list {
+            list-style: none;
+            padding: 10px;
+            margin: 0;
+        }
+        .mesh-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            transition: background-color 0.2s;
+        }
+        .mesh-item:hover, .mesh-item.active {
+            background-color: #3a3d41;
+        }
+        .thumbnail {
+            width: 40px;
+            height: 40px;
+            margin-right: 12px;
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .mesh-info {
+            flex-grow: 1;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .mesh-name {
+            font-weight: 600;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .mesh-tags {
+            font-size: 0.8em;
+            color: #888;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+        .status-icon {
+            margin-left: 10px;
+            font-size: 16px;
+        }
+        #main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #viewer-container {
+            flex-grow: 1;
+            position: relative;
+        }
+        canvas { 
+            display: block; 
+            width: 100%;
+            height: 100%;
+        }
+        #metadata-viewer {
+            height: 150px;
+            background-color: #252526;
+            border-top: 1px solid #333;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        #metadata-viewer.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div id="sidebar-header">
+            <h2>Meshes</h2>
+            <div id="add-mesh-btn" title="Generate new mesh with AI">+</div>
+        </div>
+        <div id="mesh-list-container">
+            <ul id="mesh-list"></ul>
+        </div>
+    </div>
+    <div id="main-content">
+        <div id="viewer-container"></div>
+        <div id="metadata-viewer" class="hidden">
+            <h3 id="meta-name"></h3>
+            <p><strong>Tags:</strong> <span id="meta-tags"></span></p>
+            <p id="meta-desc"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
+        import { OBJLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/OBJLoader.js';
+        import { MTLLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/MTLLoader.js';
+        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
+
+        let camera, scene, renderer, controls;
+        let meshMetadata = {};
+        const meshList = document.getElementById('mesh-list');
+        const viewerContainer = document.getElementById('viewer-container');
+        const metadataViewer = document.getElementById('metadata-viewer');
+        const meshAssetsPath = '../../assets/meshes/';
+
+        async function fetchAndDisplayMeshes() {
+            try {
+                const metaResponse = await fetch(`${meshAssetsPath}metadata.json`);
+                meshMetadata = await metaResponse.json();
+            } catch (e) {
+                console.error("Fatal: Could not load metadata.json.", e);
+                alert("Could not load metadata.json. The application cannot start.");
+                return;
+            }
+
+            meshList.innerHTML = ''; // Clear list
+            for (const meshName in meshMetadata) {
+                addMeshToList(meshName);
+            }
+        }
+
+        function addMeshToList(meshName, isAiGenerated = false) {
+            const meta = meshMetadata[meshName] || { name: meshName, tags: [], description: '' };
+            
+            const listItem = document.createElement('li');
+            listItem.className = 'mesh-item';
+            listItem.dataset.meshName = meshName;
+            listItem.dataset.isAi = isAiGenerated;
+
+            const thumb = document.createElement('div');
+            thumb.className = 'thumbnail';
+            const thumbImg = document.createElement('img');
+            
+            // For AI-generated content, we'll handle the thumbnail separately
+            if (!isAiGenerated) {
+                const texturePath = meta.texture || meshName.replace(/\.obj$/, '.png');
+                thumbImg.src = `${meshAssetsPath}${texturePath}`;
+                thumbImg.onerror = () => { thumb.innerHTML = 'N/A'; };
+            }
+            thumb.appendChild(thumbImg);
+
+            const info = document.createElement('div');
+            info.className = 'mesh-info';
+            const nameEl = document.createElement('div');
+            nameEl.className = 'mesh-name';
+            nameEl.textContent = meta.name;
+            const tagsEl = document.createElement('div');
+            tagsEl.className = 'mesh-tags';
+            tagsEl.textContent = (meta.tags || []).join(', ');
+            info.appendChild(nameEl);
+            info.appendChild(tagsEl);
+
+            const status = document.createElement('span');
+            status.className = 'status-icon';
+
+            listItem.append(thumb, info, status);
+            meshList.appendChild(listItem);
+
+            listItem.addEventListener('click', () => {
+                document.querySelectorAll('.mesh-item').forEach(item => item.classList.remove('active'));
+                listItem.classList.add('active');
+                displayMetadata(meshName);
+                loadMeshByName(meshName, status, isAiGenerated);
+            });
+        }
+
+        function displayMetadata(meshName) {
+            const meta = meshMetadata[meshName];
+            if (meta) {
+                document.getElementById('meta-name').textContent = meta.name;
+                document.getElementById('meta-tags').textContent = (meta.tags || []).join(', ');
+                document.getElementById('meta-desc').textContent = meta.description;
+                metadataViewer.classList.remove('hidden');
+            } else {
+                metadataViewer.classList.add('hidden');
+            }
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1e1e1e);
+
+            camera = new THREE.PerspectiveCamera(75, viewerContainer.clientWidth / viewerContainer.clientHeight, 0.1, 1000);
+            camera.position.set(3, 3, 3);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            viewerContainer.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            directionalLight.position.set(1, 3, 2);
+            scene.add(directionalLight);
+
+            window.addEventListener('resize', onWindowResize, false);
+            document.getElementById('add-mesh-btn').addEventListener('click', handleGenerateMesh);
+
+            onWindowResize();
+            fetchAndDisplayMeshes();
+            animate();
+        }
+
+        async function loadMeshByName(meshName, statusElement, isAiGenerated) {
+            statusElement.textContent = '⏳';
+            statusElement.title = `Loading ${meshName}...`;
+
+            try {
+                let object;
+                if (isAiGenerated) {
+                    // Load AI-generated content directly
+                    const { objContent } = meshMetadata[meshName].aiContent;
+                    object = new OBJLoader().parse(objContent);
+                    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 }); // Green for AI
+                    object.traverse((child) => {
+                        if (child.isMesh) child.material = material;
+                    });
+                } else {
+                    // Load from server
+                    object = await loadObjectWithMtl(meshName);
+                }
+                
+                clearScene();
+                centerAndAddObject(object);
+
+                statusElement.textContent = '✅';
+                statusElement.title = `Loaded successfully.`;
+            } catch (error) {
+                console.error(`Could not load mesh: ${meshName}`, error);
+                statusElement.textContent = '⚠️';
+                statusElement.title = `Error: ${error.message}`;
+                clearScene();
+            }
+        }
+        
+        function clearScene() {
+            const toRemove = scene.children.filter(child => child.isMesh || child.isGroup);
+            toRemove.forEach(child => scene.remove(child));
+        }
+
+        function centerAndAddObject(object) {
+            try {
+                const box = new THREE.Box3().setFromObject(object);
+                const center = box.getCenter(new THREE.Vector3());
+                if (!isFinite(center.x)) throw new Error('Invalid geometry');
+                object.position.sub(center);
+                scene.add(object);
+            } catch (e) {
+                throw new Error('Invalid mesh geometry for centering.');
+            }
+        }
+
+        function loadObjectWithMtl(meshName) {
+            return new Promise((resolve, reject) => {
+                const mtlLoader = new MTLLoader();
+                mtlLoader.setPath(meshAssetsPath);
+                const mtlUrl = meshName.replace(/\.obj$/, '.mtl');
+                
+                mtlLoader.load(mtlUrl, (materials) => {
+                    materials.preload();
+                    const objLoader = new OBJLoader();
+                    objLoader.setMaterials(materials);
+                    objLoader.setPath(meshAssetsPath);
+                    objLoader.load(meshName, resolve, undefined, () => reject(new Error('Failed to load OBJ file.')));
+
+                }, undefined, () => {
+                    // MTL file not found, load with default material
+                    console.warn(`MTL file not found for ${meshName}. Loading with default material.`);
+                    const objLoader = new OBJLoader();
+                    objLoader.setPath(meshAssetsPath);
+                    objLoader.load(meshName, resolve, undefined, () => reject(new Error('Failed to load OBJ file.')));
+                });
+            });
+        }
+
+        function handleGenerateMesh() {
+            const promptText = prompt("Describe the mesh you want to generate (e.g., 'a simple red cube'):");
+            if (!promptText) return;
+
+            console.log(`Simulating AI call with prompt: "${promptText}"`);
+            const newMeshName = `ai_generated_${Date.now()}.obj`;
+            const { obj, svg } = createPlaceholderCube(promptText);
+
+            meshMetadata[newMeshName] = {
+                name: promptText,
+                tags: ["ai-generated"],
+                description: "Created via AI prompt.",
+                aiContent: { objContent: obj, svgContent: svg }
+            };
+
+            addMeshToList(newMeshName, true);
+            
+            // Activate and load the new mesh
+            const newItem = meshList.querySelector(`[data-mesh-name="${newMeshName}"]`);
+            if (newItem) {
+                newItem.click();
+                // Update thumbnail for AI-gen mesh
+                const thumb = newItem.querySelector('.thumbnail img');
+                thumb.src = `data:image/svg+xml;base64,${btoa(svg)}`;
+            }
+        }
+
+        function createPlaceholderCube(promptText) {
+            const color = promptText.includes('red') ? '#ff0000' :
+                          promptText.includes('blue') ? '#0000ff' :
+                          promptText.includes('green') ? '#00ff00' : '#cccccc';
+
+            const obj = `
+# Generated from prompt: "${promptText}"
+v -0.5 -0.5 0.5
+v 0.5 -0.5 0.5
+v -0.5 0.5 0.5
+v 0.5 0.5 0.5
+v -0.5 0.5 -0.5
+v 0.5 0.5 -0.5
+v -0.5 -0.5 -0.5
+v 0.5 -0.5 -0.5
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.0 1.0
+vt 1.0 1.0
+f 1/1 2/2 4/4 3/3
+f 3/1 4/2 6/4 5/3
+f 5/1 6/2 8/4 7/3
+f 7/1 8/2 2/4 1/3
+f 2/1 8/2 6/4 4/3
+f 7/1 1/2 3/4 5/3
+            `;
+            const svg = `<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="${color}" /></svg>`;
+            return { obj, svg };
+        }
+
+        function onWindowResize() {
+            const { clientWidth, clientHeight } = viewerContainer;
+            camera.aspect = clientWidth / clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(clientWidth, clientHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
