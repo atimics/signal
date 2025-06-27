@@ -30,7 +30,3 @@ The following key features will be implemented to support the project's vision:
 *   **Graphics:** SDL2
 *   **AI:** Custom engine with llama.cpp integration
 *   **Build System:** Make
-
-## 5. Conclusion
-
-The goal of this project is to create a truly unique and immersive experience. By focusing on emergent narrative, a powerful AI system, and a rich and dynamic world, we can create a game that will keep players engaged for years to come.
