@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from scipy.spatial import Delaunay
 
 def normalize(v):
     """Normalize a numpy vector."""
@@ -19,6 +20,8 @@ def normalize(v):
 def get_random_color_hex():
     """Returns a random bright color in hex format."""
     return f"#{random.randint(128, 255):02X}{random.randint(128, 255):02X}{random.randint(128, 255):02X}"
+
+from scipy.spatial import Delaunay
 
 def generate_platonic_solid(solid_type):
     """Generates vertices and faces for a given platonic solid."""
@@ -50,42 +53,20 @@ def generate_platonic_solid(solid_type):
         ]
     elif solid_type == 'dodecahedron':
         p = (1 + math.sqrt(5)) / 2
-        q = 1 / p
-        
-        vertices = []
-        for i in [-1, 1]:
-            for j in [-1, 1]:
-                vertices.append((0, i * q, j * p))
-                vertices.append((i * q, j * p, 0))
-                vertices.append((i * p, 0, j * q))
-
-        # Icosahedron vertices for dual
-        t = (1.0 + math.sqrt(5.0)) / 2.0
-        icosahedron_vertices = [
-            (-1, t, 0), (1, t, 0), (-1, -t, 0), (1, -t, 0),
-            (0, -1, t), (0, 1, t), (0, -1, -t), (0, 1, -t),
-            (t, 0, -1), (t, 0, 1), (-t, 0, -1), (-t, 0, 1)
+        vertices = [
+            (-1, -1, -1), (-1, -1, 1), (-1, 1, -1), (-1, 1, 1),
+            (1, -1, -1), (1, -1, 1), (1, 1, -1), (1, 1, 1),
+            (0, -p, -1/p), (0, -p, 1/p), (0, p, -1/p), (0, p, 1/p),
+            (-p, -1/p, 0), (-p, 1/p, 0), (p, -1/p, 0), (p, 1/p, 0),
+            (-1/p, 0, -p), (1/p, 0, -p), (-1/p, 0, p), (1/p, 0, p)
         ]
         
-        # Dodecahedron vertices are the centers of the icosahedron faces
-        vertices = []
-        for face in [
-            (0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11),
-            (1, 5, 9), (5, 11, 4), (11, 10, 2), (10, 7, 6), (7, 1, 8),
-            (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8), (3, 8, 9),
-            (4, 9, 5), (2, 4, 11), (6, 2, 10), (8, 6, 7), (9, 8, 1)
-        ]:
-            v1 = np.array(icosahedron_vertices[face[0]])
-            v2 = np.array(icosahedron_vertices[face[1]])
-            v3 = np.array(icosahedron_vertices[face[2]])
-            vertices.append(tuple((v1 + v2 + v3) / 3))
-
-        faces = [
-            (0, 1, 2, 3, 4), (0, 4, 15, 5, 1), (1, 5, 9, 8, 2),
-            (2, 8, 18, 7, 3), (3, 7, 12, 6, 4), (19, 18, 8, 9, 17),
-            (17, 9, 5, 15, 16), (16, 15, 4, 6, 14), (14, 6, 12, 13, 11),
-            (11, 13, 7, 18, 19), (10, 11, 14, 16, 17), (10, 17, 19, 12, 13)
-        ]
+        # Use Delaunay triangulation to find the convex hull faces
+        points = np.array(vertices)
+        hull = Delaunay(points)
+        
+        # Extract the faces (simplices)
+        faces = hull.convex_hull
     elif solid_type == 'icosahedron':
         t = (1.0 + math.sqrt(5.0)) / 2.0
         vertices = [
