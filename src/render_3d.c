@@ -249,57 +249,33 @@ void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* con
     
     if (!transform || !renderable || !renderable->visible) return;
     
-    // Get visual type and corresponding mesh
-    VisualType visual_type = get_entity_visual_type(world, entity_id);
-    
-    // Map visual types to mesh names
-    const char* mesh_name = "fallback";
-    switch (visual_type) {
-        case VISUAL_TYPE_PLAYER:
-        case VISUAL_TYPE_AI_SHIP:
-            mesh_name = "player_ship";
-            break;
-        case VISUAL_TYPE_SUN:
-            mesh_name = "sun";
-            break;
-        case VISUAL_TYPE_PLANET:
-            mesh_name = "planet";
-            break;
-        case VISUAL_TYPE_ASTEROID:
-            mesh_name = "asteroid";
-            break;
-        default:
-            mesh_name = "player_ship";  // Fallback
+    // Get mesh directly from asset registry using mesh_id
+    Mesh* mesh = NULL;
+    if (renderable->mesh_id < config->assets->mesh_count) {
+        mesh = &config->assets->meshes[renderable->mesh_id];
     }
     
-    // Get mesh from asset system
-    Mesh* mesh = assets_get_mesh(config->assets, mesh_name);
-    if (!mesh) {
-        // Try fallback mesh
-        mesh = assets_get_mesh(config->assets, "player_ship");
-        if (!mesh) return;  // No mesh available
+    if (!mesh || mesh->vertex_count == 0) {
+        // Use fallback mesh if available
+        if (config->assets->mesh_count > 0) {
+            mesh = &config->assets->meshes[0];
+        } else {
+            return;  // No mesh available
+        }
     }
     
-    // Set color based on entity type (could be driven by materials in the future)
-    uint8_t r, g, b;
-    switch (visual_type) {
-        case VISUAL_TYPE_PLAYER:
-            r = 0; g = 255; b = 255;  // Cyan
-            break;
-        case VISUAL_TYPE_SUN:
-            r = 255; g = 255; b = 0;  // Yellow
-            break;
-        case VISUAL_TYPE_PLANET:
-            r = 100; g = 150; b = 255;  // Blue
-            break;
-        case VISUAL_TYPE_ASTEROID:
-            r = 128; g = 128; b = 128;  // Gray
-            break;
-        case VISUAL_TYPE_AI_SHIP:
-            r = 0; g = 255; b = 0;    // Green
-            break;
-        default:
-            r = 255; g = 255; b = 255;  // White
+    // Get material for color information
+    Material* material = NULL;
+    if (renderable->material_id < config->assets->material_count) {
+        material = &config->assets->materials[renderable->material_id];
+    }
+    
+    // Set color based on material or use default
+    uint8_t r = 255, g = 255, b = 255;  // Default white
+    if (material) {
+        r = (uint8_t)(material->diffuse_color.x * 255);
+        g = (uint8_t)(material->diffuse_color.y * 255);
+        b = (uint8_t)(material->diffuse_color.z * 255);
     }
     
     // Render the mesh

@@ -1,4 +1,5 @@
 #include "data.h"
+#include "assets.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,38 @@ static Quaternion euler_to_quaternion(Vector3 euler) {
     q.z = cr * cp * sy - sr * sp * cy;
     
     return q;
+}
+
+// Helper function to find mesh ID by name in the asset registry
+uint32_t find_mesh_id_by_name(const char* mesh_name) {
+    extern AssetRegistry g_asset_registry;  // Access global asset registry
+    
+    if (!mesh_name || strlen(mesh_name) == 0) return 0;
+    
+    for (uint32_t i = 0; i < g_asset_registry.mesh_count; i++) {
+        if (strcmp(g_asset_registry.meshes[i].name, mesh_name) == 0) {
+            return i;
+        }
+    }
+    
+    printf("⚠️  Mesh not found: '%s', using fallback\n", mesh_name);
+    return 0;  // Return first mesh as fallback
+}
+
+// Helper function to find material ID by name in the asset registry
+uint32_t find_material_id_by_name(const char* material_name) {
+    extern AssetRegistry g_asset_registry;  // Access global asset registry
+    
+    if (!material_name || strlen(material_name) == 0) return 0;
+    
+    for (uint32_t i = 0; i < g_asset_registry.material_count; i++) {
+        if (strcmp(g_asset_registry.materials[i].name, material_name) == 0) {
+            return i;
+        }
+    }
+    
+    printf("⚠️  Material not found: '%s', using fallback\n", material_name);
+    return 0;  // Return first material as fallback
 }
 
 // ============================================================================
@@ -293,10 +326,9 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
         struct Renderable* renderable = entity_get_renderable(world, id);
         renderable->visible = template->visible;
         
-        // Look up mesh ID by name (we need access to asset registry for this)
-        // For now, set a default and we'll fix this next
-        renderable->mesh_id = 0;  // Default to first mesh
-        renderable->material_id = 0;  // Default to first material
+        // Resolve mesh and material names to IDs
+        renderable->mesh_id = find_mesh_id_by_name(template->mesh_name);
+        renderable->material_id = find_material_id_by_name(template->material_name);
     }
     
     if (template->has_ai) {
@@ -397,4 +429,36 @@ void list_scene_templates(DataRegistry* registry) {
         SceneTemplate* s = &registry->scene_templates[i];
         printf("   - %s: %d spawns\n", s->name, s->spawn_count);
     }
+}
+
+// Helper function to find mesh ID by name in the asset registry
+uint32_t find_mesh_id_by_name(const char* mesh_name) {
+    extern AssetRegistry g_asset_registry;  // Access global asset registry
+    
+    if (!mesh_name || strlen(mesh_name) == 0) return 0;
+    
+    for (uint32_t i = 0; i < g_asset_registry.mesh_count; i++) {
+        if (strcmp(g_asset_registry.meshes[i].name, mesh_name) == 0) {
+            return i;
+        }
+    }
+    
+    printf("⚠️  Mesh not found: '%s', using fallback\n", mesh_name);
+    return 0;  // Return first mesh as fallback
+}
+
+// Helper function to find material ID by name in the asset registry
+uint32_t find_material_id_by_name(const char* material_name) {
+    extern AssetRegistry g_asset_registry;  // Access global asset registry
+    
+    if (!material_name || strlen(material_name) == 0) return 0;
+    
+    for (uint32_t i = 0; i < g_asset_registry.material_count; i++) {
+        if (strcmp(g_asset_registry.materials[i].name, material_name) == 0) {
+            return i;
+        }
+    }
+    
+    printf("⚠️  Material not found: '%s', using fallback\n", material_name);
+    return 0;  // Return first material as fallback
 }
