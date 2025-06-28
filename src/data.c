@@ -430,35 +430,3 @@ void list_scene_templates(DataRegistry* registry) {
         printf("   - %s: %d spawns\n", s->name, s->spawn_count);
     }
 }
-
-// Helper function to find mesh ID by name in the asset registry
-uint32_t find_mesh_id_by_name(const char* mesh_name) {
-    extern AssetRegistry g_asset_registry;  // Access global asset registry
-    
-    if (!mesh_name || strlen(mesh_name) == 0) return 0;
-    
-    for (uint32_t i = 0; i < g_asset_registry.mesh_count; i++) {
-        if (strcmp(g_asset_registry.meshes[i].name, mesh_name) == 0) {
-            return i;
-        }
-    }
-    
-    printf("⚠️  Mesh not found: '%s', using fallback\n", mesh_name);
-    return 0;  // Return first mesh as fallback
-}
-
-// Helper function to find material ID by name in the asset registry
-uint32_t find_material_id_by_name(const char* material_name) {
-    extern AssetRegistry g_asset_registry;  // Access global asset registry
-    
-    if (!material_name || strlen(material_name) == 0) return 0;
-    
-    for (uint32_t i = 0; i < g_asset_registry.material_count; i++) {
-        if (strcmp(g_asset_registry.materials[i].name, material_name) == 0) {
-            return i;
-        }
-    }
-    
-    printf("⚠️  Material not found: '%s', using fallback\n", material_name);
-    return 0;  // Return first material as fallback
-}
