@@ -267,7 +267,7 @@ bool load_texture(AssetRegistry* registry, const char* filename, const char* tex
     // For now, just record the texture info
     Texture* texture = &registry->textures[registry->texture_count++];
     strncpy(texture->name, texture_name, sizeof(texture->name) - 1);
-    snprintf(texture->filepath, sizeof(texture->filepath), "%s/textures/%s", 
+    snprintf(texture->filepath, sizeof(texture->filepath), "%s/meshes/%s", 
              registry->asset_root, filename);
     texture->loaded = true;  // Mark as loaded (even though we're not loading pixels yet)
     
@@ -346,30 +346,8 @@ bool assets_load_all_in_directory(AssetRegistry* registry) {
     
     printf("🔍 Auto-loading assets from %s/meshes/\n", registry->asset_root);
     
-    // Load known meshes based on what we found in the directory
-    bool success = true;
-    
-    // Load sun
-    if (!load_obj_mesh(registry, "sun.obj", "sun")) {
-        printf("⚠️  Could not load sun.obj, using fallback\n");
-        success = false;
-    }
-    
-    // Load ship
-    if (!load_obj_mesh(registry, "wedge_ship.obj", "player_ship")) {
-        printf("⚠️  Could not load wedge_ship.obj, using fallback\n");
-        success = false;
-    }
-    
-    // Try alternative ship
-    if (!assets_get_mesh(registry, "player_ship")) {
-        load_obj_mesh(registry, "wedge_ship_mk2.obj", "player_ship");
-    }
-    
-    // Load textures if they exist
-    load_texture(registry, "wedge_ship_texture.png", "ship_texture");
-    
-    return success;
+    // Load assets based on metadata.json
+    return load_assets_from_metadata(registry);
 }
 
 // ============================================================================
@@ -477,4 +455,122 @@ void generate_fallback_meshes(AssetRegistry* registry) {
             printf("   ✅ Generated fallback player ship mesh\n");
         }
     }
+}
+
+// ============================================================================
+// METADATA-DRIVEN ASSET LOADING
+// ============================================================================
+
+bool load_assets_from_metadata(AssetRegistry* registry) {
+    if (!registry) return false;
+    
+    char metadata_path[1024];
+    snprintf(metadata_path, sizeof(metadata_path), "%s/meshes/metadata.json", registry->asset_root);
+    
+    FILE* file = fopen(metadata_path, "r");
+    if (!file) {
+        printf("⚠️  Could not open metadata.json: %s\n", metadata_path);
+        return false;
+    }
+    
+    printf("📋 Loading assets from metadata: %s\n", metadata_path);
+    
+    // Simple JSON parser for our specific metadata format
+    char line[512];
+    char current_folder[128] = "";
+    bool in_meshes_section = false;
+    bool success = true;
+    
+    while (fgets(line, sizeof(line), file)) {
+        // Remove whitespace and newlines
+        char* trimmed = line;
+        while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
+        trimmed[strcspn(trimmed, "\n\r")] = 0;
+        
+        // Skip empty lines and comments
+        if (strlen(trimmed) == 0 || trimmed[0] == '/' || trimmed[0] == '#') continue;
+        
+        // Parse folder name
+        if (strstr(trimmed, "\"folder\":")) {
+            // Find the value after "folder":
+            char* folder_start = strstr(trimmed, "\"folder\":");
+            if (folder_start) {
+                folder_start += 9;  // Skip "folder":
+                // Skip whitespace and find opening quote
+                while (*folder_start == ' ' || *folder_start == '\t') folder_start++;
+                if (*folder_start == '"') {
+                    folder_start++;  // Skip opening quote
+                    char* folder_end = strchr(folder_start, '"');
+                    if (folder_end) {
+                        int len = folder_end - folder_start;
+                        if (len < sizeof(current_folder)) {
+                            strncpy(current_folder, folder_start, len);
+                            current_folder[len] = 0;
+                        }
+                    }
+                }
+            }
+            continue;
+        }
+        
+        // Detect meshes section
+        if (strstr(trimmed, "\"meshes\":")) {
+            in_meshes_section = true;
+            continue;
+        }
+        
+        // Parse OBJ file names in meshes section
+        if (in_meshes_section && strstr(trimmed, ".obj\":")) {
+            char obj_name[128];
+            char* start = strchr(trimmed, '"');
+            if (start) {
+                start++;
+                char* end = strchr(start, '"');
+                if (end) {
+                    int len = end - start;
+                    if (len < sizeof(obj_name)) {
+                        strncpy(obj_name, start, len);
+                        obj_name[len] = 0;
+                        
+                        // Construct full path and load mesh
+                        char mesh_path[256];
+                        snprintf(mesh_path, sizeof(mesh_path), "%s/%s", current_folder, obj_name);
+                        
+                        // Extract base name for registration (remove .obj extension)
+                        char mesh_name[128];
+                        strncpy(mesh_name, obj_name, sizeof(mesh_name) - 1);
+                        char* dot = strrchr(mesh_name, '.');
+                        if (dot) *dot = 0;
+                        
+                        printf("   Loading mesh: %s -> %s\n", mesh_path, mesh_name);
+                        
+                        if (!load_obj_mesh(registry, mesh_path, mesh_name)) {
+                            printf("   ❌ Failed to load %s\n", mesh_path);
+                            success = false;
+                        } else {
+                            printf("   ✅ Loaded %s\n", mesh_name);
+                            
+                            // Try to load associated texture
+                            char texture_path[256];
+                            char texture_name[128];
+                            snprintf(texture_path, sizeof(texture_path), "%s/%s.png", current_folder, mesh_name);
+                            snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
+                            
+                            if (load_texture(registry, texture_path, texture_name)) {
+                                printf("   ✅ Loaded texture: %s\n", texture_name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // End of meshes section
+        if (in_meshes_section && trimmed[0] == '}') {
+            in_meshes_section = false;
+        }
+    }
+    
+    fclose(file);
+    return success;
 }

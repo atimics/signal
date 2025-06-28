@@ -2,6 +2,7 @@
 #define SYSTEMS_H
 
 #include "core.h"
+#include "data.h"
 
 // ============================================================================
 // SYSTEM SCHEDULER
@@ -62,5 +63,8 @@ void scheduler_print_stats(struct SystemScheduler* scheduler);
 void scheduler_enable_system(struct SystemScheduler* scheduler, SystemType type);
 void scheduler_disable_system(struct SystemScheduler* scheduler, SystemType type);
 void scheduler_set_frequency(struct SystemScheduler* scheduler, SystemType type, float frequency);
+
+// Data access
+DataRegistry* get_data_registry(void);
 
 #endif // SYSTEMS_H

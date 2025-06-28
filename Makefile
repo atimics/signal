@@ -1,18 +1,20 @@
-# V2 Component-Based Game Engine Makefile
+# Component-Based Game Engine Makefile
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -O2 -g -I/opt/homebrew/include/SDL2
+CFLAGS = -Wall -Wextra -std=c99 -O2 -g -I/opt/homebrew/include/SDL2 -Isrc
 LIBS = -lm -L/opt/homebrew/lib -lSDL2
 
 # Directories
-SRC_DIR = .
+SRC_DIR = src
 BUILD_DIR = build
+DATA_DIR = data
+ASSETS_DIR = assets
 
 # Source files
-SOURCES = core.c systems.c render_3d.c test.c
+SOURCES = core.c systems.c assets.c render_3d.c ui.c data.c test.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
-TARGET = $(BUILD_DIR)/test
+TARGET = $(BUILD_DIR)/cgame
 
 # Default target
 all: $(TARGET)

@@ -1,0 +1,5 @@
+newmtl Cube
+Ke 1.0 1.0 1.0
+map_Ke cube_texture.png
+Kd 1.0 1.0 1.0
+map_Kd cube_texture.png

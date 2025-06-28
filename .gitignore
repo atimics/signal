@@ -1,0 +1,85 @@
+# Build artifacts
+build/
+*.o
+*.obj
+*.exe
+cgame
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# IDE/Editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/c_cpp_properties.json
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Python virtual environment (if using tools)
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Generated documentation
+docs/generated/
+
+# Test outputs
+test_output/
+screenshots/
+
+# Performance profiling
+*.prof
+*.pprof
+callgrind.out.*
+
+# Memory debugging
+*.memcheck
+valgrind.log
+
+# Local configuration
+config.local
+.env
+
+# Asset generation temporary files
+assets/**/*.tmp
+assets/**/*.temp
+
+# Keep important asset metadata
+!assets/meshes/metadata.json
+!assets/textures/metadata.json

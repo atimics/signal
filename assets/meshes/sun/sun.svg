@@ -1,0 +1,30 @@
+<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="sunGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFF3A3" />
+      <stop offset="50%" stop-color="#FFB44B" />
+      <stop offset="100%" stop-color="#E67B00" />
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#sunGradient)"/>
+  <polygon points="0.0,1024.0 102.4,768.0 204.8,1024.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="204.8,1024.0 307.20000000000005,768.0 409.6,1024.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="409.6,1024.0 512.0,768.0 614.4000000000001,1024.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="614.4000000000001,1024.0 716.8000000000001,768.0 819.2,1024.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="819.2,1024.0 921.6,768.0 1024.0,1024.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="0.0,768.0 102.4,512.0 204.8,768.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="204.8,768.0 307.20000000000005,512.0 409.6,768.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="409.6,768.0 512.0,512.0 614.4000000000001,768.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="614.4000000000001,768.0 716.8000000000001,512.0 819.2,768.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="819.2,768.0 921.6,512.0 1024.0,768.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="0.0,512.0 102.4,256.0 204.8,512.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="204.8,512.0 307.20000000000005,256.0 409.6,512.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="409.6,512.0 512.0,256.0 614.4000000000001,512.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="614.4000000000001,512.0 716.8000000000001,256.0 819.2,512.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="819.2,512.0 921.6,256.0 1024.0,512.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="0.0,256.0 102.4,0.0 204.8,256.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="204.8,256.0 307.20000000000005,0.0 409.6,256.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="409.6,256.0 512.0,0.0 614.4000000000001,256.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="614.4000000000001,256.0 716.8000000000001,0.0 819.2,256.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+  <polygon points="819.2,256.0 921.6,0.0 1024.0,256.0" fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="2"/>
+</svg>

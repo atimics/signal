@@ -1,0 +1,5 @@
+newmtl Unique_spaceship
+Ke 1.0 1.0 1.0
+map_Ke unique_spaceship_texture.png
+Kd 1.0 1.0 1.0
+map_Kd unique_spaceship_texture.png

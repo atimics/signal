@@ -1,0 +1,41 @@
+# Scene Templates - Define entity spawns and layouts
+# Format: scene: name followed by spawn: entity_type x y z
+
+scene: spaceport_alpha
+description=Bustling spaceport on planet surface
+
+# Planet surface
+spawn: planet_surface 0 -50 0
+
+# Distant sun for lighting
+spawn: distant_sun 200 150 300
+
+# Landing pads and structures
+spawn: landing_pad -20 0 -20
+spawn: control_tower -15 0 -20
+spawn: landing_pad 20 0 -20
+spawn: control_tower 25 0 -20
+spawn: landing_pad 0 0 20
+spawn: control_tower 5 0 20
+
+# Perimeter structures (8 around the spaceport)
+spawn: control_tower 40 2 0
+spawn: control_tower 28 2 28
+spawn: control_tower 0 2 40
+spawn: control_tower -28 2 28
+spawn: control_tower -40 2 0
+spawn: control_tower -28 2 -28
+spawn: control_tower 0 2 -40
+spawn: control_tower 28 2 -28
+
+# Docked and flying ships
+spawn: ai_ship 20 2 -20
+spawn: ai_ship 0 2 20
+spawn: ai_ship -30 5 10
+spawn: ai_ship 30 8 -10
+spawn: ai_ship 0 80 0
+spawn: ai_ship -50 60 -50
+spawn: ai_ship 60 70 40
+
+# Player ship on landing pad Alpha
+spawn: player_ship -20 3 -20

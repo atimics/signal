@@ -3,6 +3,7 @@
 
 #include "core.h"
 #include "assets.h"
+#include "ui.h"
 #include <stdint.h>
 #include <SDL.h>
 
@@ -57,6 +58,9 @@ typedef struct {
     // Asset system
     AssetRegistry* assets;
     
+    // UI system
+    CockpitUI ui;
+    
     // Render settings
     RenderMode mode;
     Camera3D camera;
@@ -87,7 +91,7 @@ bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_wid
 void render_cleanup(RenderConfig* config);
 
 // Main render function - called by systems.c
-void render_frame(struct World* world, RenderConfig* config, float delta_time);
+void render_frame(struct World* world, RenderConfig* config, EntityID player_id, float delta_time);
 
 // Camera controls
 void camera_set_position(Camera3D* camera, Vector3 position);
@@ -99,6 +103,9 @@ Point2D project_3d_to_2d(Vector3 world_pos, const Camera3D* camera, int screen_w
 
 // Get visual type for an entity
 VisualType get_entity_visual_type(struct World* world, EntityID entity_id);
+
+// UI access for game events
+void render_add_comm_message(RenderConfig* config, const char* sender, const char* message, bool is_player);
 
 // Rendering functions
 void render_clear_screen(RenderConfig* config);

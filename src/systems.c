@@ -1,12 +1,16 @@
 #include "systems.h"
 #include "render.h"
+#include "assets.h"
+#include "data.h"
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <stdlib.h>
 
-// Global render configuration
+// Global render configuration and asset registry
 static RenderConfig g_render_config;
+static AssetRegistry g_asset_registry;
+static DataRegistry g_data_registry;
 
 // ============================================================================
 // SYSTEM SCHEDULER IMPLEMENTATION
@@ -17,8 +21,33 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     
     memset(scheduler, 0, sizeof(struct SystemScheduler));
     
-    // Initialize render system first
-    if (!render_init(&g_render_config, 1200.0f, 800.0f)) {
+    // Initialize asset system first
+    if (!assets_init(&g_asset_registry, "/Users/ratimics/develop/cgame/assets")) {
+        printf("❌ Failed to initialize asset system\n");
+        return false;
+    }
+    
+    // Initialize data system
+    if (!data_registry_init(&g_data_registry, "/Users/ratimics/develop/cgame/data")) {
+        printf("❌ Failed to initialize data system\n");
+        return false;
+    }
+    
+    // Load entity and scene templates
+    load_entity_templates(&g_data_registry, "templates/entities.txt");
+    load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
+    
+    // Load assets from files
+    printf("🔍 Loading assets...\n");
+    assets_load_all_in_directory(&g_asset_registry);
+    
+    // Print loaded assets and templates
+    assets_list_loaded(&g_asset_registry);
+    list_entity_templates(&g_data_registry);
+    list_scene_templates(&g_data_registry);
+    
+    // Initialize render system with asset registry
+    if (!render_init(&g_render_config, &g_asset_registry, 1200.0f, 800.0f)) {
         printf("❌ Failed to initialize render system\n");
         return false;
     }
@@ -68,6 +97,8 @@ void scheduler_destroy(struct SystemScheduler* scheduler) {
     if (!scheduler) return;
     
     render_cleanup(&g_render_config);
+    assets_cleanup(&g_asset_registry);
+    data_registry_cleanup(&g_data_registry);
     printf("🎯 System scheduler destroyed after %d frames\n", scheduler->frame_count);
     scheduler_print_stats(scheduler);
 }
@@ -387,10 +418,7 @@ void ai_system_update(struct World* world, float delta_time) {
 void render_system_update(struct World* world, float delta_time) {
     if (!world) return;
     
-    // Use our new render system
-    render_frame(world, &g_render_config, delta_time);
-    
-    // Update camera to follow player if available
+    // Find player entity
     EntityID player_id = INVALID_ENTITY;
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
@@ -400,8 +428,22 @@ void render_system_update(struct World* world, float delta_time) {
         }
     }
     
+    // Use our new render system
+    render_frame(world, &g_render_config, player_id, delta_time);
+    
+    // Update camera to follow player if available
     if (player_id != INVALID_ENTITY) {
-        // Camera follows player but stays at a good distance to see the solar system
-        camera_follow_entity(&g_render_config.camera, world, player_id, 200.0f);
+        // First-person camera follows player directly
+        camera_follow_entity(&g_render_config.camera, world, player_id, 0.0f);
     }
 }
+
+// ============================================================================
+// DATA ACCESS
+// ============================================================================
+
+DataRegistry* get_data_registry(void) {
+    return &g_data_registry;
+}
+
+// ============================================================================

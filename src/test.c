@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <SDL.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -12,7 +13,7 @@
 // ============================================================================
 // FUNCTION DECLARATIONS
 // ============================================================================
-void populate_solar_system(struct World* world, EntityID* player_id);
+void load_spaceport_scene(struct World* world, EntityID* player_id);
 void simulate_player_input(struct World* world, EntityID player_id, float time);
 
 // ============================================================================
@@ -227,56 +228,39 @@ void simulate_player_input(struct World* world, EntityID player_id, float time) 
     physics->acceleration.y = sinf(time * 2.0f) * 2.0f;
 }
 
-void populate_solar_system(struct World* world, EntityID* player_id) {
-    printf("🌌 Creating solar system...\n");
+void load_spaceport_scene(struct World* world, EntityID* player_id) {
+    printf("🏗️  Loading spaceport scene from data...\n");
     
-    // Create the sun at the center
-    EntityID sun = create_sun(world, (Vector3){0, 0, 0});
+    DataRegistry* data_registry = get_data_registry();
     
-    // Create planets in orbits around the sun
-    create_planet(world, (Vector3){60, 0, 0}, 8.0f, 15.0f);      // Inner planet
-    create_planet(world, (Vector3){100, 0, 0}, 12.0f, 12.0f);    // Earth-like
-    create_planet(world, (Vector3){0, 0, 140}, 10.0f, 8.0f);     // Outer planet
-    create_planet(world, (Vector3){-180, 0, 0}, 6.0f, 5.0f);     // Far planet
-    
-    // Create asteroid belt between inner and outer orbits
-    for (int i = 0; i < 20; i++) {
-        float angle = (float)i / 20.0f * 2.0f * M_PI;
-        float distance = 75.0f + (rand() % 30);  // Between planets
-        float x = distance * cosf(angle) + (rand() % 10 - 5);
-        float z = distance * sinf(angle) + (rand() % 10 - 5);
-        float y = (rand() % 10 - 5);
-        
-        create_asteroid(world, (Vector3){x, y, z}, 1.0f + (rand() % 3));
+    // Load the scene from template
+    if (!load_scene(world, data_registry, "spaceport_alpha")) {
+        printf("❌ Failed to load spaceport scene\n");
+        return;
     }
     
-    // Create scattered asteroids in outer system
-    for (int i = 0; i < 15; i++) {
-        float distance = 200.0f + (rand() % 100);
-        float angle = (float)rand() / RAND_MAX * 2.0f * M_PI;
-        float x = distance * cosf(angle);
-        float z = distance * sinf(angle);
-        float y = (rand() % 20 - 10);
-        
-        create_asteroid(world, (Vector3){x, y, z}, 0.5f + (rand() % 2));
+    // Find the player entity that was spawned
+    *player_id = INVALID_ENTITY;
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        if (entity->component_mask & COMPONENT_PLAYER) {
+            *player_id = i + 1;  // Entity IDs are 1-based
+            break;
+        }
     }
     
-    // Create AI ships scattered around the system
-    create_ai_ship(world, (Vector3){45, 5, 45}, "Explorer");
-    create_ai_ship(world, (Vector3){-80, 10, 30}, "Trader");
-    create_ai_ship(world, (Vector3){20, -15, -160}, "Fighter");
-    create_ai_ship(world, (Vector3){150, 8, -50}, "Patrol");
-    create_ai_ship(world, (Vector3){-200, 0, -200}, "Scout");
+    if (*player_id != INVALID_ENTITY) {
+        printf("🎯 Player found: Entity ID %d\n", *player_id);
+    } else {
+        printf("❌ No player entity found in scene\n");
+    }
     
-    // Create player ship starting near the inner system
-    *player_id = create_player(world, (Vector3){-40, 0, -40});
-    
-    printf("🌍 Solar system created with %d entities\n", world->entity_count);
+    printf("🌍 Scene loaded with %d entities\n", world->entity_count);
 }
 
 int main(void) {
-    printf("🎮 V2 Component-Based Game Engine Test\n");
-    printf("=====================================\n\n");
+    printf("🎮 CGGame - Component-Based Engine\n");
+    printf("===================================\n\n");
     
     srand((unsigned int)time(NULL));
     
@@ -296,18 +280,35 @@ int main(void) {
     
     // Create entities
     EntityID player;
-    populate_solar_system(&world, &player);
+    load_spaceport_scene(&world, &player);
     
-    printf("\n� Starting simulation...\n");
-    printf("Press Ctrl+C to exit\n\n");
+    printf("\n🎮 Starting simulation...\n");
+    printf("Press Ctrl+C or close window to exit\n\n");
     
-    // Simulation loop
+    // Game loop variables
+    bool running = true;
     const float dt = 1.0f / 60.0f;  // 60 FPS
-    const float sim_duration = 60.0f;  // Run for 60 seconds
-    const int max_frames = (int)(sim_duration / dt);
+    int frame = 0;
     
-    for (int frame = 0; frame < max_frames; frame++) {
+    while (running) {
         float time = frame * dt;
+        
+        // Check for quit events (handled in render system)
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                printf("🚪 Window close requested - exiting gracefully\n");
+                running = false;
+                break;
+            }
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
+                printf("⎋ Escape key pressed - exiting\n");
+                running = false;
+                break;
+            }
+        }
+        
+        if (!running) break;
         
         // Simulate player input
         simulate_player_input(&world, player, time);
@@ -318,15 +319,16 @@ int main(void) {
         // Update systems (this will render the frame)
         scheduler_update(&scheduler, &world, dt);
         
-        // Brief pause for real-time effect (simplified)
-        // Note: In a real implementation, you'd use proper timing
-        for (volatile int i = 0; i < 1000000; i++);  // Simple delay
+        frame++;
         
         // Print status occasionally
         if (frame % 300 == 0 && frame > 0) {  // Every 5 seconds
-            printf("\n⏱️  Time: %.1fs, Frame: %d, Entities: %d\n\n", 
+            printf("⏱️  Time: %.1fs, Frame: %d, Entities: %d\n", 
                    time, frame, world.entity_count);
         }
+        
+        // Cap framerate (simple delay - in production you'd use proper timing)
+        SDL_Delay(16);  // ~60 FPS
     }
     
     printf("\n🏁 Simulation complete!\n");

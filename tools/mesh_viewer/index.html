@@ -27,25 +27,27 @@
             align-items: center;
             border-bottom: 1px solid #333;
         }
-        #add-mesh-btn {
-            cursor: pointer;
-            font-size: 24px;
-            font-weight: bold;
-            padding: 0 10px;
-            border-radius: 5px;
-            transition: background-color 0.2s;
-        }
-        #add-mesh-btn:hover {
-            background-color: #444;
-        }
         #mesh-list-container {
             overflow-y: auto;
             flex-grow: 1;
-        }
-        #mesh-list {
-            list-style: none;
             padding: 10px;
-            margin: 0;
+        }
+        details {
+            margin-bottom: 10px;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: #3a3d41;
+            display: block;
+        }
+        .folder-content {
+            padding-left: 15px;
+            border-left: 1px solid #444;
+            margin-left: 8px;
+            padding-top: 5px;
         }
         .mesh-item {
             display: flex;
@@ -84,62 +86,29 @@
         }
         .mesh-name {
             font-weight: 600;
-            text-overflow: ellipsis;
-            overflow: hidden;
         }
         .mesh-tags {
             font-size: 0.8em;
             color: #888;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
-        .status-icon {
-            margin-left: 10px;
-            font-size: 16px;
         }
         #main-content {
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
         }
         #viewer-container {
-            flex-grow: 1;
-            position: relative;
-        }
-        canvas { 
-            display: block; 
-            width: 100%;
             height: 100%;
         }
-        #metadata-viewer {
-            height: 150px;
-            background-color: #252526;
-            border-top: 1px solid #333;
-            padding: 15px;
-            overflow-y: auto;
-        }
-        #metadata-viewer.hidden {
-            display: none;
-        }
+        canvas { display: block; }
     </style>
 </head>
 <body>
     <div id="sidebar">
         <div id="sidebar-header">
             <h2>Meshes</h2>
-            <div id="add-mesh-btn" title="Generate new mesh with AI">+</div>
         </div>
-        <div id="mesh-list-container">
-            <ul id="mesh-list"></ul>
-        </div>
+        <div id="mesh-list-container"></div>
     </div>
     <div id="main-content">
         <div id="viewer-container"></div>
-        <div id="metadata-viewer" class="hidden">
-            <h3 id="meta-name"></h3>
-            <p><strong>Tags:</strong> <span id="meta-tags"></span></p>
-            <p id="meta-desc"></p>
-        </div>
     </div>
 
     <script type="module">
@@ -149,46 +118,57 @@
         import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 
         let camera, scene, renderer, controls;
-        let meshMetadata = {};
-        const meshList = document.getElementById('mesh-list');
+        const meshListContainer = document.getElementById('mesh-list-container');
         const viewerContainer = document.getElementById('viewer-container');
-        const metadataViewer = document.getElementById('metadata-viewer');
-        const meshAssetsPath = '../../assets/meshes/';
+        const rootAssetsPath = '../../assets/meshes/';
 
         async function fetchAndDisplayMeshes() {
             try {
-                const metaResponse = await fetch(`${meshAssetsPath}metadata.json`);
-                meshMetadata = await metaResponse.json();
-            } catch (e) {
-                console.error("Fatal: Could not load metadata.json.", e);
-                alert("Could not load metadata.json. The application cannot start.");
-                return;
-            }
+                const metaResponse = await fetch(`${rootAssetsPath}metadata.json`);
+                const metadata = await metaResponse.json();
 
-            meshList.innerHTML = ''; // Clear list
-            for (const meshName in meshMetadata) {
-                addMeshToList(meshName);
+                meshListContainer.innerHTML = '';
+                for (const group of metadata) {
+                    const folderName = group.folder;
+                    const meshes = group.meshes;
+
+                    const details = document.createElement('details');
+                    details.open = true;
+                    
+                    const summary = document.createElement('summary');
+                    summary.textContent = folderName;
+                    details.appendChild(summary);
+
+                    const folderContent = document.createElement('div');
+                    folderContent.className = 'folder-content';
+
+                    for (const meshFile in meshes) {
+                        const meta = meshes[meshFile];
+                        const meshItem = createMeshListItem(folderName, meshFile, meta);
+                        folderContent.appendChild(meshItem);
+                    }
+                    details.appendChild(folderContent);
+                    meshListContainer.appendChild(details);
+                }
+            } catch (e) {
+                console.error("Fatal: Could not load or parse metadata.json.", e);
+                alert("Could not load metadata.json. The application cannot start.");
             }
         }
 
-        function addMeshToList(meshName, isAiGenerated = false) {
-            const meta = meshMetadata[meshName] || { name: meshName, tags: [], description: '' };
-            
-            const listItem = document.createElement('li');
+        function createMeshListItem(folder, file, meta) {
+            const listItem = document.createElement('div');
             listItem.className = 'mesh-item';
-            listItem.dataset.meshName = meshName;
-            listItem.dataset.isAi = isAiGenerated;
+            listItem.dataset.folder = folder;
+            listItem.dataset.file = file;
 
             const thumb = document.createElement('div');
             thumb.className = 'thumbnail';
             const thumbImg = document.createElement('img');
             
-            // For AI-generated content, we'll handle the thumbnail separately
-            if (!isAiGenerated) {
-                const texturePath = meta.texture || meshName.replace(/\.obj$/, '.png');
-                thumbImg.src = `${meshAssetsPath}${texturePath}`;
-                thumbImg.onerror = () => { thumb.innerHTML = 'N/A'; };
-            }
+            const textureFile = meta.texture || file.replace(/\.obj$/, '.png');
+            thumbImg.src = `${rootAssetsPath}${folder}/${textureFile}`;
+            thumbImg.onerror = () => { thumb.innerHTML = 'N/A'; };
             thumb.appendChild(thumbImg);
 
             const info = document.createElement('div');
@@ -202,30 +182,15 @@
             info.appendChild(nameEl);
             info.appendChild(tagsEl);
 
-            const status = document.createElement('span');
-            status.className = 'status-icon';
-
-            listItem.append(thumb, info, status);
-            meshList.appendChild(listItem);
+            listItem.append(thumb, info);
 
             listItem.addEventListener('click', () => {
                 document.querySelectorAll('.mesh-item').forEach(item => item.classList.remove('active'));
                 listItem.classList.add('active');
-                displayMetadata(meshName);
-                loadMeshByName(meshName, status, isAiGenerated);
+                loadMesh(folder, file, meta);
             });
-        }
-
-        function displayMetadata(meshName) {
-            const meta = meshMetadata[meshName];
-            if (meta) {
-                document.getElementById('meta-name').textContent = meta.name;
-                document.getElementById('meta-tags').textContent = (meta.tags || []).join(', ');
-                document.getElementById('meta-desc').textContent = meta.description;
-                metadataViewer.classList.remove('hidden');
-            } else {
-                metadataViewer.classList.add('hidden');
-            }
+            
+            return listItem;
         }
 
         function init() {
@@ -248,41 +213,60 @@
             scene.add(directionalLight);
 
             window.addEventListener('resize', onWindowResize, false);
-            document.getElementById('add-mesh-btn').addEventListener('click', handleGenerateMesh);
-
+            
             onWindowResize();
-            fetchAndDisplayMeshes();
+            fetchAndDisplayMeshes().then(() => {
+                const sunMeshItem = document.querySelector('[data-file="sun.obj"]');
+                if (sunMeshItem) {
+                    sunMeshItem.click();
+                }
+            });
             animate();
         }
 
-        async function loadMeshByName(meshName, statusElement, isAiGenerated) {
-            statusElement.textContent = '⏳';
-            statusElement.title = `Loading ${meshName}...`;
-
+        async function loadMesh(folder, file, meta) {
             try {
-                let object;
-                if (isAiGenerated) {
-                    // Load AI-generated content directly
-                    const { objContent } = meshMetadata[meshName].aiContent;
-                    object = new OBJLoader().parse(objContent);
-                    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 }); // Green for AI
-                    object.traverse((child) => {
-                        if (child.isMesh) child.material = material;
+                const assetPath = `${rootAssetsPath}${folder}/`;
+                
+                // 1. Always load the geometry first
+                const objLoader = new OBJLoader();
+                objLoader.setPath(assetPath);
+                const object = await objLoader.loadAsync(file);
+
+                // 2. Determine the material
+                let material;
+                if (meta.texture) {
+                    // If texture is defined in metadata, create a basic textured material
+                    console.log(`Found texture for ${file}, creating MeshBasicMaterial.`);
+                    const textureLoader = new THREE.TextureLoader();
+                    textureLoader.setPath(assetPath);
+                    const texture = await textureLoader.loadAsync(meta.texture);
+                    
+                    material = new THREE.MeshBasicMaterial({ 
+                        map: texture,
+                        side: THREE.DoubleSide // Use DoubleSide to prevent issues with normals
                     });
                 } else {
-                    // Load from server
-                    object = await loadObjectWithMtl(meshName);
+                    // If no texture, create a default lit material
+                    console.log(`No texture found for ${file}, creating default MeshPhongMaterial.`);
+                    material = new THREE.MeshPhongMaterial({
+                        color: 0xcccccc,
+                        side: THREE.DoubleSide
+                    });
                 }
+
+                // 3. Apply the material to the object
+                object.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = material;
+                    }
+                });
                 
                 clearScene();
                 centerAndAddObject(object);
 
-                statusElement.textContent = '✅';
-                statusElement.title = `Loaded successfully.`;
             } catch (error) {
-                console.error(`Could not load mesh: ${meshName}`, error);
-                statusElement.textContent = '⚠️';
-                statusElement.title = `Error: ${error.message}`;
+                console.error(`Could not load mesh: ${file}`, error);
                 clearScene();
             }
         }
@@ -293,95 +277,10 @@
         }
 
         function centerAndAddObject(object) {
-            try {
-                const box = new THREE.Box3().setFromObject(object);
-                const center = box.getCenter(new THREE.Vector3());
-                if (!isFinite(center.x)) throw new Error('Invalid geometry');
-                object.position.sub(center);
-                scene.add(object);
-            } catch (e) {
-                throw new Error('Invalid mesh geometry for centering.');
-            }
-        }
-
-        function loadObjectWithMtl(meshName) {
-            return new Promise((resolve, reject) => {
-                const mtlLoader = new MTLLoader();
-                mtlLoader.setPath(meshAssetsPath);
-                const mtlUrl = meshName.replace(/\.obj$/, '.mtl');
-                
-                mtlLoader.load(mtlUrl, (materials) => {
-                    materials.preload();
-                    const objLoader = new OBJLoader();
-                    objLoader.setMaterials(materials);
-                    objLoader.setPath(meshAssetsPath);
-                    objLoader.load(meshName, resolve, undefined, () => reject(new Error('Failed to load OBJ file.')));
-
-                }, undefined, () => {
-                    // MTL file not found, load with default material
-                    console.warn(`MTL file not found for ${meshName}. Loading with default material.`);
-                    const objLoader = new OBJLoader();
-                    objLoader.setPath(meshAssetsPath);
-                    objLoader.load(meshName, resolve, undefined, () => reject(new Error('Failed to load OBJ file.')));
-                });
-            });
-        }
-
-        function handleGenerateMesh() {
-            const promptText = prompt("Describe the mesh you want to generate (e.g., 'a simple red cube'):");
-            if (!promptText) return;
-
-            console.log(`Simulating AI call with prompt: "${promptText}"`);
-            const newMeshName = `ai_generated_${Date.now()}.obj`;
-            const { obj, svg } = createPlaceholderCube(promptText);
-
-            meshMetadata[newMeshName] = {
-                name: promptText,
-                tags: ["ai-generated"],
-                description: "Created via AI prompt.",
-                aiContent: { objContent: obj, svgContent: svg }
-            };
-
-            addMeshToList(newMeshName, true);
-            
-            // Activate and load the new mesh
-            const newItem = meshList.querySelector(`[data-mesh-name="${newMeshName}"]`);
-            if (newItem) {
-                newItem.click();
-                // Update thumbnail for AI-gen mesh
-                const thumb = newItem.querySelector('.thumbnail img');
-                thumb.src = `data:image/svg+xml;base64,${btoa(svg)}`;
-            }
-        }
-
-        function createPlaceholderCube(promptText) {
-            const color = promptText.includes('red') ? '#ff0000' :
-                          promptText.includes('blue') ? '#0000ff' :
-                          promptText.includes('green') ? '#00ff00' : '#cccccc';
-
-            const obj = `
-# Generated from prompt: "${promptText}"
-v -0.5 -0.5 0.5
-v 0.5 -0.5 0.5
-v -0.5 0.5 0.5
-v 0.5 0.5 0.5
-v -0.5 0.5 -0.5
-v 0.5 0.5 -0.5
-v -0.5 -0.5 -0.5
-v 0.5 -0.5 -0.5
-vt 0.0 0.0
-vt 1.0 0.0
-vt 0.0 1.0
-vt 1.0 1.0
-f 1/1 2/2 4/4 3/3
-f 3/1 4/2 6/4 5/3
-f 5/1 6/2 8/4 7/3
-f 7/1 8/2 2/4 1/3
-f 2/1 8/2 6/4 4/3
-f 7/1 1/2 3/4 5/3
-            `;
-            const svg = `<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="${color}" /></svg>`;
-            return { obj, svg };
+            const box = new THREE.Box3().setFromObject(object);
+            const center = box.getCenter(new THREE.Vector3());
+            object.position.sub(center);
+            scene.add(object);
         }
 
         function onWindowResize() {

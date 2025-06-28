@@ -81,6 +81,7 @@ Texture* assets_get_texture(AssetRegistry* registry, const char* name);
 // Utility functions
 void assets_list_loaded(AssetRegistry* registry);
 bool assets_load_all_in_directory(AssetRegistry* registry);
+bool load_assets_from_metadata(AssetRegistry* registry);
 
 // OBJ file parsing helpers
 bool parse_obj_file(const char* filepath, Mesh* mesh);

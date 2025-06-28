@@ -1,0 +1,5 @@
+newmtl Tetrahedron
+Ke 1.0 1.0 1.0
+map_Ke tetrahedron_texture.png
+Kd 1.0 1.0 1.0
+map_Kd tetrahedron_texture.png
