@@ -1,202 +1,80 @@
-# CGame: Entity-Component-System 3D Space Game Engine
+# CGame: A Data-Oriented 3D Game Engine
 
-A high-performance, data-oriented 3D space game engine written in C99 using SDL2. Features an advanced Entity-Component-System (ECS) architecture with scheduled systems, data-driven entity creation, and a focus on creating emergent, AI-driven gameplay in a living universe.
+CGame is a high-performance, data-oriented 3D game engine written in C99. It features an advanced Entity-Component-System (ECS) architecture and is currently undergoing a migration to the modern, cross-platform **Sokol graphics API** for rendering. The engine is designed for creating emergent, AI-driven gameplay in a dynamic universe.
 
-## 🏗️ Architecture Overview
-
-### Core Design Principles
-- **Data-Oriented Design**: Components are pure data structures, systems process them efficiently
-- **Entity-Component-System**: Modular, composable entity architecture for scalability
-- **Scheduled Systems**: Systems run at optimal frequencies (Physics: 60Hz, AI: 2-10Hz, Collision: 20Hz)
-- **Data-Driven**: Entities and scenes defined in external data files, not hardcoded
-- **Performance First**: Cache-friendly data layout, minimal dynamic allocation in game loop
-
-### Key Components
-```c
-// Core component types - pure data structures
-struct Transform   // Position, rotation, scale in 3D space
-struct Physics     // Velocity, acceleration, mass, drag
-struct Collision   // Shape, collision layers, trigger flags
-struct AI          // State, decision timers, goals, behavior data
-struct Renderable  // Mesh, material, LOD settings
-struct Player      // Input mapping, camera settings
-```
-
-### System Architecture
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Physics       │    │   Collision      │    │      AI         │
-│   System        │    │   System         │    │   System        │
-│   (60 FPS)      │    │   (20 FPS)       │    │  (2-10 FPS)     │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                    ┌─────────────────────┐
-                    │   Event System      │
-                    │   (Message Bus)     │
-                    └─────────────────────┘
-                                 │
-                    ┌─────────────────────┐
-                    │   Render System     │
-                    │   (60 FPS)          │
-                    └─────────────────────┘
-```
-
-## 📁 Project Structure
-
-```
-src/
-├── core.h/c           # ECS foundation: entities, components, world management
-├── systems.h/c        # System scheduler and core game systems
-├── data.h/c           # Data-driven entity templates and scene loading
-├── assets.h/c         # Asset management: meshes, textures, materials
-├── render_3d.c        # 3D rendering pipeline with SDL2
-├── ui.h/c             # Debug UI and HUD rendering
-└── test.c             # Main entry point and scene testing
-
-data/
-├── templates/
-│   └── entities.txt   # Entity template definitions
-└── scenes/
-    └── spaceport.txt  # Scene configurations
-
-assets/
-├── meshes/            # 3D models (.mesh) and textures (.png)
-│   ├── platonic_solids/
-│   ├── sun/
-│   └── *_ship/
-```
-
-## 🚀 Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
-- **macOS**: `brew install sdl2`
+
+- **macOS**: `brew install sdl2` (still needed for windowing temporarily)
 - **Linux**: `sudo apt-get install libsdl2-dev build-essential`
 - **GCC** with C99 support
 
-### Build and Run
+### Building and Running
+
+The project is currently in a transitional state. The default `make run` command executes the legacy SDL application. To run the new Sokol application, you must specify the `main.c` entry point.
+
 ```bash
-# Build the engine
-make
+# Build and run the new Sokol application
+make clean && make SRC_FILES="src/main.c src/core.c src/systems.c src/data.c src/assets.c src/render_3d.c" && ./cgame
 
-# Run the test scene
-make run
-
-# Clean build files
-make clean
-
-# Debug build
-make debug
+# Build and run the legacy SDL application (for comparison)
+make clean && make && make run
 ```
 
-### Available VS Code Tasks
-- **Build Game**: Compiles the project
-- **Run Game**: Builds and executes the test scene
-- **Clean Build**: Removes build artifacts
+## 🏗️ Project Structure
 
-## 🎯 Current Features
+- **`/assets`**: Contains all game assets, including meshes, materials, and shaders.
+- **`/data`**: Game data, such as scene definitions and entity templates.
+- **`/docs`**: All project documentation, including architecture, guides, and reports.
+- **`/src`**: The C99 source code for the game engine.
+- **`/tools`**: Scripts and tools for asset processing and development.
 
-### ✅ Implemented
-- **ECS Architecture**: Full entity-component-system with efficient component storage
-- **Scheduled Systems**: Physics (60Hz), Collision (20Hz), AI (2-10Hz with LOD)
-- **3D Rendering**: SDL2-based 3D pipeline with mesh loading and matrix transforms
-- **Data-Driven Entities**: Load entity templates from external files
-- **Scene System**: Define and load complete scenes with multiple entities
-- **Asset Management**: OBJ mesh loading, texture support, material system
-- **Debug Systems**: Performance monitoring, entity inspection, frame timing
+## 📚 Documentation Hub
 
-### 🔄 In Development
-- **AI System Enhancement**: Behavior trees, goal-oriented action planning
-- **Collision Detection**: Spatial partitioning (octree/grid), precise collision resolution
-- **Particle Systems**: Engine exhaust, weapon effects, environmental particles
-- **Audio System**: 3D positional audio, music, sound effects
+This project's documentation is organized to provide a clear and comprehensive overview for developers, contributors, and users.
 
-### 🎯 Planned
-- **Neural AI Integration**: LLM-driven entity behavior and dialog
-- **Procedural Universe**: Dynamic faction systems, economic simulation
-- **Networking**: Multiplayer support, client-server architecture
-- **Modding API**: Scripting interface, content creation tools
+### 1. Project Overview
+*   **[README.md](./README.md)**: You are here. High-level summary and entry point.
+*   **[Project Vision](./docs/project/VISION.md)**: The long-term goals and philosophy of the engine.
+*   **[Project Roadmap](./docs/project/ROADMAP.md)**: A high-level overview of planned features and development milestones.
+*   **[CHANGELOG.md](./CHANGELOG.md)**: A record of all notable changes made to the project.
 
-## 🧪 Testing and Development
+### 2. Developer Guides
+*   **[Development Guide](./docs/guides/DEVELOPMENT_GUIDE.md)**: The primary guide for setting up the development environment, building the project, and understanding the workflow.
+*   **[Developer Quick Reference](./docs/guides/QUICK_REFERENCE.md)**: A quick reference for common development tasks.
+*   **[API Reference](./docs/api/REFERENCE.md)**: The reference for the engine's public API.
 
-### Entity Creation Example
-```c
-// Create a player ship
-EntityID player = entity_create(world);
-entity_add_component(world, player, COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_PLAYER);
+### 3. Architecture
+*   **[Architecture Overview](./docs/architecture/OVERVIEW.md)**: A detailed description of the Entity-Component-System (ECS) design, system scheduling, and core engine components.
+*   **[AI Integration](./docs/architecture/AI_INTEGRATION.md)**: The plan for integrating AI systems into the engine.
+*   **[AI Pipeline](./docs/architecture/AI_PIPELINE.md)**: The architecture of the AI pipeline.
 
-// Configure components
-struct Transform* transform = entity_get_transform(world, player);
-transform->position = (Vector3){0, 0, 0};
+### 4. Technical Deep Dives
+*   **[Sokol Implementation Guide](./docs/guides/SOKOL_IMPLEMENTATION_GUIDE.md)**: Technical plan for the ongoing migration to the Sokol graphics API.
+*   **[UI Implementation Guide](./docs/guides/UI_IMPLEMENTATION_GUIDE.md)**: A guide to implementing UI features.
+*   **[UI Integration Engineering Report](./docs/project/UI_INTEGRATION_ENGINEERING_REPORT.md)**: Detailed plan for implementing the Dear ImGui-based UI system.
+*   **[Semantic Material System](./docs/architecture/SEMANTIC_MATERIAL_SYSTEM.md)**: Design of the material system for PBR rendering.
+*   **[Asset Pipeline Improvements](./docs/architecture/ASSET_PIPELINE_IMPROVEMENTS.md)**: Proposed improvements to the asset pipeline.
+*   **[Clean Code & Tech Debt Report](./docs/CLEAN_CODE_AND_TECH_DEBT_ENGINEERING_REPORT.md)**: An analysis of the current state of the codebase and a backlog of technical debt to be addressed.
 
-struct Physics* physics = entity_get_physics(world, player);
-physics->mass = 80.0f;
-physics->drag = 0.98f;
-```
+### 5. Sprints & Reviews
+*   **[Sprints Index](./docs/sprints/README.md)**: Documentation for ongoing and upcoming development sprints.
+*   **[Sprint Archives](./docs/sprints/archives/)**: Records of completed sprints and reviews.
 
-### Data-Driven Entity Templates
-```
-# entities.txt - Define reusable entity types
-template player_ship {
-    name: "Player Ship"
-    components: transform physics collision renderable player
-    mass: 80.0
-    collision_radius: 4.0
-    mesh: "unique_ship"
-}
-```
+### 6. User Manual
+*   **[User Manual](./docs/user/MANUAL.md)**: Instructions on how to play and interact with the game.
 
-## 🔧 Code Style Guidelines
+## 🏛️ Architecture
 
-### Naming Conventions
-- **Files**: `snake_case.c/h`
-- **Functions**: `module_action()` (e.g., `entity_create()`, `physics_update()`)
-- **Structs**: `PascalCase` for types, `snake_case` for instances
-- **Constants**: `UPPER_SNAKE_CASE`
-- **Variables**: `snake_case`
+CGame is built on three core principles:
+1.  **Data-Oriented Design**: Components are simple data structures, and systems are functions that operate on them. This leads to efficient, cache-friendly code.
+2.  **Entity-Component-System (ECS)**: Entities are created by composing components, allowing for flexible and emergent behaviors.
+3.  **System Scheduling**: Game logic is implemented in systems that run at different frequencies (e.g., physics at 60Hz, AI at 10Hz) for optimal performance.
 
-### Code Organization
-- **4-space indentation**
-- **Descriptive variable names** (avoid abbreviations)
-- **Single responsibility** per function
-- **Comments for complex logic**, not obvious operations
-- **Error checking** for all SDL and system calls
+## 🎮 Controls (Sokol App)
 
-### Performance Guidelines
-- **Minimize allocation** in game loop (prefer object pooling)
-- **Cache-friendly data access** (iterate components by type)
-- **Profile performance-critical sections**
-- **Use const correctness** where applicable
-
-## 📚 Documentation
-
-- **[Project Vision](./docs/project/VISION.md)**: Long-term goals and philosophy
-- **[Architecture Details](./src/ARCHITECTURE.md)**: In-depth technical design
-- **[Build Instructions](./docs/project/BUILDING.md)**: Detailed compilation guide
-- **[User Manual](./docs/user/MANUAL.md)**: How to play and interact
-- **[API Reference](./docs/api/REFERENCE.md)**: Function and system documentation
-
-## 🎮 Controls and Interaction
-
-- **Arrow Keys**: Ship movement
-- **Space**: Thrust/Action
+- **W/A/S/D**: Move camera forward/left/back/right
+- **Arrow Keys**: Turn camera
 - **ESC**: Exit
-- **F1**: Toggle debug overlay
-- **Mouse**: Camera control (planned)
-
-## 🧠 For LLM Assistants
-
-This project uses a **component-based architecture** where:
-1. **Entities** are containers with unique IDs
-2. **Components** are pure data (no behavior)
-3. **Systems** process components and implement game logic
-4. **World** manages all entities and provides component access
-
-When modifying code:
-- Add new **components** in `core.h` as data structures
-- Add new **systems** in `systems.h/c` with update functions
-- Use **entity factories** in test.c for creating common entity types
-- Follow the **data-driven approach** - prefer configuration over hardcoding
-
-The engine prioritizes **performance** and **modularity** over simplicity - each system runs at its optimal frequency and components are stored for cache-efficient access.
+- **F1**: Toggle Debug UI (planned)

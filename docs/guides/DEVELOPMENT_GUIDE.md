@@ -1,3 +1,11 @@
+# Development Guide
+
+**Status:** Active
+**Last Updated:** June 29, 2025
+**Owner:** System Analysis
+
+This guide provides all the necessary information for developers to get started with the CGame engine project. It covers environment setup, build procedures, coding standards, and the overall development workflow.
+
 /**
  * @file DEVELOPMENT_GUIDE.md
  * @brief CGame ECS Engine - Developer Documentation and Code Conventions
@@ -295,7 +303,7 @@ printf("⚡ Physics update: velocity changed\n");   // System updates
 printf("❌ Error: failed to load asset\n");        // Errors
 printf("⚠️  Warning: component missing\n");        // Warnings
 printf("🎯 System: AI processing complete\n");     // System status
-printf("📊 Performance: %d entities processed\n"); // Performance
+printf("📊 Performance: %d entities processed\n", world->entity_count); // Performance
 ```
 
 ### Performance Monitoring

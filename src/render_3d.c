@@ -38,6 +38,7 @@ static struct {
     sg_sampler sampler;
     sg_buffer vertex_buffer;
     sg_buffer index_buffer;
+    sg_buffer uniform_buffer;  // Add uniform buffer
     sg_image default_texture;
     bool initialized;
     char* vertex_shader_source;
@@ -58,8 +59,9 @@ static uint16_t test_indices[] = { 0, 1, 2 };
 // MATRIX MATH HELPERS
 // ============================================================================
 
+// Math helper functions
 static void mat4_identity(float* m) {
-    for (int i = 0; i < 16; i++) m[i] = 0.0f;
+    memset(m, 0, 16 * sizeof(float));
     m[0] = m[5] = m[10] = m[15] = 1.0f;
 }
 
@@ -205,7 +207,7 @@ static bool render_sokol_init(void) {
         .label = "default_sampler"
     });
     
-    // Create pipeline
+    // Create pipeline with proper pass format matching
     render_state.pipeline = sg_make_pipeline(&(sg_pipeline_desc){
         .shader = render_state.shader,
         .layout = {
@@ -218,8 +220,13 @@ static bool render_sokol_init(void) {
         .index_type = SG_INDEXTYPE_UINT16,
         .depth = {
             .compare = SG_COMPAREFUNC_LESS_EQUAL,
-            .write_enabled = true
+            .write_enabled = true,
+            .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL  // Match default pass depth format
         },
+        .colors[0] = {
+            .pixel_format = SG_PIXELFORMAT_BGRA8  // Match Metal swapchain format
+        },
+        .sample_count = 4,  // Match swapchain sample count (4x MSAA)
         .cull_mode = SG_CULLMODE_BACK,
         .label = "basic_3d_pipeline"
     });
@@ -229,15 +236,26 @@ static bool render_sokol_init(void) {
         return false;
     }
     
+    printf("🔍 Pipeline created with sample_count=4\n");
+    
     // Create test geometry buffers
     render_state.vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
         .data = SG_RANGE(test_vertices),
+        .usage = { .vertex_buffer = true },
         .label = "test_vertices"
     });
     
     render_state.index_buffer = sg_make_buffer(&(sg_buffer_desc){
         .data = SG_RANGE(test_indices),
+        .usage = { .index_buffer = true },  // Explicitly set as index buffer
         .label = "test_indices"
+    });
+    
+    // Create uniform buffer (dynamic to allow updates)
+    render_state.uniform_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .size = sizeof(vs_uniforms_t),
+        .usage = { .dynamic_update = true }, // Allow dynamic updates
+        .label = "uniforms"
     });
     
     // Create default white texture (1x1 white pixel)
@@ -273,14 +291,10 @@ bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_wid
     printf("🚀 Initializing Sokol-based renderer (%.0fx%.0f)\n", viewport_width, viewport_height);
     (void)config; (void)assets; // Unused for now
     
-    // Initialize Sokol graphics
-    sg_setup(&(sg_desc){
-        .environment = sglue_environment(),
-        .logger.func = slog_func,
-    });
+    // Note: sg_setup() is already called in main.c init(), so we don't call it again here
     
     if (!sg_isvalid()) {
-        printf("❌ Failed to initialize Sokol graphics\n");
+        printf("❌ Sokol graphics not initialized - sg_setup() must be called first\n");
         return false;
     }
     
@@ -298,6 +312,7 @@ void render_shutdown() {
     if (render_state.initialized) {
         sg_destroy_buffer(render_state.vertex_buffer);
         sg_destroy_buffer(render_state.index_buffer);
+        sg_destroy_buffer(render_state.uniform_buffer);  // Clean up uniform buffer
         sg_destroy_image(render_state.default_texture);
         sg_destroy_pipeline(render_state.pipeline);
         sg_destroy_shader(render_state.shader);
@@ -320,19 +335,15 @@ void render_shutdown() {
 }
 
 void render_clear(float r, float g, float b, float a) {
-    sg_begin_pass(&(sg_pass){
-        .action = {
-            .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = {r, g, b, a} },
-            .depth = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f }
-        },
-        .swapchain = sglue_swapchain()
-    });
+    // Clear is now handled by render pass action in render_frame()
+    // This function is kept for API compatibility but does nothing
+    (void)r; (void)g; (void)b; (void)a;
 }
 
 void render_present(RenderConfig* config) {
-    (void)config; // Unused for now
-    sg_end_pass();
-    sg_commit();
+    // Present is now handled by sg_commit() in render_frame()
+    // This function is kept for API compatibility but does nothing
+    (void)config;
 }
 
 // ============================================================================
@@ -406,6 +417,7 @@ void render_cleanup(RenderConfig* config) {
     if (render_state.initialized) {
         sg_destroy_buffer(render_state.vertex_buffer);
         sg_destroy_buffer(render_state.index_buffer);
+        sg_destroy_buffer(render_state.uniform_buffer);  // Clean up uniform buffer
         sg_destroy_image(render_state.default_texture);
         sg_destroy_pipeline(render_state.pipeline);
         sg_destroy_shader(render_state.shader);
@@ -430,12 +442,15 @@ void render_cleanup(RenderConfig* config) {
 void render_frame(struct World* world, RenderConfig* config, EntityID player_id, float delta_time) {
     (void)delta_time; // Unused for now
     
-    if (!render_state.initialized) return;
+    if (!render_state.initialized) {
+        printf("⚠️ Render state not initialized, skipping frame\n");
+        return;
+    }
     
-    // Check if pipeline is still valid
+    // Check pipeline validity before using it
     sg_resource_state pipeline_state = sg_query_pipeline_state(render_state.pipeline);
     if (pipeline_state != SG_RESOURCESTATE_VALID) {
-        printf("❌ Pipeline no longer valid (state=%d), skipping frame\n", pipeline_state);
+        printf("⚠️ Pipeline not valid (state=%d), skipping frame\n", pipeline_state);
         return;
     }
     
@@ -448,58 +463,66 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         }
     }
     
+    // Debug first frame
+    static bool first_frame = true;
+    if (first_frame) {
+        printf("🎨 First render frame: pipeline_state=%d, renderable_count=%d\n", 
+               pipeline_state, renderable_count);
+        
+        // Get swapchain info to debug sample count (first frame only)
+        sg_swapchain swapchain = sglue_swapchain();
+        printf("🔍 Swapchain sample_count: %d\n", swapchain.sample_count);
+        
+        first_frame = false;
+    }
+    
+    // Begin render pass
+    sg_pass pass = {
+        .action = {
+            .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = {0.2f, 0.3f, 0.4f, 1.0f} },
+            .depth = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f }
+        },
+        .swapchain = sglue_swapchain()
+    };
+    sg_begin_pass(&pass);
     if (renderable_count > 0) {
-        // Apply pipeline and bindings
+        // Apply pipeline (now within render pass)
+        printf("🔧 Applying pipeline within render pass...\n");
         sg_apply_pipeline(render_state.pipeline);
         
-        // Set up basic uniforms for all entities
-        vs_uniforms_t vs_uniforms = {0};
-        
-        // Set up matrices
-        float model[16], view[16], proj[16], mvp[16], temp[16];
-        
-        // Model matrix (identity for now)
-        mat4_identity(model);
-        
-        // View matrix from camera
-        Vector3 eye = {config->camera.position.x, config->camera.position.y, config->camera.position.z};
-        Vector3 target = config->camera.target;
-        Vector3 up = config->camera.up;
-        mat4_lookat(view, eye, target, up);
-        
-        // Projection matrix
-        mat4_perspective(proj, M_PI/4.0f, config->camera.aspect_ratio, 0.1f, 100.0f);
-        
-        // Combine matrices: MVP = P * V * M
-        mat4_multiply(temp, view, model);
-        mat4_multiply(mvp, proj, temp);
-        
-        memcpy(vs_uniforms.mvp, mvp, sizeof(mvp));
-        sg_apply_uniforms(0, &SG_RANGE(vs_uniforms));
-        
-        // Fragment shader uniforms temporarily disabled
-        // fs_uniforms_t fs_uniforms = {
-        //     .light_dir = {0.0f, -1.0f, -0.5f}
-        // };
-        // sg_apply_uniforms(1, &SG_RANGE(fs_uniforms));
-        
-        // Bind vertex buffer and draw test triangle
-        sg_bindings bindings = {
+        // Apply vertex buffer
+        sg_apply_bindings(&(sg_bindings){
             .vertex_buffers[0] = render_state.vertex_buffer,
             .index_buffer = render_state.index_buffer,
             .images[0] = render_state.default_texture,
             .samplers[0] = render_state.sampler
-        };
-        sg_apply_bindings(&bindings);
+        });
+        
+        // Create simple identity MVP matrix
+        vs_uniforms_t uniforms;
+        mat4_identity(uniforms.mvp);
+        
+        // Apply uniforms
+        sg_range uniform_data = SG_RANGE(uniforms);
+        sg_apply_uniforms(0, &uniform_data);
+        
+        // Draw the triangle
+        printf("🎨 Drawing triangle (3 indices)...\n");
         sg_draw(0, 3, 1);
         
-        // Debug info
-        static bool draw_warned = false;
-        if (!draw_warned) {
-            printf("🎨 Drawing test triangle with %d entities ready to render\n", renderable_count);
-            draw_warned = true;
+        printf("✅ Triangle drawn successfully\n");
+    } else {
+        // Print once that we're not rendering
+        static bool no_render_warned = false;
+        if (!no_render_warned) {
+            printf("🎨 Sokol render frame initialized - no renderable entities\n");
+            no_render_warned = true;
         }
     }
+    
+    // End render pass
+    sg_end_pass();
+    sg_commit();
     
     // Render debug info if enabled
     if (config->show_debug_info) {

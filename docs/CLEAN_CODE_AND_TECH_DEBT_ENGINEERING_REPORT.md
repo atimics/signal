@@ -19,20 +19,14 @@ The core of the engine, primarily in `core.c` and `systems.c`, adheres well to t
 
 ### 2.2. Key Areas of Technical Debt
 
-#### 2.2.1. Dead and Redundant Code
 
-*   **Issue:** The `src` directory contains several old and backup files:
-    *   `main_old.c`
-    *   `render_3d_old.c`
-    *   `render_3d_backup_old.c`
-*   **Impact:** These files create clutter, increase the cognitive load on developers, and can lead to confusion about which code is currently in use.
-*   **Severity:** High
 
 #### 2.2.2. Dual Entry Points and Conflicting Implementations
 
 *   **Issue:** The project has two main entry points: `main` in `test.c` (using SDL) and `sokol_main` in `main.c` (using Sokol). This has resulted in a confusing and error-prone state where it is unclear which entry point is authoritative.
+*   **Status:** This is the most significant source of technical debt and is actively being addressed as the top priority of the Sokol migration. The plan to resolve this is detailed in the [Sokol Transition Final Review](./sprints/04_sokol_transition_final_review.md).
 *   **Impact:** This is the most significant source of technical debt. It makes the project difficult to build, run, and debug. It also makes it impossible to reason about the application's behavior without understanding the complex interplay between the two entry points.
-*   **Severity:** Critical
+*   **Severity:** Critical (In Progress)
 
 #### 2.2.3. Incomplete Feature Implementations
 
