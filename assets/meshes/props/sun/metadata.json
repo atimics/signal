@@ -1,0 +1,8 @@
+{
+    "name": "Sun",
+    "filename": "geometry.mesh",
+    "tags": ["environment", "star", "celestial"],
+    "description": "A glowing sun mesh with bright texture for space environments",
+    "mtl": "material.mtl",
+    "texture": "texture.png"
+}

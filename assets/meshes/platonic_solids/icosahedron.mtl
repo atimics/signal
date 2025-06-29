@@ -1,5 +1,0 @@
-newmtl Icosahedron
-Ke 1.0 1.0 1.0
-map_Ke icosahedron_texture.png
-Kd 1.0 1.0 1.0
-map_Kd icosahedron_texture.png

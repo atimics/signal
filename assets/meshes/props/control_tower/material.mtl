@@ -1,0 +1,5 @@
+newmtl Control Tower
+Ke 1.0 1.0 1.0
+map_Ke control_tower.png
+Kd 1.0 1.0 1.0
+map_Kd texture.png

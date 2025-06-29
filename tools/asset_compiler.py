@@ -1,0 +1,427 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import math
+import random
+import re
+import subprocess
+import sys
+from pathlib import Path
+import numpy as np
+from scipy.spatial import Delaunay
+import os
+import trimesh
+from jsonschema import validate, ValidationError
+import cairosvg
+
+# --- Core Functions ---
+
+def normalize(v):
+    """Normalize a numpy vector."""
+    norm = np.linalg.norm(v)
+    if norm == 0:
+        return v
+    return v / norm
+
+def get_random_color_hex():
+    """Returns a random bright color in hex format."""
+    return f"#{random.randint(128, 255):02X}{random.randint(128, 255):02X}{random.randint(128, 255):02X}"
+
+# --- Geometry and UV Generation ---
+
+def group_triangles_into_polygons(mesh):
+    """Groups triangles into original polygonal faces based on face normals."""
+    mesh.merge_vertices()
+    try:
+        # Use trimesh's built-in grouping which is more robust
+        face_groups = trimesh.geometry.group_coplanar_faces(mesh)
+        polygons = [trimesh.geometry.faces_to_polygon(mesh, faces) for faces in face_groups]
+        return [tuple(p) for p in polygons]
+    except Exception as e:
+        print(f"Warning: Could not group faces into polygons: {e}. Falling back to triangles.", file=sys.stderr)
+        return [tuple(f) for f in mesh.faces]
+
+def triangulate(faces):
+    """Triangulates polygonal faces."""
+    tri_faces = []
+    for face in faces:
+        if len(face) < 3: continue
+        if len(face) == 3:
+            tri_faces.append(face)
+        else: # Use trimesh for robust triangulation of complex polygons
+            vertices = np.arange(max(max(f) for f in faces) + 1)
+            polygon = trimesh.path.polygons.Polygon(face)
+            tris = trimesh.path.polygons.triangulate(polygon)
+            for tri in tris['faces']:
+                tri_faces.append(tuple(tri))
+    return tri_faces
+
+def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, svg_height=1024):
+    # ... (This function remains largely the same as before)
+    num_faces = len(original_faces)
+    cols = math.ceil(math.sqrt(num_faces))
+    rows = math.ceil(num_faces / cols)
+    cell_width = 1.0 / cols
+    cell_height = 1.0 / rows
+    uv_coords_per_face = []
+    for i, face in enumerate(original_faces):
+        row = i // cols
+        col = i % cols
+        # Generate UVs for the polygon based on its vertices
+        local_coords = []
+        if len(face) == 3: # Triangle
+            local_coords = [np.array([0.1,0.1]), np.array([0.9,0.1]), np.array([0.5, 0.9])]
+        elif len(face) == 4: # Square
+            local_coords = [np.array([0.1,0.1]), np.array([0.9,0.1]), np.array([0.9,0.9]), np.array([0.1,0.9])]
+        elif len(face) == 5: # Pentagon
+            local_coords = [np.array([0.5, 0.9]), np.array([0.9, 0.6]), np.array([0.7, 0.1]), np.array([0.3, 0.1]), np.array([0.1, 0.6])]
+        else: # Generic polygon
+            center = np.mean([np.array([math.cos(2*math.pi*j/len(face)), math.sin(2*math.pi*j/len(face))]) for j in range(len(face))], axis=0)
+            local_coords = [0.5 * (np.array([math.cos(2*math.pi*j/len(face)), math.sin(2*math.pi*j/len(face))]) - center) + 0.5 for j in range(len(face))]
+
+        face_uvs = []
+        for lc in local_coords:
+            u = col * cell_width + lc[0] * cell_width
+            v = row * cell_height + lc[1] * cell_height
+            face_uvs.append((u, v))
+        uv_coords_per_face.append(face_uvs)
+
+    with open(svg_path, 'w') as f:
+        f.write(f'<svg width="{svg_width}" height="{svg_height}" xmlns="http://www.w3.org/2000/svg">\n')
+        f.write('  <defs>\n')
+        for i in range(num_faces):
+            color1, color2, color3 = get_random_color_hex(), get_random_color_hex(), get_random_color_hex()
+            f.write(f'    <linearGradient id="grad{i}" x1="0%" y1="0%" x2="100%" y2="100%">\n')
+            f.write(f'      <stop offset="0%" stop-color="{color1}" />\n')
+            f.write(f'      <stop offset="50%" stop-color="{color2}" />\n')
+            f.write(f'      <stop offset="100%" stop-color="{color3}" />\n')
+            f.write('    </linearGradient>\n')
+        f.write('  </defs>\n')
+        f.write(f'  <rect width="100%" height="100%" fill="#111"/>\n')
+        for i, face_uvs in enumerate(uv_coords_per_face):
+            points = [f"{uv[0] * svg_width},{uv[1] * svg_height}" for uv in face_uvs]
+            f.write(f'  <polygon points="{" ".join(points)}" fill="url(#grad{i})"/>\n')
+        f.write('</svg>\n')
+    return uv_coords_per_face
+
+# --- File I/O and Conversion ---
+
+def convert_svg_to_png(svg_path, png_path):
+    """Converts SVG to PNG using the cairosvg library."""
+    try:
+        cairosvg.svg2png(url=str(svg_path), write_to=str(png_path))
+    except Exception as e:
+        print(f"Error during SVG to PNG conversion: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def extract_material_name_from_obj(obj_path):
+    """Extract the material name used in the OBJ file."""
+    try:
+        with open(obj_path, 'r') as f:
+            for line in f:
+                if line.startswith('usemtl '):
+                    return line.strip().split(' ', 1)[1]
+    except Exception as e:
+        print(f"Warning: Could not read material from OBJ file: {e}", file=sys.stderr)
+    return None
+
+def copy_source_mtl_if_exists(source_dir, build_dir, mesh_name):
+    """Copy existing MTL file from source to build directory."""
+    source_mtl = Path(source_dir) / "props" / mesh_name / "material.mtl"
+    build_mtl = Path(build_dir) / "props" / mesh_name / "material.mtl"
+    
+    if source_mtl.exists():
+        try:
+            # Ensure build directory exists
+            build_mtl.parent.mkdir(parents=True, exist_ok=True)
+            import shutil
+            shutil.copy2(source_mtl, build_mtl)
+            print(f"Copied existing MTL: {source_mtl.name}")
+            return True
+        except Exception as e:
+            print(f"Warning: Could not copy MTL file: {e}", file=sys.stderr)
+    return False
+
+def write_mtl_file(mtl_path, material_name, texture_filename):
+    # ... (This function remains the same)
+    with open(mtl_path, 'w') as f:
+        f.write(f"newmtl {material_name}\n")
+        f.write("Ke 1.0 1.0 1.0\n")
+        f.write(f"map_Ke {texture_filename}\n")
+        f.write("Kd 1.0 1.0 1.0\n")
+        f.write(f"map_Kd {texture_filename}\n")
+
+def write_compiled_obj(cobj_path, vertices, uvs, faces, uv_faces, mtl_filename, material_name):
+    """Writes the final compiled .cobj file with per-triangle UVs and correct winding."""
+    with open(cobj_path, 'w') as f:
+        f.write(f"mtllib {Path(mtl_filename).name}\n")
+        f.write(f"usemtl {material_name}\n\n")
+        for v in vertices:
+            f.write(f"v {' '.join(f'{c:.6f}' for c in v)}\n")
+        f.write("\n")
+        for u, v_coord in uvs:
+            f.write(f"vt {u:.6f} {1.0 - v_coord:.6f}\n") # Flip V for OBJ
+        f.write("\n")
+        
+        all_face_normals = []
+        for v_indices in faces:
+            v0, v1, v2 = np.array(vertices[v_indices[0]]), np.array(vertices[v_indices[1]]), np.array(vertices[v_indices[2]])
+            normal = normalize(np.cross(v1 - v0, v2 - v0))
+            # Ensure normals point outwards from the origin for convex shapes
+            if np.dot(normal, v0) < 0:
+                normal = -normal
+            all_face_normals.append(normal)
+        
+        for vn in all_face_normals:
+            f.write(f"vn {' '.join(f'{c:.6f}' for c in vn)}\n")
+        f.write("\n")
+
+        for i, (v_indices, vt_indices) in enumerate(zip(faces, uv_faces)):
+            f_parts = [f"{v_indices[j]+1}/{vt_indices[j]}/{i+1}" for j in range(3)]
+            f.write(f"f {' '.join(f_parts)}\n")
+
+# --- Metadata and Validation ---
+
+def validate_metadata(schema_path, data):
+    # ... (This function remains the same)
+    try:
+        with open(schema_path, 'r') as f: schema = json.load(f)
+        validate(instance=data, schema=schema)
+        return True
+    except FileNotFoundError:
+        print(f"ERROR: Schema file not found at {schema_path}", file=sys.stderr)
+        return False
+    except ValidationError as e:
+        print(f"ERROR: Metadata validation failed: {e.message} in {e.json_path}", file=sys.stderr)
+        return False
+
+def create_build_metadata(source_meta, schema_path, source_filename):
+    """Creates build metadata from source metadata, adding build-specific fields."""
+    # Start with a copy of source metadata to preserve all source information
+    build_meta = source_meta.copy() if source_meta else {}
+    
+    # BUILD-SPECIFIC TRANSFORMATIONS:
+    # 1. Always set the compiled mesh filename for the engine to load
+    source_name = Path(source_filename).stem
+    build_meta['filename'] = f"{source_name}.cobj"  # Engine loads this file
+    
+    # 2. Track the original source file for reference/debugging
+    build_meta['source_filename'] = source_filename
+    
+    # 3. Add build timestamp for cache invalidation
+    import time
+    build_meta['build_timestamp'] = int(time.time())
+    
+    # ENSURE REQUIRED FIELDS (these should come from clean source metadata):
+    if 'name' not in build_meta: 
+        build_meta['name'] = Path(source_filename).parent.stem.replace('_', ' ').title()
+    if 'tags' not in build_meta: 
+        build_meta['tags'] = ["autogenerated"]
+    if 'description' not in build_meta: 
+        build_meta['description'] = "An automatically processed mesh."
+    if 'mtl' not in build_meta: 
+        build_meta['mtl'] = "material.mtl"
+    if 'texture' not in build_meta: 
+        build_meta['texture'] = "texture.png"
+    
+    # Validate the build metadata
+    if not validate_metadata(schema_path, build_meta):
+        print(f"ERROR: Build metadata validation failed for {source_filename}.", file=sys.stderr)
+        return None
+        
+    return build_meta
+
+def write_build_metadata(metadata_path, build_meta):
+    """Writes the build metadata to file."""
+    with open(metadata_path, 'w') as f:
+        json.dump(build_meta, f, indent=4)
+    return build_meta
+
+# --- Build Pipeline ---
+
+def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
+    """Compiles a single mesh asset from source to build directory."""
+    source_path = Path(source_path)
+    mesh_name = source_path.stem
+    
+    # Define build paths
+    relative_path = source_path.parent.relative_to(Path(args.source_dir))
+    target_dir = Path(build_dir) / relative_path
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Build filename based on source filename but with .cobj extension
+    source_filename = source_path.name
+    build_filename = f"{source_path.stem}.cobj"
+    
+    cobj_path = target_dir / build_filename
+    mtl_path = target_dir / "material.mtl"
+    png_path = target_dir / "texture.png"
+    metadata_path = target_dir / "metadata.json"
+
+    # Use a temporary path for the SVG
+    svg_path = Path(target_dir) / f"{mesh_name}.svg.tmp"
+
+    if not overwrite and cobj_path.exists():
+        print(f"Skipping '{mesh_name}', compiled asset already exists.")
+        return str(metadata_path.relative_to(build_dir))
+
+    print(f"--- Compiling {source_path.name} ---")
+    
+    # 0. Create .obj copy in source directory if it's a .mesh file
+    obj_copy_path = source_path.parent / "geometry.obj"
+    if source_path.suffix == '.mesh' and not obj_copy_path.exists():
+        print(f"Creating .obj copy for mesh viewer: {obj_copy_path.relative_to(Path(args.source_dir))}")
+        try:
+            import shutil
+            shutil.copy2(source_path, obj_copy_path)
+        except Exception as e:
+            print(f"Warning: Could not create .obj copy: {e}", file=sys.stderr)
+    
+    # 1. Load Mesh
+    try:
+        file_type = 'obj' if source_path.suffix in ['.obj', '.mesh'] else None
+        mesh = trimesh.load(str(source_path), file_type=file_type, force='mesh')
+    except Exception as e:
+        if "unpack_from requires a buffer of at least" in str(e) or "string or file could not be read to its end" in str(e):
+            print(f"Warning: Mesh file {source_path} may be corrupt. Attempting repair.", file=sys.stderr)
+            try:
+                # Attempt to load with more lenient processing and re-export to fix it
+                mesh = trimesh.load(str(source_path), file_type=file_type, process=False)
+                mesh.export(str(source_path), file_type='obj')
+                # Try loading again after repair
+                mesh = trimesh.load(str(source_path), file_type=file_type, force='mesh')
+                print("Successfully repaired and reloaded mesh.", file=sys.stderr)
+            except Exception as repair_e:
+                print(f"Error: Failed to repair mesh {source_path}: {repair_e}", file=sys.stderr)
+                return None
+        else:
+            print(f"Error loading mesh {source_path}: {e}", file=sys.stderr)
+            return None
+
+    mesh.fix_normals() # Ensure winding is correct
+    vertices = mesh.vertices
+    
+    # Use Delaunay triangulation for robust face generation
+    hull = Delaunay(vertices)
+    triangulated_faces = hull.convex_hull
+
+    # 2. Auto-texture
+    original_faces = [tuple(f) for f in triangulated_faces] # Use triangles as original faces
+    uv_coords_per_face = generate_spritesheet_uvs_and_svg(original_faces, svg_path)
+    convert_svg_to_png(svg_path, png_path)
+    
+    # Clean up temporary SVG file
+    os.remove(svg_path)
+    
+    # Try to copy existing MTL file first, or create a new one
+    if not copy_source_mtl_if_exists(args.source_dir, args.build_dir, mesh_name):
+        material_name = mesh_name.replace('_', ' ').title()
+        write_mtl_file(mtl_path, material_name, png_path.name)
+        print(f"Generated new MTL file with material: {material_name}")
+    
+    # Extract material name from the OBJ file or use the generated one
+    material_name = extract_material_name_from_obj(source_path) or mesh_name.replace('_', ' ').title()
+
+    # 3. Write Compiled Mesh
+    all_uvs = []
+    uv_faces = []
+    uv_idx_counter = 1
+    for i, face in enumerate(original_faces):
+        face_uvs = uv_coords_per_face[i]
+        all_uvs.extend(face_uvs)
+        tris = triangulate([face])
+        for tri in tris:
+            uv_face = []
+            for v_idx in tri:
+                try:
+                    original_vertex_index_in_face = list(face).index(v_idx)
+                    uv_face.append(uv_idx_counter + original_vertex_index_in_face)
+                except ValueError:
+                    uv_face.append(uv_idx_counter)
+            uv_faces.append(uv_face)
+        uv_idx_counter += len(face_uvs)
+    
+    write_compiled_obj(cobj_path, vertices, all_uvs, triangulated_faces, uv_faces, mtl_path.name, material_name)
+
+    # 4. Create and Write Build Metadata
+    # Look for metadata.json in the same directory as the source mesh
+    source_meta_path = source_path.parent / "metadata.json"
+    source_meta = {}
+    if source_meta_path.exists():
+        with open(source_meta_path, 'r') as f:
+            try:
+                source_meta = json.load(f)
+                print(f"Loaded source metadata from {source_meta_path.relative_to(Path(args.source_dir))}")
+            except json.JSONDecodeError:
+                print(f"Warning: Invalid JSON in {source_meta_path}. Starting with empty metadata.", file=sys.stderr)
+
+    # Create build-specific metadata from source metadata
+    build_meta = create_build_metadata(source_meta, schema_path, source_filename)
+    if not build_meta:
+        print(f"❌ Failed to create build metadata for {source_filename}")
+        return None
+        
+    # Write the build metadata
+    write_build_metadata(metadata_path, build_meta)
+    print(f"Successfully compiled '{mesh_name}'.\n")
+    return str(metadata_path.relative_to(build_dir))
+
+def main():
+    parser = argparse.ArgumentParser(description="Compile mesh assets from the source directory to the build directory.")
+    parser.add_argument("--source_dir", default="assets/meshes", help="Source directory for mesh assets.")
+    parser.add_argument("--build_dir", default="build/assets/meshes", help="Build directory for compiled assets.")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files in the build directory.")
+    global args
+    args = parser.parse_args()
+
+    source_dir = Path(args.source_dir)
+    build_dir = Path(args.build_dir)
+    build_dir.mkdir(parents=True, exist_ok=True)
+    
+    schema_path = source_dir / "schema.json"
+    if not schema_path.exists():
+        print(f"ERROR: schema.json not found in '{source_dir}'.", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Scanning '{source_dir}' for source meshes (.obj, .mesh)...")
+    mesh_files = list(source_dir.glob("**/*.obj")) + list(source_dir.glob("**/*.mesh"))
+    
+    if not mesh_files:
+        print("No source meshes found to compile.")
+        # Create an empty index if no meshes are found
+        index_path = build_dir / "index.json"
+        with open(index_path, 'w') as f:
+            json.dump([], f)
+        return
+
+    index_paths = []
+    processed_meshes = set()  # Track processed mesh directories to avoid duplicates
+    
+    for mesh_path in mesh_files:
+        # Skip metadata files
+        if mesh_path.suffix == '.json':
+            continue
+            
+        # Create a unique identifier for this mesh based on its directory and stem
+        mesh_id = f"{mesh_path.parent.relative_to(source_dir)}/{mesh_path.stem}"
+        
+        if mesh_id in processed_meshes:
+            print(f"Skipping duplicate mesh: {mesh_path.name} (already processed from same directory)")
+            continue
+            
+        processed_meshes.add(mesh_id)
+        meta_path = compile_mesh_asset(mesh_path, build_dir, schema_path, args.overwrite)
+        if meta_path:
+            index_paths.append(meta_path)
+        
+    # Write the index file (remove duplicates just in case)
+    unique_index_paths = sorted(list(set(index_paths)))
+    index_path = build_dir / "index.json"
+    with open(index_path, 'w') as f:
+        json.dump(unique_index_paths, f, indent=4)
+        
+    print(f"Asset compilation complete. Index written to {index_path}")
+
+if __name__ == "__main__":
+    main()
+

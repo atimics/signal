@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mesh Viewer & Data Pipeline</title>
+    <title>CGame Mesh Viewer</title>
     <style>
         body { 
             margin: 0; 
@@ -50,60 +50,49 @@
             padding-top: 5px;
         }
         .mesh-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
+            padding: 8px 12px;
+            margin: 2px 0;
+            background-color: #3a3d41;
+            border-radius: 4px;
             cursor: pointer;
-            border-radius: 5px;
-            margin-bottom: 8px;
             transition: background-color 0.2s;
         }
-        .mesh-item:hover, .mesh-item.active {
-            background-color: #3a3d41;
+        .mesh-item:hover {
+            background-color: #4a4d51;
         }
-        .thumbnail {
-            width: 40px;
-            height: 40px;
-            margin-right: 12px;
-            background-color: #333;
-            border: 1px solid #444;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            flex-shrink: 0;
-        }
-        .thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .mesh-info {
-            flex-grow: 1;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-        .mesh-name {
-            font-weight: 600;
-        }
-        .mesh-tags {
-            font-size: 0.8em;
-            color: #888;
+        .mesh-item.selected {
+            background-color: #0e639c;
         }
         #main-content {
             flex-grow: 1;
+            position: relative;
         }
         #viewer-container {
+            width: 100%;
             height: 100%;
+            position: relative;
         }
         canvas { display: block; }
+        .status-message {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            max-width: 300px;
+            z-index: 1000;
+            border-left: 4px solid #0e639c;
+        }
     </style>
 </head>
 <body>
     <div id="sidebar">
         <div id="sidebar-header">
-            <h2>Meshes</h2>
+            <h2>CGame Meshes</h2>
         </div>
         <div id="mesh-list-container"></div>
     </div>
@@ -120,74 +109,80 @@
         let camera, scene, renderer, controls;
         const meshListContainer = document.getElementById('mesh-list-container');
         const viewerContainer = document.getElementById('viewer-container');
-        const rootAssetsPath = '../../assets/meshes/';
+        const sourceAssetsRoot = '/assets/meshes/';
 
         async function fetchAndDisplayMeshes() {
             try {
-                const metaResponse = await fetch(`${rootAssetsPath}metadata.json`);
-                const metadata = await metaResponse.json();
+                const indexResponse = await fetch(`${sourceAssetsRoot}index.json`);
+                const meshIndex = await indexResponse.json();
 
                 meshListContainer.innerHTML = '';
-                for (const group of metadata) {
-                    const folderName = group.folder;
-                    const meshes = group.meshes;
+                const meshesByGroup = {};
 
+                for (const metaPath of meshIndex) {
+                    const fullMetaPath = `${sourceAssetsRoot}${metaPath}`;
+                    const metaResponse = await fetch(fullMetaPath);
+                    const meta = await metaResponse.json();
+                    
+                    const group = getDirectoryName(metaPath);
+                    if (!meshesByGroup[group]) {
+                        meshesByGroup[group] = [];
+                    }
+
+                    meshesByGroup[group].push({
+                        meta,
+                        basePath: `${sourceAssetsRoot}${group}/`
+                    });
+                }
+
+                for (const groupName in meshesByGroup) {
                     const details = document.createElement('details');
                     details.open = true;
                     
                     const summary = document.createElement('summary');
-                    summary.textContent = folderName;
+                    summary.textContent = groupName;
                     details.appendChild(summary);
 
                     const folderContent = document.createElement('div');
                     folderContent.className = 'folder-content';
 
-                    for (const meshFile in meshes) {
-                        const meta = meshes[meshFile];
-                        const meshItem = createMeshListItem(folderName, meshFile, meta);
+                    meshesByGroup[groupName].sort((a, b) => a.meta.name.localeCompare(b.meta.name));
+
+                    for (const meshData of meshesByGroup[groupName]) {
+                        const meshItem = createMeshListItem(meshData);
                         folderContent.appendChild(meshItem);
                     }
                     details.appendChild(folderContent);
                     meshListContainer.appendChild(details);
                 }
-            } catch (e) {
-                console.error("Fatal: Could not load or parse metadata.json.", e);
-                alert("Could not load metadata.json. The application cannot start.");
+
+            } catch (error) {
+                console.error('Failed to load source mesh index:', error);
+                meshListContainer.innerHTML = '<p style="color: #ff6b6b; padding: 15px;">Failed to load source assets. Ensure you are running a local web server from the project root.</p>';
             }
         }
 
-        function createMeshListItem(folder, file, meta) {
+        function getDirectoryName(path) {
+            const lastSlash = path.lastIndexOf('/');
+            return lastSlash === -1 ? '' : path.substring(0, lastSlash);
+        }
+
+        function createMeshListItem(meshData) {
+            const { meta } = meshData;
             const listItem = document.createElement('div');
             listItem.className = 'mesh-item';
-            listItem.dataset.folder = folder;
-            listItem.dataset.file = file;
-
-            const thumb = document.createElement('div');
-            thumb.className = 'thumbnail';
-            const thumbImg = document.createElement('img');
             
-            const textureFile = meta.texture || file.replace(/\.obj$/, '.png');
-            thumbImg.src = `${rootAssetsPath}${folder}/${textureFile}`;
-            thumbImg.onerror = () => { thumb.innerHTML = 'N/A'; };
-            thumb.appendChild(thumbImg);
-
-            const info = document.createElement('div');
-            info.className = 'mesh-info';
-            const nameEl = document.createElement('div');
-            nameEl.className = 'mesh-name';
-            nameEl.textContent = meta.name;
-            const tagsEl = document.createElement('div');
-            tagsEl.className = 'mesh-tags';
-            tagsEl.textContent = (meta.tags || []).join(', ');
-            info.appendChild(nameEl);
-            info.appendChild(tagsEl);
-
-            listItem.append(thumb, info);
-
+            listItem.innerHTML = `
+                <div style="font-weight: 500;">📄 ${meta.name}</div>
+                <div style="font-size: 12px; color: #888; margin-top: 2px;">
+                    Source • ${meta.filename}
+                </div>
+            `;
+            
             listItem.addEventListener('click', () => {
-                document.querySelectorAll('.mesh-item').forEach(item => item.classList.remove('active'));
-                listItem.classList.add('active');
-                loadMesh(folder, file, meta);
+                document.querySelectorAll('.mesh-item').forEach(item => item.classList.remove('selected'));
+                listItem.classList.add('selected');
+                loadMesh(meshData);
             });
             
             return listItem;
@@ -216,49 +211,58 @@
             
             onWindowResize();
             fetchAndDisplayMeshes().then(() => {
-                const sunMeshItem = document.querySelector('[data-file="sun.obj"]');
-                if (sunMeshItem) {
-                    sunMeshItem.click();
+                const firstMeshItem = document.querySelector('.mesh-item');
+                if (firstMeshItem) {
+                    firstMeshItem.click();
                 }
             });
             animate();
         }
 
-        async function loadMesh(folder, file, meta) {
+        async function loadMesh(meshData) {
+            const { meta, basePath } = meshData;
+            
             try {
-                const assetPath = `${rootAssetsPath}${folder}/`;
+                console.log(`Loading mesh: ${meta.name} from ${basePath}${meta.filename}`);
                 
-                // 1. Always load the geometry first
+                const meshURL = `${basePath}${meta.filename}`;
+                const meshText = await (await fetch(meshURL)).text();
                 const objLoader = new OBJLoader();
-                objLoader.setPath(assetPath);
-                const object = await objLoader.loadAsync(file);
+                let object;
 
-                // 2. Determine the material
-                let material;
-                if (meta.texture) {
-                    // If texture is defined in metadata, create a basic textured material
-                    console.log(`Found texture for ${file}, creating MeshBasicMaterial.`);
-                    const textureLoader = new THREE.TextureLoader();
-                    textureLoader.setPath(assetPath);
-                    const texture = await textureLoader.loadAsync(meta.texture);
+                try {
+                    // Try loading with materials first
+                    const mtlURL = `${basePath}${meta.mtl}`;
+                    const mtlText = await (await fetch(mtlURL)).text();
+                    const mtlLoader = new MTLLoader();
+                    const materials = mtlLoader.parse(mtlText, basePath);
+                    materials.preload();
+                    objLoader.setMaterials(materials);
                     
-                    material = new THREE.MeshBasicMaterial({ 
-                        map: texture,
-                        side: THREE.DoubleSide // Use DoubleSide to prevent issues with normals
-                    });
-                } else {
-                    // If no texture, create a default lit material
-                    console.log(`No texture found for ${file}, creating default MeshPhongMaterial.`);
-                    material = new THREE.MeshPhongMaterial({
-                        color: 0xcccccc,
-                        side: THREE.DoubleSide
-                    });
+                    object = objLoader.parse(meshText);
+                    showMessage(`✅ Loaded: ${meta.name}`, `Source: ${meta.filename}`);
+
+                } catch (materialError) {
+                    console.warn(`Could not load materials for ${meta.name}, loading without:`, materialError);
+                    // Fallback to loading without materials
+                    object = objLoader.parse(meshText);
+                    showMessage(`⚠️ Loaded without materials: ${meta.name}`, `Source: ${meta.filename} (MTL or texture failed)`);
                 }
 
-                // 3. Apply the material to the object
+                // Apply transformations and add to scene
                 object.traverse((child) => {
                     if (child.isMesh) {
-                        child.material = material;
+                        if (!child.material) {
+                             child.material = new THREE.MeshPhongMaterial({
+                                color: 0xcccccc,
+                                side: THREE.DoubleSide
+                            });
+                        }
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(m => m.side = THREE.DoubleSide);
+                        } else {
+                            child.material.side = THREE.DoubleSide;
+                        }
                     }
                 });
                 
@@ -266,21 +270,68 @@
                 centerAndAddObject(object);
 
             } catch (error) {
-                console.error(`Could not load mesh: ${file}`, error);
-                clearScene();
+                console.error(`Failed to load mesh: ${meta.name}`, error);
+                showMessage(`❌ Failed to load: ${meta.name}`, `Error: ${error.message}`);
             }
+        }
+
+        function showMessage(title, details) {
+            const existingMessage = document.querySelector('.status-message');
+            if (existingMessage) existingMessage.remove();
+
+            const message = document.createElement('div');
+            message.className = 'status-message';
+            message.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 4px;">${title}</div>
+                <div style="font-size: 12px; opacity: 0.8;">${details}</div>
+            `;
+            viewerContainer.appendChild(message);
+            
+            setTimeout(() => message.remove(), 5000);
         }
         
         function clearScene() {
-            const toRemove = scene.children.filter(child => child.isMesh || child.isGroup);
-            toRemove.forEach(child => scene.remove(child));
+            const toRemove = [];
+            scene.traverse(child => {
+                if (child.isMesh || child.isGroup) toRemove.push(child);
+            });
+            toRemove.forEach(child => {
+                scene.remove(child);
+                if (child.geometry) child.geometry.dispose();
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => {
+                            if (m.map) m.map.dispose();
+                            m.dispose();
+                        });
+                    } else {
+                        if (child.material.map) child.material.map.dispose();
+                        child.material.dispose();
+                    }
+                }
+            });
         }
 
         function centerAndAddObject(object) {
             const box = new THREE.Box3().setFromObject(object);
             const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fitHeightDistance = maxDim / (2 * Math.atan(Math.PI * camera.fov / 360));
+            const fitWidthDistance = fitHeightDistance / camera.aspect;
+            const distance = Math.max(fitHeightDistance, fitWidthDistance);
+
             object.position.sub(center);
             scene.add(object);
+
+            camera.position.copy(center);
+            camera.position.z += distance * 1.2;
+            camera.near = distance / 100;
+            camera.far = distance * 100;
+            camera.updateProjectionMatrix();
+
+            controls.target.copy(center);
+            controls.update();
         }
 
         function onWindowResize() {

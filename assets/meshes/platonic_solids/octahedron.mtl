@@ -1,5 +1,0 @@
-newmtl Octahedron
-Ke 1.0 1.0 1.0
-map_Ke octahedron_texture.png
-Kd 1.0 1.0 1.0
-map_Kd octahedron_texture.png

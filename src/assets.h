@@ -3,34 +3,41 @@
 
 #include "core.h"
 #include <stdint.h>
+#include <stdbool.h>
+#include <SDL.h>
 
 // ============================================================================
-// ASSET SYSTEM
+// ASSET DEFINITIONS
 // ============================================================================
 
-// Asset types
-typedef enum {
-    ASSET_TYPE_MESH,
-    ASSET_TYPE_TEXTURE,
-    ASSET_TYPE_MATERIAL
-} AssetType;
+// A single vertex with all its attributes
+typedef struct {
+    Vector3 position;
+    Vector3 normal;
+    Vector2 tex_coord;
+} Vertex;
 
-// Mesh data structure (replaces SimpleMesh)
+// Mesh structure with all necessary data for rendering
 typedef struct {
     char name[64];
-    Vector3* vertices;
-    Vector3* normals;      // For future lighting
-    uint32_t* indices;
-    uint32_t vertex_count;
-    uint32_t index_count;
+    char material_name[64];  // Material name from usemtl directive
+    Vertex* vertices; // Unified vertex data
+    int vertex_count;
+    int* indices;
+    int index_count;
     bool loaded;
 } Mesh;
 
-// Texture data (for future use)
+// Forward declare SDL_Texture for header
+struct SDL_Texture;
+struct SDL_Renderer;
+
+// Texture data with SDL support
 typedef struct {
     char name[64];
     char filepath[256];
     uint32_t width, height;
+    struct SDL_Texture* sdl_texture;  // SDL texture for rendering
     bool loaded;
 } Texture;
 
@@ -69,9 +76,9 @@ bool assets_init(AssetRegistry* registry, const char* asset_root);
 void assets_cleanup(AssetRegistry* registry);
 
 // Load individual assets
-bool load_obj_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
+bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
 bool load_material(AssetRegistry* registry, const char* filename);
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name);
+bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name, struct SDL_Renderer* renderer);
 
 // Asset lookup
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name);
@@ -80,14 +87,13 @@ Texture* assets_get_texture(AssetRegistry* registry, const char* name);
 
 // Utility functions
 void assets_list_loaded(AssetRegistry* registry);
-bool assets_load_all_in_directory(AssetRegistry* registry);
-bool load_assets_from_metadata(AssetRegistry* registry);
+bool assets_load_all_in_directory(AssetRegistry* registry, struct SDL_Renderer* renderer);
+bool load_assets_from_metadata(AssetRegistry* registry, struct SDL_Renderer* renderer);
+bool load_legacy_metadata(AssetRegistry* registry, struct SDL_Renderer* renderer);
+bool load_single_mesh_metadata(AssetRegistry* registry, struct SDL_Renderer* renderer, const char* metadata_path);
 
 // OBJ file parsing helpers
 bool parse_obj_file(const char* filepath, Mesh* mesh);
 bool parse_mtl_file(const char* filepath, AssetRegistry* registry);
-
-// Mesh generation (fallback for missing assets)
-void generate_fallback_meshes(AssetRegistry* registry);
 
 #endif // ASSETS_H

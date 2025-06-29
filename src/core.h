@@ -14,6 +14,11 @@ typedef struct {
 } Vector3;
 
 typedef struct {
+    float u, v;
+} Vector2;
+
+// Quaternion for rotations
+typedef struct {
     float x, y, z, w;
 } Quaternion;
 

@@ -1,7 +1,9 @@
 #include "core.h"
 #include "systems.h"
+#include "render.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <math.h>
 #include <SDL.h>
@@ -204,38 +206,41 @@ void simulate_player_input(struct World* world, EntityID player_id, float time) 
     struct Physics* physics = entity_get_physics(world, player_id);
     if (!physics) return;
     
-    // Simulate player behavior: orbit around the sun with some exploration
-    float orbit_radius = 50.0f;
-    float orbit_speed = 8.0f;
+    // Gentle hovering movement for better camera demonstration
+    float hover_radius = 5.0f;        // Small radius
+    float hover_speed = 0.5f;         // Much slower
     
-    // Calculate desired orbital position
-    float desired_x = orbit_radius * cosf(time * orbit_speed / orbit_radius);
-    float desired_z = orbit_radius * sinf(time * orbit_speed / orbit_radius);
+    // Calculate gentle hovering position around the starting point (30, 0, 0)
+    float center_x = 30.0f;
+    float center_z = 0.0f;
+    
+    float desired_x = center_x + hover_radius * cosf(time * hover_speed);
+    float desired_z = center_z + hover_radius * sinf(time * hover_speed);
     
     // Get current position
     struct Transform* transform = entity_get_transform(world, player_id);
     if (!transform) return;
     
-    // Simple steering toward orbital path
+    // Gentle steering toward hovering position
     float dx = desired_x - transform->position.x;
     float dz = desired_z - transform->position.z;
     
-    // Apply thrust toward desired position (simplified)
-    physics->acceleration.x = dx * 0.5f;
-    physics->acceleration.z = dz * 0.5f;
+    // Much gentler acceleration
+    physics->acceleration.x = dx * 0.1f;
+    physics->acceleration.z = dz * 0.1f;
     
-    // Add some vertical movement for interest
-    physics->acceleration.y = sinf(time * 2.0f) * 2.0f;
+    // Gentle vertical bobbing
+    physics->acceleration.y = sinf(time * 1.0f) * 0.5f;
 }
 
-void load_spaceport_scene(struct World* world, EntityID* player_id) {
-    printf("🏗️  Loading spaceport scene from data...\n");
+void load_scene_by_name(struct World* world, const char* scene_name, EntityID* player_id) {
+    printf("🏗️  Loading scene '%s' from data...\n", scene_name);
     
     DataRegistry* data_registry = get_data_registry();
     
     // Load the scene from template
-    if (!load_scene(world, data_registry, "spaceport_alpha")) {
-        printf("❌ Failed to load spaceport scene\n");
+    if (!load_scene(world, data_registry, scene_name)) {
+        printf("❌ Failed to load scene: %s\n", scene_name);
         return;
     }
     
@@ -244,7 +249,7 @@ void load_spaceport_scene(struct World* world, EntityID* player_id) {
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
         if (entity->component_mask & COMPONENT_PLAYER) {
-            *player_id = i + 1;  // Entity IDs are 1-based
+            *player_id = entity->id;
             break;
         }
     }
@@ -252,16 +257,35 @@ void load_spaceport_scene(struct World* world, EntityID* player_id) {
     if (*player_id != INVALID_ENTITY) {
         printf("🎯 Player found: Entity ID %d\n", *player_id);
     } else {
-        printf("❌ No player entity found in scene\n");
+        printf("⚠️ No player entity found in scene.\n");
+    }
+    
+    // Set up scene lighting
+    RenderConfig* render_config = get_render_config();
+    if (render_config) {
+        lighting_set_ambient(&render_config->lighting, (Vector3){0.1f, 0.15f, 0.2f}, 0.3f);
+        lighting_add_directional_light(&render_config->lighting, 
+                                      (Vector3){0.3f, -0.7f, 0.2f}, 
+                                      (Vector3){0.4f, 0.5f, 0.6f}, 
+                                      0.4f);
+        printf("💡 Scene lighting configured\n");
     }
     
     printf("🌍 Scene loaded with %d entities\n", world->entity_count);
 }
 
-int main(void) {
+int main(int argc, char* argv[]) {
     printf("🎮 CGGame - Component-Based Engine\n");
     printf("===================================\n\n");
     
+    const char* scene_to_load = "mesh_test"; // Default scene
+    if (argc > 1) {
+        scene_to_load = argv[1];
+        printf("✅ Command-line argument detected, attempting to load scene: %s\n", scene_to_load);
+    } else {
+        printf("ℹ️ No scene specified, loading default: %s\n", scene_to_load);
+    }
+
     srand((unsigned int)time(NULL));
     
     // Initialize world
@@ -280,7 +304,7 @@ int main(void) {
     
     // Create entities
     EntityID player;
-    load_spaceport_scene(&world, &player);
+    load_scene_by_name(&world, scene_to_load, &player);
     
     printf("\n🎮 Starting simulation...\n");
     printf("Press Ctrl+C or close window to exit\n\n");
@@ -311,7 +335,9 @@ int main(void) {
         if (!running) break;
         
         // Simulate player input
-        simulate_player_input(&world, player, time);
+        if (player != INVALID_ENTITY) {
+            simulate_player_input(&world, player, time);
+        }
         
         // Update world
         world_update(&world, dt);

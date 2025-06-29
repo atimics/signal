@@ -81,6 +81,9 @@ void cockpit_ui_cleanup(CockpitUI* ui) {
 void cockpit_ui_update(CockpitUI* ui, struct World* world, EntityID player_id, float delta_time) {
     if (!ui || !ui->initialized || !world) return;
     
+    // Suppress unused parameter warning
+    (void)delta_time;
+    
     // Update radar
     radar_update(&ui->radar, world, player_id);
     

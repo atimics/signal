@@ -1,32 +1,168 @@
 # Project Vision: A Living, Breathing Universe
 
-This document outlines the long-term vision for the 3D vector graphics space game. It serves as a guide for future development, ensuring that all new features and architectural decisions align with the project's core goals.
+This document outlines the long-term vision for the CGame Entity-Component-System space simulation engine. It serves as a guide for future development, ensuring that all new features and architectural decisions align with the project's core goals of creating emergent, AI-driven gameplay experiences.
 
-## 1. Core Philosophy: Emergent Narrative
+## 1. Core Philosophy: Emergent Narrative Through Simulation
 
-The central goal is to create a **living, breathing universe** that is not driven by a predefined story, but by the interactions of its inhabitants. The player is not the center of the universe, but a participant in a larger simulation. The narrative should emerge organically from the actions of the player and the AI-driven entities.
+The central goal is to create a **living, breathing universe** where narrative emerges organically from the interactions of thousands of autonomous entities. Rather than following predefined storylines, players participate in a dynamic simulation where every entity—from traders to pirates to faction leaders—has its own goals, personalities, and decision-making capabilities.
 
-## 2. Architectural Pillars
+### Key Principles
+- **Player as Participant**: The player is not the center of the universe, but one actor among many in a larger simulation
+- **Emergent Storytelling**: Stories arise from entity interactions, faction dynamics, and economic pressures—not scripted events
+- **Persistent Consequences**: Player actions have lasting effects on faction relationships, territorial control, and universe state
+- **Autonomous Entities**: AI-driven characters pursue their own goals independent of player presence
 
-To achieve this vision, the architecture will be built on the following pillars:
+## 2. Architectural Foundation: High-Performance ECS
 
-*   **A Scalable, Data-Oriented Design:** The engine will be designed to support thousands of entities, each with its own state and behavior. This will be achieved through a data-oriented design that prioritizes cache-friendly data structures and efficient iteration.
-*   **A Powerful and Flexible AI System:** The AI system is the heart of the living universe. It will be designed to be highly flexible, allowing for a wide range of behaviors and personalities. The AI will be able to learn, adapt, and react to the player's actions in a believable way.
-*   **A Rich and Dynamic World:** The universe will be a dynamic place, with a variety of celestial bodies, factions, and points of interest. The world will be procedurally generated to ensure a unique experience for every player.
-*   **A Robust and Extensible Modding API:** The engine will be designed to be easily extensible, with a robust modding API that allows the community to create new content, from ships and weapons to entire new storylines.
+The vision is enabled by a sophisticated Entity-Component-System architecture designed for scale and performance:
 
-## 3. Key Features
+### Technical Pillars
 
-The following key features will be implemented to support the project's vision:
+#### **Scalable Data-Oriented Design**
+- **Entity-Component-System**: Supports thousands of entities with modular, composable components
+- **Cache-Friendly Data Layout**: Components stored in contiguous arrays for optimal CPU performance
+- **Scheduled Systems**: Each system runs at optimal frequency (Physics: 60Hz, AI: 2-10Hz with LOD)
+- **Memory Efficiency**: Minimal allocation in game loop, extensive use of object pooling
 
-*   **Dynamic Faction System:** The universe will be populated by a variety of factions, each with its own goals, territories, and relationships with other factions. The player's actions will have a direct impact on the balance of power in the universe.
-*   **Procedural Quest Generation:** Quests will be procedurally generated based on the state of the universe. This will ensure that there is always something new and interesting to do, and that the player's actions have a meaningful impact on the world.
-*   **Economic Simulation:** The universe will have a functioning economy, with resources being produced, traded, and consumed. The player can participate in the economy as a trader, a miner, or a pirate.
-*   **Player-Driven Narrative:** The player's actions will have a direct impact on the narrative. There will be no "main quest," but rather a series of emergent storylines that are created by the player's interactions with the world.
+#### **Advanced AI Architecture**
+- **Autonomous Entity Behavior**: Each entity has independent goals, decision-making, and personality
+- **Level-of-Detail AI**: Update frequency scales with distance and importance
+- **Emergent Faction Dynamics**: Faction behavior emerges from individual entity interactions
+- **Neural AI Integration**: Future LLM integration for dynamic dialog and personality systems
 
-## 4. Technology Stack
+#### **Dynamic Universe Simulation**
+- **Procedural Content**: Faction territories, trade routes, and conflicts generated dynamically
+- **Economic Simulation**: Resource production, trade networks, and market dynamics
+- **Territorial Control**: Factions expand, contract, and compete for system control
+- **Event-Driven Narrative**: Major events emerge from simulation state, not predetermined scripts
 
-*   **Language:** C
-*   **Graphics:** SDL2
-*   **AI:** Custom engine with llama.cpp integration
-*   **Build System:** Make
+#### **Data-Driven Flexibility**
+- **Configurable Entities**: Ships, stations, and characters defined in external data files
+- **Modular Components**: Easy addition of new behaviors and capabilities
+- **Scene System**: Complete universe sectors loaded from configuration files
+- **Extensible Architecture**: Clean interfaces for modding and content creation
+
+## 3. Gameplay Vision: Emergent Space Opera
+
+### Dynamic Faction System
+The universe is populated by competing factions with emergent behaviors:
+
+- **Territorial Expansion**: Factions establish and defend systems based on strategic value
+- **Economic Warfare**: Trade disruption, blockades, and resource competition
+- **Diplomatic Relations**: Alliances and conflicts emerge from faction interactions
+- **Player Impact**: Actions influence faction standings and territorial control
+
+### Procedural Quest Generation
+Missions arise organically from universe state:
+
+- **Trade Opportunities**: Based on supply/demand imbalances and trade route safety
+- **Conflict Zones**: Emerge from faction territorial disputes
+- **Escort Missions**: Generated by trade convoy needs and piracy threats
+- **Exploration Contracts**: Based on unexplored system data and scientific interests
+
+### Economic Simulation
+A functioning universe economy drives gameplay:
+
+- **Resource Production**: Asteroid mining, manufacturing, and agricultural systems
+- **Trade Networks**: Dynamic routes based on supply, demand, and security
+- **Market Fluctuations**: Prices respond to events, conflicts, and player actions
+- **Player Roles**: Trader, miner, escort, pirate—each affecting economic balance
+
+### Player-Driven Narrative
+Stories emerge from player choices and their consequences:
+
+- **Reputation Systems**: Actions affect standing with factions and individuals
+- **Territorial Influence**: Successful operations can shift faction control
+- **Economic Impact**: Large-scale trading or piracy affects market stability
+- **Butterfly Effects**: Small actions can trigger larger universe changes
+
+## 4. Technical Implementation Roadmap
+
+### Phase 1: Core ECS Foundation ✅
+- Entity-Component-System architecture
+- Basic physics and collision systems
+- 3D rendering with SDL2
+- Data-driven entity creation
+
+### Phase 2: AI and Simulation Systems 🔄
+- **Advanced AI Behaviors**: Goal-oriented action planning, behavior trees
+- **Faction System**: Territory control, diplomatic relations, conflict resolution
+- **Economic Engine**: Resource production, trade route calculation, market dynamics
+- **Event System**: Universe-wide events and consequence propagation
+
+### Phase 3: Neural AI Integration 🎯
+- **LLM-Driven Dialog**: Dynamic conversations based on entity personality and context
+- **Procedural Personalities**: AI entities with unique communication styles and goals
+- **Adaptive Behavior**: Entities learn from player actions and adjust strategies
+- **Emergent Storylines**: AI-generated plot threads based on universe state
+
+### Phase 4: Universe Scale and Polish 📈
+- **Massive Scale**: Optimize for 10,000+ entities across multiple star systems
+- **Procedural Generation**: Dynamic universe creation with consistent physics
+- **Multiplayer Foundation**: Client-server architecture for shared universe
+- **Content Creation Tools**: Visual editors for entities, factions, and scenarios
+
+### Phase 5: Community and Modding 🌟
+- **Scripting Interface**: Lua/JavaScript integration for custom behaviors
+- **Asset Pipeline**: Tools for importing ships, stations, and environments
+- **Scenario Editor**: Visual tools for creating custom campaigns and situations
+- **Workshop Integration**: Community sharing of mods, ships, and scenarios
+
+## 5. Technology Stack Evolution
+
+### Current Foundation
+- **Language**: C99 (performance and system control)
+- **Graphics**: SDL2 (cross-platform 3D rendering)
+- **Architecture**: Custom ECS (optimized for game simulation)
+- **Build System**: Make (simple, reliable, cross-platform)
+
+### Planned Integrations
+- **Neural AI**: llama.cpp or similar (for advanced dialog and behavior)
+- **Audio**: SDL2_mixer (3D positional audio)
+- **Networking**: Custom UDP protocol (low-latency multiplayer)
+- **Scripting**: Lua (safe, fast scripting for modding)
+- **Physics**: Custom (optimized for space simulation needs)
+
+## 6. Success Metrics
+
+### Technical Performance
+- **Entity Scale**: Support 5,000+ entities at 60 FPS
+- **AI Efficiency**: Complex behavior with minimal CPU impact
+- **Memory Usage**: Efficient component storage and minimal fragmentation
+- **Load Times**: Fast universe sector loading and streaming
+
+### Gameplay Experience
+- **Emergent Stories**: Player reports of unexpected, engaging narratives
+- **Faction Dynamics**: Observable, believable faction behavior evolution
+- **Economic Depth**: Meaningful economic gameplay affecting universe state
+- **Replay Value**: Different playthroughs produce distinct experiences
+
+### Community Engagement
+- **Modding Activity**: Active community creating ships, factions, scenarios
+- **Content Sharing**: Players sharing stories and discoveries
+- **Technical Interest**: Developers studying ECS implementation and AI techniques
+- **Educational Value**: Engine serves as learning resource for game development
+
+## 7. Design Principles for Development
+
+### Performance First
+- Every system must justify its computational cost
+- Profile and optimize before adding new features
+- Scale considerations in all architectural decisions
+
+### Modularity and Extensibility
+- Clean interfaces between systems
+- Easy addition of new component types
+- Data-driven configuration over hardcoded behavior
+
+### Emergent Complexity from Simple Rules
+- Simple entity behaviors should combine to create complex outcomes
+- Avoid scripted events in favor of systemic interactions
+- Let the simulation surprise both players and developers
+
+### Player Agency and Consequence
+- Every player action should have potential universe impact
+- Avoid invisible barriers or artificial limitations
+- Consequences should be logical and observable
+
+This vision guides the development of CGame as both a compelling space simulation and a demonstration of advanced game architecture techniques. The goal is to create a universe that feels alive, responsive, and genuinely surprising—where the most interesting stories are the ones that emerge naturally from the simulation itself.

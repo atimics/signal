@@ -5,6 +5,9 @@ build/
 *.exe
 cgame
 
+# Asset Build artifacts
+build/assets/
+
 # macOS
 .DS_Store
 .AppleDouble
@@ -83,3 +86,5 @@ assets/**/*.temp
 # Keep important asset metadata
 !assets/meshes/metadata.json
 !assets/textures/metadata.json
+
+*.png

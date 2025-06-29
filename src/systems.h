@@ -3,6 +3,7 @@
 
 #include "core.h"
 #include "data.h"
+#include "render.h"  // For RenderConfig
 
 // ============================================================================
 // SYSTEM SCHEDULER
@@ -66,5 +67,8 @@ void scheduler_set_frequency(struct SystemScheduler* scheduler, SystemType type,
 
 // Data access
 DataRegistry* get_data_registry(void);
+
+// Global system accessors
+RenderConfig* get_render_config(void);
 
 #endif // SYSTEMS_H

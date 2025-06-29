@@ -9,7 +9,7 @@
 
 // Global render configuration and asset registry
 static RenderConfig g_render_config;
-static AssetRegistry g_asset_registry;
+AssetRegistry g_asset_registry;  // Make this globally accessible
 static DataRegistry g_data_registry;
 
 // ============================================================================
@@ -22,7 +22,7 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     memset(scheduler, 0, sizeof(struct SystemScheduler));
     
     // Initialize asset system first
-    if (!assets_init(&g_asset_registry, "/Users/ratimics/develop/cgame/assets")) {
+    if (!assets_init(&g_asset_registry, "/Users/ratimics/develop/cgame/build/assets")) {
         printf("❌ Failed to initialize asset system\n");
         return false;
     }
@@ -35,18 +35,10 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     
     // Load entity and scene templates
     load_entity_templates(&g_data_registry, "templates/entities.txt");
+    load_scene_templates(&g_data_registry, "scenes/mesh_test.txt");
     load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
     
-    // Load assets from files
-    printf("🔍 Loading assets...\n");
-    assets_load_all_in_directory(&g_asset_registry);
-    
-    // Print loaded assets and templates
-    assets_list_loaded(&g_asset_registry);
-    list_entity_templates(&g_data_registry);
-    list_scene_templates(&g_data_registry);
-    
-    // Initialize render system with asset registry
+    // Initialize render system with asset registry FIRST
     if (!render_init(&g_render_config, &g_asset_registry, 1200.0f, 800.0f)) {
         printf("❌ Failed to initialize render system\n");
         return false;
@@ -54,6 +46,15 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     
     // Set camera for zoomed-out solar system view
     camera_set_position(&g_render_config.camera, (Vector3){0, 100, 300});  // Position camera above and back
+    
+    // Load assets from files (now that we have a renderer for textures)
+    printf("🔍 Loading assets...\n");
+    assets_load_all_in_directory(&g_asset_registry, g_render_config.renderer);
+    
+    // Print loaded assets and templates
+    assets_list_loaded(&g_asset_registry);
+    list_entity_templates(&g_data_registry);
+    list_scene_templates(&g_data_registry);
     
     // Initialize system configurations
     scheduler->systems[SYSTEM_PHYSICS] = (SystemInfo){
@@ -235,6 +236,9 @@ void physics_system_update(struct World* world, float delta_time) {
 void collision_system_update(struct World* world, float delta_time) {
     if (!world) return;
     
+    // Suppress unused parameter warning
+    (void)delta_time;
+    
     uint32_t collision_checks = 0;
     uint32_t collisions_found = 0;
     
@@ -277,9 +281,16 @@ void collision_system_update(struct World* world, float delta_time) {
             if (distance < combined_radius) {
                 collisions_found++;
                 
-                // Fire collision event (for now, just log)
-                printf("💥 Collision: Entity %d <-> Entity %d (dist: %.2f)\n",
-                       entity_a->id, entity_b->id, distance);
+                // Fire collision event (for now, just log but limit spam)
+                static int collision_count = 0;
+                if (collision_count < 10) {
+                    printf("💥 Collision: Entity %d <-> Entity %d (dist: %.2f)\n",
+                           entity_a->id, entity_b->id, distance);
+                    collision_count++;
+                } else if (collision_count == 10) {
+                    printf("💥 ... (collision logging suppressed after first 10)\n");
+                    collision_count++;
+                }
                 
                 // Simple collision response - separate objects
                 if (!col_a->is_trigger && !col_b->is_trigger) {
@@ -330,6 +341,9 @@ void collision_system_update(struct World* world, float delta_time) {
 
 void ai_system_update(struct World* world, float delta_time) {
     if (!world) return;
+    
+    // Suppress unused parameter warning
+    (void)delta_time;
     
     uint32_t ai_updates = 0;
     
@@ -447,3 +461,9 @@ DataRegistry* get_data_registry(void) {
 }
 
 // ============================================================================
+// GLOBAL SYSTEM ACCESSORS
+// ============================================================================
+
+RenderConfig* get_render_config(void) {
+    return &g_render_config;
+}

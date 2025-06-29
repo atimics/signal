@@ -1,0 +1,59 @@
+<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad0" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8F2A8" />
+      <stop offset="50%" stop-color="#9582B3" />
+      <stop offset="100%" stop-color="#9DAA81" />
+    </linearGradient>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#83F4EA" />
+      <stop offset="50%" stop-color="#D2DFF0" />
+      <stop offset="100%" stop-color="#F3F7B4" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#90DF9B" />
+      <stop offset="50%" stop-color="#83CC98" />
+      <stop offset="100%" stop-color="#B9C3FD" />
+    </linearGradient>
+    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D8A7F4" />
+      <stop offset="50%" stop-color="#A7A4B9" />
+      <stop offset="100%" stop-color="#93D38B" />
+    </linearGradient>
+    <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D2F1B6" />
+      <stop offset="50%" stop-color="#A6DC8F" />
+      <stop offset="100%" stop-color="#E3C296" />
+    </linearGradient>
+    <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#80EBBF" />
+      <stop offset="50%" stop-color="#EE9591" />
+      <stop offset="100%" stop-color="#80FDD9" />
+    </linearGradient>
+    <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E6FF97" />
+      <stop offset="50%" stop-color="#DACBEE" />
+      <stop offset="100%" stop-color="#F4FADE" />
+    </linearGradient>
+    <linearGradient id="grad7" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CFFCC5" />
+      <stop offset="50%" stop-color="#E9B6F1" />
+      <stop offset="100%" stop-color="#88E9C7" />
+    </linearGradient>
+    <linearGradient id="grad8" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#98F6C4" />
+      <stop offset="50%" stop-color="#89BE92" />
+      <stop offset="100%" stop-color="#80F9DF" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#111"/>
+  <polygon points="34.13333333333333,34.13333333333333 307.2,34.13333333333333 170.66666666666666,307.2" fill="url(#grad0)"/>
+  <polygon points="375.46666666666664,34.13333333333333 648.5333333333333,34.13333333333333 648.5333333333333,307.2 375.46666666666664,307.2" fill="url(#grad1)"/>
+  <polygon points="716.8,34.13333333333333 989.8666666666666,34.13333333333333 853.3333333333333,307.2" fill="url(#grad2)"/>
+  <polygon points="34.13333333333333,375.46666666666664 307.2,375.46666666666664 307.2,648.5333333333333 34.13333333333333,648.5333333333333" fill="url(#grad3)"/>
+  <polygon points="375.46666666666664,375.46666666666664 648.5333333333333,375.46666666666664 648.5333333333333,648.5333333333333 375.46666666666664,648.5333333333333" fill="url(#grad4)"/>
+  <polygon points="716.8,375.46666666666664 989.8666666666666,375.46666666666664 989.8666666666666,648.5333333333333 716.8,648.5333333333333" fill="url(#grad5)"/>
+  <polygon points="34.13333333333333,716.8 307.2,716.8 307.2,989.8666666666666 34.13333333333333,989.8666666666666" fill="url(#grad6)"/>
+  <polygon points="375.46666666666664,716.8 648.5333333333333,716.8 648.5333333333333,989.8666666666666 375.46666666666664,989.8666666666666" fill="url(#grad7)"/>
+  <polygon points="716.8,716.8 989.8666666666666,716.8 989.8666666666666,989.8666666666666 716.8,989.8666666666666" fill="url(#grad8)"/>
+</svg>

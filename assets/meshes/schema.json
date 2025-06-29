@@ -1,0 +1,43 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Mesh Metadata",
+    "description": "Schema for the metadata of a mesh.",
+    "type": "object",
+    "properties": {
+        "name": {
+            "description": "The display name of the mesh.",
+            "type": "string"
+        },
+        "filename": {
+            "description": "The filename of the .mesh file.",
+            "type": "string"
+        },
+        "tags": {
+            "description": "An array of strings that can be used to categorize the mesh.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "description": {
+            "description": "A brief description of the mesh.",
+            "type": "string"
+        },
+        "mtl": {
+            "description": "The filename of the .mtl file.",
+            "type": "string"
+        },
+        "texture": {
+            "description": "The filename of the .png texture file.",
+            "type": "string"
+        }
+    },
+    "required": [
+        "name",
+        "filename",
+        "tags",
+        "description",
+        "mtl",
+        "texture"
+    ]
+}

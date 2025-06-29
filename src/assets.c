@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <SDL.h>
+#include <SDL_image.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -31,17 +33,15 @@ void assets_cleanup(AssetRegistry* registry) {
     // Free all loaded meshes
     for (uint32_t i = 0; i < registry->mesh_count; i++) {
         Mesh* mesh = &registry->meshes[i];
-        if (mesh->vertices) {
-            free(mesh->vertices);
-            mesh->vertices = NULL;
-        }
-        if (mesh->normals) {
-            free(mesh->normals);
-            mesh->normals = NULL;
-        }
-        if (mesh->indices) {
-            free(mesh->indices);
-            mesh->indices = NULL;
+        if (mesh->vertices) free(mesh->vertices);
+        if (mesh->indices) free(mesh->indices);
+    }
+    
+    // Free all loaded textures
+    for (uint32_t i = 0; i < registry->texture_count; i++) {
+        Texture* texture = &registry->textures[i];
+        if (texture->sdl_texture) {
+            SDL_DestroyTexture(texture->sdl_texture);
         }
     }
     
@@ -49,7 +49,7 @@ void assets_cleanup(AssetRegistry* registry) {
 }
 
 // ============================================================================
-// OBJ FILE PARSING
+// COMPILED OBJ FILE PARSING (.cobj files from asset compiler)
 // ============================================================================
 
 bool parse_obj_file(const char* filepath, Mesh* mesh) {
@@ -57,78 +57,56 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     
     FILE* file = fopen(filepath, "r");
     if (!file) {
-        printf("❌ Failed to open OBJ file: %s\n", filepath);
+        printf("❌ Failed to open compiled mesh file: %s\n", filepath);
         return false;
     }
     
-    printf("📦 Loading OBJ: %s\n", filepath);
-    
     // Temporary storage for parsing
-    Vector3 temp_vertices[1024];
-    Vector3 temp_normals[1024];
-    uint32_t temp_indices[2048];
+    Vector3 temp_positions[4096];
+    Vector3 temp_normals[4096];
+    Vector2 temp_tex_coords[4096];
     
-    uint32_t vertex_count = 0;
-    uint32_t normal_count = 0;
-    uint32_t index_count = 0;
+    Vertex final_vertices[8192];
+    int final_indices[16384];
+    
+    int pos_count = 0;
+    int normal_count = 0;
+    int tex_coord_count = 0;
+    int final_vertex_count = 0;
+    int final_index_count = 0;
     
     char line[256];
     while (fgets(line, sizeof(line), file)) {
-        // Skip comments and empty lines
         if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
         
-        // Parse vertices
-        if (strncmp(line, "v ", 2) == 0) {
-            float x, y, z;
-            if (sscanf(line, "v %f %f %f", &x, &y, &z) == 3) {
-                if (vertex_count < 1024) {
-                    temp_vertices[vertex_count++] = (Vector3){x, y, z};
-                }
-            }
-        }
-        // Parse normals
-        else if (strncmp(line, "vn ", 3) == 0) {
-            float x, y, z;
-            if (sscanf(line, "vn %f %f %f", &x, &y, &z) == 3) {
-                if (normal_count < 1024) {
-                    temp_normals[normal_count++] = (Vector3){x, y, z};
-                }
-            }
-        }
-        // Parse faces (triangles only for now)
-        else if (strncmp(line, "f ", 2) == 0) {
-            int v1, v2, v3;
-            // Simple format: f v1 v2 v3
-            if (sscanf(line, "f %d %d %d", &v1, &v2, &v3) == 3) {
-                if (index_count + 2 < 2048) {
-                    // OBJ indices are 1-based, convert to 0-based
-                    temp_indices[index_count++] = v1 - 1;
-                    temp_indices[index_count++] = v2 - 1;
-                    temp_indices[index_count++] = v3 - 1;
-                }
-            }
-            // Format with texture coords: f v1/vt1 v2/vt2 v3/vt3
-            else if (sscanf(line, "f %d/%*d %d/%*d %d/%*d", &v1, &v2, &v3) == 3) {
-                if (index_count + 2 < 2048) {
-                    temp_indices[index_count++] = v1 - 1;
-                    temp_indices[index_count++] = v2 - 1;
-                    temp_indices[index_count++] = v3 - 1;
-                }
-            }
-            // Format with normals: f v1//vn1 v2//vn2 v3//vn3
-            else if (sscanf(line, "f %d//%*d %d//%*d %d//%*d", &v1, &v2, &v3) == 3) {
-                if (index_count + 2 < 2048) {
-                    temp_indices[index_count++] = v1 - 1;
-                    temp_indices[index_count++] = v2 - 1;
-                    temp_indices[index_count++] = v3 - 1;
-                }
-            }
-            // Full format: f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3
-            else if (sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &v1, &v2, &v3) == 3) {
-                if (index_count + 2 < 2048) {
-                    temp_indices[index_count++] = v1 - 1;
-                    temp_indices[index_count++] = v2 - 1;
-                    temp_indices[index_count++] = v3 - 1;
+        if (strncmp(line, "usemtl ", 7) == 0) {
+            sscanf(line, "usemtl %63s", mesh->material_name);
+        } else if (strncmp(line, "v ", 2) == 0) {
+            sscanf(line, "v %f %f %f", &temp_positions[pos_count].x, &temp_positions[pos_count].y, &temp_positions[pos_count].z);
+            pos_count++;
+        } else if (strncmp(line, "vn ", 3) == 0) {
+            sscanf(line, "vn %f %f %f", &temp_normals[normal_count].x, &temp_normals[normal_count].y, &temp_normals[normal_count].z);
+            normal_count++;
+        } else if (strncmp(line, "vt ", 3) == 0) {
+            sscanf(line, "vt %f %f", &temp_tex_coords[tex_coord_count].u, &temp_tex_coords[tex_coord_count].v);
+            tex_coord_count++;
+        } else if (strncmp(line, "f ", 2) == 0) {
+            int v[3], vt[3], vn[3];
+            if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", &v[0], &vt[0], &vn[0], &v[1], &vt[1], &vn[1], &v[2], &vt[2], &vn[2]) == 9) {
+                for (int i = 0; i < 3; i++) {
+                    // Create a final vertex from the indices
+                    Vertex new_vertex = {
+                        .position = temp_positions[v[i] - 1],
+                        .normal = temp_normals[vn[i] - 1],
+                        .tex_coord = temp_tex_coords[vt[i] - 1]
+                    };
+                    
+                    // For simplicity, we are not de-duplicating vertices here.
+                    // A more advanced implementation would use a hash map to find existing
+                    // vertices and reuse indices.
+                    final_vertices[final_vertex_count] = new_vertex;
+                    final_indices[final_index_count++] = final_vertex_count;
+                    final_vertex_count++;
                 }
             }
         }
@@ -137,41 +115,28 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     fclose(file);
     
     // Allocate and copy data to mesh
-    if (vertex_count > 0) {
-        mesh->vertices = malloc(vertex_count * sizeof(Vector3));
-        memcpy(mesh->vertices, temp_vertices, vertex_count * sizeof(Vector3));
-        mesh->vertex_count = vertex_count;
-    }
+    mesh->vertices = malloc(final_vertex_count * sizeof(Vertex));
+    memcpy(mesh->vertices, final_vertices, final_vertex_count * sizeof(Vertex));
+    mesh->vertex_count = final_vertex_count;
     
-    if (normal_count > 0) {
-        mesh->normals = malloc(normal_count * sizeof(Vector3));
-        memcpy(mesh->normals, temp_normals, normal_count * sizeof(Vector3));
-    }
-    
-    if (index_count > 0) {
-        mesh->indices = malloc(index_count * sizeof(uint32_t));
-        memcpy(mesh->indices, temp_indices, index_count * sizeof(uint32_t));
-        mesh->index_count = index_count;
-    }
+    mesh->indices = malloc(final_index_count * sizeof(int));
+    memcpy(mesh->indices, final_indices, final_index_count * sizeof(int));
+    mesh->index_count = final_index_count;
     
     mesh->loaded = true;
     
-    printf("   ✅ Loaded %d vertices, %d normals, %d indices\n", 
-           vertex_count, normal_count, index_count);
-    
     return true;
 }
+
 
 bool parse_mtl_file(const char* filepath, AssetRegistry* registry) {
     if (!filepath || !registry) return false;
     
     FILE* file = fopen(filepath, "r");
     if (!file) {
-        printf("⚠️  Could not open MTL file: %s\n", filepath);
+        // Don't log missing MTL files as errors - they're optional
         return false;
     }
-    
-    printf("🎨 Loading MTL: %s\n", filepath);
     
     Material* current_material = NULL;
     char line[256];
@@ -221,7 +186,6 @@ bool parse_mtl_file(const char* filepath, AssetRegistry* registry) {
     }
     
     fclose(file);
-    printf("   ✅ Loaded %d materials\n", registry->material_count);
     return true;
 }
 
@@ -229,13 +193,33 @@ bool parse_mtl_file(const char* filepath, AssetRegistry* registry) {
 // ASSET LOADING
 // ============================================================================
 
-bool load_obj_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name) {
+bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name) {
     if (!registry || !filename || !mesh_name) return false;
     if (registry->mesh_count >= 32) return false;
     
-    // Build full path
+    // Build full path - handle both .mesh and .cobj extensions
     char filepath[512];
-    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, filename);
+    char actual_filename[256];
+    
+    // Convert .mesh extension to .cobj for compiled files
+    if (strstr(filename, ".mesh")) {
+        strncpy(actual_filename, filename, sizeof(actual_filename) - 1);
+        char* dot = strrchr(actual_filename, '.');
+        if (dot) {
+            strcpy(dot, ".cobj");  // Replace .mesh with .cobj
+        }
+    } else if (!strstr(filename, ".cobj")) {
+        // If no extension, assume it's a .cobj file
+        snprintf(actual_filename, sizeof(actual_filename), "%s", filename);
+        if (!strstr(actual_filename, ".cobj")) {
+            strncat(actual_filename, ".cobj", sizeof(actual_filename) - strlen(actual_filename) - 1);
+        }
+    } else {
+        // Already has .cobj extension
+        strncpy(actual_filename, filename, sizeof(actual_filename) - 1);
+    }
+    
+    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, actual_filename);
     
     // Find or create mesh slot
     Mesh* mesh = &registry->meshes[registry->mesh_count];
@@ -243,35 +227,43 @@ bool load_obj_mesh(AssetRegistry* registry, const char* filename, const char* me
     
     if (parse_obj_file(filepath, mesh)) {
         registry->mesh_count++;
-        
-        // Try to load corresponding MTL file
-        char mtl_path[512];
-        char* dot = strrchr(filename, '.');
-        if (dot) {
-            size_t base_len = dot - filename;
-            snprintf(mtl_path, sizeof(mtl_path), "%s/meshes/%.*s.mtl", 
-                    registry->asset_root, (int)base_len, filename);
-            parse_mtl_file(mtl_path, registry);
-        }
-        
         return true;
     }
     
     return false;
 }
 
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name) {
-    if (!registry || !filename || !texture_name) return false;
+bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name, SDL_Renderer* renderer) {
+    if (!registry || !filename || !texture_name || !renderer) return false;
     if (registry->texture_count >= 32) return false;
     
-    // For now, just record the texture info
-    Texture* texture = &registry->textures[registry->texture_count++];
+    Texture* texture = &registry->textures[registry->texture_count];
     strncpy(texture->name, texture_name, sizeof(texture->name) - 1);
-    snprintf(texture->filepath, sizeof(texture->filepath), "%s/meshes/%s", 
-             registry->asset_root, filename);
-    texture->loaded = true;  // Mark as loaded (even though we're not loading pixels yet)
+    strncpy(texture->filepath, filename, sizeof(texture->filepath) - 1);
     
-    printf("📷 Registered texture: %s -> %s\n", texture_name, texture->filepath);
+    // Load the actual texture using SDL_image
+    SDL_Surface* surface = IMG_Load(texture->filepath);
+    if (!surface) {
+        printf("❌ Failed to load texture surface: %s (%s)\n", texture->filepath, IMG_GetError());
+        return false;
+    }
+    
+    // Create SDL texture from surface
+    texture->sdl_texture = SDL_CreateTextureFromSurface(renderer, surface);
+    texture->width = surface->w;
+    texture->height = surface->h;
+    
+    // Free the surface
+    SDL_FreeSurface(surface);
+    
+    if (!texture->sdl_texture) {
+        printf("❌ Failed to create texture from surface: %s (%s)\n", texture->filepath, SDL_GetError());
+        return false;
+    }
+    
+    texture->loaded = true;
+    registry->texture_count++;
+    
     return true;
 }
 
@@ -341,141 +333,270 @@ void assets_list_loaded(AssetRegistry* registry) {
     }
 }
 
-bool assets_load_all_in_directory(AssetRegistry* registry) {
-    if (!registry) return false;
+bool assets_load_all_in_directory(AssetRegistry* registry, SDL_Renderer* renderer) {
+    if (!registry || !renderer) return false;
     
     printf("🔍 Auto-loading assets from %s/meshes/\n", registry->asset_root);
     
     // Load assets based on metadata.json
-    return load_assets_from_metadata(registry);
-}
-
-// ============================================================================
-// FALLBACK MESH GENERATION
-// ============================================================================
-
-void generate_fallback_meshes(AssetRegistry* registry) {
-    if (!registry) return;
-    
-    printf("🔧 Generating fallback meshes...\n");
-    
-    // Generate fallback sun if not loaded
-    if (!assets_get_mesh(registry, "sun")) {
-        if (registry->mesh_count < 32) {
-            Mesh* mesh = &registry->meshes[registry->mesh_count++];
-            strncpy(mesh->name, "sun", sizeof(mesh->name) - 1);
-            
-            // Generate a simple icosphere for the sun
-            int segments = 12;
-            int rings = 6;
-            mesh->vertex_count = (rings + 1) * (segments + 1);
-            mesh->vertices = malloc(mesh->vertex_count * sizeof(Vector3));
-            
-            int vertex_index = 0;
-            for (int ring = 0; ring <= rings; ring++) {
-                float theta = (float)ring * M_PI / rings;
-                float sin_theta = sinf(theta);
-                float cos_theta = cosf(theta);
-                
-                for (int segment = 0; segment <= segments; segment++) {
-                    float phi = (float)segment * 2.0f * M_PI / segments;
-                    float sin_phi = sinf(phi);
-                    float cos_phi = cosf(phi);
-                    
-                    mesh->vertices[vertex_index++] = (Vector3){
-                        25.0f * sin_theta * cos_phi,
-                        25.0f * cos_theta,
-                        25.0f * sin_theta * sin_phi
-                    };
-                }
-            }
-            
-            // Generate wireframe indices
-            mesh->index_count = rings * segments * 4;
-            mesh->indices = malloc(mesh->index_count * sizeof(uint32_t));
-            
-            int index = 0;
-            for (int ring = 0; ring < rings; ring++) {
-                for (int segment = 0; segment < segments; segment++) {
-                    int current = ring * (segments + 1) + segment;
-                    int next_ring = (ring + 1) * (segments + 1) + segment;
-                    int next_segment = ring * (segments + 1) + ((segment + 1) % (segments + 1));
-                    
-                    mesh->indices[index++] = current;
-                    mesh->indices[index++] = next_ring;
-                    mesh->indices[index++] = current;
-                    mesh->indices[index++] = next_segment;
-                }
-            }
-            
-            mesh->loaded = true;
-            printf("   ✅ Generated fallback sun mesh\n");
-        }
-    }
-    
-    // Generate fallback player ship if not loaded
-    if (!assets_get_mesh(registry, "player_ship")) {
-        if (registry->mesh_count < 32) {
-            Mesh* mesh = &registry->meshes[registry->mesh_count++];
-            strncpy(mesh->name, "player_ship", sizeof(mesh->name) - 1);
-            
-            // Simple X-wing style ship
-            mesh->vertex_count = 12;
-            mesh->vertices = malloc(12 * sizeof(Vector3));
-            
-            mesh->vertices[0] = (Vector3){ 0.0f,  0.0f,  3.0f};  // Nose
-            mesh->vertices[1] = (Vector3){-1.0f,  0.0f, -2.0f};  // Left rear
-            mesh->vertices[2] = (Vector3){ 1.0f,  0.0f, -2.0f};  // Right rear
-            mesh->vertices[3] = (Vector3){ 0.0f,  0.5f, -1.0f};  // Top mid
-            mesh->vertices[4] = (Vector3){ 0.0f, -0.5f, -1.0f};  // Bottom mid
-            mesh->vertices[5] = (Vector3){-3.0f,  0.0f,  0.0f};  // Left wing tip
-            mesh->vertices[6] = (Vector3){ 3.0f,  0.0f,  0.0f};  // Right wing tip
-            mesh->vertices[7] = (Vector3){-2.0f,  1.0f, -1.0f};  // Left wing top
-            mesh->vertices[8] = (Vector3){ 2.0f,  1.0f, -1.0f};  // Right wing top
-            mesh->vertices[9] = (Vector3){-2.0f, -1.0f, -1.0f};  // Left wing bottom
-            mesh->vertices[10] = (Vector3){ 2.0f, -1.0f, -1.0f}; // Right wing bottom
-            mesh->vertices[11] = (Vector3){ 0.0f,  0.0f, -3.0f}; // Tail
-            
-            mesh->index_count = 32;
-            mesh->indices = malloc(32 * sizeof(uint32_t));
-            
-            uint32_t ship_edges[] = {
-                0,1, 0,2, 0,3, 0,4,      // Nose to body
-                1,2, 1,3, 1,4,           // Left connections
-                2,3, 2,4,                // Right connections
-                3,4, 1,11, 2,11,         // Body to tail
-                1,5, 2,6,                // Body to wing tips
-                5,7, 5,9,                // Left wing
-                6,8, 6,10,               // Right wing
-                7,9, 8,10                // Wing connections
-            };
-            
-            memcpy(mesh->indices, ship_edges, 32 * sizeof(uint32_t));
-            mesh->loaded = true;
-            printf("   ✅ Generated fallback player ship mesh\n");
-        }
-    }
+    return load_assets_from_metadata(registry, renderer);
 }
 
 // ============================================================================
 // METADATA-DRIVEN ASSET LOADING
 // ============================================================================
 
-bool load_assets_from_metadata(AssetRegistry* registry) {
-    if (!registry) return false;
+bool load_single_mesh_metadata(AssetRegistry* registry, SDL_Renderer* renderer, const char* metadata_path) {
+    FILE* file = fopen(metadata_path, "r");
+    if (!file) {
+        printf("⚠️  Could not open mesh metadata: %s\n", metadata_path);
+        return false;
+    }
     
+    // Extract directory from metadata path for relative file loading
+    char mesh_dir[512];
+    strncpy(mesh_dir, metadata_path, sizeof(mesh_dir) - 1);
+    char* last_slash = strrchr(mesh_dir, '/');
+    if (last_slash) {
+        *last_slash = '\0';  // Remove filename, keep directory
+    }
+    
+    printf("📋 Loading mesh from metadata: %s\n", metadata_path);
+    
+    // Parse metadata.json for mesh information
+    char line[512];
+    char mesh_name[128] = "";
+    char mesh_filename[128] = "";
+    char texture_filename[128] = "";
+    char mtl_filename[128] = "";
+    
+    while (fgets(line, sizeof(line), file)) {
+        // Remove whitespace and newlines
+        char* trimmed = line;
+        while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
+        trimmed[strcspn(trimmed, "\n\r")] = 0;
+        
+        // Skip empty lines and comments
+        if (strlen(trimmed) == 0 || trimmed[0] == '/' || trimmed[0] == '#') continue;
+        
+        // Parse name field
+        if (strstr(trimmed, "\"name\":")) {
+            char* value_start = strstr(trimmed, ":");
+            if (value_start) {
+                value_start++;
+                while (*value_start == ' ' || *value_start == '\t') value_start++;
+                if (*value_start == '"') {
+                    value_start++;
+                    char* value_end = strchr(value_start, '"');
+                    if (value_end) {
+                        int len = value_end - value_start;
+                        if (len > 0 && (size_t)len < sizeof(mesh_name)) {
+                            strncpy(mesh_name, value_start, len);
+                            mesh_name[len] = 0;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Parse filename field
+        if (strstr(trimmed, "\"filename\":")) {
+            char* value_start = strstr(trimmed, ":");
+            if (value_start) {
+                value_start++;
+                while (*value_start == ' ' || *value_start == '\t') value_start++;
+                if (*value_start == '"') {
+                    value_start++;
+                    char* value_end = strchr(value_start, '"');
+                    if (value_end) {
+                        int len = value_end - value_start;
+                        if (len > 0 && (size_t)len < sizeof(mesh_filename)) {
+                            strncpy(mesh_filename, value_start, len);
+                            mesh_filename[len] = 0;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Parse texture field
+        if (strstr(trimmed, "\"texture\":")) {
+            char* value_start = strstr(trimmed, ":");
+            if (value_start) {
+                value_start++;
+                while (*value_start == ' ' || *value_start == '\t') value_start++;
+                if (*value_start == '"') {
+                    value_start++;
+                    char* value_end = strchr(value_start, '"');
+                    if (value_end) {
+                        int len = value_end - value_start;
+                        if (len > 0 && (size_t)len < sizeof(texture_filename)) {
+                            strncpy(texture_filename, value_start, len);
+                            texture_filename[len] = 0;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Parse mtl field
+        if (strstr(trimmed, "\"mtl\":")) {
+            char* value_start = strstr(trimmed, ":");
+            if (value_start) {
+                value_start++;
+                while (*value_start == ' ' || *value_start == '\t') value_start++;
+                if (*value_start == '"') {
+                    value_start++;
+                    char* value_end = strchr(value_start, '"');
+                    if (value_end) {
+                        int len = value_end - value_start;
+                        if (len > 0 && (size_t)len < sizeof(mtl_filename)) {
+                            strncpy(mtl_filename, value_start, len);
+                            mtl_filename[len] = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fclose(file);
+    
+    // Validate required fields
+    if (strlen(mesh_name) == 0 || strlen(mesh_filename) == 0) {
+        printf("❌ Invalid metadata: missing name or filename\n");
+        return false;
+    }
+    
+    // Load the mesh file
+    char mesh_path[512];
+    snprintf(mesh_path, sizeof(mesh_path), "%s/%s", mesh_dir, mesh_filename);
+    
+    // Convert absolute path to relative path from meshes directory
+    char relative_mesh_path[512];
+    char meshes_prefix[512];
+    snprintf(meshes_prefix, sizeof(meshes_prefix), "%s/meshes/", registry->asset_root);
+    
+    if (strncmp(mesh_path, meshes_prefix, strlen(meshes_prefix)) == 0) {
+        // Path starts with asset_root/meshes/, extract the relative part
+        strcpy(relative_mesh_path, mesh_path + strlen(meshes_prefix));
+    } else {
+        // Path doesn't start with expected prefix, use as-is
+        strcpy(relative_mesh_path, mesh_path);
+    }
+    
+    // Load compiled mesh files (.cobj format from asset compiler)
+    bool loaded = load_compiled_mesh(registry, relative_mesh_path, mesh_name);
+    
+    if (!loaded) {
+        printf("❌ Failed to load mesh: %s\n", mesh_path);
+        return false;
+    }
+    
+    // Load associated MTL file if specified in metadata
+    if (strlen(mtl_filename) > 0) {
+        char mtl_path[512];
+        snprintf(mtl_path, sizeof(mtl_path), "%s/%s", mesh_dir, mtl_filename);
+        parse_mtl_file(mtl_path, registry);
+    }
+    
+    // Load associated texture if specified
+    if (strlen(texture_filename) > 0) {
+        char texture_path[512];
+        char texture_name[128];
+        snprintf(texture_path, sizeof(texture_path), "%s/%s", mesh_dir, texture_filename);
+        snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
+        
+        if (load_texture(registry, texture_path, texture_name, renderer)) {
+            // Texture loaded successfully (no verbose logging)
+        }
+    }
+    
+    printf("✅ %s\n", mesh_name);
+    
+    return true;
+}
+
+bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
+    if (!registry || !renderer) return false;
+    
+    // Load from index.json to get list of metadata files
+    char index_path[512];
+    snprintf(index_path, sizeof(index_path), "%s/meshes/index.json", registry->asset_root);
+    
+    FILE* file = fopen(index_path, "r");
+    if (!file) {
+        printf("⚠️  Could not open index.json: %s\n", index_path);
+        printf("⚠️  Falling back to legacy metadata.json format\n");
+        return load_legacy_metadata(registry, renderer);
+    }
+    
+    printf("📋 Loading asset index: %s\n", index_path);
+    
+    char line[512];
+    bool success = true;
+    int loaded_count = 0;
+    
+    while (fgets(line, sizeof(line), file)) {
+        // Remove whitespace and newlines
+        char* trimmed = line;
+        while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
+        trimmed[strcspn(trimmed, "\n\r")] = 0;
+        
+        // Skip empty lines, comments, and JSON syntax
+        if (strlen(trimmed) == 0 || trimmed[0] == '/' || trimmed[0] == '#' ||
+            trimmed[0] == '[' || trimmed[0] == ']' || strcmp(trimmed, "{") == 0 || strcmp(trimmed, "}") == 0) {
+            continue;
+        }
+        
+        // Extract metadata path from JSON array entry
+        char* start = strchr(trimmed, '"');
+        if (start) {
+            start++;
+            char* end = strchr(start, '"');
+            if (end) {
+                // Extract the metadata path
+                char metadata_relative[256];
+                int len = end - start;
+                if (len > 0 && (size_t)len < sizeof(metadata_relative)) {
+                    strncpy(metadata_relative, start, len);
+                    metadata_relative[len] = 0;
+                    
+                    // Build full path
+                    char metadata_full_path[512];
+                    snprintf(metadata_full_path, sizeof(metadata_full_path), "%s/meshes/%s", 
+                             registry->asset_root, metadata_relative);
+                    
+                    // Load this mesh
+                    if (load_single_mesh_metadata(registry, renderer, metadata_full_path)) {
+                        loaded_count++;
+                    } else {
+                        success = false;
+                    }
+                }
+            }
+        }
+    }
+    
+    fclose(file);
+    
+    printf("📋 Loaded %d meshes from asset index\n", loaded_count);
+    return success;
+}
+
+// Legacy metadata loading for backward compatibility
+bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
     char metadata_path[1024];
     snprintf(metadata_path, sizeof(metadata_path), "%s/meshes/metadata.json", registry->asset_root);
     
     FILE* file = fopen(metadata_path, "r");
     if (!file) {
-        printf("⚠️  Could not open metadata.json: %s\n", metadata_path);
+        printf("⚠️  Could not open legacy metadata.json: %s\n", metadata_path);
         return false;
     }
     
-    printf("📋 Loading assets from metadata: %s\n", metadata_path);
+    printf("📋 Loading assets from legacy metadata: %s\n", metadata_path);
     
-    // Simple JSON parser for our specific metadata format
+    // Simple JSON parser for legacy metadata format
     char line[512];
     char current_folder[128] = "";
     bool in_meshes_section = false;
@@ -503,7 +624,7 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
                     char* folder_end = strchr(folder_start, '"');
                     if (folder_end) {
                         int len = folder_end - folder_start;
-                        if (len < sizeof(current_folder)) {
+                        if (len > 0 && (size_t)len < sizeof(current_folder)) {
                             strncpy(current_folder, folder_start, len);
                             current_folder[len] = 0;
                         }
@@ -519,8 +640,8 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
             continue;
         }
         
-        // Parse OBJ file names in meshes section
-        if (in_meshes_section && strstr(trimmed, ".obj\":")) {
+        // Parse compiled mesh file names in meshes section
+        if (in_meshes_section && strstr(trimmed, ".cobj\":")) {
             char obj_name[128];
             char* start = strchr(trimmed, '"');
             if (start) {
@@ -528,7 +649,7 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
                 char* end = strchr(start, '"');
                 if (end) {
                     int len = end - start;
-                    if (len < sizeof(obj_name)) {
+                    if (len > 0 && (size_t)len < sizeof(obj_name)) {
                         strncpy(obj_name, start, len);
                         obj_name[len] = 0;
                         
@@ -536,7 +657,7 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
                         char mesh_path[256];
                         snprintf(mesh_path, sizeof(mesh_path), "%s/%s", current_folder, obj_name);
                         
-                        // Extract base name for registration (remove .obj extension)
+                        // Extract base name for registration (remove .cobj extension)
                         char mesh_name[128];
                         strncpy(mesh_name, obj_name, sizeof(mesh_name) - 1);
                         char* dot = strrchr(mesh_name, '.');
@@ -544,7 +665,7 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
                         
                         printf("   Loading mesh: %s -> %s\n", mesh_path, mesh_name);
                         
-                        if (!load_obj_mesh(registry, mesh_path, mesh_name)) {
+                        if (!load_compiled_mesh(registry, mesh_path, mesh_name)) {
                             printf("   ❌ Failed to load %s\n", mesh_path);
                             success = false;
                         } else {
@@ -556,7 +677,7 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
                             snprintf(texture_path, sizeof(texture_path), "%s/%s.png", current_folder, mesh_name);
                             snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
                             
-                            if (load_texture(registry, texture_path, texture_name)) {
+                            if (load_texture(registry, texture_path, texture_name, renderer)) {
                                 printf("   ✅ Loaded texture: %s\n", texture_name);
                             }
                         }
