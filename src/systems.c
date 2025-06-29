@@ -603,8 +603,9 @@ void render_system_update(struct World* world, float delta_time) {
         }
     }
     
-    // Render the frame - camera system has already updated camera position
-    render_frame(world, &g_render_config, player_id, delta_time);
+    // Note: Actual rendering is handled by main render loop, not here
+    // This system only updates render-related data and configurations
+    (void)player_id; (void)delta_time; // Suppress unused warnings for now
 }
 
 // ============================================================================

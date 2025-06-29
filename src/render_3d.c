@@ -207,7 +207,12 @@ static bool render_sokol_init(void) {
         .label = "default_sampler"
     });
     
-    // Create pipeline with proper pass format matching
+    // Create pipeline with swapchain-compatible formats
+    // Query swapchain to get the actual formats
+    sg_swapchain swapchain = sglue_swapchain();
+    printf("🔍 Swapchain info: sample_count=%d, color_fmt=%d, depth_fmt=%d\n", 
+           swapchain.sample_count, swapchain.color_format, swapchain.depth_format);
+    
     render_state.pipeline = sg_make_pipeline(&(sg_pipeline_desc){
         .shader = render_state.shader,
         .layout = {
@@ -221,12 +226,12 @@ static bool render_sokol_init(void) {
         .depth = {
             .compare = SG_COMPAREFUNC_LESS_EQUAL,
             .write_enabled = true,
-            .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL  // Match default pass depth format
+            .pixel_format = swapchain.depth_format  // Match swapchain depth format
         },
         .colors[0] = {
-            .pixel_format = SG_PIXELFORMAT_BGRA8  // Match Metal swapchain format
+            .pixel_format = swapchain.color_format  // Match swapchain color format
         },
-        .sample_count = 4,  // Match swapchain sample count (4x MSAA)
+        .sample_count = swapchain.sample_count,  // Match swapchain sample count
         .cull_mode = SG_CULLMODE_BACK,
         .label = "basic_3d_pipeline"
     });
@@ -236,7 +241,7 @@ static bool render_sokol_init(void) {
         return false;
     }
     
-    printf("🔍 Pipeline created with sample_count=4\n");
+    printf("🔍 Pipeline created with default formats\n");
     
     // Create test geometry buffers
     render_state.vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
@@ -480,7 +485,10 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     
     // If we have entities to render, draw a simple test triangle
     if (renderable_count > 0) {
-        // Apply pipeline (now within render pass)
+        // Debug: Check if we're in a render pass
+        printf("🔧 About to apply pipeline - checking pass state...\n");
+        
+        // Apply pipeline (should be within render pass from main.c)
         printf("🔧 Applying pipeline within render pass...\n");
         sg_apply_pipeline(render_state.pipeline);
         
