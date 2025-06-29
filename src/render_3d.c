@@ -1,6 +1,5 @@
-#define SOKOL_IMPL
-#include "sokol_gfx.h"
 #include "sokol_app.h"
+#include "sokol_gfx.h"
 #include "sokol_glue.h"
 #include "sokol_log.h"
 
@@ -149,4 +148,36 @@ bool render_take_screenshot_from_position(struct World* world, RenderConfig* con
     (void)look_at_pos;
     (void)filename;
     return false;
+}
+
+// ============================================================================
+// ENTITY RENDERING (PLACEHOLDER FOR SOKOL MIGRATION)
+// ============================================================================
+
+void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* config) {
+    if (!world || !config || entity_id == INVALID_ENTITY) return;
+    
+    // Get entity
+    struct Entity* entity = entity_get(world, entity_id);
+    if (!entity) return;
+    
+    // Check if entity is renderable
+    if (!(entity->component_mask & COMPONENT_RENDERABLE)) return;
+    
+    struct Renderable* renderable = entity_get_renderable(world, entity_id);
+    if (!renderable || !renderable->visible) return;
+    
+    struct Transform* transform = entity_get_transform(world, entity_id);
+    if (!transform) return;
+    
+    // TODO: Implement actual Sokol rendering here
+    // For now, just suppress unused parameter warnings
+    (void)transform;
+    (void)renderable;
+    
+    // This is where we would:
+    // 1. Get mesh and material from asset registry
+    // 2. Set up vertex/index buffers
+    // 3. Apply MVP matrix uniforms
+    // 4. Call sg_draw()
 }

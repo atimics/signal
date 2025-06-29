@@ -50,7 +50,7 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     
     // Load assets from files (now that we have a renderer for textures)
     printf("🔍 Loading assets...\n");
-    assets_load_all_in_directory(&g_asset_registry, g_render_config.renderer);
+    assets_load_all_in_directory(&g_asset_registry);
     
     // Print loaded assets and templates
     assets_list_loaded(&g_asset_registry);

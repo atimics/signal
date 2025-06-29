@@ -5,71 +5,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// ============================================================================
-// 3D PROJECTION
-// ============================================================================
 
-Point2D project_3d_to_2d(Vector3 world_pos, const Camera3D* camera, int screen_width, int screen_height) {
-    // Transform world position to camera space
-    Vector3 relative_pos = {
-        world_pos.x - camera->position.x,
-        world_pos.y - camera->position.y,
-        world_pos.z - camera->position.z
-    };
-    
-    // Calculate camera coordinate system
-    Vector3 forward = {
-        camera->target.x - camera->position.x,
-        camera->target.y - camera->position.y,
-        camera->target.z - camera->position.z
-    };
-    
-    // Normalize forward vector
-    float forward_len = sqrtf(forward.x * forward.x + forward.y * forward.y + forward.z * forward.z);
-    if (forward_len > 0.001f) {
-        forward.x /= forward_len;
-        forward.y /= forward_len;
-        forward.z /= forward_len;
-    } else {
-        forward = (Vector3){0, 0, -1};  // Default forward
-    }
-    
-    // Calculate right vector (cross product of forward and up)
-    Vector3 right = {
-        forward.y * camera->up.z - forward.z * camera->up.y,
-        forward.z * camera->up.x - forward.x * camera->up.z,
-        forward.x * camera->up.y - forward.y * camera->up.x
-    };
-    
-    // Calculate actual up vector (cross product of right and forward)
-    Vector3 up = {
-        right.y * forward.z - right.z * forward.y,
-        right.z * forward.x - right.x * forward.z,
-        right.x * forward.y - right.y * forward.x
-    };
-    
-    // Transform to camera space using dot products
-    float cam_x = relative_pos.x * right.x + relative_pos.y * right.y + relative_pos.z * right.z;
-    float cam_y = relative_pos.x * up.x + relative_pos.y * up.y + relative_pos.z * up.z;
-    float cam_z = relative_pos.x * forward.x + relative_pos.y * forward.y + relative_pos.z * forward.z;
-    
-    // Perspective projection
-    if (cam_z <= 0.1f) cam_z = 0.1f;  // Prevent division by zero and behind camera
-    
-    // Use proper FOV calculation
-    float fov_rad = camera->fov * M_PI / 180.0f;
-    float focal_length = (screen_height / 2.0f) / tanf(fov_rad / 2.0f);
-    
-    float screen_x = (cam_x * focal_length / cam_z) + screen_width / 2.0f;
-    float screen_y = screen_height / 2.0f - (cam_y * focal_length / cam_z);  // Flip Y
-    
-    Point2D result = {
-        (int)screen_x,
-        (int)screen_y
-    };
-    
-    return result;
-}
 
 // ============================================================================
 // CAMERA CONTROLS

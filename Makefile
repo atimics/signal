@@ -1,14 +1,17 @@
 # Component-Based Game Engine Makefile
-CC = gcc
+CC = clang
 CFLAGS = -Wall -Wextra -std=c99 -O2 -g -Isrc
 LIBS = -lm
+OS := $(shell uname)
 
 # Platform-specific flags
 ifeq ($(OS),Darwin)
     # macOS
-    LIBS += -framework Metal -framework AppKit
+    CFLAGS += -DSOKOL_METAL
+    LIBS += -framework Metal -framework MetalKit -framework AppKit
 else
     # Linux
+    CFLAGS += -DSOKOL_GLCORE
     LIBS += -lGL -lX11 -lm
 endif
 
@@ -25,7 +28,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c assets.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c test.c
+SOURCES = core.c systems.c assets.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -64,6 +67,15 @@ $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 # Compile source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+# Special rule for main.c on macOS to compile as Objective-C
+ifeq ($(OS),Darwin)
+$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
+$(BUILD_DIR)/render_3d.o: $(SRC_DIR)/render_3d.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
+endif
+
 
 # Clean build files and compiled assets
 clean:

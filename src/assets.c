@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <SDL.h>
-#include <SDL_image.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -43,14 +41,6 @@ void assets_cleanup(AssetRegistry* registry) {
         Mesh* mesh = &registry->meshes[i];
         if (mesh->vertices) free(mesh->vertices);
         if (mesh->indices) free(mesh->indices);
-    }
-    
-    // Free all loaded textures
-    for (uint32_t i = 0; i < registry->texture_count; i++) {
-        Texture* texture = &registry->textures[i];
-        if (texture->sdl_texture) {
-            SDL_DestroyTexture(texture->sdl_texture);
-        }
     }
     
     printf("🎨 Asset system cleaned up\n");
@@ -266,33 +256,15 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
     return false;
 }
 
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name, SDL_Renderer* renderer) {
-    if (!registry || !filename || !texture_name || !renderer) return false;
+bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name) {
+    if (!registry || !filename || !texture_name) return false;
     if (registry->texture_count >= 32) return false;
     
     Texture* texture = &registry->textures[registry->texture_count];
     strncpy(texture->name, texture_name, sizeof(texture->name) - 1);
     strncpy(texture->filepath, filename, sizeof(texture->filepath) - 1);
     
-    // Load the actual texture using SDL_image
-    SDL_Surface* surface = IMG_Load(texture->filepath);
-    if (!surface) {
-        printf("❌ Failed to load texture surface: %s (%s)\n", texture->filepath, IMG_GetError());
-        return false;
-    }
-    
-    // Create SDL texture from surface
-    texture->sdl_texture = SDL_CreateTextureFromSurface(renderer, surface);
-    texture->width = surface->w;
-    texture->height = surface->h;
-    
-    // Free the surface
-    SDL_FreeSurface(surface);
-    
-    if (!texture->sdl_texture) {
-        printf("❌ Failed to create texture from surface: %s (%s)\n", texture->filepath, SDL_GetError());
-        return false;
-    }
+    // Texture loading will be handled by a separate function that creates the sg_image
     
     texture->loaded = true;
     registry->texture_count++;
@@ -366,20 +338,20 @@ void assets_list_loaded(AssetRegistry* registry) {
     }
 }
 
-bool assets_load_all_in_directory(AssetRegistry* registry, SDL_Renderer* renderer) {
-    if (!registry || !renderer) return false;
+bool assets_load_all_in_directory(AssetRegistry* registry) {
+    if (!registry) return false;
     
     printf("🔍 Auto-loading assets from %s/meshes/\n", registry->asset_root);
     
     // Load assets based on metadata.json
-    return load_assets_from_metadata(registry, renderer);
+    return load_assets_from_metadata(registry);
 }
 
 // ============================================================================
 // METADATA-DRIVEN ASSET LOADING
 // ============================================================================
 
-bool load_single_mesh_metadata(AssetRegistry* registry, SDL_Renderer* renderer, const char* metadata_path) {
+bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_path) {
     FILE* file = fopen(metadata_path, "r");
     if (!file) {
         printf("⚠️  Could not open mesh metadata: %s\n", metadata_path);
@@ -539,7 +511,7 @@ bool load_single_mesh_metadata(AssetRegistry* registry, SDL_Renderer* renderer, 
         snprintf(texture_path, sizeof(texture_path), "%s/%s", mesh_dir, texture_filename);
         snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
         
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             // Texture loaded successfully (no verbose logging)
         }
     }
@@ -549,8 +521,8 @@ bool load_single_mesh_metadata(AssetRegistry* registry, SDL_Renderer* renderer, 
     return true;
 }
 
-bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
-    if (!registry || !renderer) return false;
+bool load_assets_from_metadata(AssetRegistry* registry) {
+    if (!registry) return false;
     
     // Load from index.json to get list of metadata files
     char index_path[512];
@@ -560,7 +532,7 @@ bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) 
     if (!file) {
         printf("⚠️  Could not open index.json: %s\n", index_path);
         printf("⚠️  Falling back to legacy metadata.json format\n");
-        return load_legacy_metadata(registry, renderer);
+        return load_legacy_metadata(registry);
     }
     
     printf("📋 Loading asset index: %s\n", index_path);
@@ -600,7 +572,7 @@ bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) 
                              registry->asset_root, metadata_relative);
                     
                     // Load this mesh
-                    if (load_single_mesh_metadata(registry, renderer, metadata_full_path)) {
+                    if (load_single_mesh_metadata(registry, metadata_full_path)) {
                         loaded_count++;
                     } else {
                         success = false;
@@ -617,7 +589,7 @@ bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) 
 }
 
 // Legacy metadata loading for backward compatibility
-bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
+bool load_legacy_metadata(AssetRegistry* registry) {
     char metadata_path[1024];
     snprintf(metadata_path, sizeof(metadata_path), "%s/meshes/metadata.json", registry->asset_root);
     
@@ -710,7 +682,7 @@ bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
                             snprintf(texture_path, sizeof(texture_path), "%s/%s.png", current_folder, mesh_name);
                             snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
                             
-                            if (load_texture(registry, texture_path, texture_name, renderer)) {
+                            if (load_texture(registry, texture_path, texture_name)) {
                                 printf("   ✅ Loaded texture: %s\n", texture_name);
                             }
                         }
@@ -733,8 +705,8 @@ bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
 // MATERIAL REPOSITORY IMPLEMENTATION
 // ============================================================================
 
-bool materials_load_library(AssetRegistry* registry, const char* materials_dir, SDL_Renderer* renderer) {
-    if (!registry || !materials_dir || !renderer) return false;
+bool materials_load_library(AssetRegistry* registry, const char* materials_dir) {
+    if (!registry || !materials_dir) return false;
     
     // TODO: Implement loading of shared material library
     // This would scan materials_dir for .mtl files and load them
@@ -814,8 +786,8 @@ void materials_list_loaded(AssetRegistry* registry) {
 }
 
 bool materials_load_texture_set(AssetRegistry* registry, Material* material, 
-                               const char* texture_dir, SDL_Renderer* renderer) {
-    if (!registry || !material || !texture_dir || !renderer) return false;
+                               const char* texture_dir) {
+    if (!registry || !material || !texture_dir) return false;
     
     char texture_path[512];
     bool any_loaded = false;
@@ -825,7 +797,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->diffuse_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_diffuse", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -835,7 +807,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->normal_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_normal", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -845,7 +817,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->specular_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_specular", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -855,7 +827,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->emission_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_emission", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -863,8 +835,8 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
     return any_loaded;
 }
 
-bool materials_bind_textures(Material* material, SDL_Renderer* renderer) {
-    if (!material || !renderer) return false;
+bool materials_bind_textures(Material* material) {
+    if (!material) return false;
     
     // This function would bind multiple textures for multi-texture rendering
     // For now, it's a placeholder for future multi-texture support
