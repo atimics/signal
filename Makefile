@@ -8,7 +8,7 @@ OS := $(shell uname)
 ifeq ($(OS),Darwin)
     # macOS
     CFLAGS += -DSOKOL_METAL
-    LIBS += -framework Metal -framework MetalKit -framework AppKit
+    LIBS += -framework Metal -framework MetalKit -framework AppKit -framework QuartzCore
 else
     # Linux
     CFLAGS += -DSOKOL_GLCORE
