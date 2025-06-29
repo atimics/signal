@@ -10,174 +10,454 @@
 #include "ui.h"
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // ============================================================================
-// INITIALIZATION & CLEANUP
+// SOKOL RENDERING DEFINITIONS
 // ============================================================================
 
-bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_width, float viewport_height) {
-    if (!config || !assets) return false;
+// Metal vertex shader for macOS
+static const char* vs_source_metal = 
+    "#include <metal_stdlib>\n"
+    "using namespace metal;\n"
+    "struct vs_uniforms {\n"
+    "    float4x4 mvp;\n"
+    "};\n"
+    "struct vs_in {\n"
+    "    float3 position [[attribute(0)]];\n"
+    "    float3 normal [[attribute(1)]];\n"
+    "    float2 texcoord [[attribute(2)]];\n"
+    "};\n"
+    "struct vs_out {\n"
+    "    float4 position [[position]];\n"
+    "    float3 normal;\n"
+    "    float2 texcoord;\n"
+    "};\n"
+    "vertex vs_out vs_main(vs_in in [[stage_in]], constant vs_uniforms& uniforms [[buffer(0)]]) {\n"
+    "    vs_out out;\n"
+    "    out.position = uniforms.mvp * float4(in.position, 1.0);\n"
+    "    out.normal = in.normal;\n"
+    "    out.texcoord = in.texcoord;\n"
+    "    return out;\n"
+    "}\n";
+
+// Metal fragment shader for macOS
+static const char* fs_source_metal = 
+    "#include <metal_stdlib>\n"
+    "using namespace metal;\n"
+    "struct fs_uniforms {\n"
+    "    float3 light_dir;\n"
+    "};\n"
+    "struct fs_in {\n"
+    "    float3 normal;\n"
+    "    float2 texcoord;\n"
+    "};\n"
+    "fragment float4 fs_main(fs_in in [[stage_in]], constant fs_uniforms& uniforms [[buffer(0)]],\n"
+    "                       texture2d<float> diffuse_texture [[texture(0)]],\n"
+    "                       sampler diffuse_sampler [[sampler(0)]]) {\n"
+    "    float3 normal = normalize(in.normal);\n"
+    "    float light = max(0.0, dot(normal, -uniforms.light_dir));\n"
+    "    float4 color = diffuse_texture.sample(diffuse_sampler, in.texcoord);\n"
+    "    return float4(color.rgb * (0.3 + 0.7 * light), color.a);\n"
+    "}\n";
+
+// OpenGL shader sources (for Linux/other platforms)
+static const char* vs_source_gl = 
+    "#version 330\n"
+    "uniform mat4 mvp;\n"
+    "layout(location=0) in vec3 position;\n"
+    "layout(location=1) in vec3 normal;\n"
+    "layout(location=2) in vec2 texcoord;\n"
+    "out vec3 frag_normal;\n"
+    "out vec2 frag_texcoord;\n"
+    "void main() {\n"
+    "    gl_Position = mvp * vec4(position, 1.0);\n"
+    "    frag_normal = normal;\n"
+    "    frag_texcoord = texcoord;\n"
+    "}\n";
+
+static const char* fs_source_gl = 
+    "#version 330\n"
+    "uniform sampler2D diffuse_texture;\n"
+    "uniform vec3 light_dir;\n"
+    "in vec3 frag_normal;\n"
+    "in vec2 frag_texcoord;\n"
+    "out vec4 frag_color;\n"
+    "void main() {\n"
+    "    vec3 normal = normalize(frag_normal);\n"
+    "    float light = max(0.0, dot(normal, -light_dir));\n"
+    "    vec4 color = texture(diffuse_texture, frag_texcoord);\n"
+    "    frag_color = vec4(color.rgb * (0.3 + 0.7 * light), color.a);\n"
+    "}\n";
+
+// Uniform data structures
+typedef struct {
+    float mvp[16];  // Model-View-Projection matrix
+} vs_uniforms_t;
+
+typedef struct {
+    float light_dir[3];  // Light direction
+    float _pad;          // Padding for alignment
+} fs_uniforms_t;
+
+// Global rendering state
+static struct {
+    sg_pipeline pipeline;
+    sg_shader shader;
+    sg_sampler sampler;
+    bool initialized;
+} render_state = {0};
+
+// ============================================================================
+// MATRIX MATH HELPERS
+// ============================================================================
+
+static void mat4_identity(float* m) {
+    for (int i = 0; i < 16; i++) m[i] = 0.0f;
+    m[0] = m[5] = m[10] = m[15] = 1.0f;
+}
+
+static void mat4_perspective(float* m, float fov, float aspect, float near, float far) {
+    mat4_identity(m);
+    float f = 1.0f / tanf(fov * 0.5f);
+    m[0] = f / aspect;
+    m[5] = f;
+    m[10] = (far + near) / (near - far);
+    m[11] = -1.0f;
+    m[14] = (2.0f * far * near) / (near - far);
+    m[15] = 0.0f;
+}
+
+static void mat4_lookat(float* m, Vector3 eye, Vector3 target, Vector3 up) {
+    // Calculate camera basis vectors
+    Vector3 f = {target.x - eye.x, target.y - eye.y, target.z - eye.z};
+    float len = sqrtf(f.x*f.x + f.y*f.y + f.z*f.z);
+    if (len > 0) { f.x /= len; f.y /= len; f.z /= len; }
     
-    printf("🎨 Initializing Sokol Render System...\n");
+    Vector3 s = {f.y*up.z - f.z*up.y, f.z*up.x - f.x*up.z, f.x*up.y - f.y*up.x};
+    len = sqrtf(s.x*s.x + s.y*s.y + s.z*s.z);
+    if (len > 0) { s.x /= len; s.y /= len; s.z /= len; }
     
-    // Create window
-    config->screen_width = (int)viewport_width;
-    config->screen_height = (int)viewport_height;
-    config->assets = assets;
+    Vector3 u = {s.y*f.z - s.z*f.y, s.z*f.x - s.x*f.z, s.x*f.y - s.y*f.x};
     
-    // Initialize render settings
-    config->mode = RENDER_MODE_TEXTURED;  // Use textured mode by default
-    config->show_debug_info = true;
-    config->show_velocities = true;
-    config->show_collision_bounds = false;
-    config->show_orbits = true;
-    config->update_interval = 1.0f / 60.0f;  // 60 FPS
-    config->last_update = 0.0f;
-    config->frame_count = 0;
+    // Build matrix
+    mat4_identity(m);
+    m[0] = s.x; m[4] = s.y; m[8] = s.z; m[12] = -(s.x*eye.x + s.y*eye.y + s.z*eye.z);
+    m[1] = u.x; m[5] = u.y; m[9] = u.z; m[13] = -(u.x*eye.x + u.y*eye.y + u.z*eye.z);
+    m[2] = -f.x; m[6] = -f.y; m[10] = -f.z; m[14] = (f.x*eye.x + f.y*eye.y + f.z*eye.z);
+}
+
+static void mat4_multiply(float* result, const float* a, const float* b) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            result[i*4 + j] = 0;
+            for (int k = 0; k < 4; k++) {
+                result[i*4 + j] += a[i*4 + k] * b[k*4 + j];
+            }
+        }
+    }
+}
+
+// ============================================================================
+// SOKOL INITIALIZATION
+// ============================================================================
+
+static bool render_sokol_init(void) {
+    if (render_state.initialized) return true;
     
-    // Initialize 3D camera for first-person view
-    config->camera.position = (Vector3){-20, 5, -20};    // Start at player position (elevated)
-    config->camera.target = (Vector3){0, 5, 0};          // Looking toward spaceport center
-    config->camera.up = (Vector3){0, 1, 0};              // Y is up
-    config->camera.fov = 75.0f;                          // Wider FOV for FPS
-    config->camera.near_plane = 0.1f;                    // Closer near plane for FPS
-    config->camera.far_plane = 500.0f;
-    config->camera.aspect_ratio = viewport_width / viewport_height;
+    // Create shader - using platform-specific shader source and entry points
+    sg_shader_desc shader_desc = {
+#ifdef SOKOL_METAL
+        .vertex_func = {
+            .source = vs_source_metal,
+            .entry = "vs_main"
+        },
+        .fragment_func = {
+            .source = fs_source_metal,
+            .entry = "fs_main"
+        },
+#else
+        .vertex_func = {
+            .source = vs_source_gl,
+            .entry = "main"
+        },
+        .fragment_func = {
+            .source = fs_source_gl,
+            .entry = "main"
+        },
+#endif
+        .label = "basic_3d_shader"
+    };
     
-    // Initialize lighting system
-    lighting_init(&config->lighting);
+    render_state.shader = sg_make_shader(&shader_desc);
     
-    printf("✅ 3D Render system initialized (%dx%d)\n", config->screen_width, config->screen_height);
-    printf("   Camera position: (%.1f, %.1f, %.1f)\n", 
-           config->camera.position.x, config->camera.position.y, config->camera.position.z);
-    printf("   Using enhanced material system\n");
+    if (render_state.shader.id == SG_INVALID_ID) {
+        printf("❌ Failed to create shader\n");
+        return false;
+    }
     
+    // Create sampler
+    render_state.sampler = sg_make_sampler(&(sg_sampler_desc){
+        .min_filter = SG_FILTER_LINEAR,
+        .mag_filter = SG_FILTER_LINEAR,
+        .wrap_u = SG_WRAP_REPEAT,
+        .wrap_v = SG_WRAP_REPEAT,
+        .label = "default_sampler"
+    });
+    
+    // Create pipeline
+    render_state.pipeline = sg_make_pipeline(&(sg_pipeline_desc){
+        .shader = render_state.shader,
+        .layout = {
+            .attrs = {
+                [0].format = SG_VERTEXFORMAT_FLOAT3,  // position
+                [1].format = SG_VERTEXFORMAT_FLOAT3,  // normal
+                [2].format = SG_VERTEXFORMAT_FLOAT2   // texcoord
+            }
+        },
+        .index_type = SG_INDEXTYPE_UINT16,
+        .depth = {
+            .compare = SG_COMPAREFUNC_LESS_EQUAL,
+            .write_enabled = true
+        },
+        .cull_mode = SG_CULLMODE_BACK,
+        .label = "basic_3d_pipeline"
+    });
+    
+    if (render_state.pipeline.id == SG_INVALID_ID) {
+        printf("❌ Failed to create pipeline\n");
+        return false;
+    }
+    
+    render_state.initialized = true;
+    printf("✅ Sokol rendering pipeline initialized\n");
     return true;
 }
 
-void render_cleanup(RenderConfig* config) {
-    if (!config) return;
-    
-    sg_shutdown();
-    printf("🎨 Render system cleaned up\n");
-}
-
 // ============================================================================
-// MAIN RENDERING PIPELINE
+// LEGACY SDL COMPATIBILITY LAYER
 // ============================================================================
 
-void render_clear_screen(RenderConfig* config) {
-    // This will be handled by the sokol_gfx pass action
-    (void)config;
-}
-
-void render_debug_info(struct World* world, RenderConfig* config) {
-    if (!config || !config->show_debug_info) return;
+bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_width, float viewport_height) {
+    printf("🚀 Initializing Sokol-based renderer (%.0fx%.0f)\n", viewport_width, viewport_height);
+    (void)config; (void)assets; // Unused for now
     
-    // For now, just count entities - we'd need a font system for proper text
-    // This is where you'd render FPS, entity count, camera position, etc.
+    // Initialize Sokol graphics
+    sg_setup(&(sg_desc){
+        .environment = sglue_environment(),
+        .logger.func = slog_func,
+    });
     
-    static uint32_t debug_counter = 0;
-    if (++debug_counter % 60 == 0) {  // Print debug info every second
-        printf("🎮 Frame %d | Entities: %d | Camera: (%.1f,%.1f,%.1f)\n", 
-               config->frame_count, world->entity_count,
-               config->camera.position.x, config->camera.position.y, config->camera.position.z);
+    if (!sg_isvalid()) {
+        printf("❌ Failed to initialize Sokol graphics\n");
+        return false;
     }
+    
+    // Initialize our rendering pipeline
+    if (!render_sokol_init()) {
+        printf("❌ Failed to initialize Sokol rendering pipeline\n");
+        return false;
+    }
+    
+    printf("✅ Render system initialized successfully\n");
+    return true;
+}
+
+void render_shutdown() {
+    if (render_state.initialized) {
+        sg_destroy_pipeline(render_state.pipeline);
+        sg_destroy_shader(render_state.shader);
+        sg_destroy_sampler(render_state.sampler);
+        render_state.initialized = false;
+    }
+    sg_shutdown();
+    printf("🔄 Render system shut down\n");
+}
+
+void render_clear(float r, float g, float b, float a) {
+    sg_begin_pass(&(sg_pass){
+        .action = {
+            .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = {r, g, b, a} },
+            .depth = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f }
+        },
+        .swapchain = sglue_swapchain()
+    });
 }
 
 void render_present(RenderConfig* config) {
-    // This will be handled by sg_commit()
-    (void)config;
-}
-
-void render_frame(struct World* world, RenderConfig* config, EntityID player_id, float delta_time) {
-    if (!world || !config) return;
-    
-    // Suppress unused parameter warning
-    (void)delta_time;
-    (void)player_id;  // Camera system now handles camera positioning
-    
-    // Clear the screen
-    render_clear_screen(config);
-    
-    // Camera position is now managed by camera system
-    
-    // Render all entities using enhanced material system
-    for (uint32_t i = 0; i < world->entity_count; i++) {
-        EntityID entity_id = i + 1; // Entity IDs are 1-based
-        render_entity_3d(world, entity_id, config);
-    }
-    
-    // Render debug information
-    render_debug_info(world, config);
-    
-    // Render UI
-    // cockpit_ui_render(&config->ui);
-    
-    // Present the frame
-    render_present(config);
+    (void)config; // Unused for now
+    sg_end_pass();
+    sg_commit();
 }
 
 // ============================================================================
-// UI MESSAGE API
+// ECS INTEGRATION
+// ============================================================================
+
+void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* config) {
+    if (!render_state.initialized) {
+        printf("⚠️  Sokol rendering not initialized, skipping entity render\n");
+        return;
+    }
+    
+    // Get entity transform component
+    struct Transform* transform = entity_get_transform(world, entity_id);
+    if (!transform) return;
+    
+    // Set up matrices
+    float model[16], view[16], proj[16], mvp[16], temp[16];
+    
+    // Model matrix (identity for now - TODO: use transform data)
+    mat4_identity(model);
+    
+    // View matrix from camera
+    Vector3 eye = {config->camera.position.x, config->camera.position.y, config->camera.position.z};
+    Vector3 target = config->camera.target;
+    Vector3 up = config->camera.up;
+    mat4_lookat(view, eye, target, up);
+    
+    // Projection matrix
+    mat4_perspective(proj, M_PI/4.0f, 16.0f/9.0f, 0.1f, 100.0f);
+    
+    // Combine matrices: MVP = P * V * M
+    mat4_multiply(temp, view, model);
+    mat4_multiply(mvp, proj, temp);
+    
+    // Apply pipeline
+    sg_apply_pipeline(render_state.pipeline);
+    
+    // Apply uniforms
+    vs_uniforms_t vs_uniforms = {0};
+    memcpy(vs_uniforms.mvp, mvp, sizeof(mvp));
+    sg_apply_uniforms(0, &SG_RANGE(vs_uniforms));
+    
+    fs_uniforms_t fs_uniforms = {
+        .light_dir = {0.0f, -1.0f, -0.5f}
+    };
+    sg_apply_uniforms(1, &SG_RANGE(fs_uniforms));
+    
+    // TODO: Apply mesh vertex/index buffers and texture bindings
+    // TODO: sg_draw() call when we have actual mesh data
+    
+    printf("🎨 Rendered entity %d (placeholder - no mesh data yet)\n", entity_id);
+}
+
+// ============================================================================
+// LEGACY COMPATIBILITY FUNCTIONS  
+// ============================================================================
+
+void render_set_camera(Vector3 position, Vector3 target) {
+    // Legacy function - camera is now handled through render_entity_3d config
+    printf("📷 Camera set: pos(%.1f,%.1f,%.1f) target(%.1f,%.1f,%.1f)\n", 
+           position.x, position.y, position.z, target.x, target.y, target.z);
+}
+
+void render_set_lighting(Vector3 direction, uint8_t r, uint8_t g, uint8_t b) {
+    // Legacy function - lighting is now handled in shaders
+    printf("💡 Lighting set: dir(%.2f,%.2f,%.2f) color(%d,%d,%d)\n", 
+           direction.x, direction.y, direction.z, r, g, b);
+}
+
+void render_add_mesh(Mesh* mesh) {
+    // Legacy function - meshes are now handled through ECS
+    if (mesh) {
+        printf("🔺 Mesh added: %s (%d vertices, %d indices)\n", 
+               mesh->name, mesh->vertex_count, mesh->index_count);
+    }
+}
+
+void render_apply_material(Material* material) {
+    // Legacy function - materials are now handled through uniform bindings
+    if (material) {
+        printf("🎨 Material applied: %s\n", material->name);
+    }
+}
+
+// ============================================================================
+// UI INTEGRATION
 // ============================================================================
 
 void render_add_comm_message(RenderConfig* config, const char* sender, const char* message, bool is_player) {
-    if (!config) return;
-    // cockpit_ui_add_message(&config->ui, sender, message, is_player);
+    // Legacy UI function - preserved for compatibility
+    (void)config; (void)sender; (void)message; (void)is_player;
+    printf("💬 Comm message: %s: %s\n", sender, message);
 }
 
 // ============================================================================
-// SCREENSHOT FUNCTIONALITY
+// MAIN RENDER INTERFACE FUNCTIONS
 // ============================================================================
 
+void render_cleanup(RenderConfig* config) {
+    (void)config; // Unused for now
+    
+    if (render_state.initialized) {
+        sg_destroy_pipeline(render_state.pipeline);
+        sg_destroy_shader(render_state.shader);
+        sg_destroy_sampler(render_state.sampler);
+        render_state.initialized = false;
+    }
+    
+    printf("🔄 Render system cleaned up\n");
+}
+
+void render_frame(struct World* world, RenderConfig* config, EntityID player_id, float delta_time) {
+    (void)delta_time; // Unused for now
+    
+    if (!render_state.initialized) return;
+    
+    // Basic frame rendering - just render entities with renderable components
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        if (entity->component_mask & COMPONENT_RENDERABLE) {
+            render_entity_3d(world, entity->id, config);
+        }
+    }
+    
+    // Render debug info if enabled
+    if (config->show_debug_info) {
+        render_debug_info(world, config);
+    }
+    
+    // Basic HUD for player if available
+    if (player_id != INVALID_ENTITY) {
+        struct Transform* transform = entity_get_transform(world, player_id);
+        if (transform) {
+            printf("🎮 Player at (%.1f,%.1f,%.1f)\n", 
+                   transform->position.x, transform->position.y, transform->position.z);
+        }
+    }
+}
+
+void render_debug_info(struct World* world, RenderConfig* config) {
+    (void)config; // Unused for now
+    
+    // Print basic debug info occasionally
+    static int debug_counter = 0;
+    debug_counter++;
+    
+    if (debug_counter % 180 == 0) { // Every 3 seconds at 60fps
+        printf("🔧 Debug: %d entities, %dx%d viewport\n", 
+               world->entity_count, config->screen_width, config->screen_height);
+    }
+}
+
+void render_clear_screen(RenderConfig* config) {
+    (void)config; // Unused - clearing is handled by Sokol pass action
+}
+
 bool render_take_screenshot(RenderConfig* config, const char* filename) {
-    // This will need to be re-implemented with sokol_gfx
-    (void)config;
-    (void)filename;
+    (void)config; (void)filename;
+    printf("📸 Screenshot requested: %s (not implemented yet)\n", filename);
     return false;
 }
 
 bool render_take_screenshot_from_position(struct World* world, RenderConfig* config, 
-                                         Vector3 camera_pos, Vector3 look_at_pos, 
-                                         const char* filename) {
-    // This will need to be re-implemented with sokol_gfx
-    (void)world;
-    (void)config;
-    (void)camera_pos;
-    (void)look_at_pos;
-    (void)filename;
+                                         Vector3 position, Vector3 target, const char* filename) {
+    (void)world; (void)config; (void)position; (void)target; (void)filename;
+    printf("📸 Positioned screenshot requested: %s (not implemented yet)\n", filename);
     return false;
-}
-
-// ============================================================================
-// ENTITY RENDERING (PLACEHOLDER FOR SOKOL MIGRATION)
-// ============================================================================
-
-void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* config) {
-    if (!world || !config || entity_id == INVALID_ENTITY) return;
-    
-    // Get entity
-    struct Entity* entity = entity_get(world, entity_id);
-    if (!entity) return;
-    
-    // Check if entity is renderable
-    if (!(entity->component_mask & COMPONENT_RENDERABLE)) return;
-    
-    struct Renderable* renderable = entity_get_renderable(world, entity_id);
-    if (!renderable || !renderable->visible) return;
-    
-    struct Transform* transform = entity_get_transform(world, entity_id);
-    if (!transform) return;
-    
-    // TODO: Implement actual Sokol rendering here
-    // For now, just suppress unused parameter warnings
-    (void)transform;
-    (void)renderable;
-    
-    // This is where we would:
-    // 1. Get mesh and material from asset registry
-    // 2. Set up vertex/index buffers
-    // 3. Apply MVP matrix uniforms
-    // 4. Call sg_draw()
 }

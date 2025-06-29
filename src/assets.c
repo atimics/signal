@@ -844,3 +844,65 @@ bool materials_bind_textures(Material* material) {
     
     return true;
 }
+
+// ============================================================================
+// SHADER LOADING FUNCTIONS
+// ============================================================================
+
+char* load_shader_source(const char* shader_path) {
+    if (!shader_path) {
+        printf("❌ Shader path is null\n");
+        return NULL;
+    }
+    
+    FILE* file = fopen(shader_path, "r");
+    if (!file) {
+        printf("❌ Failed to open shader file: %s\n", shader_path);
+        return NULL;
+    }
+    
+    // Get file size
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    if (size <= 0) {
+        printf("❌ Shader file is empty or invalid: %s\n", shader_path);
+        fclose(file);
+        return NULL;
+    }
+    
+    // Allocate buffer and read file
+    char* source = malloc(size + 1);
+    if (!source) {
+        printf("❌ Failed to allocate memory for shader source\n");
+        fclose(file);
+        return NULL;
+    }
+    
+    size_t bytes_read = fread(source, 1, size, file);
+    source[bytes_read] = '\0';
+    fclose(file);
+    
+    printf("✅ Loaded shader: %s (%ld bytes)\n", shader_path, bytes_read);
+    return source;
+}
+
+void free_shader_source(char* source) {
+    if (source) {
+        free(source);
+    }
+}
+
+const char* get_shader_path(const char* base_name, const char* stage) {
+    static char path[512];
+    
+#ifdef SOKOL_METAL
+    const char* extension = "metal";
+#else
+    const char* extension = "glsl";
+#endif
+    
+    snprintf(path, sizeof(path), "assets/shaders/%s.%s.%s", base_name, stage, extension);
+    return path;
+}

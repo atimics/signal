@@ -133,4 +133,17 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
                                const char* texture_dir);
 bool materials_bind_textures(Material* material);
 
+// ============================================================================
+// SHADER LOADING FUNCTIONS
+// ============================================================================
+
+// Load shader source from file
+char* load_shader_source(const char* shader_path);
+
+// Free shader source
+void free_shader_source(char* source);
+
+// Get platform-specific shader path
+const char* get_shader_path(const char* base_name, const char* stage); // stage: "vert" or "frag"
+
 #endif // ASSETS_H
