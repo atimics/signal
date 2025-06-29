@@ -3,6 +3,14 @@
 #include "sokol_glue.h"
 #include "sokol_log.h"
 
+// Nuklear configuration - declarations only (no implementation)
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
 #include "nuklear.h"
 #include "sokol_nuklear.h"
 
@@ -13,16 +21,6 @@
 #include <stdarg.h>
 
 static UIState ui_state = {0};
-
-// Helper function for formatted labels since nk_labelf doesn't exist
-static void nk_labelf(struct nk_context* ctx, nk_flags align, const char* fmt, ...) {
-    char buffer[256];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buffer, sizeof(buffer), fmt, args);
-    va_end(args);
-    nk_label(ctx, buffer, align);
-}
 
 void ui_init(void) {
     snk_setup(&(snk_desc_t){0});
@@ -45,10 +43,8 @@ void ui_shutdown(void) {
     printf("✅ Nuklear UI shutdown\n");
 }
 
-static void draw_hud(struct World* world) {
-    struct nk_context* ctx = ui_data.ctx;
-    
-    if (!ui_data.state.show_hud) return;
+static void draw_hud(struct nk_context* ctx, struct World* world) {
+    if (!ui_state.show_hud) return;
     
     // Create a HUD window in the top-left corner
     if (nk_begin(ctx, "HUD", nk_rect(10, 10, 300, 200),
@@ -57,7 +53,7 @@ static void draw_hud(struct World* world) {
         nk_layout_row_dynamic(ctx, 20, 1);
         
         // Display FPS
-        nk_labelf(ctx, NK_TEXT_LEFT, "FPS: %.1f", ui_data.state.fps);
+        nk_labelf(ctx, NK_TEXT_LEFT, "FPS: %.1f", ui_state.fps);
         
         // Display entity count
         nk_labelf(ctx, NK_TEXT_LEFT, "Entities: %d", world->entity_count);
@@ -85,9 +81,7 @@ static void draw_hud(struct World* world) {
             
             if (camera) {
                 nk_labelf(ctx, NK_TEXT_LEFT, "FOV: %.1f°", camera->fov);
-                nk_labelf(ctx, NK_TEXT_LEFT, "Mode: %s", 
-                         camera->mode == CAMERA_ORBITAL ? "Orbital" : 
-                         camera->mode == CAMERA_FIRST_PERSON ? "First Person" : "Free");
+                nk_labelf(ctx, NK_TEXT_LEFT, "Type: Camera");
             }
         }
         
@@ -118,10 +112,8 @@ static void draw_hud(struct World* world) {
     nk_end(ctx);
 }
 
-static void draw_debug_panel(struct World* world, SystemScheduler* scheduler) {
-    struct nk_context* ctx = ui_data.ctx;
-    
-    if (!ui_data.state.show_debug_panel) return;
+static void draw_debug_panel(struct nk_context* ctx, struct World* world, SystemScheduler* scheduler) {
+    if (!ui_state.show_debug_panel) return;
     
     if (nk_begin(ctx, "Debug Panel", nk_rect(50, 250, 400, 500),
         NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
@@ -131,7 +123,7 @@ static void draw_debug_panel(struct World* world, SystemScheduler* scheduler) {
         if (nk_tree_push(ctx, NK_TREE_TAB, "Performance", NK_MAXIMIZED)) {
             nk_layout_row_dynamic(ctx, 20, 2);
             nk_label(ctx, "FPS:", NK_TEXT_LEFT);
-            nk_labelf(ctx, NK_TEXT_LEFT, "%.1f", ui_data.state.fps);
+            nk_labelf(ctx, NK_TEXT_LEFT, "%.1f", ui_state.fps);
             
             nk_label(ctx, "Frame Count:", NK_TEXT_LEFT);
             nk_labelf(ctx, NK_TEXT_LEFT, "%d", scheduler->frame_count);
@@ -158,11 +150,13 @@ static void draw_debug_panel(struct World* world, SystemScheduler* scheduler) {
         if (nk_tree_push(ctx, NK_TREE_TAB, "Render Settings", NK_MAXIMIZED)) {
             nk_layout_row_dynamic(ctx, 30, 1);
             
-            // Wireframe toggle
-            if (nk_checkbox_label(ctx, "Wireframe Mode", &ui_data.state.show_wireframe)) {
+            // Wireframe toggle - using int for nuklear compatibility
+            int wireframe_int = ui_state.show_wireframe ? 1 : 0;
+            if (nk_checkbox_label(ctx, "Wireframe Mode", &wireframe_int)) {
+                ui_state.show_wireframe = wireframe_int ? true : false;
                 RenderConfig* render_config = get_render_config();
                 if (render_config) {
-                    render_config->mode = ui_data.state.show_wireframe ? 
+                    render_config->mode = ui_state.show_wireframe ? 
                                         RENDER_MODE_WIREFRAME : RENDER_MODE_SOLID;
                 }
             }
@@ -170,10 +164,23 @@ static void draw_debug_panel(struct World* world, SystemScheduler* scheduler) {
             // Debug visualization toggles
             RenderConfig* render_config = get_render_config();
             if (render_config) {
-                nk_checkbox_label(ctx, "Show Debug Info", &render_config->show_debug_info);
-                nk_checkbox_label(ctx, "Show Velocities", &render_config->show_velocities);
-                nk_checkbox_label(ctx, "Show Collision Bounds", &render_config->show_collision_bounds);
-                nk_checkbox_label(ctx, "Show Orbits", &render_config->show_orbits);
+                int debug_info = render_config->show_debug_info ? 1 : 0;
+                int show_velocities = render_config->show_velocities ? 1 : 0;
+                int show_collision = render_config->show_collision_bounds ? 1 : 0;
+                int show_orbits = render_config->show_orbits ? 1 : 0;
+                
+                if (nk_checkbox_label(ctx, "Show Debug Info", &debug_info)) {
+                    render_config->show_debug_info = debug_info ? true : false;
+                }
+                if (nk_checkbox_label(ctx, "Show Velocities", &show_velocities)) {
+                    render_config->show_velocities = show_velocities ? true : false;
+                }
+                if (nk_checkbox_label(ctx, "Show Collision Bounds", &show_collision)) {
+                    render_config->show_collision_bounds = show_collision ? true : false;
+                }
+                if (nk_checkbox_label(ctx, "Show Orbits", &show_orbits)) {
+                    render_config->show_orbits = show_orbits ? true : false;
+                }
             }
             
             nk_tree_pop(ctx);
@@ -183,8 +190,8 @@ static void draw_debug_panel(struct World* world, SystemScheduler* scheduler) {
         if (nk_tree_push(ctx, NK_TREE_TAB, "Camera Controls", NK_MAXIMIZED)) {
             nk_layout_row_dynamic(ctx, 30, 1);
             
-            nk_property_float(ctx, "Camera Speed", 0.1f, &ui_data.state.camera_speed, 50.0f, 0.1f, 0.1f);
-            nk_property_float(ctx, "Time Scale", 0.0f, &ui_data.state.time_scale, 5.0f, 0.1f, 0.1f);
+            nk_property_float(ctx, "Camera Speed", 0.1f, &ui_state.camera_speed, 50.0f, 0.1f, 0.1f);
+            nk_property_float(ctx, "Time Scale", 0.0f, &ui_state.time_scale, 5.0f, 0.1f, 0.1f);
             
             nk_tree_pop(ctx);
         }
@@ -245,7 +252,10 @@ static void draw_debug_panel(struct World* world, SystemScheduler* scheduler) {
                 SystemInfo* system = &scheduler->systems[i];
                 
                 nk_layout_row_dynamic(ctx, 25, 2);
-                nk_checkbox_label(ctx, system->name, &system->enabled);
+                int enabled = system->enabled ? 1 : 0;
+                if (nk_checkbox_label(ctx, system->name, &enabled)) {
+                    system->enabled = enabled ? true : false;
+                }
                 nk_labelf(ctx, NK_TEXT_LEFT, "%.1f Hz", system->frequency);
             }
             
@@ -256,21 +266,22 @@ static void draw_debug_panel(struct World* world, SystemScheduler* scheduler) {
 }
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time) {
-    struct nk_context* ctx = ui_data.ctx;
+    // Get new frame context from sokol_nuklear
+    struct nk_context* ctx = snk_new_frame();
     
     // Update FPS calculation
-    ui_data.state.frame_count++;
-    ui_data.state.fps_timer += delta_time;
+    ui_state.frame_count++;
+    ui_state.fps_timer += delta_time;
     
-    if (ui_data.state.fps_timer >= 1.0f) {
-        ui_data.state.fps = ui_data.state.frame_count / ui_data.state.fps_timer;
-        ui_data.state.frame_count = 0;
-        ui_data.state.fps_timer = 0.0f;
+    if (ui_state.fps_timer >= 1.0f) {
+        ui_state.fps = ui_state.frame_count / ui_state.fps_timer;
+        ui_state.frame_count = 0;
+        ui_state.fps_timer = 0.0f;
     }
     
     // Draw UI components
-    draw_hud(world);
-    draw_debug_panel(world, scheduler);
+    draw_hud(ctx, world);
+    draw_debug_panel(ctx, world, scheduler);
     
     // Render the UI
     snk_render(sapp_width(), sapp_height());
@@ -291,13 +302,16 @@ bool ui_handle_event(const void* ev) {
                 return true;  // UI captured this event
                 
             case SAPP_KEYCODE_F3:
-                ui_data.state.show_wireframe = !ui_data.state.show_wireframe;
+                ui_state.show_wireframe = !ui_state.show_wireframe;
                 RenderConfig* render_config = get_render_config();
                 if (render_config) {
-                    render_config->mode = ui_data.state.show_wireframe ? 
+                    render_config->mode = ui_state.show_wireframe ? 
                                         RENDER_MODE_WIREFRAME : RENDER_MODE_SOLID;
                 }
                 return true;  // UI captured this event
+                
+            default:
+                break;
         }
     }
     
@@ -306,11 +320,11 @@ bool ui_handle_event(const void* ev) {
 }
 
 void ui_toggle_debug_panel(void) {
-    ui_data.state.show_debug_panel = !ui_data.state.show_debug_panel;
-    printf("🔧 Debug panel %s\n", ui_data.state.show_debug_panel ? "enabled" : "disabled");
+    ui_state.show_debug_panel = !ui_state.show_debug_panel;
+    printf("🔧 Debug panel %s\n", ui_state.show_debug_panel ? "enabled" : "disabled");
 }
 
 void ui_toggle_hud(void) {
-    ui_data.state.show_hud = !ui_data.state.show_hud;
-    printf("📊 HUD %s\n", ui_data.state.show_hud ? "enabled" : "disabled");
+    ui_state.show_hud = !ui_state.show_hud;
+    printf("📊 HUD %s\n", ui_state.show_hud ? "enabled" : "disabled");
 }
