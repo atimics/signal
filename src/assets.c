@@ -1,5 +1,5 @@
-#include "assets.h"
 #include "sokol_gfx.h"
+#include "assets.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -236,16 +236,20 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
     if (parse_obj_file(filepath, mesh)) {
         // Create vertex buffer
         mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
-            .data = SG_RANGE(mesh->vertices),
-            .size = mesh->vertex_count * sizeof(Vertex),
+            .data = {
+                .ptr = mesh->vertices,
+                .size = mesh->vertex_count * sizeof(Vertex)
+            },
             .usage = { .vertex_buffer = true },
             .label = mesh->name
         });
 
         // Create index buffer
         mesh->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
-            .data = SG_RANGE(mesh->indices),
-            .size = mesh->index_count * sizeof(int),
+            .data = {
+                .ptr = mesh->indices,
+                .size = mesh->index_count * sizeof(int)
+            },
             .usage = { .index_buffer = true },
             .label = mesh->name
         });

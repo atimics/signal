@@ -45,12 +45,12 @@ static struct {
     char* fragment_shader_source;
 } render_state = {0};
 
-// Test triangle vertices (position, normal, texcoord)
+// Test triangle vertices (position, normal, texcoord) - Large, centered triangle
 static float test_vertices[] = {
     // Position        Normal          TexCoord
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
-    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
-     0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
+     0.0f,  0.8f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
+    -0.8f, -0.8f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
+     0.8f, -0.8f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
 };
 
 static uint16_t test_indices[] = { 0, 1, 2 };
@@ -504,16 +504,64 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         return;
     }
     
-    // Apply the rendering pipeline
-    sg_apply_pipeline(render_state.pipeline);
-    
-    // Iterate over all renderable entities
+    // Count entities to render
+    int renderable_count = 0;
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
         if (entity->component_mask & COMPONENT_RENDERABLE) {
-            render_entity_3d(world, entity->id, config);
+            renderable_count++;
         }
     }
+    
+    // Debug first frame
+    static bool first_frame = true;
+    if (first_frame) {
+        printf("🎨 Sokol rendering active: pipeline_state=%d, renderable_count=%d\n", 
+               pipeline_state, renderable_count);
+        first_frame = false;
+    }
+    
+    // Apply the rendering pipeline
+    sg_apply_pipeline(render_state.pipeline);
+    
+    // For now, draw a simple triangle if we have renderable entities
+    // This ensures we see something on screen while mesh rendering is being developed
+    if (renderable_count > 0) {
+        // Apply vertex buffer
+        sg_apply_bindings(&(sg_bindings){
+            .vertex_buffers[0] = render_state.vertex_buffer,
+            .index_buffer = render_state.index_buffer,
+            .images[0] = render_state.default_texture,
+            .samplers[0] = render_state.sampler
+        });
+        
+        // Create simple identity MVP matrix
+        vs_uniforms_t uniforms;
+        mat4_identity(uniforms.mvp);
+        
+        // Apply uniforms
+        sg_range uniform_data = SG_RANGE(uniforms);
+        sg_apply_uniforms(0, &uniform_data);
+        
+        // Draw the triangle
+        sg_draw(0, 3, 1);
+    } else {
+        // Print once that we're not rendering
+        static bool no_render_warned = false;
+        if (!no_render_warned) {
+            printf("🎨 Sokol render frame initialized - no renderable entities\n");
+            no_render_warned = true;
+        }
+    }
+    
+    // TODO: Uncomment when mesh rendering is working properly
+    // Iterate over all renderable entities
+    // for (uint32_t i = 0; i < world->entity_count; i++) {
+    //     struct Entity* entity = &world->entities[i];
+    //     if (entity->component_mask & COMPONENT_RENDERABLE) {
+    //         render_entity_3d(world, entity->id, config);
+    //     }
+    // }
     
     // Render debug info if enabled
     if (config->show_debug_info) {

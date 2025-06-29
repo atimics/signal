@@ -5,10 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Forward declarations for Sokol types
-typedef struct sg_buffer sg_buffer;
-typedef struct sg_image sg_image;
-
 
 
 
