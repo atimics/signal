@@ -278,17 +278,14 @@ static void frame(void) {
     scheduler_update(&app_state.scheduler, &app_state.world, dt);
     
     // Render frame
-    printf("🔧 About to start render pass in main.c\n");
     sg_begin_pass(&(sg_pass){
         .swapchain = sglue_swapchain(),
         .action = app_state.pass_action
     });
-    printf("🔧 Render pass started, calling render_frame\n");
     
     // Render entities (basic implementation for now)
     render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
     
-    printf("🔧 Ending render pass in main.c\n");
     sg_end_pass();
     sg_commit();
     

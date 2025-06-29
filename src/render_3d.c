@@ -207,11 +207,9 @@ static bool render_sokol_init(void) {
         .label = "default_sampler"
     });
     
-    // Create pipeline with swapchain-compatible formats
-    // Query swapchain to get the actual formats
-    sg_swapchain swapchain = sglue_swapchain();
-    printf("🔍 Swapchain info: sample_count=%d, color_fmt=%d, depth_fmt=%d\n", 
-           swapchain.sample_count, swapchain.color_format, swapchain.depth_format);
+    // Create pipeline - use default formats for swapchain compatibility  
+    // Note: Don't specify formats explicitly - let Sokol use defaults that match the swapchain
+    printf("� Creating pipeline with default swapchain-compatible formats\n");
     
     render_state.pipeline = sg_make_pipeline(&(sg_pipeline_desc){
         .shader = render_state.shader,
@@ -225,13 +223,13 @@ static bool render_sokol_init(void) {
         .index_type = SG_INDEXTYPE_UINT16,
         .depth = {
             .compare = SG_COMPAREFUNC_LESS_EQUAL,
-            .write_enabled = true,
-            .pixel_format = swapchain.depth_format  // Match swapchain depth format
+            .write_enabled = true
+            // Don't specify pixel_format - let it default to match swapchain
         },
         .colors[0] = {
-            .pixel_format = swapchain.color_format  // Match swapchain color format
+            // Don't specify pixel_format - let it default to match swapchain
         },
-        .sample_count = swapchain.sample_count,  // Match swapchain sample count
+        // Don't specify sample_count - let it default to match swapchain
         .cull_mode = SG_CULLMODE_BACK,
         .label = "basic_3d_pipeline"
     });
@@ -485,11 +483,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     
     // If we have entities to render, draw a simple test triangle
     if (renderable_count > 0) {
-        // Debug: Check if we're in a render pass
-        printf("🔧 About to apply pipeline - checking pass state...\n");
-        
         // Apply pipeline (should be within render pass from main.c)
-        printf("🔧 Applying pipeline within render pass...\n");
         sg_apply_pipeline(render_state.pipeline);
         
         // Apply vertex buffer
@@ -509,10 +503,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         sg_apply_uniforms(0, &uniform_data);
         
         // Draw the triangle
-        printf("🎨 Drawing triangle (3 indices)...\n");
         sg_draw(0, 3, 1);
-        
-        printf("✅ Triangle drawn successfully\n");
     } else {
         // Print once that we're not rendering
         static bool no_render_warned = false;
