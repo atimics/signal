@@ -45,12 +45,12 @@ static struct {
     char* fragment_shader_source;
 } render_state = {0};
 
-// Test triangle vertices (position, normal, texcoord) - Large, centered triangle
+// Test triangle vertices (position, normal, texcoord) - Simple NDC triangle
 static float test_vertices[] = {
     // Position        Normal          TexCoord
-     0.0f,  0.8f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
-    -0.8f, -0.8f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
-     0.8f, -0.8f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
+    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
+     0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
 };
 
 static uint16_t test_indices[] = { 0, 1, 2 };
@@ -226,15 +226,15 @@ static bool render_sokol_init(void) {
         },
         .index_type = SG_INDEXTYPE_UINT16,
         .depth = {
-            .compare = SG_COMPAREFUNC_LESS_EQUAL,
-            .write_enabled = true
+            .compare = SG_COMPAREFUNC_ALWAYS,  // Always pass depth test
+            .write_enabled = false              // Don't write to depth buffer
             // Don't specify pixel_format - let it default to match swapchain
         },
         .colors[0] = {
             // Don't specify pixel_format - let it default to match swapchain
         },
         // Don't specify sample_count - let it default to match swapchain
-        .cull_mode = SG_CULLMODE_BACK,
+        .cull_mode = SG_CULLMODE_NONE,  // Disable culling for debugging
         .label = "basic_3d_pipeline"
     });
     
@@ -257,6 +257,16 @@ static bool render_sokol_init(void) {
         .usage = { .index_buffer = true },  // Explicitly set as index buffer
         .label = "test_indices"
     });
+    
+    // Check buffer creation
+    sg_resource_state vb_state = sg_query_buffer_state(render_state.vertex_buffer);
+    sg_resource_state ib_state = sg_query_buffer_state(render_state.index_buffer);
+    printf("🔍 Vertex buffer state: %d, Index buffer state: %d\n", vb_state, ib_state);
+    
+    if (vb_state != SG_RESOURCESTATE_VALID || ib_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ Buffer creation failed - VB:%d IB:%d\n", vb_state, ib_state);
+        return false;
+    }
     
     // Create uniform buffer (dynamic to allow updates)
     render_state.uniform_buffer = sg_make_buffer(&(sg_buffer_desc){
@@ -527,6 +537,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     // For now, draw a simple triangle if we have renderable entities
     // This ensures we see something on screen while mesh rendering is being developed
     if (renderable_count > 0) {
+        static int draw_count = 0;
+        if (draw_count % 60 == 0) { // Print once per second
+            printf("🔴 Drawing triangle frame %d\n", draw_count);
+        }
+        draw_count++;
+        
         // Apply vertex buffer
         sg_apply_bindings(&(sg_bindings){
             .vertex_buffers[0] = render_state.vertex_buffer,
