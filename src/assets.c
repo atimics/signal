@@ -895,7 +895,11 @@ void free_shader_source(char* source) {
 }
 
 const char* get_shader_path(const char* base_name, const char* stage) {
-    static char path[512];
+    static char path_buffers[2][512];  // Two buffers to handle consecutive calls
+    static int buffer_index = 0;
+    
+    char* path = path_buffers[buffer_index];
+    buffer_index = (buffer_index + 1) % 2;  // Alternate between buffers
     
 #ifdef SOKOL_METAL
     const char* extension = "metal";
@@ -903,6 +907,6 @@ const char* get_shader_path(const char* base_name, const char* stage) {
     const char* extension = "glsl";
 #endif
     
-    snprintf(path, sizeof(path), "assets/shaders/%s.%s.%s", base_name, stage, extension);
+    snprintf(path, 512, "assets/shaders/%s.%s.%s", base_name, stage, extension);
     return path;
 }

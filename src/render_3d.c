@@ -36,10 +36,23 @@ static struct {
     sg_pipeline pipeline;
     sg_shader shader;
     sg_sampler sampler;
+    sg_buffer vertex_buffer;
+    sg_buffer index_buffer;
+    sg_image default_texture;
     bool initialized;
     char* vertex_shader_source;
     char* fragment_shader_source;
 } render_state = {0};
+
+// Test triangle vertices (position, normal, texcoord)
+static float test_vertices[] = {
+    // Position        Normal          TexCoord
+     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
+    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
+     0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
+};
+
+static uint16_t test_indices[] = { 0, 1, 2 };
 
 // ============================================================================
 // MATRIX MATH HELPERS
@@ -100,9 +113,12 @@ static bool render_sokol_init(void) {
     
     // Load shader sources from files
     const char* vs_path = get_shader_path("basic_3d", "vert");
-    const char* fs_path = get_shader_path("basic_3d", "frag");
+    const char* fs_path = get_shader_path("basic_3d_simple", "frag");
     
+    printf("📂 Loading vertex shader: %s\n", vs_path);
     render_state.vertex_shader_source = load_shader_source(vs_path);
+    
+    printf("📂 Loading fragment shader: %s\n", fs_path);
     render_state.fragment_shader_source = load_shader_source(fs_path);
     
     if (!render_state.vertex_shader_source || !render_state.fragment_shader_source) {
@@ -136,12 +152,42 @@ static bool render_sokol_init(void) {
             .entry = "main"
 #endif
         },
+        .uniform_blocks = {
+            [0] = {
+                .stage = SG_SHADERSTAGE_VERTEX,
+                .size = sizeof(vs_uniforms_t),
+                .layout = SG_UNIFORMLAYOUT_NATIVE
+            }
+            // Fragment shader uniform temporarily disabled
+            // [1] = {
+            //     .stage = SG_SHADERSTAGE_FRAGMENT,
+            //     .size = sizeof(fs_uniforms_t),
+            //     .layout = SG_UNIFORMLAYOUT_NATIVE
+            // }
+        },
+        .images = {
+            [0] = { .stage = SG_SHADERSTAGE_FRAGMENT, .image_type = SG_IMAGETYPE_2D, .sample_type = SG_IMAGESAMPLETYPE_FLOAT }
+        },
+        .samplers = {
+            [0] = { .stage = SG_SHADERSTAGE_FRAGMENT, .sampler_type = SG_SAMPLERTYPE_FILTERING }
+        },
+        .image_sampler_pairs = {
+            [0] = { .stage = SG_SHADERSTAGE_FRAGMENT, .image_slot = 0, .sampler_slot = 0 }
+        },
         .label = "basic_3d_shader"
     };
     
+    printf("🔧 Creating shader with entry points: vs=%s, fs=%s\n", 
+           shader_desc.vertex_func.entry, shader_desc.fragment_func.entry);
+    
     render_state.shader = sg_make_shader(&shader_desc);
     
-    if (render_state.shader.id == SG_INVALID_ID) {
+    // Check for shader creation errors
+    sg_resource_state shader_state = sg_query_shader_state(render_state.shader);
+    printf("🔍 Shader state: %d (VALID=%d, FAILED=%d, INVALID=%d)\n", 
+           shader_state, SG_RESOURCESTATE_VALID, SG_RESOURCESTATE_FAILED, SG_RESOURCESTATE_INVALID);
+    
+    if (render_state.shader.id == SG_INVALID_ID || shader_state == SG_RESOURCESTATE_FAILED) {
         printf("❌ Failed to create shader\n");
         free_shader_source(render_state.vertex_shader_source);
         free_shader_source(render_state.fragment_shader_source);
@@ -183,6 +229,37 @@ static bool render_sokol_init(void) {
         return false;
     }
     
+    // Create test geometry buffers
+    render_state.vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .data = SG_RANGE(test_vertices),
+        .label = "test_vertices"
+    });
+    
+    render_state.index_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .data = SG_RANGE(test_indices),
+        .label = "test_indices"
+    });
+    
+    // Create default white texture (1x1 white pixel)
+    uint32_t white_pixel = 0xFFFFFFFF;
+    render_state.default_texture = sg_make_image(&(sg_image_desc){
+        .width = 1,
+        .height = 1,
+        .pixel_format = SG_PIXELFORMAT_RGBA8,
+        .data.subimage[0][0] = SG_RANGE(white_pixel),
+        .label = "default_white_texture"
+    });
+    
+    // Check pipeline state
+    sg_resource_state pipeline_state = sg_query_pipeline_state(render_state.pipeline);
+    printf("🔍 Pipeline state: %d (VALID=%d, FAILED=%d, INVALID=%d)\n", 
+           pipeline_state, SG_RESOURCESTATE_VALID, SG_RESOURCESTATE_FAILED, SG_RESOURCESTATE_INVALID);
+    
+    if (pipeline_state == SG_RESOURCESTATE_FAILED) {
+        printf("❌ Pipeline creation failed - invalid resource state\n");
+        return false;
+    }
+    
     render_state.initialized = true;
     printf("✅ Sokol rendering pipeline initialized with external shaders\n");
     return true;
@@ -219,6 +296,9 @@ bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_wid
 
 void render_shutdown() {
     if (render_state.initialized) {
+        sg_destroy_buffer(render_state.vertex_buffer);
+        sg_destroy_buffer(render_state.index_buffer);
+        sg_destroy_image(render_state.default_texture);
         sg_destroy_pipeline(render_state.pipeline);
         sg_destroy_shader(render_state.shader);
         sg_destroy_sampler(render_state.sampler);
@@ -269,42 +349,10 @@ void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* con
     struct Transform* transform = entity_get_transform(world, entity_id);
     if (!transform) return;
     
-    // Set up matrices
-    float model[16], view[16], proj[16], mvp[16], temp[16];
+    // TODO: Implement individual entity rendering
+    // For now, this is handled in render_frame() to avoid multiple pipeline applications
     
-    // Model matrix (identity for now - TODO: use transform data)
-    mat4_identity(model);
-    
-    // View matrix from camera
-    Vector3 eye = {config->camera.position.x, config->camera.position.y, config->camera.position.z};
-    Vector3 target = config->camera.target;
-    Vector3 up = config->camera.up;
-    mat4_lookat(view, eye, target, up);
-    
-    // Projection matrix
-    mat4_perspective(proj, M_PI/4.0f, 16.0f/9.0f, 0.1f, 100.0f);
-    
-    // Combine matrices: MVP = P * V * M
-    mat4_multiply(temp, view, model);
-    mat4_multiply(mvp, proj, temp);
-    
-    // Apply pipeline
-    sg_apply_pipeline(render_state.pipeline);
-    
-    // Apply uniforms
-    vs_uniforms_t vs_uniforms = {0};
-    memcpy(vs_uniforms.mvp, mvp, sizeof(mvp));
-    sg_apply_uniforms(0, &SG_RANGE(vs_uniforms));
-    
-    fs_uniforms_t fs_uniforms = {
-        .light_dir = {0.0f, -1.0f, -0.5f}
-    };
-    sg_apply_uniforms(1, &SG_RANGE(fs_uniforms));
-    
-    // TODO: Apply mesh vertex/index buffers and texture bindings
-    // TODO: sg_draw() call when we have actual mesh data
-    
-    printf("🎨 Rendered entity %d (placeholder - no mesh data yet)\n", entity_id);
+    printf("🎨 Entity %d ready for render (transform available)\n", entity_id);
 }
 
 // ============================================================================
@@ -356,6 +404,9 @@ void render_cleanup(RenderConfig* config) {
     (void)config; // Unused for now
     
     if (render_state.initialized) {
+        sg_destroy_buffer(render_state.vertex_buffer);
+        sg_destroy_buffer(render_state.index_buffer);
+        sg_destroy_image(render_state.default_texture);
         sg_destroy_pipeline(render_state.pipeline);
         sg_destroy_shader(render_state.shader);
         sg_destroy_sampler(render_state.sampler);
@@ -381,11 +432,72 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     
     if (!render_state.initialized) return;
     
-    // Basic frame rendering - just render entities with renderable components
+    // Check if pipeline is still valid
+    sg_resource_state pipeline_state = sg_query_pipeline_state(render_state.pipeline);
+    if (pipeline_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ Pipeline no longer valid (state=%d), skipping frame\n", pipeline_state);
+        return;
+    }
+    
+    // Count entities to render
+    int renderable_count = 0;
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
         if (entity->component_mask & COMPONENT_RENDERABLE) {
-            render_entity_3d(world, entity->id, config);
+            renderable_count++;
+        }
+    }
+    
+    if (renderable_count > 0) {
+        // Apply pipeline and bindings
+        sg_apply_pipeline(render_state.pipeline);
+        
+        // Set up basic uniforms for all entities
+        vs_uniforms_t vs_uniforms = {0};
+        
+        // Set up matrices
+        float model[16], view[16], proj[16], mvp[16], temp[16];
+        
+        // Model matrix (identity for now)
+        mat4_identity(model);
+        
+        // View matrix from camera
+        Vector3 eye = {config->camera.position.x, config->camera.position.y, config->camera.position.z};
+        Vector3 target = config->camera.target;
+        Vector3 up = config->camera.up;
+        mat4_lookat(view, eye, target, up);
+        
+        // Projection matrix
+        mat4_perspective(proj, M_PI/4.0f, config->camera.aspect_ratio, 0.1f, 100.0f);
+        
+        // Combine matrices: MVP = P * V * M
+        mat4_multiply(temp, view, model);
+        mat4_multiply(mvp, proj, temp);
+        
+        memcpy(vs_uniforms.mvp, mvp, sizeof(mvp));
+        sg_apply_uniforms(0, &SG_RANGE(vs_uniforms));
+        
+        // Fragment shader uniforms temporarily disabled
+        // fs_uniforms_t fs_uniforms = {
+        //     .light_dir = {0.0f, -1.0f, -0.5f}
+        // };
+        // sg_apply_uniforms(1, &SG_RANGE(fs_uniforms));
+        
+        // Bind vertex buffer and draw test triangle
+        sg_bindings bindings = {
+            .vertex_buffers[0] = render_state.vertex_buffer,
+            .index_buffer = render_state.index_buffer,
+            .images[0] = render_state.default_texture,
+            .samplers[0] = render_state.sampler
+        };
+        sg_apply_bindings(&bindings);
+        sg_draw(0, 3, 1);
+        
+        // Debug info
+        static bool draw_warned = false;
+        if (!draw_warned) {
+            printf("🎨 Drawing test triangle with %d entities ready to render\n", renderable_count);
+            draw_warned = true;
         }
     }
     
@@ -394,8 +506,9 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         render_debug_info(world, config);
     }
     
-    // Basic HUD for player if available
-    if (player_id != INVALID_ENTITY) {
+    // Basic HUD for player if available (print occasionally)
+    static int player_print_counter = 0;
+    if (player_id != INVALID_ENTITY && ++player_print_counter % 60 == 0) {
         struct Transform* transform = entity_get_transform(world, player_id);
         if (transform) {
             printf("🎮 Player at (%.1f,%.1f,%.1f)\n", 
