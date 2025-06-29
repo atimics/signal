@@ -1,3 +1,9 @@
+#define SOKOL_IMPL
+#include "sokol_gfx.h"
+#include "sokol_app.h"
+#include "sokol_glue.h"
+#include "sokol_log.h"
+
 #include "render.h"
 #include "render_camera.h"
 #include "render_lighting.h"
@@ -13,42 +19,12 @@
 bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_width, float viewport_height) {
     if (!config || !assets) return false;
     
-    printf("🎨 Initializing 3D SDL Render System...\n");
-    
-    // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        printf("❌ SDL could not initialize: %s\n", SDL_GetError());
-        return false;
-    }
+    printf("🎨 Initializing Sokol Render System...\n");
     
     // Create window
     config->screen_width = (int)viewport_width;
     config->screen_height = (int)viewport_height;
     config->assets = assets;
-    
-    config->window = SDL_CreateWindow("CGGame - Spaceport",
-                                     SDL_WINDOWPOS_UNDEFINED,
-                                     SDL_WINDOWPOS_UNDEFINED,
-                                     config->screen_width,
-                                     config->screen_height,
-                                     SDL_WINDOW_SHOWN);
-    
-    if (!config->window) {
-        printf("❌ Window could not be created: %s\n", SDL_GetError());
-        SDL_Quit();
-        return false;
-    }
-    
-    // Create renderer
-    config->renderer = SDL_CreateRenderer(config->window, -1, 
-                                         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    
-    if (!config->renderer) {
-        printf("❌ Renderer could not be created: %s\n", SDL_GetError());
-        SDL_DestroyWindow(config->window);
-        SDL_Quit();
-        return false;
-    }
     
     // Initialize render settings
     config->mode = RENDER_MODE_TEXTURED;  // Use textured mode by default
@@ -59,15 +35,6 @@ bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_wid
     config->update_interval = 1.0f / 60.0f;  // 60 FPS
     config->last_update = 0.0f;
     config->frame_count = 0;
-    
-    // Initialize cockpit UI
-    if (!cockpit_ui_init(&config->ui, config->renderer, config->screen_width, config->screen_height)) {
-        printf("❌ Failed to initialize cockpit UI\n");
-        SDL_DestroyRenderer(config->renderer);
-        SDL_DestroyWindow(config->window);
-        SDL_Quit();
-        return false;
-    }
     
     // Initialize 3D camera for first-person view
     config->camera.position = (Vector3){-20, 5, -20};    // Start at player position (elevated)
@@ -92,23 +59,7 @@ bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_wid
 void render_cleanup(RenderConfig* config) {
     if (!config) return;
     
-    // Cleanup UI
-    cockpit_ui_cleanup(&config->ui);
-    
-    // Asset cleanup is handled by the asset system
-    
-    // Cleanup SDL
-    if (config->renderer) {
-        SDL_DestroyRenderer(config->renderer);
-        config->renderer = NULL;
-    }
-    
-    if (config->window) {
-        SDL_DestroyWindow(config->window);
-        config->window = NULL;
-    }
-    
-    SDL_Quit();
+    sg_shutdown();
     printf("🎨 Render system cleaned up\n");
 }
 
@@ -117,11 +68,8 @@ void render_cleanup(RenderConfig* config) {
 // ============================================================================
 
 void render_clear_screen(RenderConfig* config) {
-    if (!config || !config->renderer) return;
-    
-    // Set background to space black
-    SDL_SetRenderDrawColor(config->renderer, 0, 0, 0, 255);
-    SDL_RenderClear(config->renderer);
+    // This will be handled by the sokol_gfx pass action
+    (void)config;
 }
 
 void render_debug_info(struct World* world, RenderConfig* config) {
@@ -139,10 +87,8 @@ void render_debug_info(struct World* world, RenderConfig* config) {
 }
 
 void render_present(RenderConfig* config) {
-    if (!config || !config->renderer) return;
-    
-    SDL_RenderPresent(config->renderer);
-    config->frame_count++;
+    // This will be handled by sg_commit()
+    (void)config;
 }
 
 void render_frame(struct World* world, RenderConfig* config, EntityID player_id, float delta_time) {
@@ -167,7 +113,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     render_debug_info(world, config);
     
     // Render UI
-    cockpit_ui_render(&config->ui);
+    // cockpit_ui_render(&config->ui);
     
     // Present the frame
     render_present(config);
@@ -179,7 +125,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
 
 void render_add_comm_message(RenderConfig* config, const char* sender, const char* message, bool is_player) {
     if (!config) return;
-    cockpit_ui_add_message(&config->ui, sender, message, is_player);
+    // cockpit_ui_add_message(&config->ui, sender, message, is_player);
 }
 
 // ============================================================================
@@ -187,82 +133,20 @@ void render_add_comm_message(RenderConfig* config, const char* sender, const cha
 // ============================================================================
 
 bool render_take_screenshot(RenderConfig* config, const char* filename) {
-    if (!config || !config->renderer || !filename) return false;
-    
-    // Get the current render target surface
-    SDL_Surface* surface = SDL_CreateRGBSurface(0, config->screen_width, config->screen_height, 32,
-                                               0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
-    if (!surface) {
-        printf("❌ Failed to create surface for screenshot: %s\n", SDL_GetError());
-        return false;
-    }
-    
-    // Read pixels from renderer
-    if (SDL_RenderReadPixels(config->renderer, NULL, surface->format->format,
-                           surface->pixels, surface->pitch) != 0) {
-        printf("❌ Failed to read pixels for screenshot: %s\n", SDL_GetError());
-        SDL_FreeSurface(surface);
-        return false;
-    }
-    
-    // Save as BMP file
-    if (SDL_SaveBMP(surface, filename) != 0) {
-        printf("❌ Failed to save screenshot: %s\n", SDL_GetError());
-        SDL_FreeSurface(surface);
-        return false;
-    }
-    
-    SDL_FreeSurface(surface);
-    printf("📸 Screenshot saved: %s (%dx%d)\n", filename, config->screen_width, config->screen_height);
-    return true;
+    // This will need to be re-implemented with sokol_gfx
+    (void)config;
+    (void)filename;
+    return false;
 }
 
 bool render_take_screenshot_from_position(struct World* world, RenderConfig* config, 
                                          Vector3 camera_pos, Vector3 look_at_pos, 
                                          const char* filename) {
-    if (!world || !config || !filename) return false;
-    
-    // Save current camera state
-    Camera3D original_camera = config->camera;
-    
-    // Set up camera at specified position
-    camera_look_at(&config->camera, camera_pos, look_at_pos, (Vector3){0, 1, 0});
-    
-    printf("📸 Taking screenshot from (%.1f, %.1f, %.1f) looking at (%.1f, %.1f, %.1f)\n",
-           camera_pos.x, camera_pos.y, camera_pos.z,
-           look_at_pos.x, look_at_pos.y, look_at_pos.z);
-    
-    // Clear screen with space background
-    SDL_SetRenderDrawColor(config->renderer, 8, 8, 20, 255);  // Dark space blue
-    SDL_RenderClear(config->renderer);
-    
-    // Render all entities from this viewpoint
-    uint32_t rendered_count = 0;
-    for (uint32_t i = 0; i < world->entity_count; i++) {
-        struct Entity* entity = &world->entities[i];
-        
-        if ((entity->component_mask & COMPONENT_RENDERABLE) &&
-            (entity->component_mask & COMPONENT_TRANSFORM)) {
-            
-            EntityID entity_id = i + 1;  // Entity IDs are 1-based
-            render_entity_3d(world, entity_id, config);
-            rendered_count++;
-        }
-    }
-    
-    printf("📸 Rendered %d entities for screenshot\n", rendered_count);
-    
-    // Present the frame (this updates the renderer's back buffer)
-    SDL_RenderPresent(config->renderer);
-    
-    // Small delay to ensure rendering is complete
-    SDL_Delay(100);
-    
-    // Take the screenshot
-    bool success = render_take_screenshot(config, filename);
-    
-    // Restore original camera
-    config->camera = original_camera;
-    
-    return success;
+    // This will need to be re-implemented with sokol_gfx
+    (void)world;
+    (void)config;
+    (void)camera_pos;
+    (void)look_at_pos;
+    (void)filename;
+    return false;
 }

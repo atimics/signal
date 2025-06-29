@@ -5,7 +5,6 @@
 #include "assets.h"
 #include "ui.h"
 #include <stdint.h>
-#include <SDL.h>
 
 // ============================================================================
 // RENDER SYSTEM DEFINITIONS
@@ -74,9 +73,6 @@ typedef struct {
 
 // Render configuration
 typedef struct {
-    // SDL/Graphics
-    SDL_Window* window;
-    SDL_Renderer* renderer;
     int screen_width;
     int screen_height;
     
@@ -135,16 +131,16 @@ void lighting_set_ambient(LightingSystem* lighting, Vector3 color, float intensi
 // Textured mesh rendering
 Vector3 calculate_lighting(Vector3 surface_pos, Vector3 surface_normal, Vector3 material_color, LightingSystem* lighting);
 void render_textured_triangle(SDL_Renderer* renderer, Vector3 v1, Vector3 v2, Vector3 v3, 
-                             Vector3 n1, Vector3 n2, Vector3 n3, SDL_Texture* texture,
+                             Vector3 n1, Vector3 n2, Vector3 n3, struct SDL_Texture* texture,
                              Camera3D* camera, LightingSystem* lighting, int screen_width, int screen_height);
 
 // Enhanced mesh rendering with lighting
 void render_solid_mesh_with_lighting(Mesh* mesh, struct Transform* transform, Material* material, RenderConfig* config);
-void render_textured_mesh_with_lighting(Mesh* mesh, struct Transform* transform, Texture* texture, RenderConfig* config);
+void render_textured_mesh_with_lighting(Mesh* mesh, struct Transform* transform, struct Texture* texture, RenderConfig* config);
 Vector3 transform_vertex(Vector3 vertex, struct Transform* transform);
 
 // Enhanced mesh rendering with new material properties
-void render_mesh_enhanced(Mesh* mesh, struct Transform* transform, Material* material, Texture* texture, RenderConfig* config);
+void render_mesh_enhanced(Mesh* mesh, struct Transform* transform, Material* material, struct Texture* texture, RenderConfig* config);
 
 // Triangle rasterization
 void render_filled_triangle(SDL_Renderer* renderer, Point2D p1, Point2D p2, Point2D p3, Uint8 r, Uint8 g, Uint8 b);

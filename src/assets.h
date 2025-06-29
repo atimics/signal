@@ -4,7 +4,7 @@
 #include "core.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include <SDL.h>
+#include "sokol_gfx.h"
 
 // ============================================================================
 // ASSET DEFINITIONS
@@ -26,18 +26,16 @@ typedef struct {
     int* indices;
     int index_count;
     bool loaded;
+    sg_buffer sg_vertex_buffer;
+    sg_buffer sg_index_buffer;
 } Mesh;
 
-// Forward declare SDL_Texture for header
-struct SDL_Texture;
-struct SDL_Renderer;
-
-// Texture data with SDL support
+// Texture data with Sokol support
 typedef struct {
     char name[64];
     char filepath[256];
     uint32_t width, height;
-    struct SDL_Texture* sdl_texture;  // SDL texture for rendering
+    sg_image sg_image;
     bool loaded;
 } Texture;
 
@@ -92,7 +90,7 @@ void assets_cleanup(AssetRegistry* registry);
 // Load individual assets
 bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
 bool load_material(AssetRegistry* registry, const char* filename);
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name, struct SDL_Renderer* renderer);
+bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name);
 
 // Asset lookup
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name);
@@ -101,10 +99,10 @@ Texture* assets_get_texture(AssetRegistry* registry, const char* name);
 
 // Utility functions
 void assets_list_loaded(AssetRegistry* registry);
-bool assets_load_all_in_directory(AssetRegistry* registry, struct SDL_Renderer* renderer);
-bool load_assets_from_metadata(AssetRegistry* registry, struct SDL_Renderer* renderer);
-bool load_legacy_metadata(AssetRegistry* registry, struct SDL_Renderer* renderer);
-bool load_single_mesh_metadata(AssetRegistry* registry, struct SDL_Renderer* renderer, const char* metadata_path);
+bool assets_load_all_in_directory(AssetRegistry* registry);
+bool load_assets_from_metadata(AssetRegistry* registry);
+bool load_legacy_metadata(AssetRegistry* registry);
+bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_path);
 
 // OBJ file parsing helpers
 bool parse_obj_file(const char* filepath, Mesh* mesh);
@@ -115,7 +113,7 @@ bool parse_mtl_file(const char* filepath, AssetRegistry* registry);
 // ============================================================================
 
 // Material management
-bool materials_load_library(AssetRegistry* registry, const char* materials_dir, struct SDL_Renderer* renderer);
+bool materials_load_library(AssetRegistry* registry, const char* materials_dir);
 Material* materials_get_by_name(AssetRegistry* registry, const char* name);
 bool materials_create_variant(AssetRegistry* registry, const char* base_name, const char* variant_name, 
                              Vector3 color_tint, float roughness_modifier);
@@ -123,7 +121,7 @@ void materials_list_loaded(AssetRegistry* registry);
 
 // Multi-texture material support
 bool materials_load_texture_set(AssetRegistry* registry, Material* material, 
-                               const char* texture_dir, struct SDL_Renderer* renderer);
-bool materials_bind_textures(Material* material, struct SDL_Renderer* renderer);
+                               const char* texture_dir);
+bool materials_bind_textures(Material* material);
 
 #endif // ASSETS_H

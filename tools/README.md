@@ -19,35 +19,54 @@ python3 tools/asset_compiler.py --source_dir assets/meshes --build_dir build/ass
 
 **Features**:
 - Converts `.obj` and `.mesh` files to `.cobj` format
+- **Semantic Material Generation**: Creates materials based on metadata tags
+- **SVG Template Processing**: Generates textures from SVG templates using tag-based colors
+- **Tag-Based Pipeline**: Uses `assets/material_definitions.json` for semantic generation
 - Validates mesh integrity and attempts repairs
 - Generates per-mesh metadata in JSON format
 - Creates central asset index for efficient loading
-- Processes materials and textures
+- **Material Property Assignment**: Applies ambient, diffuse, specular, and emission properties
+
+**Semantic Material System**:
+- Reads metadata tags from asset files (e.g., ["ship", "vehicle", "spacecraft"])
+- Loads tag definitions with priorities, colors, and material properties
+- Generates semantic colors for SVG texture templates
+- Creates MTL files with physically-based material properties
+- Supports artist-friendly workflow with JSON-based definitions
 
 **Requirements**: `trimesh`, `cairosvg`, `numpy`, `scipy`, `jsonschema`
 
-### 2. Mesh Viewer (`mesh_viewer/index.html`)
+### 2. Semantic Material Mesh Viewer (`mesh_viewer/index.html`)
 
-**Purpose**: Web-based 3D viewer for inspecting mesh assets during development.
+**Purpose**: Web-based 3D viewer for inspecting mesh assets with semantic material analysis.
 
 **Usage**:
-1. Compile assets first: `make with-assets`
-2. Open `tools/mesh_viewer/index.html` in a web browser
-3. Browse and select meshes from the sidebar
-4. View 3D models with materials and textures
+1. Start a local HTTP server from project root: `python3 -m http.server 8081`
+2. Open `http://localhost:8081/tools/mesh_viewer/index.html` in a web browser
+3. Use the Source/Compiled toggle to switch between asset modes
+4. Browse and select meshes from the sidebar
+5. View 3D models with semantic material information
 
 **Features**:
-- Reads from compiled asset index to discover available meshes
-- Attempts to load source files (`.obj`/`.mesh`) for viewing
-- Falls back gracefully when source files are missing
-- Displays materials, textures, and lighting
-- Orbital camera controls for inspection
-- Status indicators for source vs. compiled files
+- **Dual Mode Operation**: Switch between source and compiled asset viewing
+- **Tag-Based Analysis**: Displays semantic tags with priorities and descriptions
+- **Material Preview**: Shows dominant material colors and properties
+- **Semantic Information**: Displays tag priorities, material coefficients, and color palettes
+- **Asset Metadata**: Shows comprehensive asset information including descriptions
+- **3D Rendering**: Orbital camera controls with material and texture support
+- **Status Indicators**: Clear feedback on loading success/failure
 
-**Limitations**:
-- Cannot display `.cobj` files (compiled format only readable by C engine)
-- Requires source `.obj` or `.mesh` files to be present
-- Some meshes may show as "compiled only"
+**Semantic Material System**:
+- Loads tag definitions from `assets/material_definitions.json`
+- Analyzes asset tags to determine dominant materials
+- Displays color swatches based on tag priorities
+- Shows material properties (ambient, diffuse, specular, emission)
+- Supports artist-friendly tag visualization
+
+**Requirements**: 
+- Local HTTP server (for CORS policy compliance)
+- Modern web browser with WebGL support
+- Three.js library (loaded via CDN)
 
 ### 3. Metadata Validator (`validate_metadata.py`)
 
@@ -75,17 +94,26 @@ python3 tools/validate_metadata.py
 
 1. **Create Source Assets**:
    - Place `.obj` or `.mesh` files in `assets/meshes/category/`
-   - Include corresponding `.mtl` and `.png` files
+   - Include corresponding `.mtl` and `.png` files (or `.svg` templates)
+   - Add semantic tags to `metadata.json` files
    - Follow naming conventions (snake_case)
+
+2. **Configure Semantic Materials**:
+   - Edit `assets/material_definitions.json` to add/modify tags
+   - Define priorities, colors, and material properties
+   - Use high-priority tags for unique appearances (stars, engines)
+   - Use low-priority tags for environmental modifiers
 
 2. **Compile Assets**:
    ```bash
    make with-assets
    ```
 
-3. **Preview in Viewer**:
-   - Open `tools/mesh_viewer/index.html`
-   - Select mesh from sidebar to inspect
+3. **Preview in Semantic Viewer**:
+   - Start HTTP server: `python3 -m http.server 8081`
+   - Open `http://localhost:8081/tools/mesh_viewer/index.html`
+   - Use Source/Compiled toggle to inspect both asset types
+   - Review semantic material information and tag analysis
 
 4. **Validate Metadata**:
    ```bash

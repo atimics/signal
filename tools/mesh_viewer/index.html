@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CGame Mesh Viewer</title>
+    <title>CGame Semantic Material Mesh Viewer</title>
     <style>
         body { 
             margin: 0; 
@@ -14,7 +14,7 @@
             color: #fff;
         }
         #sidebar {
-            width: 300px;
+            width: 350px;
             display: flex;
             flex-direction: column;
             background-color: #252526;
@@ -22,10 +22,37 @@
         }
         #sidebar-header {
             padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             border-bottom: 1px solid #333;
+        }
+        #mode-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .mode-button {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: #3a3d41;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .mode-button:hover {
+            background-color: #4a4d51;
+        }
+        .mode-button.active {
+            background-color: #0e639c;
+        }
+        #asset-info {
+            padding: 10px 15px;
+            background-color: #2d2d30;
+            border-bottom: 1px solid #333;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
         }
         #mesh-list-container {
             overflow-y: auto;
@@ -63,6 +90,32 @@
         .mesh-item.selected {
             background-color: #0e639c;
         }
+        .tag {
+            display: inline-block;
+            background-color: #444;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin: 1px 2px;
+        }
+        .tag.priority-high {
+            background-color: #d73a49;
+        }
+        .tag.priority-medium {
+            background-color: #fb8500;
+        }
+        .tag.priority-low {
+            background-color: #28a745;
+        }
+        .material-preview {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            display: inline-block;
+            margin-right: 4px;
+            border: 1px solid #555;
+        }
         #main-content {
             flex-grow: 1;
             position: relative;
@@ -87,13 +140,41 @@
             z-index: 1000;
             border-left: 4px solid #0e639c;
         }
+        .color-swatch {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+            display: inline-block;
+            margin-right: 4px;
+            border: 1px solid #555;
+            vertical-align: middle;
+        }
+        .info-section {
+            margin-bottom: 12px;
+        }
+        .info-section h4 {
+            margin: 0 0 4px 0;
+            color: #0e639c;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+        .info-section p {
+            margin: 0;
+            font-size: 11px;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body>
     <div id="sidebar">
         <div id="sidebar-header">
-            <h2>CGame Meshes</h2>
+            <h2>CGame Semantic Materials</h2>
+            <div id="mode-selector">
+                <button class="mode-button active" data-mode="source">Source</button>
+                <button class="mode-button" data-mode="compiled">Compiled</button>
+            </div>
         </div>
+        <div id="asset-info"></div>
         <div id="mesh-list-container"></div>
     </div>
     <div id="main-content">
@@ -107,20 +188,72 @@
         import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
 
         let camera, scene, renderer, controls;
+        let materialDefinitions = null;
+        let currentMode = 'source';
+        
         const meshListContainer = document.getElementById('mesh-list-container');
         const viewerContainer = document.getElementById('viewer-container');
-        const sourceAssetsRoot = '/assets/meshes/';
+        const assetInfo = document.getElementById('asset-info');
+        const sourceAssetsRoot = '../../assets/meshes/';
+        const compiledAssetsRoot = '../../build/assets/meshes/';
+
+        // Load material definitions for tag analysis
+        async function loadMaterialDefinitions() {
+            try {
+                const response = await fetch('../../assets/material_definitions.json');
+                materialDefinitions = await response.json();
+                console.log('Loaded material definitions:', materialDefinitions);
+            } catch (error) {
+                console.warn('Could not load material definitions:', error);
+                materialDefinitions = { definitions: {} };
+            }
+        }
+
+        // Get tag information including priority and colors
+        function getTagInfo(tag) {
+            const definition = materialDefinitions?.definitions?.[tag];
+            if (!definition) {
+                return {
+                    priority: 0,
+                    colors: { primary: '#888888' },
+                    material: null,
+                    description: 'Unknown tag'
+                };
+            }
+            return definition;
+        }
+
+        // Get priority class for styling
+        function getPriorityClass(priority) {
+            if (priority >= 80) return 'priority-high';
+            if (priority >= 40) return 'priority-medium';
+            return 'priority-low';
+        }
+
+        // Mode switching
+        document.getElementById('mode-selector').addEventListener('click', (e) => {
+            if (e.target.classList.contains('mode-button')) {
+                document.querySelectorAll('.mode-button').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                currentMode = e.target.dataset.mode;
+                fetchAndDisplayMeshes();
+            }
+        });
 
         async function fetchAndDisplayMeshes() {
+            const assetsRoot = currentMode === 'source' ? sourceAssetsRoot : compiledAssetsRoot;
+            
             try {
-                const indexResponse = await fetch(`${sourceAssetsRoot}index.json`);
+                const indexResponse = await fetch(`${assetsRoot}index.json`);
                 const meshIndex = await indexResponse.json();
 
                 meshListContainer.innerHTML = '';
+                assetInfo.innerHTML = '';
+                
                 const meshesByGroup = {};
 
                 for (const metaPath of meshIndex) {
-                    const fullMetaPath = `${sourceAssetsRoot}${metaPath}`;
+                    const fullMetaPath = `${assetsRoot}${metaPath}`;
                     const metaResponse = await fetch(fullMetaPath);
                     const meta = await metaResponse.json();
                     
@@ -131,7 +264,7 @@
 
                     meshesByGroup[group].push({
                         meta,
-                        basePath: `${sourceAssetsRoot}${group}/`
+                        basePath: `${assetsRoot}${group}/`
                     });
                 }
 
@@ -157,8 +290,8 @@
                 }
 
             } catch (error) {
-                console.error('Failed to load source mesh index:', error);
-                meshListContainer.innerHTML = '<p style="color: #ff6b6b; padding: 15px;">Failed to load source assets. Ensure you are running a local web server from the project root.</p>';
+                console.error(`Failed to load ${currentMode} mesh index:`, error);
+                meshListContainer.innerHTML = `<p style="color: #ff6b6b; padding: 15px;">Failed to load ${currentMode} assets. Ensure you are running a local web server from the project root.</p>`;
             }
         }
 
@@ -172,20 +305,127 @@
             const listItem = document.createElement('div');
             listItem.className = 'mesh-item';
             
+            // Get primary tag for color preview
+            const primaryTag = meta.tags?.[0];
+            const tagInfo = primaryTag ? getTagInfo(primaryTag) : null;
+            const primaryColor = tagInfo?.colors?.primary || '#888888';
+            
+            // Create tags display
+            const tagsHtml = meta.tags ? meta.tags.map(tag => {
+                const info = getTagInfo(tag);
+                const priorityClass = getPriorityClass(info.priority);
+                return `<span class="tag ${priorityClass}" title="${info.description}">${tag}</span>`;
+            }).join('') : '';
+            
+            const modeIcon = currentMode === 'source' ? '📄' : '⚙️';
+            const fileExt = currentMode === 'source' ? 'mesh/obj' : 'cobj';
+            
             listItem.innerHTML = `
-                <div style="font-weight: 500;">📄 ${meta.name}</div>
-                <div style="font-size: 12px; color: #888; margin-top: 2px;">
-                    Source • ${meta.filename}
+                <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                    <div class="material-preview" style="background-color: ${primaryColor};" title="Primary tag color"></div>
+                    <div style="font-weight: 500;">${modeIcon} ${meta.name}</div>
                 </div>
+                <div style="font-size: 12px; color: #888; margin-bottom: 4px;">
+                    ${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} • ${fileExt}
+                </div>
+                <div>${tagsHtml}</div>
             `;
             
             listItem.addEventListener('click', () => {
                 document.querySelectorAll('.mesh-item').forEach(item => item.classList.remove('selected'));
                 listItem.classList.add('selected');
+                updateAssetInfo(meshData);
                 loadMesh(meshData);
             });
             
             return listItem;
+        }
+
+        function updateAssetInfo(meshData) {
+            const { meta } = meshData;
+            
+            // Get semantic material info from tags
+            const semanticInfo = analyzeSemanticMaterials(meta.tags || []);
+            
+            let infoHtml = `
+                <div class="info-section">
+                    <h4>Asset Info</h4>
+                    <p><strong>${meta.name}</strong></p>
+                    <p>${meta.description || 'No description'}</p>
+                </div>
+            `;
+            
+            if (meta.tags && meta.tags.length > 0) {
+                infoHtml += `
+                    <div class="info-section">
+                        <h4>Tags & Materials</h4>
+                `;
+                
+                meta.tags.forEach(tag => {
+                    const info = getTagInfo(tag);
+                    const priorityClass = getPriorityClass(info.priority);
+                    infoHtml += `
+                        <div style="margin-bottom: 6px;">
+                            <div class="color-swatch" style="background-color: ${info.colors.primary}"></div>
+                            <span class="tag ${priorityClass}">${tag}</span>
+                            <span style="font-size: 10px; color: #999; margin-left: 4px;">P${info.priority}</span>
+                        </div>
+                        <p style="margin-left: 18px; color: #bbb; font-size: 10px;">${info.description}</p>
+                    `;
+                });
+                
+                infoHtml += '</div>';
+            }
+            
+            if (semanticInfo.dominantTag) {
+                const dominant = getTagInfo(semanticInfo.dominantTag);
+                infoHtml += `
+                    <div class="info-section">
+                        <h4>Material Properties</h4>
+                        <p><strong>Dominant:</strong> ${semanticInfo.dominantTag}</p>
+                `;
+                
+                if (dominant.material) {
+                    infoHtml += `
+                        <p><strong>Ambient:</strong> RGB(${dominant.material.ambient.map(v => Math.round(v*255)).join(', ')})</p>
+                        <p><strong>Diffuse:</strong> RGB(${dominant.material.diffuse.map(v => Math.round(v*255)).join(', ')})</p>
+                        <p><strong>Specular:</strong> RGB(${dominant.material.specular.map(v => Math.round(v*255)).join(', ')})</p>
+                        <p><strong>Shininess:</strong> ${dominant.material.shininess}</p>
+                        ${dominant.material.emission ? `<p><strong>Emission:</strong> RGB(${dominant.material.emission.map(v => Math.round(v*255)).join(', ')})</p>` : ''}
+                    `;
+                }
+                
+                infoHtml += '</div>';
+            }
+            
+            infoHtml += `
+                <div class="info-section">
+                    <h4>Files</h4>
+                    <p><strong>Geometry:</strong> ${meta.filename}</p>
+                    <p><strong>Material:</strong> ${meta.mtl || 'N/A'}</p>
+                    <p><strong>Texture:</strong> ${meta.texture || 'N/A'}</p>
+                </div>
+            `;
+            
+            assetInfo.innerHTML = infoHtml;
+        }
+
+        function analyzeSemanticMaterials(tags) {
+            if (!tags || tags.length === 0) return { dominantTag: null };
+            
+            // Find the highest priority tag
+            let dominantTag = tags[0];
+            let highestPriority = getTagInfo(dominantTag).priority;
+            
+            for (const tag of tags) {
+                const info = getTagInfo(tag);
+                if (info.priority > highestPriority) {
+                    highestPriority = info.priority;
+                    dominantTag = tag;
+                }
+            }
+            
+            return { dominantTag };
         }
 
         function init() {
@@ -210,12 +450,17 @@
             window.addEventListener('resize', onWindowResize, false);
             
             onWindowResize();
-            fetchAndDisplayMeshes().then(() => {
+            
+            // Load material definitions first, then meshes
+            loadMaterialDefinitions().then(() => {
+                return fetchAndDisplayMeshes();
+            }).then(() => {
                 const firstMeshItem = document.querySelector('.mesh-item');
                 if (firstMeshItem) {
                     firstMeshItem.click();
                 }
             });
+            
             animate();
         }
 
@@ -225,7 +470,11 @@
             try {
                 console.log(`Loading mesh: ${meta.name} from ${basePath}${meta.filename}`);
                 
-                const meshURL = `${basePath}${meta.filename}`;
+                const isCompiled = currentMode === 'compiled';
+                const fileExtension = isCompiled ? '.cobj' : '';
+                const meshFile = isCompiled ? meta.filename.replace(/\.(mesh|obj)$/, '.cobj') : meta.filename;
+                const meshURL = `${basePath}${meshFile}`;
+                
                 const meshText = await (await fetch(meshURL)).text();
                 const objLoader = new OBJLoader();
                 let object;
@@ -235,18 +484,24 @@
                     const mtlURL = `${basePath}${meta.mtl}`;
                     const mtlText = await (await fetch(mtlURL)).text();
                     const mtlLoader = new MTLLoader();
+                    
+                    // Set base path for texture loading
+                    mtlLoader.setResourcePath(basePath);
                     const materials = mtlLoader.parse(mtlText, basePath);
                     materials.preload();
                     objLoader.setMaterials(materials);
                     
                     object = objLoader.parse(meshText);
-                    showMessage(`✅ Loaded: ${meta.name}`, `Source: ${meta.filename}`);
+                    
+                    const semanticInfo = analyzeSemanticMaterials(meta.tags || []);
+                    const modeLabel = currentMode === 'source' ? 'Source' : 'Compiled';
+                    showMessage(`✅ Loaded: ${meta.name}`, `${modeLabel}: ${meshFile} • Semantic: ${semanticInfo.dominantTag || 'none'}`);
 
                 } catch (materialError) {
                     console.warn(`Could not load materials for ${meta.name}, loading without:`, materialError);
                     // Fallback to loading without materials
                     object = objLoader.parse(meshText);
-                    showMessage(`⚠️ Loaded without materials: ${meta.name}`, `Source: ${meta.filename} (MTL or texture failed)`);
+                    showMessage(`⚠️ Loaded without materials: ${meta.name}`, `${currentMode}: ${meshFile} (MTL or texture failed)`);
                 }
 
                 // Apply transformations and add to scene

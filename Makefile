@@ -1,7 +1,16 @@
 # Component-Based Game Engine Makefile
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99 -O2 -g -I/opt/homebrew/include/SDL2 -Isrc
-LIBS = -lm -L/opt/homebrew/lib -lSDL2 -lSDL2_image
+CFLAGS = -Wall -Wextra -std=c99 -O2 -g -Isrc
+LIBS = -lm
+
+# Platform-specific flags
+ifeq ($(OS),Darwin)
+    # macOS
+    LIBS += -framework Metal -framework AppKit
+else
+    # Linux
+    LIBS += -lGL -lX11 -lm
+endif
 
 # Directories
 SRC_DIR = src
