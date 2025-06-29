@@ -8,8 +8,8 @@ This directory contains the documentation for all development sprints, both acti
 - **Goal:** Establish a CI pipeline using GitHub Actions to automatically build the project for macOS, Linux, and Windows.
 - **Status:** Planned.
 
-### [Sprint 05: UI Integration with Dear ImGui](./05_ui_integration.md)
-- **Goal:** Integrate Dear ImGui to create a flexible UI system, including a HUD and debug panels.
+### [Sprint 05: UI Integration with Nuklear](./05_ui_integration.md)
+- **Goal:** Integrate Nuklear to create a flexible UI system, including a HUD and debug panels.
 - **Status:** Planned.
 
 ## Archived Sprints
