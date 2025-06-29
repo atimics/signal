@@ -4,11 +4,25 @@
 #include "sokol_glue.h"
 #include "sokol_log.h"
 
+// Nuklear implementation
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#include "nuklear.h"
+
+#define SOKOL_NUKLEAR_IMPL
+#include "sokol_nuklear.h"
+
 #include "core.h"
 #include "systems.h"
 #include "render.h"
 #include "data.h"
 #include "assets.h"
+#include "ui.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,7 +106,7 @@ static void simulate_player_input(struct World* world, EntityID player_id, float
     float desired_z = center_z + hover_radius * sinf(time * hover_speed);
     
     // Get current position
-    struct Transform* transform = entity_get_transform(world, player_id);
+    struct Transform* transform = entity_get_transform(world, id);
     if (!transform) return;
     
     // Gentle steering toward hovering position
@@ -240,7 +254,7 @@ static void init(void) {
     app_state.pass_action = (sg_pass_action){
         .colors[0] = { 
             .load_action = SG_LOADACTION_CLEAR, 
-            .clear_value = {0.0f, 1.0f, 0.0f, 1.0f}  // Bright green for debugging
+            .clear_value = {0.0f, 0.05f, 0.1f, 1.0f} 
         }
     };
     
@@ -256,6 +270,8 @@ static void init(void) {
     app_state.frame_count = 0;
     app_state.simulation_time = 0.0f;
     app_state.initialized = true;
+    
+    ui_init();
     
     printf("\n🎮 Starting simulation...\n");
     printf("Press ESC to exit, 1-9 to switch cameras\n");
@@ -286,6 +302,8 @@ static void frame(void) {
     // Render entities (basic implementation for now)
     render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
     
+    ui_render(&app_state.world, &app_state.scheduler, dt);
+    
     sg_end_pass();
     sg_commit();
     
@@ -299,6 +317,7 @@ static void frame(void) {
 static void cleanup(void) {
     printf("\n🏁 Simulation complete!\n");
     
+    ui_shutdown();
     render_cleanup(&app_state.render_config);
     assets_cleanup(&app_state.assets);
     scheduler_destroy(&app_state.scheduler);
@@ -309,6 +328,12 @@ static void cleanup(void) {
 }
 
 static void event(const sapp_event* ev) {
+    // Handle UI events first - if UI captures the event, don't process it further
+    if (ui_handle_event(ev)) {
+        return;  // UI captured this event
+    }
+    
+    // Process game events only if UI didn't capture them
     switch (ev->type) {
         case SAPP_EVENTTYPE_KEY_DOWN:
             if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
