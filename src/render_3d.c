@@ -7,6 +7,7 @@
 #include "render_camera.h"
 #include "render_lighting.h"
 #include "render_mesh.h"
+#include "assets.h"
 #include "ui.h"
 #include <stdio.h>
 #include <string.h>
@@ -19,80 +20,6 @@
 // ============================================================================
 // SOKOL RENDERING DEFINITIONS
 // ============================================================================
-
-// Metal vertex shader for macOS
-static const char* vs_source_metal = 
-    "#include <metal_stdlib>\n"
-    "using namespace metal;\n"
-    "struct vs_uniforms {\n"
-    "    float4x4 mvp;\n"
-    "};\n"
-    "struct vs_in {\n"
-    "    float3 position [[attribute(0)]];\n"
-    "    float3 normal [[attribute(1)]];\n"
-    "    float2 texcoord [[attribute(2)]];\n"
-    "};\n"
-    "struct vs_out {\n"
-    "    float4 position [[position]];\n"
-    "    float3 normal;\n"
-    "    float2 texcoord;\n"
-    "};\n"
-    "vertex vs_out vs_main(vs_in in [[stage_in]], constant vs_uniforms& uniforms [[buffer(0)]]) {\n"
-    "    vs_out out;\n"
-    "    out.position = uniforms.mvp * float4(in.position, 1.0);\n"
-    "    out.normal = in.normal;\n"
-    "    out.texcoord = in.texcoord;\n"
-    "    return out;\n"
-    "}\n";
-
-// Metal fragment shader for macOS
-static const char* fs_source_metal = 
-    "#include <metal_stdlib>\n"
-    "using namespace metal;\n"
-    "struct fs_uniforms {\n"
-    "    float3 light_dir;\n"
-    "};\n"
-    "struct fs_in {\n"
-    "    float3 normal;\n"
-    "    float2 texcoord;\n"
-    "};\n"
-    "fragment float4 fs_main(fs_in in [[stage_in]], constant fs_uniforms& uniforms [[buffer(0)]],\n"
-    "                       texture2d<float> diffuse_texture [[texture(0)]],\n"
-    "                       sampler diffuse_sampler [[sampler(0)]]) {\n"
-    "    float3 normal = normalize(in.normal);\n"
-    "    float light = max(0.0, dot(normal, -uniforms.light_dir));\n"
-    "    float4 color = diffuse_texture.sample(diffuse_sampler, in.texcoord);\n"
-    "    return float4(color.rgb * (0.3 + 0.7 * light), color.a);\n"
-    "}\n";
-
-// OpenGL shader sources (for Linux/other platforms)
-static const char* vs_source_gl = 
-    "#version 330\n"
-    "uniform mat4 mvp;\n"
-    "layout(location=0) in vec3 position;\n"
-    "layout(location=1) in vec3 normal;\n"
-    "layout(location=2) in vec2 texcoord;\n"
-    "out vec3 frag_normal;\n"
-    "out vec2 frag_texcoord;\n"
-    "void main() {\n"
-    "    gl_Position = mvp * vec4(position, 1.0);\n"
-    "    frag_normal = normal;\n"
-    "    frag_texcoord = texcoord;\n"
-    "}\n";
-
-static const char* fs_source_gl = 
-    "#version 330\n"
-    "uniform sampler2D diffuse_texture;\n"
-    "uniform vec3 light_dir;\n"
-    "in vec3 frag_normal;\n"
-    "in vec2 frag_texcoord;\n"
-    "out vec4 frag_color;\n"
-    "void main() {\n"
-    "    vec3 normal = normalize(frag_normal);\n"
-    "    float light = max(0.0, dot(normal, -light_dir));\n"
-    "    vec4 color = texture(diffuse_texture, frag_texcoord);\n"
-    "    frag_color = vec4(color.rgb * (0.3 + 0.7 * light), color.a);\n"
-    "}\n";
 
 // Uniform data structures
 typedef struct {
@@ -110,6 +37,8 @@ static struct {
     sg_shader shader;
     sg_sampler sampler;
     bool initialized;
+    char* vertex_shader_source;
+    char* fragment_shader_source;
 } render_state = {0};
 
 // ============================================================================
@@ -169,27 +98,44 @@ static void mat4_multiply(float* result, const float* a, const float* b) {
 static bool render_sokol_init(void) {
     if (render_state.initialized) return true;
     
-    // Create shader - using platform-specific shader source and entry points
+    // Load shader sources from files
+    const char* vs_path = get_shader_path("basic_3d", "vert");
+    const char* fs_path = get_shader_path("basic_3d", "frag");
+    
+    render_state.vertex_shader_source = load_shader_source(vs_path);
+    render_state.fragment_shader_source = load_shader_source(fs_path);
+    
+    if (!render_state.vertex_shader_source || !render_state.fragment_shader_source) {
+        printf("❌ Failed to load shader sources\n");
+        if (render_state.vertex_shader_source) {
+            free_shader_source(render_state.vertex_shader_source);
+            render_state.vertex_shader_source = NULL;
+        }
+        if (render_state.fragment_shader_source) {
+            free_shader_source(render_state.fragment_shader_source);
+            render_state.fragment_shader_source = NULL;
+        }
+        return false;
+    }
+    
+    // Create shader - using loaded shader sources and entry points
     sg_shader_desc shader_desc = {
+        .vertex_func = {
+            .source = render_state.vertex_shader_source,
 #ifdef SOKOL_METAL
-        .vertex_func = {
-            .source = vs_source_metal,
             .entry = "vs_main"
-        },
-        .fragment_func = {
-            .source = fs_source_metal,
-            .entry = "fs_main"
-        },
 #else
-        .vertex_func = {
-            .source = vs_source_gl,
             .entry = "main"
+#endif
         },
         .fragment_func = {
-            .source = fs_source_gl,
+            .source = render_state.fragment_shader_source,
+#ifdef SOKOL_METAL
+            .entry = "fs_main"
+#else
             .entry = "main"
-        },
 #endif
+        },
         .label = "basic_3d_shader"
     };
     
@@ -197,6 +143,10 @@ static bool render_sokol_init(void) {
     
     if (render_state.shader.id == SG_INVALID_ID) {
         printf("❌ Failed to create shader\n");
+        free_shader_source(render_state.vertex_shader_source);
+        free_shader_source(render_state.fragment_shader_source);
+        render_state.vertex_shader_source = NULL;
+        render_state.fragment_shader_source = NULL;
         return false;
     }
     
@@ -234,7 +184,7 @@ static bool render_sokol_init(void) {
     }
     
     render_state.initialized = true;
-    printf("✅ Sokol rendering pipeline initialized\n");
+    printf("✅ Sokol rendering pipeline initialized with external shaders\n");
     return true;
 }
 
@@ -272,6 +222,17 @@ void render_shutdown() {
         sg_destroy_pipeline(render_state.pipeline);
         sg_destroy_shader(render_state.shader);
         sg_destroy_sampler(render_state.sampler);
+        
+        // Free loaded shader sources
+        if (render_state.vertex_shader_source) {
+            free_shader_source(render_state.vertex_shader_source);
+            render_state.vertex_shader_source = NULL;
+        }
+        if (render_state.fragment_shader_source) {
+            free_shader_source(render_state.fragment_shader_source);
+            render_state.fragment_shader_source = NULL;
+        }
+        
         render_state.initialized = false;
     }
     sg_shutdown();
@@ -398,6 +359,17 @@ void render_cleanup(RenderConfig* config) {
         sg_destroy_pipeline(render_state.pipeline);
         sg_destroy_shader(render_state.shader);
         sg_destroy_sampler(render_state.sampler);
+        
+        // Free loaded shader sources
+        if (render_state.vertex_shader_source) {
+            free_shader_source(render_state.vertex_shader_source);
+            render_state.vertex_shader_source = NULL;
+        }
+        if (render_state.fragment_shader_source) {
+            free_shader_source(render_state.fragment_shader_source);
+            render_state.fragment_shader_source = NULL;
+        }
+        
         render_state.initialized = false;
     }
     
