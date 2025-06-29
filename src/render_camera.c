@@ -90,6 +90,9 @@ void camera_look_at(Camera3D* camera, Vector3 eye, Vector3 target, Vector3 up) {
 void camera_follow_entity(Camera3D* camera, struct World* world, EntityID entity_id, float distance) {
     if (!camera || !world || entity_id == INVALID_ENTITY) return;
     
+    // Suppress unused parameter warning (distance not used in current implementation)
+    (void)distance;
+    
     struct Transform* transform = entity_get_transform(world, entity_id);
     if (!transform) return;
     
