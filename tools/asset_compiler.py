@@ -27,6 +27,48 @@ def get_random_color_hex():
     """Returns a random bright color in hex format."""
     return f"#{random.randint(128, 255):02X}{random.randint(128, 255):02X}{random.randint(128, 255):02X}"
 
+def get_semantic_color_for_mesh(mesh_name, face_index=None):
+    """Returns semantic colors based on mesh type and context."""
+    mesh_lower = mesh_name.lower()
+    
+    # Spacecraft materials
+    if any(term in mesh_lower for term in ['ship', 'wedge', 'fighter', 'craft', 'vessel']):
+        colors = {
+            'hull': '#8C9BAB',      # Metallic blue-gray
+            'cockpit': '#4A90E2',   # Glass blue
+            'engine': '#FF6B35',    # Engine orange
+            'weapon': '#E74C3C',    # Warning red
+            'detail': '#34495E'     # Dark detail
+        }
+        # Assign based on face position/index for variety
+        if face_index is not None:
+            color_keys = list(colors.keys())
+            return colors[color_keys[face_index % len(color_keys)]]
+        return colors['hull']  # Default to hull color
+    
+    # Architectural structures
+    elif any(term in mesh_lower for term in ['tower', 'building', 'structure', 'base']):
+        colors = {
+            'wall': '#95A5A6',      # Concrete gray
+            'window': '#3498DB',    # Window blue
+            'detail': '#2C3E50',    # Dark trim
+            'light': '#F1C40F'      # Warning lights
+        }
+        if face_index is not None:
+            color_keys = list(colors.keys())
+            return colors[color_keys[face_index % len(color_keys)]]
+        return colors['wall']
+    
+    # Celestial bodies
+    elif any(term in mesh_lower for term in ['sun', 'star', 'solar']):
+        return '#FFA500'  # Bright orange
+    elif any(term in mesh_lower for term in ['planet', 'moon', 'asteroid']):
+        return '#8B7355'  # Rocky brown
+    
+    # Default fallback to varied metallics
+    metallic_colors = ['#8C9BAB', '#A8B2C1', '#7A8B9C', '#95A5A6']
+    return metallic_colors[hash(mesh_name) % len(metallic_colors)]
+
 # --- Geometry and UV Generation ---
 
 def group_triangles_into_polygons(mesh):
@@ -56,8 +98,8 @@ def triangulate(faces):
                 tri_faces.append(tuple(tri))
     return tri_faces
 
-def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, svg_height=1024):
-    # ... (This function remains largely the same as before)
+def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, svg_height=1024, mesh_name=""):
+    # Generate UV coordinates for faces in a spritesheet layout
     num_faces = len(original_faces)
     cols = math.ceil(math.sqrt(num_faces))
     rows = math.ceil(num_faces / cols)
@@ -86,23 +128,66 @@ def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, s
             face_uvs.append((u, v))
         uv_coords_per_face.append(face_uvs)
 
+    # Generate semantic SVG template instead of random gradients
     with open(svg_path, 'w') as f:
         f.write(f'<svg width="{svg_width}" height="{svg_height}" xmlns="http://www.w3.org/2000/svg">\n')
+        
+        # Add semantic color definitions
         f.write('  <defs>\n')
         for i in range(num_faces):
-            color1, color2, color3 = get_random_color_hex(), get_random_color_hex(), get_random_color_hex()
+            # Use semantic colors instead of random
+            semantic_color = get_semantic_color_for_mesh(mesh_name, i)
+            # Create subtle gradients for visual interest
+            lighter = lighten_color(semantic_color, 0.2)
+            darker = darken_color(semantic_color, 0.2)
+            
             f.write(f'    <linearGradient id="grad{i}" x1="0%" y1="0%" x2="100%" y2="100%">\n')
-            f.write(f'      <stop offset="0%" stop-color="{color1}" />\n')
-            f.write(f'      <stop offset="50%" stop-color="{color2}" />\n')
-            f.write(f'      <stop offset="100%" stop-color="{color3}" />\n')
+            f.write(f'      <stop offset="0%" stop-color="{lighter}" />\n')
+            f.write(f'      <stop offset="50%" stop-color="{semantic_color}" />\n')
+            f.write(f'      <stop offset="100%" stop-color="{darker}" />\n')
             f.write('    </linearGradient>\n')
         f.write('  </defs>\n')
+        
+        # Dark background
         f.write(f'  <rect width="100%" height="100%" fill="#111"/>\n')
+        
+        # Add UV seam guides as thin lines
+        f.write('  <!-- UV Seam Guides -->\n')
+        seam_color = "#333"  # Dark gray guides
+        for col in range(1, cols):
+            x = col * (svg_width / cols)
+            f.write(f'  <line x1="{x}" y1="0" x2="{x}" y2="{svg_height}" stroke="{seam_color}" stroke-width="1" opacity="0.5"/>\n')
+        for row in range(1, rows):
+            y = row * (svg_height / rows)
+            f.write(f'  <line x1="0" y1="{y}" x2="{svg_width}" y2="{y}" stroke="{seam_color}" stroke-width="1" opacity="0.5"/>\n')
+        
+        # Draw face polygons with semantic colors
         for i, face_uvs in enumerate(uv_coords_per_face):
             points = [f"{uv[0] * svg_width},{uv[1] * svg_height}" for uv in face_uvs]
-            f.write(f'  <polygon points="{" ".join(points)}" fill="url(#grad{i})"/>\n')
+            f.write(f'  <polygon points="{" ".join(points)}" fill="url(#grad{i})" stroke="#000" stroke-width="0.5"/>\n')
+        
+        # Add title and instructions
+        f.write('  <text x="10" y="30" fill="white" font-family="Arial" font-size="20" font-weight="bold">')
+        f.write(f'{mesh_name.replace("_", " ").title()} Texture Template</text>\n')
+        f.write('  <text x="10" y="50" fill="#ccc" font-family="Arial" font-size="12">')
+        f.write('Edit colors and details. Each section represents a mesh face.</text>\n')
+        
         f.write('</svg>\n')
     return uv_coords_per_face
+
+def lighten_color(hex_color, factor):
+    """Lighten a hex color by a factor (0.0-1.0)."""
+    hex_color = hex_color.lstrip('#')
+    rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    lightened = tuple(min(255, int(c + (255 - c) * factor)) for c in rgb)
+    return f"#{lightened[0]:02X}{lightened[1]:02X}{lightened[2]:02X}"
+
+def darken_color(hex_color, factor):
+    """Darken a hex color by a factor (0.0-1.0)."""
+    hex_color = hex_color.lstrip('#')
+    rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    darkened = tuple(int(c * (1 - factor)) for c in rgb)
+    return f"#{darkened[0]:02X}{darkened[1]:02X}{darkened[2]:02X}"
 
 # --- File I/O and Conversion ---
 
@@ -126,9 +211,10 @@ def extract_material_name_from_obj(obj_path):
     return None
 
 def copy_source_mtl_if_exists(source_dir, build_dir, mesh_name):
-    """Copy existing MTL file from source to build directory."""
-    source_mtl = Path(source_dir) / "props" / mesh_name / "material.mtl"
-    build_mtl = Path(build_dir) / "props" / mesh_name / "material.mtl"
+    """Copy existing MTL file from source to build directory, preserving materials."""
+    # Look for material.mtl in the source mesh directory
+    source_mtl = Path(source_dir) / "meshes" / "props" / mesh_name / "material.mtl"
+    build_mtl = Path(build_dir) / "meshes" / "props" / mesh_name / "material.mtl"
     
     if source_mtl.exists():
         try:
@@ -136,14 +222,60 @@ def copy_source_mtl_if_exists(source_dir, build_dir, mesh_name):
             build_mtl.parent.mkdir(parents=True, exist_ok=True)
             import shutil
             shutil.copy2(source_mtl, build_mtl)
-            print(f"Copied existing MTL: {source_mtl.name}")
+            print(f"✅ Preserved source material: {source_mtl.name}")
             return True
         except Exception as e:
-            print(f"Warning: Could not copy MTL file: {e}", file=sys.stderr)
+            print(f"⚠️  Could not copy MTL file: {e}", file=sys.stderr)
+    
     return False
 
+def generate_semantic_mtl_file(mtl_path, material_name, texture_filename, mesh_name):
+    """Generate a semantic MTL file with appropriate material properties."""
+    mesh_lower = mesh_name.lower()
+    
+    # Determine material type and properties
+    if any(term in mesh_lower for term in ['ship', 'wedge', 'fighter', 'craft', 'vessel']):
+        # Spacecraft materials - metallic
+        ambient = "0.2 0.2 0.3"
+        diffuse = "0.6 0.7 0.9"
+        specular = "0.8 0.8 0.8"
+        shininess = "64.0"
+    elif any(term in mesh_lower for term in ['tower', 'building', 'structure', 'base']):
+        # Architectural materials - concrete/metal
+        ambient = "0.3 0.3 0.3"
+        diffuse = "0.7 0.7 0.7"
+        specular = "0.4 0.4 0.4"
+        shininess = "16.0"
+    elif any(term in mesh_lower for term in ['sun', 'star', 'solar']):
+        # Glowing materials
+        ambient = "1.0 0.6 0.2"
+        diffuse = "1.0 0.8 0.4"
+        specular = "1.0 1.0 1.0"
+        shininess = "100.0"
+    else:
+        # Default metallic material
+        ambient = "0.2 0.2 0.3"
+        diffuse = "0.6 0.7 0.8"
+        specular = "0.8 0.8 0.8"
+        shininess = "32.0"
+    
+    with open(mtl_path, 'w') as f:
+        f.write(f"# Material file for {mesh_name}\n")
+        f.write(f"# Generated with semantic properties\n\n")
+        f.write(f"newmtl {material_name}\n")
+        f.write(f"Ka {ambient}  # Ambient color\n")
+        f.write(f"Kd {diffuse}  # Diffuse color\n")
+        f.write(f"Ks {specular}  # Specular color\n")
+        f.write(f"Ns {shininess}         # Shininess\n")
+        f.write(f"map_Kd {texture_filename}\n")
+        
+        # Add emission for glowing objects
+        if any(term in mesh_lower for term in ['sun', 'star', 'solar', 'engine']):
+            f.write(f"Ke 0.3 0.2 0.1  # Emission color\n")
+            f.write(f"map_Ke {texture_filename}\n")
+
 def write_mtl_file(mtl_path, material_name, texture_filename):
-    # ... (This function remains the same)
+    """Legacy MTL file generator - use generate_semantic_mtl_file instead."""
     with open(mtl_path, 'w') as f:
         f.write(f"newmtl {material_name}\n")
         f.write("Ke 1.0 1.0 1.0\n")
@@ -305,19 +437,19 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
     hull = Delaunay(vertices)
     triangulated_faces = hull.convex_hull
 
-    # 2. Auto-texture
+    # 2. Auto-texture with semantic colors
     original_faces = [tuple(f) for f in triangulated_faces] # Use triangles as original faces
-    uv_coords_per_face = generate_spritesheet_uvs_and_svg(original_faces, svg_path)
+    uv_coords_per_face = generate_spritesheet_uvs_and_svg(original_faces, svg_path, mesh_name=mesh_name)
     convert_svg_to_png(svg_path, png_path)
     
     # Clean up temporary SVG file
     os.remove(svg_path)
     
-    # Try to copy existing MTL file first, or create a new one
+    # Try to copy existing MTL file first, or create a semantic one
     if not copy_source_mtl_if_exists(args.source_dir, args.build_dir, mesh_name):
         material_name = mesh_name.replace('_', ' ').title()
-        write_mtl_file(mtl_path, material_name, png_path.name)
-        print(f"Generated new MTL file with material: {material_name}")
+        generate_semantic_mtl_file(mtl_path, material_name, png_path.name, mesh_name)
+        print(f"🎨 Generated semantic MTL file: {material_name}")
     
     # Extract material name from the OBJ file or use the generated one
     material_name = extract_material_name_from_obj(source_path) or mesh_name.replace('_', ' ').title()

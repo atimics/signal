@@ -41,14 +41,28 @@ typedef struct {
     bool loaded;
 } Texture;
 
-// Material data
+// Material data with multi-texture support
 typedef struct {
     char name[64];
-    Vector3 diffuse_color;  // RGB color
+    
+    // Basic material properties
+    Vector3 diffuse_color;   // RGB color
     Vector3 ambient_color;
     Vector3 specular_color;
+    Vector3 emission_color;  // For glowing materials
     float shininess;
-    char texture_name[64];  // Reference to texture
+    float roughness;         // Surface roughness (0.0 = mirror, 1.0 = rough)
+    float metallic;          // Metallic factor (0.0 = dielectric, 1.0 = metallic)
+    
+    // Multi-texture support
+    char diffuse_texture[64];   // Base color map (map_Kd)
+    char normal_texture[64];    // Surface detail/normal map
+    char specular_texture[64];  // Specular/reflectivity map
+    char emission_texture[64];  // Glow/emission map
+    
+    // Legacy single texture support (for compatibility)
+    char texture_name[64];      // Reference to primary texture
+    
     bool loaded;
 } Material;
 
@@ -95,5 +109,21 @@ bool load_single_mesh_metadata(AssetRegistry* registry, struct SDL_Renderer* ren
 // OBJ file parsing helpers
 bool parse_obj_file(const char* filepath, Mesh* mesh);
 bool parse_mtl_file(const char* filepath, AssetRegistry* registry);
+
+// ============================================================================
+// MATERIAL REPOSITORY FUNCTIONS
+// ============================================================================
+
+// Material management
+bool materials_load_library(AssetRegistry* registry, const char* materials_dir, struct SDL_Renderer* renderer);
+Material* materials_get_by_name(AssetRegistry* registry, const char* name);
+bool materials_create_variant(AssetRegistry* registry, const char* base_name, const char* variant_name, 
+                             Vector3 color_tint, float roughness_modifier);
+void materials_list_loaded(AssetRegistry* registry);
+
+// Multi-texture material support
+bool materials_load_texture_set(AssetRegistry* registry, Material* material, 
+                               const char* texture_dir, struct SDL_Renderer* renderer);
+bool materials_bind_textures(Material* material, struct SDL_Renderer* renderer);
 
 #endif // ASSETS_H

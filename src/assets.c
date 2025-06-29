@@ -10,6 +10,14 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// Add fmaxf and fminf for older C standard compatibility
+#ifndef fmaxf
+#define fmaxf(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef fminf
+#define fminf(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 // ============================================================================
 // ASSET SYSTEM IMPLEMENTATION
 // ============================================================================
@@ -175,13 +183,38 @@ bool parse_mtl_file(const char* filepath, AssetRegistry* registry) {
                    &current_material->specular_color.y,
                    &current_material->specular_color.z);
         }
+        // Emission color
+        else if (strncmp(line, "Ke ", 3) == 0 && current_material) {
+            sscanf(line, "Ke %f %f %f",
+                   &current_material->emission_color.x,
+                   &current_material->emission_color.y,
+                   &current_material->emission_color.z);
+        }
         // Shininess
         else if (strncmp(line, "Ns ", 3) == 0 && current_material) {
             sscanf(line, "Ns %f", &current_material->shininess);
         }
-        // Texture map
+        // Diffuse texture map (primary texture)
         else if (strncmp(line, "map_Kd ", 7) == 0 && current_material) {
-            sscanf(line, "map_Kd %63s", current_material->texture_name);
+            sscanf(line, "map_Kd %63s", current_material->diffuse_texture);
+            // Also set legacy texture_name for compatibility
+            strncpy(current_material->texture_name, current_material->diffuse_texture, 
+                   sizeof(current_material->texture_name) - 1);
+        }
+        // Normal/bump map
+        else if (strncmp(line, "map_Bump ", 9) == 0 && current_material) {
+            sscanf(line, "map_Bump %63s", current_material->normal_texture);
+        }
+        else if (strncmp(line, "bump ", 5) == 0 && current_material) {
+            sscanf(line, "bump %63s", current_material->normal_texture);
+        }
+        // Specular map
+        else if (strncmp(line, "map_Ks ", 7) == 0 && current_material) {
+            sscanf(line, "map_Ks %63s", current_material->specular_texture);
+        }
+        // Emission map
+        else if (strncmp(line, "map_Ke ", 7) == 0 && current_material) {
+            sscanf(line, "map_Ke %63s", current_material->emission_texture);
         }
     }
     
@@ -694,4 +727,148 @@ bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
     
     fclose(file);
     return success;
+}
+
+// ============================================================================
+// MATERIAL REPOSITORY IMPLEMENTATION
+// ============================================================================
+
+bool materials_load_library(AssetRegistry* registry, const char* materials_dir, SDL_Renderer* renderer) {
+    if (!registry || !materials_dir || !renderer) return false;
+    
+    // TODO: Implement loading of shared material library
+    // This would scan materials_dir for .mtl files and load them
+    // as reusable materials independent of specific meshes
+    printf("📚 Material library loading not yet implemented\n");
+    return true;
+}
+
+Material* materials_get_by_name(AssetRegistry* registry, const char* name) {
+    if (!registry || !name) return NULL;
+    
+    for (uint32_t i = 0; i < registry->material_count; i++) {
+        if (strcmp(registry->materials[i].name, name) == 0) {
+            return &registry->materials[i];
+        }
+    }
+    return NULL;
+}
+
+bool materials_create_variant(AssetRegistry* registry, const char* base_name, const char* variant_name,
+                             Vector3 color_tint, float roughness_modifier) {
+    if (!registry || !base_name || !variant_name) return false;
+    if (registry->material_count >= 32) return false;
+    
+    // Find base material
+    Material* base_material = materials_get_by_name(registry, base_name);
+    if (!base_material) {
+        printf("⚠️  Base material '%s' not found for variant creation\n", base_name);
+        return false;
+    }
+    
+    // Create variant by copying base and modifying properties
+    Material* variant = &registry->materials[registry->material_count];
+    *variant = *base_material;  // Copy all properties
+    
+    // Update variant-specific properties
+    strncpy(variant->name, variant_name, sizeof(variant->name) - 1);
+    variant->diffuse_color.x *= color_tint.x;
+    variant->diffuse_color.y *= color_tint.y;
+    variant->diffuse_color.z *= color_tint.z;
+    variant->roughness = fmaxf(0.0f, fminf(1.0f, variant->roughness + roughness_modifier));
+    
+    registry->material_count++;
+    printf("🎨 Created material variant: %s (from %s)\n", variant_name, base_name);
+    return true;
+}
+
+void materials_list_loaded(AssetRegistry* registry) {
+    if (!registry) return;
+    
+    printf("🎨 Material Repository (%d materials):\n", registry->material_count);
+    for (uint32_t i = 0; i < registry->material_count; i++) {
+        Material* mat = &registry->materials[i];
+        printf("   - %s: diffuse(%.2f,%.2f,%.2f) roughness=%.2f metallic=%.2f\n", 
+               mat->name, 
+               mat->diffuse_color.x, mat->diffuse_color.y, mat->diffuse_color.z,
+               mat->roughness, mat->metallic);
+        
+        // List associated textures
+        if (strlen(mat->diffuse_texture) > 0) {
+            printf("     └ Diffuse: %s", mat->diffuse_texture);
+        }
+        if (strlen(mat->normal_texture) > 0) {
+            printf(" | Normal: %s", mat->normal_texture);
+        }
+        if (strlen(mat->specular_texture) > 0) {
+            printf(" | Specular: %s", mat->specular_texture);
+        }
+        if (strlen(mat->emission_texture) > 0) {
+            printf(" | Emission: %s", mat->emission_texture);
+        }
+        if (strlen(mat->diffuse_texture) > 0 || strlen(mat->normal_texture) > 0 || 
+            strlen(mat->specular_texture) > 0 || strlen(mat->emission_texture) > 0) {
+            printf("\n");
+        }
+    }
+}
+
+bool materials_load_texture_set(AssetRegistry* registry, Material* material, 
+                               const char* texture_dir, SDL_Renderer* renderer) {
+    if (!registry || !material || !texture_dir || !renderer) return false;
+    
+    char texture_path[512];
+    bool any_loaded = false;
+    
+    // Try to load diffuse texture
+    if (strlen(material->diffuse_texture) > 0) {
+        snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->diffuse_texture);
+        char texture_name[128];
+        snprintf(texture_name, sizeof(texture_name), "%s_diffuse", material->name);
+        if (load_texture(registry, texture_path, texture_name, renderer)) {
+            any_loaded = true;
+        }
+    }
+    
+    // Try to load normal texture
+    if (strlen(material->normal_texture) > 0) {
+        snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->normal_texture);
+        char texture_name[128];
+        snprintf(texture_name, sizeof(texture_name), "%s_normal", material->name);
+        if (load_texture(registry, texture_path, texture_name, renderer)) {
+            any_loaded = true;
+        }
+    }
+    
+    // Try to load specular texture
+    if (strlen(material->specular_texture) > 0) {
+        snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->specular_texture);
+        char texture_name[128];
+        snprintf(texture_name, sizeof(texture_name), "%s_specular", material->name);
+        if (load_texture(registry, texture_path, texture_name, renderer)) {
+            any_loaded = true;
+        }
+    }
+    
+    // Try to load emission texture
+    if (strlen(material->emission_texture) > 0) {
+        snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->emission_texture);
+        char texture_name[128];
+        snprintf(texture_name, sizeof(texture_name), "%s_emission", material->name);
+        if (load_texture(registry, texture_path, texture_name, renderer)) {
+            any_loaded = true;
+        }
+    }
+    
+    return any_loaded;
+}
+
+bool materials_bind_textures(Material* material, SDL_Renderer* renderer) {
+    if (!material || !renderer) return false;
+    
+    // This function would bind multiple textures for multi-texture rendering
+    // For now, it's a placeholder for future multi-texture support
+    // In a real implementation, this would set up texture units for shaders
+    
+    return true;
 }

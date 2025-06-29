@@ -143,6 +143,9 @@ void render_solid_mesh_with_lighting(Mesh* mesh, struct Transform* transform, Ma
 void render_textured_mesh_with_lighting(Mesh* mesh, struct Transform* transform, Texture* texture, RenderConfig* config);
 Vector3 transform_vertex(Vector3 vertex, struct Transform* transform);
 
+// Enhanced mesh rendering with new material properties
+void render_mesh_enhanced(Mesh* mesh, struct Transform* transform, Material* material, Texture* texture, RenderConfig* config);
+
 // Triangle rasterization
 void render_filled_triangle(SDL_Renderer* renderer, Point2D p1, Point2D p2, Point2D p3, Uint8 r, Uint8 g, Uint8 b);
 
@@ -168,5 +171,10 @@ bool render_take_screenshot(RenderConfig* config, const char* filename);
 bool render_take_screenshot_from_position(struct World* world, RenderConfig* config, 
                                          Vector3 camera_pos, Vector3 look_at_pos, 
                                          const char* filename);
+
+// Include modular render components
+#include "render_camera.h"
+#include "render_lighting.h"
+#include "render_mesh.h"
 
 #endif // RENDER_H
