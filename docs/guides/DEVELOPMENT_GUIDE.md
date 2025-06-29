@@ -6,17 +6,6 @@
 
 This guide provides all the necessary information for developers to get started with the CGame engine project. It covers environment setup, build procedures, coding standards, and the overall development workflow.
 
-/**
- * @file DEVELOPMENT_GUIDE.md
- * @brief CGame ECS Engine - Developer Documentation and Code Conventions
- * 
- * This file provides comprehensive documentation for developers working on the
- * CGame Entity-Component-System engine. It serves as a reference for code
- * organization, architectural decisions, and development practices.
- */
-
-# CGame ECS Engine - Development Guide
-
 ## Project Structure and Philosophy
 
 ### Entity-Component-System Architecture
@@ -70,7 +59,6 @@ The engine is built around a pure ECS architecture where:
 #### `src/assets.h/.c` - Asset Management
 - Mesh, texture, and material loading
 - Asset registry and caching
-- OBJ file parsing
 
 **When to modify**: Adding new asset types, optimizing loading performance
 
@@ -82,25 +70,25 @@ The engine is built around a pure ECS architecture where:
 **When to modify**: Extending template system, adding new configuration options
 
 #### `src/render_3d.c` - 3D Rendering Pipeline
-- SDL2 3D rendering implementation
+- Sokol 3D rendering implementation
 - Matrix transformations
 - Camera management
 
 **When to modify**: Improving rendering performance, adding visual features
 
 #### `src/ui.h/.c` - Debug Interface
+- UI rendering (WIP)
 - Performance monitoring
 - Entity inspection tools
-- Development utilities
 
 **When to modify**: Adding new debug features, improving developer experience
 
-#### `src/test.c` - Main Entry Point
+#### `src/main.c` - Main Entry Point
 - Application initialization
 - Scene setup and testing
-- Entity factory functions
+- Sokol event loop
 
-**When to modify**: Creating new test scenarios, debugging engine features
+**When to modify**: Changing initialization logic, modifying the main loop
 
 ## Component Design Guidelines
 

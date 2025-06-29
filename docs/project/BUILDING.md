@@ -16,7 +16,52 @@ This document provides comprehensive instructions for building, running, and dev
 ### Supported Platforms
 - **macOS** (primary development platform)
 - **Linux** (Ubuntu, Debian, Fedora tested)
-- **Windows** (via WSL or MinGW - community supported)
+# Building the CGame Engine
+
+This document provides instructions for building and running the CGame engine.
+
+## Prerequisites
+
+### macOS
+- **Homebrew**: `brew install pkg-config`
+
+### Linux (Ubuntu/Debian)
+- **Build Tools**: `sudo apt-get install build-essential pkg-config`
+- **OpenGL Libraries**: `sudo apt-get install libgl1-mesa-dev xorg-dev`
+
+### Windows
+- **MinGW-w64**: For cross-compilation from a Linux environment.
+
+## Build and Run
+
+The project uses a `Makefile` for building. The following command will compile and run the engine:
+
+```bash
+# Build and run the Sokol application
+make clean && make && ./build/cgame
+```
+
+## Build System Details
+
+### Makefile Targets
+- **`make`** or **`make all`**: Build the engine.
+- **`make run`**: Build and run the engine.
+- **`make clean`**: Remove all build artifacts.
+- **`make debug`**: Build with debug symbols.
+- **`make release`**: Build with optimizations.
+
+### Source File Organization
+```
+src/
+├── core.c/h         → ECS foundation
+├── systems.c/h      → Game systems
+├── assets.c/h       → Asset management
+├── render_3d.c      → 3D rendering with Sokol
+├── ui.c/h           → UI system (WIP)
+├── data.c/h         → Data loading
+└── main.c           → Main entry point with Sokol
+```
+
 
 ## Quick Start
 
