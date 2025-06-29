@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+"""
+Metadata Validator for CGame Engine
+
+This script validates all `metadata.json` files within the `assets/meshes`
+directory against the master `schema.json`. It serves as a crucial tool for
+ensuring data consistency and integrity across all game assets.
+
+The script performs the following checks:
+1.  **Schema Existence**: Verifies that the `schema.json` file exists.
+2.  **JSON Validity**: Ensures that each `metadata.json` file is a well-formed
+    JSON document.
+3.  **Schema Compliance**: Validates the structure and data types of each
+    metadata file against the rules defined in the schema.
+
+It can be run as a standalone script to check all assets and is intended to be
+used as part of a pre-commit hook or CI/CD pipeline to prevent invalid
+metadata from being introduced into the codebase.
+"""
 import json
 import sys
 from pathlib import Path
