@@ -18,7 +18,6 @@
 #include "core.h"
 #include <math.h>
 #include <stdio.h>
-#include <stdarg.h>
 
 static UIState ui_state = {0};
 
