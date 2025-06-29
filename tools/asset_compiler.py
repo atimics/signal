@@ -1,4 +1,28 @@
 #!/usr/bin/env python3
+"""
+Asset Compiler for CGame Engine
+
+This script compiles source mesh assets (`.obj`, `.mesh`) into an optimized,
+engine-ready format (`.cobj`). It performs the following key functions:
+
+1.  **Mesh Processing**: Loads and validates source meshes, attempting to repair
+    any corruption. It uses Delaunay triangulation for robust face generation.
+2.  **Semantic Material Generation**: Creates `.mtl` files with physically-based
+    properties derived from tags in the asset's `metadata.json`. This allows
+    for an artist-friendly, data-driven material workflow.
+3.  **Texture Generation**: Generates a spritesheet-style texture in SVG format
+    with semantic colors based on the asset's tags. The SVG is then converted
+    to a `.png` file.
+4.  **UV Mapping**: Generates UV coordinates for each face, mapping them to the
+    procedurally generated texture.
+5.  **Metadata Compilation**: Creates a `metadata.json` file in the build
+    directory, combining source metadata with build-specific information.
+6.  **Index Creation**: Generates a central `index.json` file that lists all
+    compiled assets, allowing the engine to efficiently discover and load them.
+
+The compiler is designed to be integrated into the build system (via `make`)
+and can be run manually for development and debugging.
+"""
 import argparse
 import json
 import math
@@ -469,7 +493,24 @@ def write_build_metadata(metadata_path, build_meta):
 # --- Build Pipeline ---
 
 def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
-    """Compiles a single mesh asset from source to build directory."""
+    """
+    Compiles a single mesh asset from a source file to the build directory.
+
+    This function orchestrates the entire compilation process for a single
+    asset, including loading the mesh, generating materials and textures,
+    creating UV maps, and writing the final compiled object and metadata.
+
+    Args:
+        source_path (str or Path): The path to the source mesh file (.obj or .mesh).
+        build_dir (str or Path): The root directory for compiled assets.
+        schema_path (str or Path): The path to the metadata JSON schema.
+        overwrite (bool, optional): If True, overwrite existing compiled files.
+            Defaults to False.
+
+    Returns:
+        str or None: The relative path to the compiled metadata file if
+        successful, otherwise None.
+    """
     source_path = Path(source_path)
     mesh_name = source_path.stem
     
@@ -611,6 +652,13 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
     return str(metadata_path.relative_to(build_dir))
 
 def main():
+    """
+    Main function to run the asset compiler.
+
+    Parses command-line arguments, discovers all mesh assets in the source
+    directory, and orchestrates the compilation process for each asset.
+    Finally, it generates the master asset index file.
+    """
     parser = argparse.ArgumentParser(description="Compile mesh assets from the source directory to the build directory.")
     parser.add_argument("--source_dir", default="assets/meshes", help="Source directory for mesh assets.")
     parser.add_argument("--build_dir", default="build/assets/meshes", help="Build directory for compiled assets.")

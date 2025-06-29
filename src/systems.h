@@ -3,10 +3,10 @@
 
 #include "core.h"
 #include "data.h"
-#include "render.h"  // For RenderConfig
+#include "render.h"
 
 // ============================================================================
-// SYSTEM SCHEDULER
+// ENUMS AND STRUCTS
 // ============================================================================
 
 typedef enum {
@@ -18,61 +18,48 @@ typedef enum {
     SYSTEM_COUNT
 } SystemType;
 
+typedef void (*SystemUpdateFunc)(struct World* world, float delta_time);
+
 typedef struct {
     const char* name;
-    float frequency;        // Hz - how often to run
-    float last_update;      // When last ran
+    float frequency;
+    float last_update;
     bool enabled;
-    void (*update_func)(struct World* world, float delta_time);
+    SystemUpdateFunc update_func;
 } SystemInfo;
 
-struct SystemScheduler {
+typedef struct SystemScheduler {
     SystemInfo systems[SYSTEM_COUNT];
     float total_time;
-    uint32_t frame_count;
-    
-    // Performance tracking
+    int frame_count;
     float system_times[SYSTEM_COUNT];
-    uint32_t system_calls[SYSTEM_COUNT];
-};
+    int system_calls[SYSTEM_COUNT];
+} SystemScheduler;
 
 // ============================================================================
-// SYSTEM FUNCTIONS
+// FUNCTION DECLARATIONS
 // ============================================================================
 
-// Physics System - Runs every frame (60 FPS)
+// System Scheduler
+bool scheduler_init(SystemScheduler* scheduler);
+void scheduler_destroy(SystemScheduler* scheduler);
+void scheduler_update(SystemScheduler* scheduler, struct World* world, float delta_time);
+void scheduler_print_stats(SystemScheduler* scheduler);
+
+// System Control
+void scheduler_enable_system(SystemScheduler* scheduler, SystemType type);
+void scheduler_disable_system(SystemScheduler* scheduler, SystemType type);
+void scheduler_set_frequency(SystemScheduler* scheduler, SystemType type, float frequency);
+
+// Individual Systems
 void physics_system_update(struct World* world, float delta_time);
-
-// Collision System - Runs every 3 frames (20 FPS)
 void collision_system_update(struct World* world, float delta_time);
-
-// AI System - Runs with LOD (2-10 FPS based on distance)
 void ai_system_update(struct World* world, float delta_time);
-
-// Camera System - Runs every frame (60 FPS)
 void camera_system_update(struct World* world, float delta_time);
-
-// Render System - Runs every frame (60 FPS)
 void render_system_update(struct World* world, float delta_time);
 
-// ============================================================================
-// SCHEDULER API
-// ============================================================================
-
-bool scheduler_init(struct SystemScheduler* scheduler);
-void scheduler_destroy(struct SystemScheduler* scheduler);
-void scheduler_update(struct SystemScheduler* scheduler, struct World* world, float delta_time);
-void scheduler_print_stats(struct SystemScheduler* scheduler);
-
-// System control
-void scheduler_enable_system(struct SystemScheduler* scheduler, SystemType type);
-void scheduler_disable_system(struct SystemScheduler* scheduler, SystemType type);
-void scheduler_set_frequency(struct SystemScheduler* scheduler, SystemType type, float frequency);
-
-// Data access
+// Data Access
 DataRegistry* get_data_registry(void);
-
-// Global system accessors
 RenderConfig* get_render_config(void);
 
 #endif // SYSTEMS_H

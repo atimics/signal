@@ -476,15 +476,9 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         first_frame = false;
     }
     
-    // Begin render pass
-    sg_pass pass = {
-        .action = {
-            .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = {0.2f, 0.3f, 0.4f, 1.0f} },
-            .depth = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f }
-        },
-        .swapchain = sglue_swapchain()
-    };
-    sg_begin_pass(&pass);
+    // Note: Render pass is managed by main.c, we just do the rendering here
+    
+    // If we have entities to render, draw a simple test triangle
     if (renderable_count > 0) {
         // Apply pipeline (now within render pass)
         printf("🔧 Applying pipeline within render pass...\n");
@@ -520,9 +514,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         }
     }
     
-    // End render pass
-    sg_end_pass();
-    sg_commit();
+    // Note: Render pass end and commit are handled by main.c
     
     // Render debug info if enabled
     if (config->show_debug_info) {
