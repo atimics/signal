@@ -27,37 +27,101 @@ def get_random_color_hex():
     """Returns a random bright color in hex format."""
     return f"#{random.randint(128, 255):02X}{random.randint(128, 255):02X}{random.randint(128, 255):02X}"
 
-def get_semantic_color_for_mesh(mesh_name, face_index=None):
-    """Returns semantic colors based on mesh type and context."""
+# ============================================================================
+# TAG-BASED SEMANTIC COLOR AND MATERIAL SYSTEM
+# ============================================================================
+
+# Global variable to cache loaded material definitions
+TAG_MATERIAL_DEFINITIONS = None
+
+def load_material_definitions(assets_dir="assets"):
+    """Load material definitions from JSON file."""
+    global TAG_MATERIAL_DEFINITIONS
+    
+    if TAG_MATERIAL_DEFINITIONS is not None:
+        return TAG_MATERIAL_DEFINITIONS
+    
+    definitions_path = Path(assets_dir) / "material_definitions.json"
+    
+    try:
+        with open(definitions_path, 'r') as f:
+            data = json.load(f)
+            TAG_MATERIAL_DEFINITIONS = data.get('definitions', {})
+            print(f"✅ Loaded {len(TAG_MATERIAL_DEFINITIONS)} material definitions from {definitions_path}")
+            return TAG_MATERIAL_DEFINITIONS
+    except FileNotFoundError:
+        print(f"⚠️  Material definitions file not found: {definitions_path}")
+        print("   Using fallback default definitions.")
+        # Provide minimal fallback definitions
+        TAG_MATERIAL_DEFINITIONS = {
+            'spacecraft': {
+                'priority': 80,
+                'colors': {'primary': '#8C9BAB', 'secondary': '#4A90E2', 'tertiary': '#FF6B35', 'accent': '#34495E'},
+                'material': {'ambient': [0.2, 0.2, 0.3], 'diffuse': [0.6, 0.7, 0.9], 'specular': [0.8, 0.8, 0.8], 'shininess': 64.0, 'emission': [0.0, 0.0, 0.0]}
+            },
+            'building': {
+                'priority': 60,
+                'colors': {'primary': '#95A5A6', 'secondary': '#3498DB', 'tertiary': '#F1C40F', 'accent': '#2C3E50'},
+                'material': {'ambient': [0.3, 0.3, 0.3], 'diffuse': [0.7, 0.7, 0.7], 'specular': [0.4, 0.4, 0.4], 'shininess': 16.0, 'emission': [0.0, 0.0, 0.0]}
+            },
+            'sun': {
+                'priority': 100,
+                'colors': {'primary': '#FFD700', 'secondary': '#FFA500', 'tertiary': '#FF6B35', 'accent': '#FFFF99'},
+                'material': {'ambient': [1.0, 0.8, 0.4], 'diffuse': [1.0, 0.9, 0.6], 'specular': [1.0, 1.0, 1.0], 'shininess': 128.0, 'emission': [0.4, 0.3, 0.1]}
+            }
+        }
+        return TAG_MATERIAL_DEFINITIONS
+    except json.JSONDecodeError as e:
+        print(f"❌ Error parsing material definitions JSON: {e}")
+        print("   Using fallback default definitions.")
+        TAG_MATERIAL_DEFINITIONS = {}
+        return TAG_MATERIAL_DEFINITIONS
+
+def get_material_definition_from_tags(tags):
+    """Get the highest priority material definition based on tags."""
+    if not tags:
+        return None
+    
+    # Ensure definitions are loaded
+    definitions = load_material_definitions()
+    
+    best_match = None
+    highest_priority = -1
+    
+    for tag in tags:
+        tag_lower = tag.lower().strip()
+        if tag_lower in definitions:
+            priority = definitions[tag_lower].get('priority', 0)
+            if priority > highest_priority:
+                highest_priority = priority
+                best_match = definitions[tag_lower]
+    
+    return best_match
+
+def get_semantic_color_for_mesh(mesh_name, face_index=None, tags=None):
+    """Returns semantic colors based on tags with fallback to mesh name."""
+    # Try tags first (new system)
+    if tags:
+        material_def = get_material_definition_from_tags(tags)
+        if material_def:
+            colors = material_def.get('colors', {})
+            color_keys = list(colors.keys())
+            if face_index is not None and len(color_keys) > 1:
+                return colors[color_keys[face_index % len(color_keys)]]
+            return colors.get('primary', '#8C9BAB')  # Fallback to metallic gray
+    
+    # Fallback to old mesh_name-based system for compatibility
     mesh_lower = mesh_name.lower()
     
     # Spacecraft materials
     if any(term in mesh_lower for term in ['ship', 'wedge', 'fighter', 'craft', 'vessel']):
-        colors = {
-            'hull': '#8C9BAB',      # Metallic blue-gray
-            'cockpit': '#4A90E2',   # Glass blue
-            'engine': '#FF6B35',    # Engine orange
-            'weapon': '#E74C3C',    # Warning red
-            'detail': '#34495E'     # Dark detail
-        }
-        # Assign based on face position/index for variety
-        if face_index is not None:
-            color_keys = list(colors.keys())
-            return colors[color_keys[face_index % len(color_keys)]]
-        return colors['hull']  # Default to hull color
+        colors = ['#8C9BAB', '#4A90E2', '#FF6B35', '#34495E']
+        return colors[face_index % len(colors)] if face_index is not None else colors[0]
     
     # Architectural structures
     elif any(term in mesh_lower for term in ['tower', 'building', 'structure', 'base']):
-        colors = {
-            'wall': '#95A5A6',      # Concrete gray
-            'window': '#3498DB',    # Window blue
-            'detail': '#2C3E50',    # Dark trim
-            'light': '#F1C40F'      # Warning lights
-        }
-        if face_index is not None:
-            color_keys = list(colors.keys())
-            return colors[color_keys[face_index % len(color_keys)]]
-        return colors['wall']
+        colors = ['#95A5A6', '#3498DB', '#F1C40F', '#2C3E50']
+        return colors[face_index % len(colors)] if face_index is not None else colors[0]
     
     # Celestial bodies
     elif any(term in mesh_lower for term in ['sun', 'star', 'solar']):
@@ -68,6 +132,39 @@ def get_semantic_color_for_mesh(mesh_name, face_index=None):
     # Default fallback to varied metallics
     metallic_colors = ['#8C9BAB', '#A8B2C1', '#7A8B9C', '#95A5A6']
     return metallic_colors[hash(mesh_name) % len(metallic_colors)]
+
+def generate_semantic_mtl_file_from_tags(mtl_path, material_name, texture_filename, tags):
+    """Generate a semantic MTL file using tag-based material definitions."""
+    material_def = get_material_definition_from_tags(tags) if tags else None
+    
+    if material_def and 'material' in material_def:
+        # Use tag-based material properties
+        mat = material_def['material']
+        ambient = f"{mat['ambient'][0]:.1f} {mat['ambient'][1]:.1f} {mat['ambient'][2]:.1f}"
+        diffuse = f"{mat['diffuse'][0]:.1f} {mat['diffuse'][1]:.1f} {mat['diffuse'][2]:.1f}"
+        specular = f"{mat['specular'][0]:.1f} {mat['specular'][1]:.1f} {mat['specular'][2]:.1f}"
+        shininess = f"{mat['shininess']:.1f}"
+        emission = mat.get('emission', [0.0, 0.0, 0.0])
+        
+        with open(mtl_path, 'w') as f:
+            f.write(f"# Material file generated from tags: {', '.join(tags) if tags else 'none'}\n")
+            f.write(f"# Material definition: {material_def.get('description', 'No description')}\n\n")
+            f.write(f"newmtl {material_name}\n")
+            f.write(f"Ka {ambient}  # Ambient color\n")
+            f.write(f"Kd {diffuse}  # Diffuse color\n")
+            f.write(f"Ks {specular}  # Specular color\n")
+            f.write(f"Ns {shininess}         # Shininess\n")
+            f.write(f"map_Kd {texture_filename}\n")
+            
+            # Add emission for glowing objects
+            if emission[0] > 0.0 or emission[1] > 0.0 or emission[2] > 0.0:
+                emission_str = f"{emission[0]:.1f} {emission[1]:.1f} {emission[2]:.1f}"
+                f.write(f"Ke {emission_str}  # Emission color\n")
+                f.write(f"map_Ke {texture_filename}\n")
+        
+        return True
+    
+    return False
 
 # --- Geometry and UV Generation ---
 
@@ -98,7 +195,7 @@ def triangulate(faces):
                 tri_faces.append(tuple(tri))
     return tri_faces
 
-def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, svg_height=1024, mesh_name=""):
+def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, svg_height=1024, mesh_name="", tags=None):
     # Generate UV coordinates for faces in a spritesheet layout
     num_faces = len(original_faces)
     cols = math.ceil(math.sqrt(num_faces))
@@ -135,8 +232,8 @@ def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, s
         # Add semantic color definitions
         f.write('  <defs>\n')
         for i in range(num_faces):
-            # Use semantic colors instead of random
-            semantic_color = get_semantic_color_for_mesh(mesh_name, i)
+            # Use semantic colors based on tags, fallback to mesh name
+            semantic_color = get_semantic_color_for_mesh(mesh_name, i, tags)
             # Create subtle gradients for visual interest
             lighter = lighten_color(semantic_color, 0.2)
             darker = darken_color(semantic_color, 0.2)
@@ -399,7 +496,27 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
 
     print(f"--- Compiling {source_path.name} ---")
     
-    # 0. Create .obj copy in source directory if it's a .mesh file
+    # 0. Load metadata FIRST to get tags for semantic color generation
+    source_meta_path = source_path.parent / "metadata.json"
+    source_meta = {}
+    asset_tags = []
+    asset_name = mesh_name.replace('_', ' ').title()
+    
+    if source_meta_path.exists():
+        with open(source_meta_path, 'r') as f:
+            try:
+                source_meta = json.load(f)
+                asset_tags = source_meta.get('tags', [])
+                asset_name = source_meta.get('name', asset_name)
+                print(f"Loaded source metadata from {source_meta_path.relative_to(Path(args.source_dir))}")
+                print(f"   Asset: {asset_name} | Tags: {', '.join(asset_tags)}")
+            except json.JSONDecodeError:
+                print(f"Warning: Invalid JSON in {source_meta_path}. Starting with empty metadata.", file=sys.stderr)
+    
+    # Initialize material definitions (loads from JSON file)
+    load_material_definitions()
+    
+    # 1. Create .obj copy in source directory if it's a .mesh file
     obj_copy_path = source_path.parent / "geometry.obj"
     if source_path.suffix == '.mesh' and not obj_copy_path.exists():
         print(f"Creating .obj copy for mesh viewer: {obj_copy_path.relative_to(Path(args.source_dir))}")
@@ -409,7 +526,7 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
         except Exception as e:
             print(f"Warning: Could not create .obj copy: {e}", file=sys.stderr)
     
-    # 1. Load Mesh
+    # 2. Load Mesh
     try:
         file_type = 'obj' if source_path.suffix in ['.obj', '.mesh'] else None
         mesh = trimesh.load(str(source_path), file_type=file_type, force='mesh')
@@ -437,24 +554,31 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
     hull = Delaunay(vertices)
     triangulated_faces = hull.convex_hull
 
-    # 2. Auto-texture with semantic colors
+    # 3. Auto-texture with semantic colors based on tags
     original_faces = [tuple(f) for f in triangulated_faces] # Use triangles as original faces
-    uv_coords_per_face = generate_spritesheet_uvs_and_svg(original_faces, svg_path, mesh_name=mesh_name)
+    uv_coords_per_face = generate_spritesheet_uvs_and_svg(original_faces, svg_path, 
+                                                         mesh_name=asset_name, tags=asset_tags)
     convert_svg_to_png(svg_path, png_path)
     
     # Clean up temporary SVG file
     os.remove(svg_path)
     
-    # Try to copy existing MTL file first, or create a semantic one
+    # 4. Create semantic MTL file based on tags
     if not copy_source_mtl_if_exists(args.source_dir, args.build_dir, mesh_name):
-        material_name = mesh_name.replace('_', ' ').title()
-        generate_semantic_mtl_file(mtl_path, material_name, png_path.name, mesh_name)
-        print(f"🎨 Generated semantic MTL file: {material_name}")
+        material_name = asset_name
+        
+        # Try new tag-based MTL generation first
+        if asset_tags and generate_semantic_mtl_file_from_tags(mtl_path, material_name, png_path.name, asset_tags):
+            print(f"🎨 Generated tag-based MTL file: {material_name} (tags: {', '.join(asset_tags)})")
+        else:
+            # Fallback to old mesh-name-based system
+            generate_semantic_mtl_file(mtl_path, material_name, png_path.name, mesh_name)
+            print(f"🎨 Generated semantic MTL file: {material_name}")
     
     # Extract material name from the OBJ file or use the generated one
-    material_name = extract_material_name_from_obj(source_path) or mesh_name.replace('_', ' ').title()
+    material_name = extract_material_name_from_obj(source_path) or asset_name
 
-    # 3. Write Compiled Mesh
+    # 5. Write Compiled Mesh
     all_uvs = []
     uv_faces = []
     uv_idx_counter = 1
@@ -475,19 +599,7 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
     
     write_compiled_obj(cobj_path, vertices, all_uvs, triangulated_faces, uv_faces, mtl_path.name, material_name)
 
-    # 4. Create and Write Build Metadata
-    # Look for metadata.json in the same directory as the source mesh
-    source_meta_path = source_path.parent / "metadata.json"
-    source_meta = {}
-    if source_meta_path.exists():
-        with open(source_meta_path, 'r') as f:
-            try:
-                source_meta = json.load(f)
-                print(f"Loaded source metadata from {source_meta_path.relative_to(Path(args.source_dir))}")
-            except json.JSONDecodeError:
-                print(f"Warning: Invalid JSON in {source_meta_path}. Starting with empty metadata.", file=sys.stderr)
-
-    # Create build-specific metadata from source metadata
+    # 6. Create and Write Build Metadata
     build_meta = create_build_metadata(source_meta, schema_path, source_filename)
     if not build_meta:
         print(f"❌ Failed to create build metadata for {source_filename}")
@@ -495,7 +607,7 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
         
     # Write the build metadata
     write_build_metadata(metadata_path, build_meta)
-    print(f"Successfully compiled '{mesh_name}'.\n")
+    print(f"Successfully compiled '{asset_name}'.\n")
     return str(metadata_path.relative_to(build_dir))
 
 def main():
