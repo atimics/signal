@@ -51,9 +51,35 @@ has_physics=true
 has_collision=true
 has_renderable=true
 has_player=true
+has_camera=true
 mass=80.0
 collision_radius=4.0
 mesh_name=Wedge Ship Mk2
+
+# Camera Templates
+
+template: chase_camera
+description=Third-person chase camera
+has_transform=true
+has_camera=true
+camera_behavior=third_person
+follow_distance=10.0
+follow_offset_x=5.0
+follow_offset_y=15.0
+follow_offset_z=25.0
+follow_smoothing=0.02
+fov=60.0
+near_plane=0.1
+far_plane=1000.0
+
+template: security_camera
+description=Fixed security camera
+has_transform=true
+has_camera=true
+camera_behavior=static
+fov=90.0
+near_plane=0.1
+far_plane=500.0
 
 template: ai_ship
 description=AI-controlled spacecraft

@@ -307,7 +307,29 @@ int main(int argc, char* argv[]) {
     load_scene_by_name(&world, scene_to_load, &player);
     
     printf("\n🎮 Starting simulation...\n");
-    printf("Press Ctrl+C or close window to exit\n\n");
+    printf("Press Ctrl+C or close window to exit\n");
+    printf("Press 1-9 to switch between cameras\n");
+    
+    // List available cameras
+    printf("\n📹 Available cameras:\n");
+    int camera_count = 0;
+    for (uint32_t i = 0; i < world.entity_count; i++) {
+        struct Entity* entity = &world.entities[i];
+        if (entity->component_mask & COMPONENT_CAMERA) {
+            camera_count++;
+            struct Camera* camera = entity->camera;
+            const char* behavior_name = "Unknown";
+            switch (camera->behavior) {
+                case 0: behavior_name = "Third Person"; break;
+                case 1: behavior_name = "First Person"; break; 
+                case 2: behavior_name = "Static"; break;
+                case 3: behavior_name = "Chase"; break;
+                case 4: behavior_name = "Orbital"; break;
+            }
+            printf("   %d: Entity %d (%s)\n", camera_count, entity->id, behavior_name);
+        }
+    }
+    printf("\n");
     
     // Game loop variables
     bool running = true;
@@ -325,10 +347,31 @@ int main(int argc, char* argv[]) {
                 running = false;
                 break;
             }
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
-                printf("⎋ Escape key pressed - exiting\n");
-                running = false;
-                break;
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    printf("⎋ Escape key pressed - exiting\n");
+                    running = false;
+                    break;
+                }
+                
+                // Camera switching with number keys
+                if (event.key.keysym.sym >= SDLK_1 && event.key.keysym.sym <= SDLK_9) {
+                    int camera_index = event.key.keysym.sym - SDLK_1; // 0-8
+                    
+                    // Find camera entities
+                    int found_cameras = 0;
+                    for (uint32_t i = 0; i < world.entity_count; i++) {
+                        struct Entity* entity = &world.entities[i];
+                        if (entity->component_mask & COMPONENT_CAMERA) {
+                            if (found_cameras == camera_index) {
+                                world_set_active_camera(&world, entity->id);
+                                printf("📹 Switched to camera %d (Entity %d)\n", camera_index + 1, entity->id);
+                                break;
+                            }
+                            found_cameras++;
+                        }
+                    }
+                }
             }
         }
         

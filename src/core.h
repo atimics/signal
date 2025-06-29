@@ -34,6 +34,7 @@ typedef enum {
     COMPONENT_AI         = 1 << 3,
     COMPONENT_RENDERABLE = 1 << 4,
     COMPONENT_PLAYER     = 1 << 5,
+    COMPONENT_CAMERA     = 1 << 6,
 } ComponentType;
 
 // ============================================================================
@@ -106,6 +107,29 @@ struct Player {
     bool controls_enabled;
 };
 
+struct Camera {
+    float fov;
+    float near_plane;
+    float far_plane;
+    float aspect_ratio;
+    bool is_active;
+    
+    // Camera behavior settings
+    enum {
+        CAMERA_BEHAVIOR_THIRD_PERSON,
+        CAMERA_BEHAVIOR_FIRST_PERSON,
+        CAMERA_BEHAVIOR_STATIC,
+        CAMERA_BEHAVIOR_CHASE,
+        CAMERA_BEHAVIOR_ORBITAL
+    } behavior;
+    
+    // Follow target for chase cameras
+    EntityID follow_target;
+    float follow_distance;
+    Vector3 follow_offset;
+    float follow_smoothing;
+};
+
 // ============================================================================
 // ENTITY DEFINITION
 // ============================================================================
@@ -123,6 +147,7 @@ struct Entity {
     struct AI* ai;
     struct Renderable* renderable; 
     struct Player* player;
+    struct Camera* camera;
 };
 
 // ============================================================================
@@ -137,6 +162,7 @@ struct ComponentPools {
     struct AI ais[MAX_ENTITIES];
     struct Renderable renderables[MAX_ENTITIES];
     struct Player players[MAX_ENTITIES];
+    struct Camera cameras[MAX_ENTITIES];
     
     // Free list management
     uint32_t transform_count;
@@ -145,6 +171,7 @@ struct ComponentPools {
     uint32_t ai_count;
     uint32_t renderable_count;
     uint32_t player_count;
+    uint32_t camera_count;
 };
 
 // ============================================================================
@@ -157,6 +184,9 @@ struct World {
     uint32_t next_entity_id;
     
     struct ComponentPools components;
+    
+    // Active camera tracking
+    EntityID active_camera_entity;
     
     // Frame timing
     uint32_t frame_number;
@@ -190,6 +220,11 @@ struct Collision* entity_get_collision(struct World* world, EntityID entity_id);
 struct AI* entity_get_ai(struct World* world, EntityID entity_id);
 struct Renderable* entity_get_renderable(struct World* world, EntityID entity_id);
 struct Player* entity_get_player(struct World* world, EntityID entity_id);
+struct Camera* entity_get_camera(struct World* world, EntityID entity_id);
+
+// Camera management
+void world_set_active_camera(struct World* world, EntityID camera_entity);
+EntityID world_get_active_camera(struct World* world);
 
 // Utility functions
 Vector3 vector3_add(Vector3 a, Vector3 b);

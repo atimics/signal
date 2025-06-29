@@ -762,14 +762,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     
     // Suppress unused parameter warning
     (void)delta_time;
+    (void)player_id;  // Camera system now handles camera positioning
     
     // Clear the screen
     render_clear_screen(config);
     
-    // Update camera to follow player
-    if (player_id != INVALID_ENTITY) {
-        camera_follow_entity(&config->camera, world, player_id, 10.0f);
-    }
+    // Camera position is now managed by camera system
     
     // Render all entities
     for (uint32_t i = 0; i < world->entity_count; i++) {

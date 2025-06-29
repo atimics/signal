@@ -1,0 +1,8 @@
+# Camera system test scene
+scene: camera_test
+    spawn: player_ship 0 0 0
+    spawn: chase_camera 0 20 40
+    spawn: security_camera -50 30 -50
+    spawn: control_tower -30 0 -30
+    spawn: sun 0 0 50
+    spawn: ai_ship 25 0 25

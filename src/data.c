@@ -205,6 +205,48 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path) {
         else if (strcmp(key, "has_player") == 0) {
             current_template->has_player = (strcmp(value, "true") == 0);
         }
+        else if (strcmp(key, "has_camera") == 0) {
+            current_template->has_camera = (strcmp(value, "true") == 0);
+        }
+        else if (strcmp(key, "camera_behavior") == 0) {
+            if (strcmp(value, "third_person") == 0) {
+                current_template->camera_behavior = 0; // CAMERA_BEHAVIOR_THIRD_PERSON
+            } else if (strcmp(value, "first_person") == 0) {
+                current_template->camera_behavior = 1; // CAMERA_BEHAVIOR_FIRST_PERSON
+            } else if (strcmp(value, "static") == 0) {
+                current_template->camera_behavior = 2; // CAMERA_BEHAVIOR_STATIC
+            } else if (strcmp(value, "chase") == 0) {
+                current_template->camera_behavior = 3; // CAMERA_BEHAVIOR_CHASE
+            } else if (strcmp(value, "orbital") == 0) {
+                current_template->camera_behavior = 4; // CAMERA_BEHAVIOR_ORBITAL
+            } else {
+                current_template->camera_behavior = 0; // Default to third person
+            }
+        }
+        else if (strcmp(key, "fov") == 0) {
+            current_template->fov = atof(value);
+        }
+        else if (strcmp(key, "near_plane") == 0) {
+            current_template->near_plane = atof(value);
+        }
+        else if (strcmp(key, "far_plane") == 0) {
+            current_template->far_plane = atof(value);
+        }
+        else if (strcmp(key, "follow_distance") == 0) {
+            current_template->follow_distance = atof(value);
+        }
+        else if (strcmp(key, "follow_offset_x") == 0) {
+            current_template->follow_offset.x = atof(value);
+        }
+        else if (strcmp(key, "follow_offset_y") == 0) {
+            current_template->follow_offset.y = atof(value);
+        }
+        else if (strcmp(key, "follow_offset_z") == 0) {
+            current_template->follow_offset.z = atof(value);
+        }
+        else if (strcmp(key, "follow_smoothing") == 0) {
+            current_template->follow_smoothing = atof(value);
+        }
         else if (strcmp(key, "mass") == 0) {
             current_template->mass = atof(value);
         }
@@ -381,6 +423,23 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
     
     if (template->has_player) {
         entity_add_component(world, id, COMPONENT_PLAYER);
+    }
+    
+    if (template->has_camera) {
+        entity_add_component(world, id, COMPONENT_CAMERA);
+        struct Camera* camera = entity_get_camera(world, id);
+        if (camera) {
+            camera->fov = template->fov > 0 ? template->fov : 60.0f;
+            camera->near_plane = template->near_plane > 0 ? template->near_plane : 0.1f;
+            camera->far_plane = template->far_plane > 0 ? template->far_plane : 1000.0f;
+            camera->aspect_ratio = template->aspect_ratio > 0 ? template->aspect_ratio : 16.0f / 9.0f;
+            camera->behavior = template->camera_behavior;
+            camera->follow_distance = template->follow_distance > 0 ? template->follow_distance : 10.0f;
+            camera->follow_offset = template->follow_offset;
+            camera->follow_smoothing = template->follow_smoothing > 0 ? template->follow_smoothing : 0.02f;
+            camera->is_active = false; // Will be set by camera system
+            camera->follow_target = INVALID_ENTITY; // Will be set later
+        }
     }
     
     return id;

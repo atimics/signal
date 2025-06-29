@@ -89,6 +89,9 @@ void entity_destroy(struct World* world, EntityID entity_id) {
             if (entity->component_mask & COMPONENT_PLAYER) {
                 entity_remove_component(world, entity_id, COMPONENT_PLAYER);
             }
+            if (entity->component_mask & COMPONENT_CAMERA) {
+                entity_remove_component(world, entity_id, COMPONENT_CAMERA);
+            }
             
             // Swap with last entity to avoid gaps
             if (i < world->entity_count - 1) {
@@ -172,6 +175,22 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             entity->player->controls_enabled = true;
             break;
             
+        case COMPONENT_CAMERA:
+            if (world->components.camera_count >= MAX_ENTITIES) return false;
+            entity->camera = &world->components.cameras[world->components.camera_count++];
+            memset(entity->camera, 0, sizeof(struct Camera));
+            entity->camera->fov = 60.0f;
+            entity->camera->near_plane = 0.1f;
+            entity->camera->far_plane = 1000.0f;
+            entity->camera->aspect_ratio = 16.0f / 9.0f;
+            entity->camera->is_active = false;
+            entity->camera->behavior = CAMERA_BEHAVIOR_THIRD_PERSON;
+            entity->camera->follow_target = INVALID_ENTITY;
+            entity->camera->follow_distance = 10.0f;
+            entity->camera->follow_offset = (Vector3){5.0f, 15.0f, 25.0f};
+            entity->camera->follow_smoothing = 0.02f;
+            break;
+            
         default:
             entity->component_mask &= ~type;  // Remove flag
             return false;
@@ -197,6 +216,7 @@ void entity_remove_component(struct World* world, EntityID entity_id, ComponentT
         case COMPONENT_AI:         entity->ai = NULL; break;
         case COMPONENT_RENDERABLE: entity->renderable = NULL; break;
         case COMPONENT_PLAYER:     entity->player = NULL; break;
+        case COMPONENT_CAMERA:     entity->camera = NULL; break;
     }
 }
 
@@ -237,6 +257,42 @@ struct Renderable* entity_get_renderable(struct World* world, EntityID entity_id
 struct Player* entity_get_player(struct World* world, EntityID entity_id) {
     struct Entity* entity = entity_get(world, entity_id);
     return entity ? entity->player : NULL;
+}
+
+struct Camera* entity_get_camera(struct World* world, EntityID entity_id) {
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->camera : NULL;
+}
+
+// ============================================================================
+// CAMERA MANAGEMENT
+// ============================================================================
+
+void world_set_active_camera(struct World* world, EntityID camera_entity) {
+    if (!world) return;
+    
+    // Deactivate current camera if any
+    if (world->active_camera_entity != INVALID_ENTITY) {
+        struct Camera* old_camera = entity_get_camera(world, world->active_camera_entity);
+        if (old_camera) {
+            old_camera->is_active = false;
+        }
+    }
+    
+    // Set new active camera
+    world->active_camera_entity = camera_entity;
+    
+    // Activate new camera if valid
+    if (camera_entity != INVALID_ENTITY) {
+        struct Camera* new_camera = entity_get_camera(world, camera_entity);
+        if (new_camera) {
+            new_camera->is_active = true;
+        }
+    }
+}
+
+EntityID world_get_active_camera(struct World* world) {
+    return world ? world->active_camera_entity : INVALID_ENTITY;
 }
 
 // ============================================================================

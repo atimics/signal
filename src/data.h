@@ -44,6 +44,16 @@ typedef struct {
     float ai_update_frequency;
     
     bool has_player;
+    
+    bool has_camera;
+    int camera_behavior;   // 0=third_person, 1=first_person, 2=static, etc.
+    float fov;
+    float near_plane;
+    float far_plane;
+    float aspect_ratio;
+    float follow_distance;
+    Vector3 follow_offset;
+    float follow_smoothing;
 } EntityTemplate;
 
 // Scene definition (collection of entity spawns)

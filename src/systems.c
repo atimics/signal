@@ -37,6 +37,7 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     load_entity_templates(&g_data_registry, "templates/entities.txt");
     load_scene_templates(&g_data_registry, "scenes/mesh_test.txt");
     load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
+    load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
     
     // Initialize render system with asset registry FIRST
     if (!render_init(&g_render_config, &g_asset_registry, 1200.0f, 800.0f)) {
@@ -78,6 +79,13 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
         .update_func = ai_system_update
     };
     
+    scheduler->systems[SYSTEM_CAMERA] = (SystemInfo){
+        .name = "Camera",
+        .frequency = 60.0f,      // Every frame
+        .enabled = true,
+        .update_func = camera_system_update
+    };
+    
     scheduler->systems[SYSTEM_RENDER] = (SystemInfo){
         .name = "Render",
         .frequency = 60.0f,      // Every frame
@@ -89,6 +97,7 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
     printf("   Collision: %.1f Hz\n", scheduler->systems[SYSTEM_COLLISION].frequency);
     printf("   AI: %.1f Hz (base)\n", scheduler->systems[SYSTEM_AI].frequency);
+    printf("   Camera: %.1f Hz\n", scheduler->systems[SYSTEM_CAMERA].frequency);
     printf("   Render: %.1f Hz\n", scheduler->systems[SYSTEM_RENDER].frequency);
     
     return true;
@@ -426,6 +435,158 @@ void ai_system_update(struct World* world, float delta_time) {
 }
 
 // ============================================================================
+// CAMERA SYSTEM
+// ============================================================================
+
+void camera_system_update(struct World* world, float delta_time) {
+    if (!world) return;
+    
+    // Suppress unused parameter warning
+    (void)delta_time;
+    
+    // Set up camera follow targets if not already set
+    static bool cameras_initialized = false;
+    if (!cameras_initialized) {
+        EntityID player_id = INVALID_ENTITY;
+        
+        // Find player entity
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->component_mask & COMPONENT_PLAYER) {
+                player_id = entity->id;
+                break;
+            }
+        }
+        
+        // Set up camera follow targets
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->component_mask & COMPONENT_CAMERA) {
+                struct Camera* camera = entity->camera;
+                if (camera && camera->follow_target == INVALID_ENTITY) {
+                    // If this is a player's camera or chase camera, follow the player
+                    if ((entity->component_mask & COMPONENT_PLAYER) || 
+                        (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
+                         camera->behavior == CAMERA_BEHAVIOR_CHASE)) {
+                        camera->follow_target = player_id;
+                    }
+                }
+            }
+        }
+        
+        // Set the first available camera as active
+        if (world->active_camera_entity == INVALID_ENTITY) {
+            for (uint32_t i = 0; i < world->entity_count; i++) {
+                struct Entity* entity = &world->entities[i];
+                if (entity->component_mask & COMPONENT_CAMERA) {
+                    world_set_active_camera(world, entity->id);
+                    break;
+                }
+            }
+        }
+        
+        cameras_initialized = true;
+    }
+    
+    // Find the active camera entity
+    EntityID active_camera_id = world_get_active_camera(world);
+    
+    if (active_camera_id == INVALID_ENTITY) {
+        // No active camera, try to find any camera
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->component_mask & COMPONENT_CAMERA) {
+                world_set_active_camera(world, entity->id);
+                active_camera_id = entity->id;
+                break;
+            }
+        }
+    }
+    
+    if (active_camera_id == INVALID_ENTITY) {
+        return; // No camera found
+    }
+    
+    struct Camera* camera = entity_get_camera(world, active_camera_id);
+    struct Transform* camera_transform = entity_get_transform(world, active_camera_id);
+    
+    if (!camera || !camera_transform) {
+        return;
+    }
+    
+    // Update camera based on its behavior
+    switch (camera->behavior) {
+        case CAMERA_BEHAVIOR_THIRD_PERSON:
+        case CAMERA_BEHAVIOR_CHASE:
+            if (camera->follow_target != INVALID_ENTITY) {
+                struct Transform* target_transform = entity_get_transform(world, camera->follow_target);
+                if (target_transform) {
+                    // Calculate desired camera position
+                    Vector3 target_pos = target_transform->position;
+                    Vector3 desired_pos = {
+                        target_pos.x + camera->follow_offset.x,
+                        target_pos.y + camera->follow_offset.y,
+                        target_pos.z + camera->follow_offset.z
+                    };
+                    
+                    // Smooth camera movement
+                    float lerp = camera->follow_smoothing;
+                    camera_transform->position.x += (desired_pos.x - camera_transform->position.x) * lerp;
+                    camera_transform->position.y += (desired_pos.y - camera_transform->position.y) * lerp;
+                    camera_transform->position.z += (desired_pos.z - camera_transform->position.z) * lerp;
+                    
+                    camera_transform->dirty = true;
+                }
+            }
+            break;
+            
+        case CAMERA_BEHAVIOR_STATIC:
+            // Static cameras don't move
+            break;
+            
+        case CAMERA_BEHAVIOR_FIRST_PERSON:
+            if (camera->follow_target != INVALID_ENTITY) {
+                struct Transform* target_transform = entity_get_transform(world, camera->follow_target);
+                if (target_transform) {
+                    // First person camera follows exactly
+                    camera_transform->position = target_transform->position;
+                    camera_transform->rotation = target_transform->rotation;
+                    camera_transform->dirty = true;
+                }
+            }
+            break;
+            
+        case CAMERA_BEHAVIOR_ORBITAL:
+            // TODO: Implement orbital camera behavior
+            break;
+    }
+    
+    // Update render system camera settings
+    RenderConfig* render_config = get_render_config();
+    if (render_config) {
+        // Update camera position
+        render_config->camera.position = camera_transform->position;
+        
+        // Update camera properties
+        render_config->camera.fov = camera->fov;
+        render_config->camera.near_plane = camera->near_plane;
+        render_config->camera.far_plane = camera->far_plane;
+        render_config->camera.aspect_ratio = camera->aspect_ratio;
+        
+        // Set camera target based on follow target or look direction
+        if (camera->follow_target != INVALID_ENTITY) {
+            struct Transform* target_transform = entity_get_transform(world, camera->follow_target);
+            if (target_transform) {
+                render_config->camera.target = target_transform->position;
+            }
+        }
+        
+        // Update camera up vector (for now, always up)
+        render_config->camera.up = (Vector3){0.0f, 1.0f, 0.0f};
+    }
+}
+
+// ============================================================================
 // RENDER SYSTEM
 // ============================================================================
 
@@ -442,14 +603,8 @@ void render_system_update(struct World* world, float delta_time) {
         }
     }
     
-    // Use our new render system
+    // Render the frame - camera system has already updated camera position
     render_frame(world, &g_render_config, player_id, delta_time);
-    
-    // Update camera to follow player if available
-    if (player_id != INVALID_ENTITY) {
-        // First-person camera follows player directly
-        camera_follow_entity(&g_render_config.camera, world, player_id, 0.0f);
-    }
 }
 
 // ============================================================================

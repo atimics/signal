@@ -13,6 +13,7 @@ typedef enum {
     SYSTEM_PHYSICS,
     SYSTEM_COLLISION,
     SYSTEM_AI,
+    SYSTEM_CAMERA,
     SYSTEM_RENDER,
     SYSTEM_COUNT
 } SystemType;
@@ -47,6 +48,9 @@ void collision_system_update(struct World* world, float delta_time);
 
 // AI System - Runs with LOD (2-10 FPS based on distance)
 void ai_system_update(struct World* world, float delta_time);
+
+// Camera System - Runs every frame (60 FPS)
+void camera_system_update(struct World* world, float delta_time);
 
 // Render System - Runs every frame (60 FPS)
 void render_system_update(struct World* world, float delta_time);
