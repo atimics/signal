@@ -1,8 +1,13 @@
 #include "assets.h"
+#include "sokol_gfx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -220,35 +225,31 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
     if (!registry || !filename || !mesh_name) return false;
     if (registry->mesh_count >= 32) return false;
     
-    // Build full path - handle both .mesh and .cobj extensions
+    // Build full path
     char filepath[512];
-    char actual_filename[256];
-    
-    // Convert .mesh extension to .cobj for compiled files
-    if (strstr(filename, ".mesh")) {
-        strncpy(actual_filename, filename, sizeof(actual_filename) - 1);
-        char* dot = strrchr(actual_filename, '.');
-        if (dot) {
-            strcpy(dot, ".cobj");  // Replace .mesh with .cobj
-        }
-    } else if (!strstr(filename, ".cobj")) {
-        // If no extension, assume it's a .cobj file
-        snprintf(actual_filename, sizeof(actual_filename), "%s", filename);
-        if (!strstr(actual_filename, ".cobj")) {
-            strncat(actual_filename, ".cobj", sizeof(actual_filename) - strlen(actual_filename) - 1);
-        }
-    } else {
-        // Already has .cobj extension
-        strncpy(actual_filename, filename, sizeof(actual_filename) - 1);
-    }
-    
-    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, actual_filename);
+    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, filename);
     
     // Find or create mesh slot
     Mesh* mesh = &registry->meshes[registry->mesh_count];
     strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
     
     if (parse_obj_file(filepath, mesh)) {
+        // Create vertex buffer
+        mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = SG_RANGE(mesh->vertices),
+            .size = mesh->vertex_count * sizeof(Vertex),
+            .usage = { .vertex_buffer = true },
+            .label = mesh->name
+        });
+
+        // Create index buffer
+        mesh->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = SG_RANGE(mesh->indices),
+            .size = mesh->index_count * sizeof(int),
+            .usage = { .index_buffer = true },
+            .label = mesh->name
+        });
+
         registry->mesh_count++;
         return true;
     }
@@ -259,17 +260,31 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
 bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name) {
     if (!registry || !filename || !texture_name) return false;
     if (registry->texture_count >= 32) return false;
-    
+
     Texture* texture = &registry->textures[registry->texture_count];
     strncpy(texture->name, texture_name, sizeof(texture->name) - 1);
     strncpy(texture->filepath, filename, sizeof(texture->filepath) - 1);
-    
-    // Texture loading will be handled by a separate function that creates the sg_image
-    
-    texture->loaded = true;
-    registry->texture_count++;
-    
-    return true;
+
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4);
+
+    if (data) {
+        texture->width = width;
+        texture->height = height;
+        texture->sg_image = sg_make_image(&(sg_image_desc){
+            .width = width,
+            .height = height,
+            .pixel_format = SG_PIXELFORMAT_RGBA8,
+            .data.subimage[0][0] = { .ptr = data, .size = (size_t)(width * height * 4) },
+            .label = texture->name
+        });
+        stbi_image_free(data);
+        texture->loaded = true;
+        registry->texture_count++;
+        return true;
+    }
+
+    return false;
 }
 
 // ============================================================================

@@ -5,11 +5,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Sokol types - only forward declare if not already included
-#ifndef SOKOL_GFX_INCLUDED
-typedef struct sg_buffer { uint32_t id; } sg_buffer;
-typedef struct sg_image { uint32_t id; } sg_image;
-#endif
+// Forward declarations for Sokol types
+typedef struct sg_buffer sg_buffer;
+typedef struct sg_image sg_image;
 
 
 

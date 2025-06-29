@@ -211,6 +211,10 @@ static bool render_sokol_init(void) {
     // Note: Don't specify formats explicitly - let Sokol use defaults that match the swapchain
     printf("� Creating pipeline with default swapchain-compatible formats\n");
     
+    // Create pipeline - use default formats for swapchain compatibility  
+    // Note: Don't specify formats explicitly - let Sokol use defaults that match the swapchain
+    printf("🔧 Creating pipeline with default swapchain-compatible formats\n");
+    
     render_state.pipeline = sg_make_pipeline(&(sg_pipeline_desc){
         .shader = render_state.shader,
         .layout = {
@@ -355,18 +359,61 @@ void render_present(RenderConfig* config) {
 
 void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* config) {
     if (!render_state.initialized) {
-        printf("⚠️  Sokol rendering not initialized, skipping entity render\n");
         return;
     }
-    
-    // Get entity transform component
+
+    // Get entity components
     struct Transform* transform = entity_get_transform(world, entity_id);
-    if (!transform) return;
+    struct Renderable* renderable = entity_get_renderable(world, entity_id);
+
+    if (!transform || !renderable) {
+        return;
+    }
+
+    // Get mesh and material by ID
+    if (renderable->mesh_id >= config->assets->mesh_count || 
+        renderable->material_id >= config->assets->material_count) {
+        return; // Invalid IDs
+    }
     
-    // TODO: Implement individual entity rendering
-    // For now, this is handled in render_frame() to avoid multiple pipeline applications
-    
-    printf("🎨 Entity %d ready for render (transform available)\n", entity_id);
+    Mesh* mesh = &config->assets->meshes[renderable->mesh_id];
+    Material* material = &config->assets->materials[renderable->material_id];
+
+    if (!mesh || !material) {
+        return;
+    }
+
+    // Get texture
+    Texture* texture = assets_get_texture(config->assets, material->texture_name);
+    if (!texture) {
+        return;
+    }
+
+    // Create MVP matrix
+    float model[16], view[16], proj[16], mvp[16], temp[16];
+    mat4_identity(model);
+    mat4_lookat(view, config->camera.position, config->camera.target, config->camera.up);
+    mat4_perspective(proj, config->camera.fov, config->camera.aspect_ratio, config->camera.near_plane, config->camera.far_plane);
+    mat4_multiply(temp, view, model);
+    mat4_multiply(mvp, proj, temp);
+
+    // Bindings
+    sg_bindings bindings = {
+        .vertex_buffers[0] = mesh->sg_vertex_buffer,
+        .index_buffer = mesh->sg_index_buffer,
+        .images[0] = texture->sg_image,
+        .samplers[0] = render_state.sampler
+    };
+    sg_apply_bindings(&bindings);
+
+    // Uniforms
+    vs_uniforms_t vs_uniforms;
+    memcpy(vs_uniforms.mvp, mvp, sizeof(mvp));
+    sg_range uniform_data = SG_RANGE(vs_uniforms);
+    sg_apply_uniforms(0, &uniform_data);
+
+    // Draw
+    sg_draw(0, mesh->index_count, 1);
 }
 
 // ============================================================================
@@ -457,63 +504,16 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         return;
     }
     
-    // Count entities to render
-    int renderable_count = 0;
+    // Apply the rendering pipeline
+    sg_apply_pipeline(render_state.pipeline);
+    
+    // Iterate over all renderable entities
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
         if (entity->component_mask & COMPONENT_RENDERABLE) {
-            renderable_count++;
+            render_entity_3d(world, entity->id, config);
         }
     }
-    
-    // Debug first frame
-    static bool first_frame = true;
-    if (first_frame) {
-        printf("🎨 First render frame: pipeline_state=%d, renderable_count=%d\n", 
-               pipeline_state, renderable_count);
-        
-        // Get swapchain info to debug sample count (first frame only)
-        sg_swapchain swapchain = sglue_swapchain();
-        printf("🔍 Swapchain sample_count: %d\n", swapchain.sample_count);
-        
-        first_frame = false;
-    }
-    
-    // Note: Render pass is managed by main.c, we just do the rendering here
-    
-    // If we have entities to render, draw a simple test triangle
-    if (renderable_count > 0) {
-        // Apply pipeline (should be within render pass from main.c)
-        sg_apply_pipeline(render_state.pipeline);
-        
-        // Apply vertex buffer
-        sg_apply_bindings(&(sg_bindings){
-            .vertex_buffers[0] = render_state.vertex_buffer,
-            .index_buffer = render_state.index_buffer,
-            .images[0] = render_state.default_texture,
-            .samplers[0] = render_state.sampler
-        });
-        
-        // Create simple identity MVP matrix
-        vs_uniforms_t uniforms;
-        mat4_identity(uniforms.mvp);
-        
-        // Apply uniforms
-        sg_range uniform_data = SG_RANGE(uniforms);
-        sg_apply_uniforms(0, &uniform_data);
-        
-        // Draw the triangle
-        sg_draw(0, 3, 1);
-    } else {
-        // Print once that we're not rendering
-        static bool no_render_warned = false;
-        if (!no_render_warned) {
-            printf("🎨 Sokol render frame initialized - no renderable entities\n");
-            no_render_warned = true;
-        }
-    }
-    
-    // Note: Render pass end and commit are handled by main.c
     
     // Render debug info if enabled
     if (config->show_debug_info) {
