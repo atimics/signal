@@ -1,4 +1,6 @@
 #include "../assets.h"
+#include "asset_loader_mesh.h"
+#include "asset_loader_material.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
