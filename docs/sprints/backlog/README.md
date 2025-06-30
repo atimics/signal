@@ -9,45 +9,38 @@ This document outlines the prioritized development sprints for the CGame engine,
 
 ---
 
-## Phase 1: Core System Repair (COMPLETED)
+## Phase 1 & 2: Core System Repair & Stabilization (COMPLETED)
 
 ### Sprint 10.5: Critical Mesh System Architecture Repair
-
 *   **Status**: **✅ COMPLETED**
-*   **Outcome**: The core asset and rendering pipeline has been successfully repaired and stabilized. See the [Sprint 10.5 Review](../../completed/10_5_sprint_review.md) for full details.
 
 ### Sprint 11.7: Shader Unification
-
 *   **Status**: **✅ COMPLETED**
-*   **Outcome**: The rendering pipeline now uses a single, unified set of shaders, resolving the hardcoded shader conflict.
+
+### Sprint 12.0: Rendering & Asset Pipeline Stabilization
+*   **Status**: **✅ COMPLETED**
+*   **Outcome**: The asset pipeline has been successfully migrated to a high-performance binary format. The engine can now reliably discover, load, and render textured 3D meshes. This resolves all critical rendering blockers.
 
 ---
 
-## Phase 2: Foundational Stability (IN PROGRESS)
+## Phase 3: Performance & Feature Advancement (IN PROGRESS)
 
-### Sprint 12.0: Mesh Rendering Stabilization & Optimization
-
+### Sprint 13: Performance Optimization & Code Style
 *   **Status**: **ACTIVE & CRITICAL**
-*   **Goal**: To achieve feature parity with the `mesh_viewer` tool by fixing all mesh rendering artifacts, including distorted geometry and missing textures. This sprint will also implement foundational performance optimizations and complete the outstanding technical debt from Sprint 11.6.
-*   **Implementation Guide**: `../../active/12.0_mesh_rendering_stabilization.md`
+*   **Goal**: To implement foundational performance optimizations and pay down the remaining technical debt, creating a truly robust platform for PBR development.
+*   **Implementation Guide**: `../../active/sprint_13_optimization_and_style.md`
 
----
-
-## Phase 3: Feature Advancement
-
-### Sprint 11: PBR Rendering Pipeline Implementation
-
-*   **Status**: **BLOCKED** (by Sprint 12.0)
+### Sprint 14: PBR Rendering Pipeline Implementation
+*   **Status**: **BLOCKED** (by Sprint 13)
 *   **Goal**: To architect and implement a modern, end-to-end Physically Based Rendering (PBR) pipeline.
-*   **Justification**: With a stable core and a testing framework in place, we can now confidently proceed with major feature development. PBR is the highest priority feature for the engine.
+*   **Justification**: With a stable and performant core, we can now confidently proceed with major feature development. PBR is the highest priority feature for the engine.
 *   **Relevant Research**: `R03`, `R14`
 
 ---
 
 ## Phase 4: AI & World Simulation
 
-### Sprint 13: AI Foundation (Proof of Concept)
-
+### Sprint 15: AI Foundation (Proof of Concept)
 *   **Status**: **BACKLOG**
 *   **Goal**: To create a "single agent" proof-of-concept by integrating the core technologies needed for the generative swarm AI system.
 *   **Justification**: This R&D sprint will de-risk the immense technical challenges of the AI vision by solving the core integration problems on a small scale before building the full swarm infrastructure.

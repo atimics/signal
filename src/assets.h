@@ -10,6 +10,11 @@
 struct MeshGpuResources;
 struct TextureGpuResources;
 
+// Asset registry constants
+#define MAX_MESHES 32
+#define MAX_TEXTURES 32
+#define MAX_MATERIALS 32
+
 // ============================================================================
 // ASSET DEFINITIONS
 // ============================================================================
