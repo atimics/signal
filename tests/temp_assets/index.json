@@ -1,0 +1,7 @@
+{
+  "assets": {
+    "test_ship": {
+      "path": "props/test_ship/geometry.cobj"
+    }
+  }
+}
