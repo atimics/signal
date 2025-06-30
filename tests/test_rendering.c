@@ -5,11 +5,6 @@
 #include "gpu_resources.h"
 #include "sokol_gfx.h" // For SG_INVALID_ID constant in tests
 
-// Helper function to convert opaque gpu_buffer_t to sg_buffer for testing
-static sg_buffer gpu_buffer_to_sg(gpu_buffer_t buf) {
-    return (sg_buffer){.id = buf.id};
-}
-
 // ============================================================================
 // Test Cases
 // ============================================================================
