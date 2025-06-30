@@ -116,11 +116,22 @@ struct Player {
 };
 
 struct Camera {
-    float fov;
-    float near_plane;
-    float far_plane;
-    float aspect_ratio;
-    bool is_active;
+    // Position and orientation
+    Vector3 position;
+    Vector3 target;
+    Vector3 up;
+    
+    // Projection parameters
+    float fov;           // Field of view in degrees
+    float aspect_ratio;  // Width/height ratio
+    float near_plane;    // Near clipping plane (0.1f)
+    float far_plane;     // Far clipping plane (1000.0f)
+    
+    // Cached matrices (updated when camera changes)
+    float view_matrix[16];
+    float projection_matrix[16];
+    float view_projection_matrix[16];
+    bool matrices_dirty;
     
     // Camera behavior settings
     enum {
@@ -136,6 +147,12 @@ struct Camera {
     float follow_distance;
     Vector3 follow_offset;
     float follow_smoothing;
+    
+    // Movement properties
+    Vector3 velocity;
+    float speed;
+    float sensitivity;
+    bool is_active;
 };
 
 // ============================================================================
@@ -233,11 +250,22 @@ struct Camera* entity_get_camera(struct World* world, EntityID entity_id);
 // Camera management
 void world_set_active_camera(struct World* world, EntityID camera_entity);
 EntityID world_get_active_camera(struct World* world);
+void camera_update_matrices(struct Camera* camera);
+bool switch_to_camera(struct World* world, int camera_index);
+void update_camera_aspect_ratio(struct World* world, float aspect_ratio);
 
 // Utility functions
 Vector3 vector3_add(Vector3 a, Vector3 b);
+Vector3 vector3_subtract(Vector3 a, Vector3 b);
 Vector3 vector3_multiply(Vector3 v, float scalar);
+Vector3 vector3_normalize(Vector3 v);
 float vector3_length(Vector3 v);
 float vector3_distance(Vector3 a, Vector3 b);
+
+// Matrix utility functions
+void mat4_identity(float* m);
+void mat4_perspective(float* m, float fov, float aspect, float near, float far);
+void mat4_lookat(float* m, Vector3 eye, Vector3 target, Vector3 up);
+void mat4_multiply(float* result, const float* a, const float* b);
 
 #endif // CORE_H
