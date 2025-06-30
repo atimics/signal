@@ -169,4 +169,12 @@ bool assets_load_all_textures_to_gpu(AssetRegistry* registry);
 // Initialize all GPU resources from loaded asset data
 bool assets_initialize_gpu_resources(AssetRegistry* registry);
 
+// Accessor functions for tests (Task 4: PIMPL compliance)
+// These expose underlying GPU handles in a controlled way for testing
+#ifdef CGAME_TESTING
+#include "sokol_gfx.h"
+void mesh_get_gpu_buffers(const Mesh* mesh, sg_buffer* out_vbuf, sg_buffer* out_ibuf);
+void texture_get_gpu_image(const Texture* texture, sg_image* out_image);
+#endif
+
 #endif // ASSETS_H
