@@ -648,15 +648,11 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name) {
     if (!registry || !name) return NULL;
     
-    printf("🔍 DEBUG: assets_get_mesh looking for '%s', registry has %d meshes\n", name, registry->mesh_count);
-    
     for (uint32_t i = 0; i < registry->mesh_count; i++) {
-        printf("🔍 DEBUG: Mesh %d: '%s'\n", i, registry->meshes[i].name);
         if (strcmp(registry->meshes[i].name, name) == 0) {
             return &registry->meshes[i];
         }
     }
-    printf("🔍 DEBUG: Mesh '%s' not found\n", name);
     return NULL;
 }
 
