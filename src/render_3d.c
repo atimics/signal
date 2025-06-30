@@ -106,6 +106,13 @@ static void mat4_multiply(float* result, const float* a, const float* b) {
     }
 }
 
+static void mat4_translate(float* m, Vector3 t) {
+    mat4_identity(m);
+    m[12] = t.x;
+    m[13] = t.y;
+    m[14] = t.z;
+}
+
 // ============================================================================
 // SOKOL INITIALIZATION
 // ============================================================================
@@ -550,14 +557,40 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         // TODO: Apply rotation and scale - for now just use translation
         // For now, use identity matrix
         
-        // Create view matrix (simple camera for now)
+        // Get active camera or use default
         Vector3 camera_pos = {0.0f, 0.0f, 10.0f};
         Vector3 camera_target = {0.0f, 0.0f, 0.0f};
         Vector3 camera_up = {0.0f, 1.0f, 0.0f};
-        mat4_lookat(view, camera_pos, camera_target, camera_up);
+        float fov = 45.0f * M_PI / 180.0f;
+        float aspect = 16.0f/9.0f;
+        float near_plane = 0.1f;
+        float far_plane = 100.0f;
         
-        // Create projection matrix
-        mat4_perspective(proj, 45.0f * M_PI / 180.0f, 16.0f/9.0f, 0.1f, 100.0f);
+        // Find active camera component
+        for (uint32_t j = 0; j < world->entity_count; j++) {
+            struct Entity* cam_entity = &world->entities[j];
+            if (!(cam_entity->component_mask & COMPONENT_CAMERA)) continue;
+            
+            struct Camera* camera = entity_get_camera(world, cam_entity->id);
+            if (camera && camera->is_active) {
+                // Get camera transform
+                struct Transform* cam_transform = entity_get_transform(world, cam_entity->id);
+                if (cam_transform) {
+                    camera_pos = cam_transform->position;
+                    // For now, look towards origin + offset
+                    camera_target = (Vector3){camera_pos.x, camera_pos.y - 5.0f, camera_pos.z - 10.0f};
+                }
+                fov = camera->fov * M_PI / 180.0f;
+                aspect = camera->aspect_ratio;
+                near_plane = camera->near_plane;
+                far_plane = camera->far_plane;
+                break;
+            }
+        }
+        
+        // Create view and projection matrices
+        mat4_lookat(view, camera_pos, camera_target, camera_up);
+        mat4_perspective(proj, fov, aspect, near_plane, far_plane);
         
         // Combine matrices
         mat4_multiply(temp, view, model);
