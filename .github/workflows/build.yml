@@ -26,12 +26,9 @@ jobs:
         run: python3 -m venv .venv
 
       - name: Install Python Dependencies
-        env:
-          CAIRO_INCLUDE_PATH: $(brew --prefix cairo)/include/cairo
-          CAIRO_LIB_PATH: $(brew --prefix cairo)/lib
         run: |
-          pip cache purge
           source .venv/bin/activate
+          pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Build Project
@@ -53,7 +50,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcairo2-dev pkg-config libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev
+          sudo apt-get install -y libcairo2-dev pkg-config libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev
 
       - name: Set up Python
         uses: actions/setup-python@v5
