@@ -10,6 +10,7 @@ jobs:
   build-macos:
     name: Build (macOS)
     runs-on: macos-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,6 +44,7 @@ jobs:
   build-linux:
     name: Build (Linux)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -78,6 +80,7 @@ jobs:
   build-wasm:
     name: Build (WebAssembly)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
