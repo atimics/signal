@@ -46,14 +46,33 @@ The loop works as follows:
 
 This creates a clean separation: the LLM is for **cognition**, and the engine systems are for **action**.
 
-## 3. Technical Implementation
+## 4. Technical Implementation
 
 ### Inference Engine
 
-*   **Engine**: The system is designed to integrate directly with a C-based inference engine, with `llama.cpp` being the primary reference implementation. This allows for local, private, and high-performance inference.
+*   **Engine**: The system is designed to integrate directly with a C-based inference engine. The primary reference implementation and target for integration is **`llama.cpp`**. This choice is based on its performance, maturity, and C/C++-native architecture.
+*   **Model Flexibility**: Using `llama.cpp` gives us the flexibility to load various compatible open models, including those from the **Gemma**, **Llama**, and other families. This allows us to choose the best model for our performance and quality targets without being locked into a single provider.
 *   **Inference LOD (Level of Detail)**: It is computationally infeasible to run inference for millions of agents simultaneously. The system will use an aggressive LOD approach:
     *   **Active Agents**: Agents directly interacting with the player (e.g., in dialog) or involved in critical, on-screen events will have their inference requests processed in real-time or near real-time.
     *   **Passive Agents**: Agents that are "off-screen" or not engaged in complex tasks will have their state updated via much simpler, non-LLM heuristics or have their "thinking" batched and processed at a very low frequency (e.g., once every few minutes).
 *   **Asynchronous Processing**: All LLM inference calls will be handled by a dedicated, asynchronous task scheduler to prevent them from blocking the main game loop.
 
-This architecture provides a scalable, powerful, and uniquely dynamic foundation for the AI in CGame.
+## 5. Multimodal Capabilities Roadmap
+
+The generative nature of the AI system allows for future expansion into other modalities beyond text. This will be approached in a phased manner, prioritizing feasibility and performance.
+
+*   **Phase 1: Text-Only (Foundation)**
+    *   **Status**: Planned
+    *   **Goal**: Implement the core text-based generative agent system as described above. This is the prerequisite for all other modalities.
+
+*   **Phase 2: Text-to-Speech (TTS)**
+    *   **Status**: Research
+    *   **Goal**: Integrate a lightweight, C/C++-native TTS engine (e.g., Piper). This will allow agents to have a voice, with the `AIService` generating text and a new `TTSService` converting it to audio for the engine's audio system. This is considered the most practical and high-value next step after the text foundation is complete.
+
+*   **Phase 3: Asynchronous Image Generation**
+    *   **Status**: Research
+    *   **Goal**: Integrate a C/C++ image generation engine (e.g., `Stable Diffusion.cpp`) for non-real-time, event-driven use cases. This would allow an agent to "create" an image (a painting, a photo) in the background without impacting real-time performance.
+
+*   **Phase 4: Video Generation**
+    *   **Status**: Long-Term R&D
+    *   **Goal**: Monitor the open-source landscape for mature, locally-runnable video generation models. Active implementation is deferred until the technology is feasible for use in an interactive context.
