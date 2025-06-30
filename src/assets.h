@@ -84,36 +84,88 @@ typedef struct {
 // ASSET SYSTEM API
 // ============================================================================
 
-// Initialize the asset system
+/**
+ * @brief Initialize the asset system
+ * @param registry The asset registry to initialize
+ * @param asset_root Path to the root directory containing assets
+ * @return true if initialization successful, false otherwise
+ */
 bool assets_init(AssetRegistry* registry, const char* asset_root);
 
-// Cleanup the asset system
+/**
+ * @brief Cleanup the asset system and free all resources
+ * @param registry The asset registry to cleanup
+ */
 void assets_cleanup(AssetRegistry* registry);
 
-// Load individual assets
+/**
+ * @brief Load a material from material definition
+ * @param registry The asset registry to load into
+ * @param material Name or path of the material to load
+ * @return true if material loaded successfully, false otherwise
+ */
 bool load_material(AssetRegistry* registry, const char* material);
+
+/**
+ * @brief Load a texture from file
+ * @param registry The asset registry to load into
+ * @param texture Path to the texture file
+ * @param texture_name Name to assign to the loaded texture
+ * @return true if texture loaded successfully, false otherwise
+ */
 bool load_texture(AssetRegistry* registry, const char* texture, const char* texture_name);
 
-// Asset lookup
+/**
+ * @brief Get a mesh by name from the asset registry
+ * @param registry The asset registry to search
+ * @param name Name of the mesh to find
+ * @return Pointer to the mesh if found, NULL otherwise
+ */
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name);
+
+/**
+ * @brief Get a material by name from the asset registry
+ * @param registry The asset registry to search
+ * @param name Name of the material to find
+ * @return Pointer to the material if found, NULL otherwise
+ */
 Material* assets_get_material(AssetRegistry* registry, const char* name);
+
+/**
+ * @brief Get a texture by name from the asset registry
+ * @param registry The asset registry to search
+ * @param name Name of the texture to find
+ * @return Pointer to the texture if found, NULL otherwise
+ */
 Texture* assets_get_texture(AssetRegistry* registry, const char* name);
 
-// Path resolution from index.json
-bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_name, char* out_path, size_t out_size);
-
-// Utility functions
+/**
+ * @brief List all loaded assets to console for debugging
+ * @param registry The asset registry to list
+ */
 void assets_list_loaded(AssetRegistry* registry);
+
+/**
+ * @brief Load all assets from the default asset directory
+ * @param registry The asset registry to load into
+ * @return true if all assets loaded successfully, false otherwise
+ */
 bool assets_load_all_in_directory(AssetRegistry* registry);
-bool load_assets_from_metadata(AssetRegistry* registry);
-bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_path);
 
-// OBJ file parsing helpers
-bool parse_obj_file(const char* filepath, Mesh* mesh);
-bool parse_mtl_file(const char* filepath, AssetRegistry* registry);
+/**
+ * @brief Get GPU buffer handles for a mesh
+ * @param mesh The mesh to get buffers for
+ * @param out_vbuf Output vertex buffer handle
+ * @param out_ibuf Output index buffer handle
+ */
+void mesh_get_gpu_buffers(const Mesh* mesh, void* out_vbuf, void* out_ibuf);
 
-// Mesh loading functions
-bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
+/**
+ * @brief Initialize GPU resources for all loaded assets
+ * @param registry The asset registry containing assets to initialize
+ * @return true if all GPU resources initialized successfully, false otherwise
+ */
+bool assets_initialize_gpu_resources(AssetRegistry* registry);
 
 // ============================================================================
 // MATERIAL REPOSITORY FUNCTIONS
