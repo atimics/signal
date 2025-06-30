@@ -71,6 +71,7 @@ $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 
 # Compile source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Special compilation rules for main.c (platform-specific)
