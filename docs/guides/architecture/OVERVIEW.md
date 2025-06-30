@@ -41,21 +41,10 @@ The asset pipeline is designed to separate slow, offline compilation from fast, 
 -   **Compiler:** The Python script at `tools/asset_compiler.py` reads the source assets and metadata.
 -   **Output:** The compiler processes this data and outputs optimized, game-ready binary files into the `/build/assets` directory. This is the data the engine actually loads.
 
-## 5. Rendering Pipeline
+## 5. Rendering and Camera Systems
 
-The rendering pipeline is designed for high performance and flexibility, using the `sokol_gfx` API for cross-platform graphics.
+For a detailed explanation of the rendering pipeline and camera system, please see the **[Rendering and Camera Systems Guide](rendering_and_camera.md)**.
 
-### 5.1. Rendering Backend (`src/render_3d.c`)
-
-This file is responsible for the low-level details of rendering. It initializes the Sokol graphics context, creates the rendering pipeline, and provides functions for drawing entities. The `render_frame` function is the heart of the renderer, iterating through all renderable entities and drawing them to the screen.
-
-### 5.2. Camera System (`src/systems.c`)
-
-The camera system is responsible for controlling the viewpoint in the 3D world. It's implemented as a standard ECS system that runs every frame.
-
--   **Camera Component**: A `Camera` component can be attached to any entity to turn it into a camera. This component stores the camera's properties, such as its field of view (FOV), near and far clipping planes, and behavior (e.g., static, chase, third-person).
--   **Active Camera**: The `World` struct keeps track of the active camera. The rendering system uses this camera's view and projection matrices to render the scene.
--   **Camera Behaviors**: The `camera_system_update` function implements various camera behaviors. For example, a "chase" camera will smoothly follow a target entity.
 
 ## 6. AI Integration
 

@@ -70,11 +70,8 @@ The engine is built around a pure ECS architecture where:
 **When to modify**: Extending template system, adding new configuration options
 
 #### `src/render_3d.c` - 3D Rendering Pipeline
-- Sokol 3D rendering implementation
-- Matrix transformations
-- Camera management
+- For a detailed explanation of the rendering pipeline and camera system, please see the **[Rendering and Camera Systems Guide](rendering_and_camera.md)**.
 
-**When to modify**: Improving rendering performance, adding visual features
 
 #### `src/ui.h/.c` - Debug Interface
 - UI rendering (WIP)
