@@ -18,15 +18,12 @@ This document outlines the prioritized development sprints for the CGame engine,
 
 ---
 
-## Phase 2: Foundational Stability
+## Phase 2: Foundational Stability (COMPLETED)
 
 ### Sprint 15: Automated Testing Framework Integration
 
-*   **Status**: **ACTIVE & CRITICAL**
-*   **Goal**: To integrate a C unit testing framework and establish a strategy for unit, integration, and rendering tests.
-*   **Justification**: A testing framework is a foundational capability that will de-risk all future development and improve code quality. This is the highest priority for the project.
-*   **Relevant Research**: `R02`
-*   **Strategic Alignment**: This sprint is the sole focus of **Phase 2** of the strategic plan.
+*   **Status**: **✅ COMPLETED**
+*   **Outcome**: The Unity testing framework has been successfully integrated. The `make test` command is operational and runs a suite of core math tests on CI. See the [Sprint 15 Review](../../completed/15_sprint_review.md) for full details.
 
 ---
 
@@ -34,9 +31,9 @@ This document outlines the prioritized development sprints for the CGame engine,
 
 ### Sprint 11: PBR Rendering Pipeline Implementation
 
-*   **Status**: **BLOCKED** (by Sprints 10.5 and 15)
+*   **Status**: **ACTIVE & CRITICAL**
 *   **Goal**: To architect and implement a modern, end-to-end Physically Based Rendering (PBR) pipeline.
-*   **Justification**: PBR is the industry standard for realistic rendering and is the next major step in achieving modern visual fidelity.
+*   **Justification**: With a stable core and a testing framework in place, we can now confidently proceed with major feature development. PBR is the highest priority feature for the engine.
 *   **Relevant Research**: `R03`
 *   **Strategic Alignment**: This sprint is the first major objective of **Phase 3** of the strategic plan.
 
