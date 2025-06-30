@@ -376,28 +376,25 @@ void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* con
     struct Transform* transform = entity_get_transform(world, entity_id);
     struct Renderable* renderable = entity_get_renderable(world, entity_id);
 
-    if (!transform || !renderable) {
+    if (!transform || !renderable || !renderable->visible) {
         return;
     }
 
-    // Get mesh and material by ID
-    if (renderable->mesh_id >= config->assets->mesh_count || 
-        renderable->material_id >= config->assets->material_count) {
-        return; // Invalid IDs
-    }
-    
-    Mesh* mesh = &config->assets->meshes[renderable->mesh_id];
-    Material* material = &config->assets->materials[renderable->material_id];
-
-    if (!mesh || !material) {
+    // Skip if GPU resources are invalid
+    if (renderable->vbuf.id == SG_INVALID_ID || 
+        renderable->ibuf.id == SG_INVALID_ID ||
+        renderable->index_count == 0) {
         return;
     }
 
-    // Get texture
-    Texture* texture = assets_get_texture(config->assets, material->texture_name);
-    if (!texture) {
-        return;
-    }
+    // Apply bindings (VBO, IBO, textures)
+    sg_bindings bindings = {
+        .vertex_buffers[0] = renderable->vbuf,
+        .index_buffer = renderable->ibuf,
+        .images[0] = (renderable->tex.id != SG_INVALID_ID) ? renderable->tex : render_state.default_texture,
+        .samplers[0] = render_state.sampler
+    };
+    sg_apply_bindings(&bindings);
 
     // Create MVP matrix
     float model[16], view[16], proj[16], mvp[16], temp[16];
@@ -407,23 +404,13 @@ void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* con
     mat4_multiply(temp, view, model);
     mat4_multiply(mvp, proj, temp);
 
-    // Bindings
-    sg_bindings bindings = {
-        .vertex_buffers[0] = mesh->sg_vertex_buffer,
-        .index_buffer = mesh->sg_index_buffer,
-        .images[0] = texture->sg_image,
-        .samplers[0] = render_state.sampler
-    };
-    sg_apply_bindings(&bindings);
-
     // Uniforms
     vs_uniforms_t vs_uniforms;
     memcpy(vs_uniforms.mvp, mvp, sizeof(mvp));
-    sg_range uniform_data = SG_RANGE(vs_uniforms);
-    sg_apply_uniforms(0, &uniform_data);
+    sg_apply_uniforms(0, &SG_RANGE(vs_uniforms));
 
     // Draw
-    sg_draw(0, mesh->index_count, 1);
+    sg_draw(0, renderable->index_count, 1);
 }
 
 // ============================================================================
@@ -514,36 +501,96 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         return;
     }
     
+    // Apply the rendering pipeline
+    sg_apply_pipeline(render_state.pipeline);
+    
     // Count entities to render
     int renderable_count = 0;
+    int rendered_count = 0;
+    
+    // Iterate through renderable entities (Engineering Brief pattern)
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
-        if (entity->component_mask & COMPONENT_RENDERABLE) {
-            renderable_count++;
+        if (!(entity->component_mask & COMPONENT_RENDERABLE) || 
+            !(entity->component_mask & COMPONENT_TRANSFORM)) {
+            continue;
         }
+        
+        renderable_count++;
+        
+        // Get components
+        struct Transform* transform = entity_get_transform(world, entity->id);
+        struct Renderable* renderable = entity_get_renderable(world, entity->id);
+        
+        if (!transform || !renderable || !renderable->visible) {
+            continue;
+        }
+        
+        // Skip if GPU resources are invalid
+        if (renderable->vbuf.id == SG_INVALID_ID || 
+            renderable->ibuf.id == SG_INVALID_ID ||
+            renderable->index_count == 0) {
+            continue;
+        }
+        
+        // Apply bindings (VBO, IBO, textures)
+        sg_bindings binds = {
+            .vertex_buffers[0] = renderable->vbuf,
+            .index_buffer = renderable->ibuf,
+            .images[0] = (renderable->tex.id != SG_INVALID_ID) ? renderable->tex : render_state.default_texture,
+            .samplers[0] = render_state.sampler
+        };
+        sg_apply_bindings(&binds);
+        
+        // Calculate MVP matrix from transform component
+        float model[16], view[16], proj[16], mvp[16], temp[16];
+        
+        // Create model matrix from transform
+        mat4_identity(model);
+        // TODO: Apply transform->position, rotation, scale to model matrix
+        // For now, use identity matrix
+        
+        // Create view matrix (simple camera for now)
+        Vector3 camera_pos = {0.0f, 0.0f, 10.0f};
+        Vector3 camera_target = {0.0f, 0.0f, 0.0f};
+        Vector3 camera_up = {0.0f, 1.0f, 0.0f};
+        mat4_lookat(view, camera_pos, camera_target, camera_up);
+        
+        // Create projection matrix
+        mat4_perspective(proj, 45.0f * M_PI / 180.0f, 16.0f/9.0f, 0.1f, 100.0f);
+        
+        // Combine matrices
+        mat4_multiply(temp, view, model);
+        mat4_multiply(mvp, proj, temp);
+        
+        // Apply uniforms (MVP matrix)
+        vs_uniforms_t vs_params;
+        memcpy(vs_params.mvp, mvp, sizeof(mvp));
+        sg_apply_uniforms(0, &SG_RANGE(vs_params));
+        
+        // Draw
+        sg_draw(0, renderable->index_count, 1);
+        rendered_count++;
     }
     
-    // Debug first frame
+    // Debug first frame and periodically
     static bool first_frame = true;
+    static int frame_count = 0;
+    frame_count++;
+    
     if (first_frame) {
-        printf("🎨 Sokol rendering active: pipeline_state=%d, renderable_count=%d\n", 
+        printf("🎨 Sokol ECS rendering active: pipeline_state=%d, renderable_entities=%d\n", 
                pipeline_state, renderable_count);
         first_frame = false;
     }
     
-    // Apply the rendering pipeline
-    sg_apply_pipeline(render_state.pipeline);
+    if (frame_count % 300 == 0 && rendered_count > 0) { // Print every 5 seconds
+        printf("🎨 Rendered %d/%d entities (frame %d)\n", rendered_count, renderable_count, frame_count);
+    }
     
-    // For now, draw a simple triangle if we have renderable entities
-    // This ensures we see something on screen while mesh rendering is being developed
-    if (renderable_count > 0) {
-        static int draw_count = 0;
-        if (draw_count % 60 == 0) { // Print once per second
-            printf("🔴 Drawing triangle frame %d\n", draw_count);
-        }
-        draw_count++;
-        
-        // Apply vertex buffer
+    // Fallback: draw test triangle if no entities were rendered
+    if (rendered_count == 0 && renderable_count > 0) {
+        // Apply test triangle bindings
         sg_apply_bindings(&(sg_bindings){
             .vertex_buffers[0] = render_state.vertex_buffer,
             .index_buffer = render_state.index_buffer,
@@ -556,41 +603,13 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         mat4_identity(uniforms.mvp);
         
         // Apply uniforms
-        sg_range uniform_data = SG_RANGE(uniforms);
-        sg_apply_uniforms(0, &uniform_data);
+        sg_apply_uniforms(0, &SG_RANGE(uniforms));
         
         // Draw the triangle
         sg_draw(0, 3, 1);
-    } else {
-        // Print once that we're not rendering
-        static bool no_render_warned = false;
-        if (!no_render_warned) {
-            printf("🎨 Sokol render frame initialized - no renderable entities\n");
-            no_render_warned = true;
-        }
-    }
-    
-    // TODO: Uncomment when mesh rendering is working properly
-    // Iterate over all renderable entities
-    // for (uint32_t i = 0; i < world->entity_count; i++) {
-    //     struct Entity* entity = &world->entities[i];
-    //     if (entity->component_mask & COMPONENT_RENDERABLE) {
-    //         render_entity_3d(world, entity->id, config);
-    //     }
-    // }
-    
-    // Render debug info if enabled
-    if (config->show_debug_info) {
-        render_debug_info(world, config);
-    }
-    
-    // Basic HUD for player if available (print occasionally)
-    static int player_print_counter = 0;
-    if (player_id != INVALID_ENTITY && ++player_print_counter % 60 == 0) {
-        struct Transform* transform = entity_get_transform(world, player_id);
-        if (transform) {
-            printf("🎮 Player at (%.1f,%.1f,%.1f)\n", 
-                   transform->position.x, transform->position.y, transform->position.z);
+        
+        if (frame_count % 300 == 0) {
+            printf("🔴 Fallback triangle drawn - no valid mesh entities\n");
         }
     }
 }
