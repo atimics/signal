@@ -2,10 +2,6 @@
 #ifndef GRAPHICS_API_H
 #define GRAPHICS_API_H
 
-// src/graphics_api.h
-#ifndef GRAPHICS_API_H
-#define GRAPHICS_API_H
-
 // This is the central hub for all Sokol graphics library includes.
 // By including this single file, other modules can access the necessary
 // graphics functionality without being tightly coupled to the Sokol implementation.
@@ -28,8 +24,5 @@
 #define NK_INCLUDE_STANDARD_VARARGS
 #include "nuklear.h"
 #include "sokol_nuklear.h"
-
-#endif // GRAPHICS_API_H
-
 
 #endif // GRAPHICS_API_H

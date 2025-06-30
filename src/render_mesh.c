@@ -24,55 +24,7 @@ bool mesh_renderer_init(MeshRenderer* renderer) {
     
     // Create a basic shader for mesh rendering
     // For now, we'll create a simple shader that can render basic meshes
-    sg_shader_desc shader_desc = {
-        .attrs = {
-            [0].name = "position",
-            [1].name = "normal", 
-            [2].name = "texcoord"
-        },
-        .vs.uniform_blocks[0] = {
-            .size = 64,  // 4x4 matrix (16 floats * 4 bytes)
-            .uniforms = {
-                [0] = { .name = "mvp", .type = SG_UNIFORMTYPE_MAT4 }
-            }
-        }
-    };
-    
-    // Set platform-specific shader source
-    #ifdef SOKOL_METAL
-    shader_desc.vs.source = 
-        "#include <metal_stdlib>\n"
-        "using namespace metal;\n"
-        "struct vs_in {\n"
-        "  float3 position [[attribute(0)]];\n"
-        "  float3 normal [[attribute(1)]];\n"
-        "  float2 texcoord [[attribute(2)]];\n"
-        "};\n"
-        "struct vs_out {\n"
-        "  float4 position [[position]];\n"
-        "  float3 color;\n"
-        "};\n"
-        "vertex vs_out _main(vs_in in [[stage_in]], constant float4x4& mvp [[buffer(0)]]) {\n"
-        "  vs_out out;\n"
-        "  out.position = mvp * float4(in.position, 1.0);\n"
-        "  out.color = in.normal * 0.5 + 0.5;\n"  // Normal as color
-        "  return out;\n"
-        "}\n";
-    
-    shader_desc.fs.source = 
-        "#include <metal_stdlib>\n"
-        "using namespace metal;\n"
-        "struct fs_out {\n"
-        "  float4 color [[color(0)]];\n"
-        "};\n"
-        "fragment fs_out _main(float3 color [[stage_in]]) {\n"
-        "  fs_out out;\n"
-        "  out.color = float4(color, 1.0);\n"
-        "  return out;\n"
-        "}\n";
-    #else
-    // OpenGL/GLSL version
-    shader_desc.vs.source = 
+    const char* vs_source = 
         "#version 330\n"
         "in vec3 position;\n"
         "in vec3 normal;\n"
@@ -84,14 +36,68 @@ bool mesh_renderer_init(MeshRenderer* renderer) {
         "  color = normal * 0.5 + 0.5;\n"
         "}\n";
     
-    shader_desc.fs.source = 
+    const char* fs_source = 
         "#version 330\n"
         "in vec3 color;\n"
         "out vec4 fragColor;\n"
         "void main() {\n"
         "  fragColor = vec4(color, 1.0);\n"
         "}\n";
+    
+    #ifdef SOKOL_METAL
+    vs_source = 
+        "#include <metal_stdlib>\n"
+        "using namespace metal;\n"
+        "struct vs_in {\n"
+        "  float3 position [[attribute(0)]];\n"
+        "  float3 normal [[attribute(1)]];\n"
+        "  float2 texcoord [[attribute(2)]];\n"
+        "};\n"
+        "struct vs_out {\n"
+        "  float4 position [[position]];\n"
+        "  float3 color;\n"
+        "};\n"
+        "vertex vs_out vs_main(vs_in in [[stage_in]], constant float4x4& mvp [[buffer(0)]]) {\n"
+        "  vs_out out;\n"
+        "  out.position = mvp * float4(in.position, 1.0);\n"
+        "  out.color = in.normal * 0.5 + 0.5;\n"
+        "  return out;\n"
+        "}\n";
+    
+    fs_source = 
+        "#include <metal_stdlib>\n"
+        "using namespace metal;\n"
+        "fragment float4 fs_main(float3 color [[stage_in]]) {\n"
+        "  return float4(color, 1.0);\n"
+        "}\n";
     #endif
+    
+    sg_shader_desc shader_desc = {
+        .vertex_func = {
+            .source = vs_source,
+            #ifdef SOKOL_METAL
+            .entry = "vs_main"
+            #else
+            .entry = "main"
+            #endif
+        },
+        .fragment_func = {
+            .source = fs_source,
+            #ifdef SOKOL_METAL
+            .entry = "fs_main"
+            #else
+            .entry = "main"
+            #endif
+        },
+        .uniform_blocks = {
+            [0] = {
+                .stage = SG_SHADERSTAGE_VERTEX,
+                .size = 64,  // 4x4 matrix (16 floats * 4 bytes)
+                .layout = SG_UNIFORMLAYOUT_NATIVE
+            }
+        },
+        .label = "mesh_renderer_shader"
+    };
     
     renderer->shader = sg_make_shader(&shader_desc);
     
