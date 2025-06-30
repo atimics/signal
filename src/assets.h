@@ -111,6 +111,10 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
 bool parse_obj_file(const char* filepath, Mesh* mesh);
 bool parse_mtl_file(const char* filepath, AssetRegistry* registry);
 
+// Mesh loading functions
+bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
+bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
+
 // ============================================================================
 // MATERIAL REPOSITORY FUNCTIONS
 // ============================================================================

@@ -69,6 +69,8 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
         return false;
     }
     
+    printf("🔍 DEBUG parse_obj_file: Starting to parse file: %s\n", filepath);
+    
     // Temporary storage for parsing
     Vector3 temp_positions[4096];
     Vector3 temp_normals[4096];
@@ -84,13 +86,20 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     int final_index_count = 0;
     
     char line[256];
+    int line_number = 0;
     while (fgets(line, sizeof(line), file)) {
+        line_number++;
         if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
         
         if (strncmp(line, "usemtl ", 7) == 0) {
             sscanf(line, "usemtl %63s", mesh->material_name);
+            printf("🔍 DEBUG: Found material: %s\n", mesh->material_name);
         } else if (strncmp(line, "v ", 2) == 0) {
             sscanf(line, "v %f %f %f", &temp_positions[pos_count].x, &temp_positions[pos_count].y, &temp_positions[pos_count].z);
+            if (pos_count < 3) { // Only log first few
+                printf("🔍 DEBUG: Vertex %d: %.2f %.2f %.2f\n", pos_count, 
+                       temp_positions[pos_count].x, temp_positions[pos_count].y, temp_positions[pos_count].z);
+            }
             pos_count++;
         } else if (strncmp(line, "vn ", 3) == 0) {
             sscanf(line, "vn %f %f %f", &temp_normals[normal_count].x, &temp_normals[normal_count].y, &temp_normals[normal_count].z);
@@ -99,28 +108,74 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
             sscanf(line, "vt %f %f", &temp_tex_coords[tex_coord_count].u, &temp_tex_coords[tex_coord_count].v);
             tex_coord_count++;
         } else if (strncmp(line, "f ", 2) == 0) {
+            if (final_index_count < 10) { // Only log first few faces
+                printf("🔍 DEBUG: Face line %d: %s", line_number, line);
+            }
             int v[3], vt[3], vn[3];
-            if (sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", &v[0], &vt[0], &vn[0], &v[1], &vt[1], &vn[1], &v[2], &vt[2], &vn[2]) == 9) {
+            
+            // Try parsing full format first: f v/vt/vn v/vt/vn v/vt/vn
+            int parsed = sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", 
+                               &v[0], &vt[0], &vn[0], &v[1], &vt[1], &vn[1], &v[2], &vt[2], &vn[2]);
+            
+            if (parsed == 9) {
+                // Full format with normals
                 for (int i = 0; i < 3; i++) {
-                    // Create a final vertex from the indices
                     Vertex new_vertex = {
                         .position = temp_positions[v[i] - 1],
                         .normal = temp_normals[vn[i] - 1],
                         .tex_coord = temp_tex_coords[vt[i] - 1]
                     };
-                    
-                    // For simplicity, we are not de-duplicating vertices here.
-                    // A more advanced implementation would use a hash map to find existing
-                    // vertices and reuse indices.
                     final_vertices[final_vertex_count] = new_vertex;
                     final_indices[final_index_count++] = final_vertex_count;
                     final_vertex_count++;
+                }
+            } else {
+                // Try parsing without normals: f v/vt v/vt v/vt
+                parsed = sscanf(line, "f %d/%d %d/%d %d/%d", 
+                               &v[0], &vt[0], &v[1], &vt[1], &v[2], &vt[2]);
+                
+                if (parsed == 6) {
+                    if (final_index_count < 3) {
+                        printf("🔍 DEBUG: Parsing face without normals - v/vt format\n");
+                    }
+                    for (int i = 0; i < 3; i++) {
+                        Vertex new_vertex = {
+                            .position = temp_positions[v[i] - 1],
+                            .normal = {0.0f, 1.0f, 0.0f},  // Default normal pointing up
+                            .tex_coord = temp_tex_coords[vt[i] - 1]
+                        };
+                        final_vertices[final_vertex_count] = new_vertex;
+                        final_indices[final_index_count++] = final_vertex_count;
+                        final_vertex_count++;
+                    }
+                } else {
+                    // Try simple vertex-only format: f v v v
+                    parsed = sscanf(line, "f %d %d %d", &v[0], &v[1], &v[2]);
+                    if (parsed == 3) {
+                        if (final_index_count < 3) {
+                            printf("🔍 DEBUG: Parsing face with vertices only\n");
+                        }
+                        for (int i = 0; i < 3; i++) {
+                            Vertex new_vertex = {
+                                .position = temp_positions[v[i] - 1],
+                                .normal = {0.0f, 1.0f, 0.0f},  // Default normal
+                                .tex_coord = {0.0f, 0.0f}      // Default UV
+                            };
+                            final_vertices[final_vertex_count] = new_vertex;
+                            final_indices[final_index_count++] = final_vertex_count;
+                            final_vertex_count++;
+                        }
+                    }
                 }
             }
         }
     }
     
     fclose(file);
+    
+    printf("🔍 DEBUG parse_obj_file: Finished parsing\n");
+    printf("   Positions: %d, Normals: %d, TexCoords: %d\n", pos_count, normal_count, tex_coord_count);
+    printf("   Final vertices: %d, Final indices: %d\n", final_vertex_count, final_index_count);
     
     // Allocate and copy data to mesh
     mesh->vertices = malloc(final_vertex_count * sizeof(Vertex));
@@ -305,6 +360,87 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
         return true;
     }
     
+    return false;
+}
+
+// TASK 1.1: New simplified function that accepts absolute paths directly
+bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name) {
+    if (!registry || !absolute_filepath || !mesh_name) return false;
+    if (registry->mesh_count >= 32) return false;
+    
+    printf("🔍 DEBUG load_compiled_mesh_absolute: filepath='%s', mesh_name='%s'\n", absolute_filepath, mesh_name);
+    
+    // Check if file exists
+    FILE* test_file = fopen(absolute_filepath, "r");
+    if (!test_file) {
+        printf("❌ DEBUG: Cannot open file '%s'\n", absolute_filepath);
+        return false;
+    }
+    fclose(test_file);
+    printf("✅ DEBUG: File exists and is readable\n");
+    
+    // Find or create mesh slot
+    Mesh* mesh = &registry->meshes[registry->mesh_count];
+    strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
+    
+    if (parse_obj_file(absolute_filepath, mesh)) {
+        printf("✅ DEBUG: parse_obj_file succeeded - vertices=%d, indices=%d\n", 
+               mesh->vertex_count, mesh->index_count);
+        
+        // TASK 1.3: Add comprehensive validation
+        if (mesh->vertex_count == 0 || mesh->index_count == 0) {
+            printf("❌ Mesh %s has zero vertices (%d) or indices (%d)\n", 
+                   mesh_name, mesh->vertex_count, mesh->index_count);
+            return false;
+        }
+        
+        if (!mesh->vertices || !mesh->indices) {
+            printf("❌ Mesh %s has NULL vertex (%p) or index (%p) data\n",
+                   mesh_name, (void*)mesh->vertices, (void*)mesh->indices);
+            return false;
+        }
+        
+        // Validate buffer creation before calling sg_make_buffer
+        size_t vertex_buffer_size = mesh->vertex_count * sizeof(Vertex);
+        size_t index_buffer_size = mesh->index_count * sizeof(int);
+        
+        if (vertex_buffer_size == 0 || index_buffer_size == 0) {
+            printf("❌ Mesh %s would create zero-sized buffers: VB=%zu IB=%zu\n",
+                   mesh_name, vertex_buffer_size, index_buffer_size);
+            return false;
+        }
+        
+        printf("🔍 DEBUG: Creating GPU buffers - VB=%zu bytes, IB=%zu bytes\n", 
+               vertex_buffer_size, index_buffer_size);
+        
+        // Create vertex buffer
+        mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = {
+                .ptr = mesh->vertices,
+                .size = vertex_buffer_size
+            },
+            .usage = { .vertex_buffer = true },
+            .label = mesh->name
+        });
+
+        // Create index buffer
+        mesh->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = {
+                .ptr = mesh->indices,
+                .size = index_buffer_size
+            },
+            .usage = { .index_buffer = true },
+            .label = mesh->name
+        });
+
+        mesh->loaded = true;  // Mark as successfully loaded
+        registry->mesh_count++;
+        printf("✅ Mesh '%s' loaded successfully with %d vertices, %d indices\n", 
+               mesh_name, mesh->vertex_count, mesh->index_count);
+        return true;
+    }
+    
+    printf("❌ Failed to parse mesh file: %s\n", absolute_filepath);
     return false;
 }
 
@@ -540,33 +676,16 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
     
     printf("🔍 DEBUG: Parsed metadata - name='%s', geometry='%s'\n", mesh_name, geometry_filename);
     
-    // Load the mesh file
+    // TASK 1.1: Simplified path resolution - construct full absolute path to .cobj file
     char mesh_path[512];
     snprintf(mesh_path, sizeof(mesh_path), "%s/%s", mesh_dir, geometry_filename);
     
     printf("🔍 DEBUG: Full mesh path: '%s'\n", mesh_path);
     
-    // Convert absolute path to relative path from meshes directory
-    char relative_mesh_path[512];
-    char meshes_prefix[512];
-    snprintf(meshes_prefix, sizeof(meshes_prefix), "%s/meshes/", registry->asset_root);
-    
-    printf("🔍 DEBUG: Meshes prefix: '%s'\n", meshes_prefix);
-    
-    if (strncmp(mesh_path, meshes_prefix, strlen(meshes_prefix)) == 0) {
-        // Path starts with asset_root/meshes/, extract the relative part
-        strcpy(relative_mesh_path, mesh_path + strlen(meshes_prefix));
-        printf("🔍 DEBUG: Using relative path: '%s'\n", relative_mesh_path);
-    } else {
-        // Path doesn't start with expected prefix, use as-is
-        strcpy(relative_mesh_path, mesh_path);
-        printf("🔍 DEBUG: Using full path as-is: '%s'\n", relative_mesh_path);
-    }
-    
     // Load compiled mesh files (.cobj format from asset compiler)
-    printf("🔍 DEBUG: Calling load_compiled_mesh with: registry=%p, path='%s', name='%s'\n", 
-           (void*)registry, relative_mesh_path, mesh_name);
-    bool loaded = load_compiled_mesh(registry, relative_mesh_path, mesh_name);
+    printf("🔍 DEBUG: Calling load_compiled_mesh_absolute with: registry=%p, path='%s', name='%s'\n", 
+           (void*)registry, mesh_path, mesh_name);
+    bool loaded = load_compiled_mesh_absolute(registry, mesh_path, mesh_name);
     
     if (!loaded) {
         printf("❌ Failed to load mesh: %s\n", mesh_path);
