@@ -432,3 +432,74 @@ void mesh_get_gpu_buffers(const Mesh* mesh, void* out_vbuf, void* out_ibuf) {
     *(sg_buffer*)out_vbuf = mesh->gpu_resources->sg_vertex_buffer;
     *(sg_buffer*)out_ibuf = mesh->gpu_resources->sg_index_buffer;
 }
+
+bool assets_upload_mesh_to_gpu(Mesh* mesh) {
+#ifdef CGAME_TESTING
+    // Skip GPU resource creation in test mode
+    (void)mesh; // Suppress unused parameter warning in test builds
+    return true;
+#else
+    if (!mesh || !mesh->vertices || !mesh->indices) {
+        printf("❌ Invalid mesh data for GPU resource creation\n");
+        return false;
+    }
+    
+    // Validate buffer sizes
+    size_t vertex_buffer_size = mesh->vertex_count * sizeof(Vertex);
+    size_t index_buffer_size = mesh->index_count * sizeof(int);
+    
+    if (vertex_buffer_size == 0 || index_buffer_size == 0) {
+        printf("❌ Mesh %s would create zero-sized buffers: VB=%zu IB=%zu\n",
+               mesh->name, vertex_buffer_size, index_buffer_size);
+        return false;
+    }
+    
+    printf("🔍 DEBUG: Creating GPU buffers for %s - VB=%zu bytes, IB=%zu bytes\n", 
+           mesh->name, vertex_buffer_size, index_buffer_size);
+    
+    // Allocate memory for our opaque struct
+    mesh->gpu_resources = calloc(1, sizeof(struct MeshGpuResources));
+    if (!mesh->gpu_resources) {
+        printf("❌ Failed to allocate GPU resources for mesh %s\n", mesh->name);
+        return false;
+    }
+    
+    // Create vertex buffer
+    mesh->gpu_resources->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .data = {
+            .ptr = mesh->vertices,
+            .size = vertex_buffer_size
+        },
+        .usage = { .vertex_buffer = true },
+        .label = mesh->name
+    });
+
+    // Create index buffer
+    mesh->gpu_resources->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .data = {
+            .ptr = mesh->indices,
+            .size = index_buffer_size
+        },
+        .usage = { .index_buffer = true },
+        .label = mesh->name
+    });
+    
+    // Validate that buffers were created
+    if (mesh->gpu_resources->sg_vertex_buffer.id == SG_INVALID_ID ||
+        mesh->gpu_resources->sg_index_buffer.id == SG_INVALID_ID) {
+        printf("❌ Failed to create GPU buffers for mesh %s\n", mesh->name);
+        if (mesh->gpu_resources->sg_vertex_buffer.id != SG_INVALID_ID) {
+            sg_destroy_buffer(mesh->gpu_resources->sg_vertex_buffer);
+        }
+        if (mesh->gpu_resources->sg_index_buffer.id != SG_INVALID_ID) {
+            sg_destroy_buffer(mesh->gpu_resources->sg_index_buffer);
+        }
+        free(mesh->gpu_resources);
+        mesh->gpu_resources = NULL;
+        return false;
+    }
+    
+    printf("✅ GPU resources created successfully for mesh %s\n", mesh->name);
+    return true;
+#endif
+}

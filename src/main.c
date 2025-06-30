@@ -75,9 +75,9 @@ static void loading_screen_init(LoadingScreen* loading) {
     strcpy(loading->status_text, "Initializing...");
 }
 
-static void loading_screen_create_cube(LoadingScreen* loading, struct World* world, AssetRegistry* assets) {
+static void loading_screen_create_cube(LoadingScreen* loading, struct World* world) {
     // Create a simple rotating cube entity for the loading screen
-    loading->cube_entity = world_create_entity(world);
+    loading->cube_entity = entity_create(world);
     
     if (loading->cube_entity == INVALID_ENTITY) {
         printf("❌ Failed to create loading screen cube entity\n");
@@ -85,21 +85,38 @@ static void loading_screen_create_cube(LoadingScreen* loading, struct World* wor
     }
     
     // Add transform component
-    struct Entity* entity = world_get_entity(world, loading->cube_entity);
-    entity->component_mask |= COMPONENT_TRANSFORM;
-    entity->transform = calloc(1, sizeof(struct Transform));
-    if (entity->transform) {
-        entity->transform->position = (Vector3){0.0f, 0.0f, 0.0f};
-        entity->transform->rotation = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
-        entity->transform->scale = (Vector3){1.0f, 1.0f, 1.0f};
-        entity->transform->dirty = true;
+    if (!entity_add_component(world, loading->cube_entity, COMPONENT_TRANSFORM)) {
+        printf("❌ Failed to add transform component to loading cube\n");
+        return;
     }
     
-    // Add mesh component - we'll create a simple cube mesh
-    entity->component_mask |= COMPONENT_MESH;
-    entity->mesh_name = calloc(1, 64);
-    if (entity->mesh_name) {
-        strcpy(entity->mesh_name, "loading_cube");
+    struct Transform* transform = entity_get_transform(world, loading->cube_entity);
+    if (transform) {
+        transform->position = (Vector3){0.0f, 0.0f, 0.0f};
+        transform->rotation = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
+        transform->scale = (Vector3){1.0f, 1.0f, 1.0f};
+        transform->dirty = true;
+    }
+    
+    // Add renderable component
+    if (!entity_add_component(world, loading->cube_entity, COMPONENT_RENDERABLE)) {
+        printf("❌ Failed to add renderable component to loading cube\n");
+        return;
+    }
+    
+    struct Renderable* renderable = entity_get_renderable(world, loading->cube_entity);
+    if (renderable) {
+        // Connect the mesh to the renderable component
+        AssetRegistry* asset_registry = get_asset_registry();
+        if (assets_create_renderable_from_mesh(asset_registry, "loading_cube", renderable)) {
+            printf("✅ Loading cube renderable created successfully\n");
+        } else {
+            printf("❌ Failed to create renderable from loading cube mesh\n");
+            renderable->visible = false;
+        }
+        
+        renderable->lod_distance = 100.0f;
+        renderable->lod_level = 0;
     }
     
     printf("📦 Created loading screen cube entity: %d\n", loading->cube_entity);
@@ -116,17 +133,17 @@ static void loading_screen_update(LoadingScreen* loading, float dt) {
     
     // Update cube rotation if entity exists
     if (loading->cube_entity != INVALID_ENTITY) {
-        struct Entity* entity = world_get_entity(&app_state.world, loading->cube_entity);
-        if (entity && entity->transform) {
+        struct Transform* transform = entity_get_transform(&app_state.world, loading->cube_entity);
+        if (transform) {
             // Rotate around Y axis
             float half_angle = loading->rotation * 0.5f;
-            entity->transform->rotation = (Quaternion){
+            transform->rotation = (Quaternion){
                 0.0f, 
                 sinf(half_angle), 
                 0.0f, 
                 cosf(half_angle)
             };
-            entity->transform->dirty = true;
+            transform->dirty = true;
         }
     }
 }
@@ -143,6 +160,82 @@ static void loading_screen_set_progress(LoadingScreen* loading, float progress, 
 static void loading_screen_finish(LoadingScreen* loading) {
     loading->active = false;
     printf("✅ Loading screen completed\n");
+}
+
+static void create_loading_cube_mesh(AssetRegistry* assets) {
+    // Create a simple textured cube mesh for the loading screen
+    if (assets->mesh_count >= MAX_MESHES) {
+        printf("❌ Cannot create loading cube - mesh limit reached\n");
+        return;
+    }
+    
+    Mesh* cube = &assets->meshes[assets->mesh_count];
+    strncpy(cube->name, "loading_cube", sizeof(cube->name) - 1);
+    strncpy(cube->material_name, "game_logo", sizeof(cube->material_name) - 1);
+    
+    // Cube vertices (simplified - just 8 vertices, 12 triangles = 36 indices)
+    cube->vertex_count = 8;
+    cube->vertices = malloc(cube->vertex_count * sizeof(Vertex));
+    
+    // Cube indices (12 triangles * 3 vertices = 36 indices)
+    cube->index_count = 36;
+    cube->indices = malloc(cube->index_count * sizeof(int));
+    
+    if (!cube->vertices || !cube->indices) {
+        printf("❌ Failed to allocate memory for loading cube\n");
+        return;
+    }
+    
+    // Define 8 cube vertices
+    Vertex cube_vertices[8] = {
+        // Bottom face
+        {{-1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}}, // 0
+        {{ 1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}}, // 1
+        {{ 1.0f, -1.0f,  1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}}, // 2
+        {{-1.0f, -1.0f,  1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}}, // 3
+        // Top face
+        {{-1.0f,  1.0f, -1.0f}, {0.0f,  1.0f, 0.0f}, {0.0f, 0.0f}}, // 4
+        {{ 1.0f,  1.0f, -1.0f}, {0.0f,  1.0f, 0.0f}, {1.0f, 0.0f}}, // 5
+        {{ 1.0f,  1.0f,  1.0f}, {0.0f,  1.0f, 0.0f}, {1.0f, 1.0f}}, // 6
+        {{-1.0f,  1.0f,  1.0f}, {0.0f,  1.0f, 0.0f}, {0.0f, 1.0f}}  // 7
+    };
+    
+    // Define cube indices (2 triangles per face, 6 faces = 12 triangles)
+    int cube_indices[36] = {
+        // Bottom face
+        0, 1, 2,  0, 2, 3,
+        // Top face
+        4, 7, 6,  4, 6, 5,
+        // Front face
+        3, 2, 6,  3, 6, 7,
+        // Back face
+        0, 5, 1,  0, 4, 5,
+        // Left face
+        0, 3, 7,  0, 7, 4,
+        // Right face
+        1, 6, 2,  1, 5, 6
+    };
+    
+    // Copy data
+    memcpy(cube->vertices, cube_vertices, sizeof(cube_vertices));
+    memcpy(cube->indices, cube_indices, sizeof(cube_indices));
+    
+    // Set AABB
+    cube->aabb_min = (Vector3){-1.0f, -1.0f, -1.0f};
+    cube->aabb_max = (Vector3){1.0f, 1.0f, 1.0f};
+    
+    // Create GPU resources using the asset system's mesh upload function
+    if (assets_upload_mesh_to_gpu(cube)) {
+        cube->loaded = true;
+        assets->mesh_count++;
+        printf("📦 Created loading cube mesh with GPU resources\n");
+    } else {
+        printf("❌ Failed to create GPU resources for loading cube\n");
+        free(cube->vertices);
+        free(cube->indices);
+        cube->vertices = NULL;
+        cube->indices = NULL;
+    }
 }
 
 // ============================================================================
@@ -229,8 +322,13 @@ static void init(void) {
     printf("🎮 CGGame - Sokol-based Component Engine\n");
     printf("==========================================\n\n");
     
+    // Initialize loading screen
+    loading_screen_init(&app_state.loading_screen);
+    
     // Initialize random seed
     srand((unsigned int)time(NULL));
+    
+    loading_screen_set_progress(&app_state.loading_screen, 0.1f, "Initializing graphics...");
     
     // Initialize Sokol graphics
     sg_setup(&(sg_desc){
@@ -244,12 +342,16 @@ static void init(void) {
         return;
     }
     
+    loading_screen_set_progress(&app_state.loading_screen, 0.2f, "Setting up world...");
+    
     // Initialize world
     if (!world_init(&app_state.world)) {
         printf("❌ Failed to initialize world\n");
         sapp_quit();
         return;
     }
+    
+    loading_screen_set_progress(&app_state.loading_screen, 0.3f, "Starting systems...");
     
     // Initialize system scheduler
     if (!scheduler_init(&app_state.scheduler, &app_state.render_config)) {
@@ -258,7 +360,34 @@ static void init(void) {
         return;
     }
     
-    // Assets are initialized by the scheduler - use global registry
+    loading_screen_set_progress(&app_state.loading_screen, 0.4f, "Loading logo texture...");
+    
+    // Load logo texture early for loading screen
+    AssetRegistry* asset_registry = get_asset_registry();
+    bool logo_loaded = false;
+    if (load_texture(asset_registry, "logo.png", "game_logo")) {
+        printf("✅ Logo texture loaded successfully!\n");
+        logo_loaded = true;
+    } else {
+        printf("⚠️  Logo texture loading failed (trying from textures/ directory)\n");
+        // Try from textures directory as fallback
+        if (load_texture(asset_registry, "textures/logo.png", "game_logo")) {
+            printf("✅ Logo texture loaded from textures/ directory!\n");
+            logo_loaded = true;
+        }
+    }
+    
+    loading_screen_set_progress(&app_state.loading_screen, 0.5f, "Creating loading cube...");
+    
+    // Create loading cube mesh
+    if (logo_loaded) {
+        create_loading_cube_mesh(asset_registry);
+        loading_screen_create_cube(&app_state.loading_screen, &app_state.world);
+    } else {
+        printf("⚠️  Skipping loading cube creation due to missing logo texture\n");
+    }
+    
+    loading_screen_set_progress(&app_state.loading_screen, 0.6f, "Configuring renderer...");
     
     // Initialize render config
     app_state.render_config = (RenderConfig){
@@ -266,7 +395,7 @@ static void init(void) {
         .screen_height = (int)sapp_height(),
         .assets = get_asset_registry(),
         .camera = {
-            .position = {5.0f, 3.0f, 10.0f},
+            .position = {0.0f, 0.0f, 5.0f},  // Position for loading screen
             .target = {0.0f, 0.0f, 0.0f},
             .up = {0.0f, 1.0f, 0.0f},
             .fov = 45.0f * M_PI / 180.0f,
@@ -275,7 +404,7 @@ static void init(void) {
             .aspect_ratio = (float)sapp_width() / (float)sapp_height()
         },
         .show_debug_info = true,
-        .wireframe_mode = false  // Start with solid rendering
+        .wireframe_mode = false
     };
     
     // Initialize renderer
@@ -294,6 +423,8 @@ static void init(void) {
         }
     };
     
+    loading_screen_set_progress(&app_state.loading_screen, 0.8f, "Loading scene...");
+    
     // Load default scene
     const char* scene_to_load = "camera_test";
     strcpy(app_state.current_scene, scene_to_load);
@@ -302,36 +433,61 @@ static void init(void) {
     load_scene_by_name(&app_state.world, scene_to_load, &app_state.player_id);
     list_available_cameras(&app_state.world);
     
-    // Load logo texture for demonstration
-    printf("🖼️  Loading logo texture...\n");
-    AssetRegistry* asset_registry = get_asset_registry();
-    if (load_texture(asset_registry, "logo.png", "game_logo")) {
-        printf("✅ Logo texture loaded successfully!\n");
-    } else {
-        printf("⚠️  Logo texture loading failed (trying from textures/ directory)\n");
-        // Try from textures directory as fallback
-        if (load_texture(asset_registry, "textures/logo.png", "game_logo")) {
-            printf("✅ Logo texture loaded from textures/ directory!\n");
-        }
-    }
+    loading_screen_set_progress(&app_state.loading_screen, 0.9f, "Finalizing...");
     
     // Initialize application state
     app_state.frame_count = 0;
     app_state.simulation_time = 0.0f;
-    app_state.initialized = true;
     
     ui_init();
     
+    loading_screen_set_progress(&app_state.loading_screen, 1.0f, "Ready!");
+    
+    // Keep loading screen active for a moment to show the rotating cube
     printf("\n🎮 Starting simulation...\n");
     printf("Press ESC to exit, 1-9 to switch cameras\n");
 }
 
 static void frame(void) {
-    if (!app_state.initialized) return;
-    
     const float dt = (float)sapp_frame_duration();
     app_state.simulation_time += dt;
     app_state.frame_count++;
+
+    // Handle loading screen
+    if (app_state.loading_screen.active) {
+        loading_screen_update(&app_state.loading_screen, dt);
+        
+        // Auto-complete loading screen after showing for 2 seconds at 100%
+        if (app_state.loading_screen.progress >= 1.0f && app_state.simulation_time > 2.0f) {
+            loading_screen_finish(&app_state.loading_screen);
+            app_state.initialized = true;
+            
+            // Switch camera back to scene camera
+            if (world_get_active_camera(&app_state.world) == INVALID_ENTITY) {
+                switch_to_camera(&app_state.world, 0); // Switch to first camera
+            }
+        }
+        
+        // Render loading screen
+        sg_begin_pass(&(sg_pass){
+            .swapchain = sglue_swapchain(),
+            .action = app_state.pass_action
+        });
+        
+        // Render the rotating cube if it exists
+        if (app_state.loading_screen.cube_entity != INVALID_ENTITY) {
+            render_frame(&app_state.world, &app_state.render_config, INVALID_ENTITY, dt);
+        }
+        
+        // TODO: Render loading progress UI here
+        
+        sg_end_pass();
+        sg_commit();
+        return;
+    }
+    
+    // Normal game frame (after loading is complete)
+    if (!app_state.initialized) return;
 
     // Update world and systems
     world_update(&app_state.world, dt);
@@ -343,7 +499,7 @@ static void frame(void) {
         .action = app_state.pass_action
     });
     
-    // Render entities (basic implementation for now)
+    // Render entities
     render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
     
     ui_render(&app_state.world, &app_state.scheduler, dt);
