@@ -9,7 +9,8 @@
 // ENUMS AND STRUCTS
 // ============================================================================
 
-typedef enum {
+typedef enum
+{
     SYSTEM_PHYSICS,
     SYSTEM_COLLISION,
     SYSTEM_AI,
@@ -17,9 +18,11 @@ typedef enum {
     SYSTEM_COUNT
 } SystemType;
 
-typedef void (*SystemUpdateFunc)(struct World* world, RenderConfig* render_config, float delta_time);
+typedef void (*SystemUpdateFunc)(struct World* world, RenderConfig* render_config,
+                                 float delta_time);
 
-typedef struct {
+typedef struct
+{
     const char* name;
     float frequency;
     float last_update;
@@ -27,7 +30,8 @@ typedef struct {
     SystemUpdateFunc update_func;
 } SystemInfo;
 
-typedef struct SystemScheduler {
+typedef struct SystemScheduler
+{
     SystemInfo systems[SYSTEM_COUNT];
     float total_time;
     int frame_count;
@@ -42,7 +46,8 @@ typedef struct SystemScheduler {
 // System Scheduler
 bool scheduler_init(SystemScheduler* scheduler, RenderConfig* config);
 void scheduler_destroy(SystemScheduler* scheduler, RenderConfig* config);
-void scheduler_update(SystemScheduler* scheduler, struct World* world, RenderConfig* render_config, float delta_time);
+void scheduler_update(SystemScheduler* scheduler, struct World* world, RenderConfig* render_config,
+                      float delta_time);
 void scheduler_print_stats(SystemScheduler* scheduler);
 
 // System Control
@@ -60,4 +65,4 @@ void camera_system_update(struct World* world, RenderConfig* render_config, floa
 DataRegistry* get_data_registry(void);
 AssetRegistry* get_asset_registry(void);  // Access to global asset registry
 
-#endif // SYSTEMS_H
+#endif  // SYSTEMS_H

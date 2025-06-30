@@ -8,4 +8,4 @@
 // Include Sokol GFX header (implementation defined elsewhere)
 #include "graphics_api.h"
 
-#endif // CGAME_GRAPHICS_H
+#endif  // CGAME_GRAPHICS_H

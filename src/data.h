@@ -1,53 +1,55 @@
 #pragma once
 
-#include "core.h"
-#include "assets.h"
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include "assets.h"
+#include "core.h"
 
 // ============================================================================
 // DATA-DRIVEN ENTITY SYSTEM
 // ============================================================================
 
 // Entity template definition (loaded from data files)
-typedef struct {
+typedef struct
+{
     char name[64];
     char description[256];
     char tags[10][32];
     int tag_count;
-    
+
     // Component configuration
     bool has_transform;
     Vector3 position;
     Vector3 rotation;
     Vector3 scale;
-    
+
     bool has_physics;
     float mass;
     float drag;
     Vector3 velocity;
     Vector3 acceleration;
     bool kinematic;
-    
+
     bool has_collision;
     int collision_shape;  // 0=sphere, 1=box, 2=capsule
     float collision_radius;
     uint32_t layer_mask;
     bool is_trigger;
-    
+
     bool has_renderable;
     char mesh_name[64];
     char material_name[64];
     bool visible;
-    
+
     bool has_ai;
     int initial_ai_state;  // 0=idle, 1=patrolling, etc.
     float ai_update_frequency;
-    
+
     bool has_player;
-    
+
     bool has_camera;
-    int camera_behavior;   // 0=third_person, 1=first_person, 2=static, etc.
+    int camera_behavior;  // 0=third_person, 1=first_person, 2=static, etc.
     float fov;
     float near_plane;
     float far_plane;
@@ -58,7 +60,8 @@ typedef struct {
 } EntityTemplate;
 
 // Scene definition (collection of entity spawns)
-typedef struct {
+typedef struct
+{
     char entity_type[64];
     Vector3 position;
     Vector3 rotation;
@@ -66,7 +69,8 @@ typedef struct {
     char custom_params[256];  // JSON-like custom parameters
 } EntitySpawn;
 
-typedef struct {
+typedef struct
+{
     char name[64];
     char description[256];
     EntitySpawn spawns[256];
@@ -74,13 +78,14 @@ typedef struct {
 } SceneTemplate;
 
 // Data registry for templates
-typedef struct {
+typedef struct
+{
     EntityTemplate entity_templates[128];
     uint32_t entity_template_count;
-    
+
     SceneTemplate scene_templates[32];
     uint32_t scene_template_count;
-    
+
     char data_root[512];
 } DataRegistry;
 
@@ -97,11 +102,13 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path);
 bool load_scene_templates(DataRegistry* registry, const char* scenes_path);
 
 // Entity creation from templates
-EntityID create_entity_from_template(struct World* world, DataRegistry* registry, 
-                                    AssetRegistry* assets, const char* template_name, Vector3 position);
+EntityID create_entity_from_template(struct World* world, DataRegistry* registry,
+                                     AssetRegistry* assets, const char* template_name,
+                                     Vector3 position);
 
 // Scene loading
-bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* assets, const char* scene_name);
+bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* assets,
+                const char* scene_name);
 
 // Template queries
 EntityTemplate* find_entity_template(DataRegistry* registry, const char* name);

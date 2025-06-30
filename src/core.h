@@ -10,9 +10,9 @@
 #ifndef CORE_H
 #define CORE_H
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 // R06 Solution: PIMPL Idiom - Forward declaration for opaque graphics resources
 struct GpuResources;
@@ -22,17 +22,20 @@ struct GpuResources;
 // ============================================================================
 
 /** @brief A 3D vector with float components. */
-typedef struct {
+typedef struct
+{
     float x, y, z;
 } Vector3;
 
 /** @brief A 2D vector with float components, typically for UV coordinates. */
-typedef struct {
+typedef struct
+{
     float u, v;
 } Vector2;
 
 /** @brief A quaternion for representing 3D rotations. */
-typedef struct {
+typedef struct
+{
     float x, y, z, w;
 } Quaternion;
 
@@ -41,14 +44,15 @@ typedef uint32_t EntityID;
 #define INVALID_ENTITY 0 /**< A reserved ID for an invalid or null entity. */
 
 /** @brief A bitmask representing the components attached to an entity. */
-typedef enum {
-    COMPONENT_TRANSFORM  = 1 << 0,
-    COMPONENT_PHYSICS    = 1 << 1, 
-    COMPONENT_COLLISION  = 1 << 2,
-    COMPONENT_AI         = 1 << 3,
+typedef enum
+{
+    COMPONENT_TRANSFORM = 1 << 0,
+    COMPONENT_PHYSICS = 1 << 1,
+    COMPONENT_COLLISION = 1 << 2,
+    COMPONENT_AI = 1 << 3,
     COMPONENT_RENDERABLE = 1 << 4,
-    COMPONENT_PLAYER     = 1 << 5,
-    COMPONENT_CAMERA     = 1 << 6,
+    COMPONENT_PLAYER = 1 << 5,
+    COMPONENT_CAMERA = 1 << 6,
 } ComponentType;
 
 // ============================================================================
@@ -56,7 +60,8 @@ typedef enum {
 // ============================================================================
 
 /** @brief Defines an entity's position, rotation, and scale in the world. */
-struct Transform {
+struct Transform
+{
     Vector3 position;
     Quaternion rotation;
     Vector3 scale;
@@ -64,7 +69,8 @@ struct Transform {
 };
 
 /** @brief Defines an entity's physical properties for simulation. */
-struct Physics {
+struct Physics
+{
     Vector3 velocity;
     Vector3 acceleration;
     float mass;
@@ -73,94 +79,107 @@ struct Physics {
 };
 
 /** @brief Defines an entity's collision shape and properties. */
-struct Collision {
-    enum {
+struct Collision
+{
+    enum
+    {
         COLLISION_SPHERE,
         COLLISION_BOX,
         COLLISION_CAPSULE
     } shape;
-    
-    union {
+
+    union
+    {
         float radius;
         Vector3 box_size;
-        struct { float radius; float height; } capsule;
+        struct
+        {
+            float radius;
+            float height;
+        } capsule;
     };
-    
-    bool is_trigger;      // Ghost vs solid
-    uint32_t layer_mask;  // What this collides with
+
+    bool is_trigger;            // Ghost vs solid
+    uint32_t layer_mask;        // What this collides with
     uint32_t last_check_frame;  // For temporal optimization
 };
 
 /** @brief Defines the state and behavior for an AI-controlled entity. */
-struct AI {
-    enum {
+struct AI
+{
+    enum
+    {
         AI_STATE_IDLE,
         AI_STATE_PATROLLING,
         AI_STATE_REACTING,
         AI_STATE_COMMUNICATING,
         AI_STATE_FLEEING
     } state;
-    
+
     float decision_timer;
     float reaction_cooldown;
     Vector3 target_position;
     EntityID target_entity;
-    
+
     // AI scheduling
     float update_frequency;  // Hz (2-10 based on distance)
     float last_update;
 };
 
 /** @brief Defines the data needed to render an entity. */
-struct Renderable {
-    struct GpuResources* gpu_resources;  /**< Opaque pointer to GPU-specific resources. */
-    uint32_t index_count;                /**< Number of indices to draw. */
-    bool visible;                        /**< Whether the entity should be rendered. */
-    float lod_distance;                  /**< Distance at which to switch LOD levels. */
-    uint8_t lod_level;                   /**< The current level of detail. */
+struct Renderable
+{
+    struct GpuResources* gpu_resources; /**< Opaque pointer to GPU-specific resources. */
+    uint32_t index_count;               /**< Number of indices to draw. */
+    bool visible;                       /**< Whether the entity should be rendered. */
+    float lod_distance;                 /**< Distance at which to switch LOD levels. */
+    uint8_t lod_level;                  /**< The current level of detail. */
 };
 
 /** @brief Defines data specific to a player-controlled entity. */
-struct Player {
+struct Player
+{
     float throttle;
     float afterburner_energy;
     bool controls_enabled;
 };
 
 /** @brief Defines a camera for viewing the world. */
-struct Camera {
+struct Camera
+{
     // Position and orientation
     Vector3 position;
     Vector3 target;
     Vector3 up;
-    
+
     // Projection parameters
     float fov;           // Field of view in degrees
     float aspect_ratio;  // Width/height ratio
     float near_plane;    // Near clipping plane
     float far_plane;     // Far clipping plane
-    
+
     // Cached matrices (updated when camera changes)
     float view_matrix[16];
     float projection_matrix[16];
     float view_projection_matrix[16];
     bool matrices_dirty;
-    
+
     // Camera behavior settings
-    enum {
+    enum
+    {
         CAMERA_BEHAVIOR_THIRD_PERSON,
         CAMERA_BEHAVIOR_FIRST_PERSON,
         CAMERA_BEHAVIOR_STATIC,
         CAMERA_BEHAVIOR_CHASE,
         CAMERA_BEHAVIOR_ORBITAL
     } behavior;
-    
+
     // Follow target for chase cameras
     EntityID follow_target;
     float follow_distance;
     Vector3 follow_offset;
     float follow_smoothing;
-    
+
     bool is_active;
 };
 
@@ -171,16 +190,17 @@ struct Camera {
 #define MAX_ENTITIES 4096
 
 /** @brief Represents an object in the game world. */
-struct Entity {
+struct Entity
+{
     EntityID id;
     uint32_t component_mask;
-    
+
     // Optional component pointers
     struct Transform* transform;
     struct Physics* physics;
     struct Collision* collision;
     struct AI* ai;
-    struct Renderable* renderable; 
+    struct Renderable* renderable;
     struct Player* player;
     struct Camera* camera;
 };
@@ -190,7 +210,8 @@ struct Entity {
 // ============================================================================
 
 /** @brief Contains pre-allocated pools for all component types. */
-struct ComponentPools {
+struct ComponentPools
+{
     struct Transform transforms[MAX_ENTITIES];
     struct Physics physics[MAX_ENTITIES];
     struct Collision collisions[MAX_ENTITIES];
@@ -198,7 +219,7 @@ struct ComponentPools {
     struct Renderable renderables[MAX_ENTITIES];
     struct Player players[MAX_ENTITIES];
     struct Camera cameras[MAX_ENTITIES];
-    
+
     uint32_t transform_count;
     uint32_t physics_count;
     uint32_t collision_count;
@@ -213,15 +234,16 @@ struct ComponentPools {
 // ============================================================================
 
 /** @brief Represents the entire state of the game world. */
-struct World {
+struct World
+{
     struct Entity entities[MAX_ENTITIES];
     uint32_t entity_count;
     uint32_t next_entity_id;
-    
+
     struct ComponentPools components;
-    
+
     EntityID active_camera_entity;
-    
+
     uint32_t frame_number;
     float delta_time;
     float total_time;
@@ -236,7 +258,7 @@ bool world_init(struct World* world);
 void world_destroy(struct World* world);
 void world_update(struct World* world, float delta_time);
 
-// Entity management  
+// Entity management
 EntityID entity_create(struct World* world);
 void entity_destroy(struct World* world, EntityID entity_id);
 struct Entity* entity_get(struct World* world, EntityID entity_id);
@@ -290,4 +312,4 @@ void mat4_scale(float* m, Vector3 scale);
 void mat4_from_quaternion(float* m, Quaternion q);
 void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale);
 
-#endif // CORE_H
+#endif  // CORE_H

@@ -5,13 +5,14 @@
 #include "systems.h"
 
 // UI State management
-typedef struct {
+typedef struct
+{
     bool show_debug_panel;
     bool show_hud;
     bool show_wireframe;
     float camera_speed;
     float time_scale;
-    
+
     // FPS tracking
     float fps;
     int frame_count;
@@ -25,4 +26,4 @@ bool ui_handle_event(const void* ev);  // Returns true if UI captured the event
 void ui_toggle_debug_panel(void);
 void ui_toggle_hud(void);
 
-#endif // UI_H
+#endif  // UI_H

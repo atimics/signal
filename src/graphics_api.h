@@ -31,4 +31,4 @@
 
 #include "sokol_log.h"
 
-#endif // GRAPHICS_API_H
+#endif  // GRAPHICS_API_H

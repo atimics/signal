@@ -10,10 +10,11 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "core.h"
 #include "gpu_resources.h"
-#include <stdint.h>
-#include <stdbool.h>
 
 // Forward-declare the opaque structs. The header knows nothing about them.
 struct MeshGpuResources;
@@ -31,76 +32,82 @@ struct TextureGpuResources;
 /**
  * @brief A single vertex with all its attributes for rendering.
  */
-typedef struct {
-    Vector3 position;   /**< 3D position of the vertex. */
-    Vector3 normal;     /**< Surface normal vector for lighting. */
-    Vector2 tex_coord;  /**< UV coordinates for texture mapping. */
+typedef struct
+{
+    Vector3 position;  /**< 3D position of the vertex. */
+    Vector3 normal;    /**< Surface normal vector for lighting. */
+    Vector2 tex_coord; /**< UV coordinates for texture mapping. */
 } Vertex;
 
 /**
  * @brief Represents a 3D mesh, including its geometry and material info.
  */
-typedef struct {
-    char name[64];              /**< Unique name of the mesh. */
-    char material_name[64];     /**< Name of the material used by this mesh. */
-    Vertex* vertices;           /**< Pointer to the vertex data on the CPU. */
-    int vertex_count;           /**< Number of vertices in the mesh. */
-    int* indices;               /**< Pointer to the index data on the CPU. */
-    int index_count;            /**< Number of indices in the mesh. */
-    Vector3 aabb_min;           /**< The minimum corner of the mesh's axis-aligned bounding box. */
-    Vector3 aabb_max;           /**< The maximum corner of the mesh's axis-aligned bounding box. */
-    bool loaded;                /**< Flag indicating if the mesh data is loaded. */
+typedef struct
+{
+    char name[64];          /**< Unique name of the mesh. */
+    char material_name[64]; /**< Name of the material used by this mesh. */
+    Vertex* vertices;       /**< Pointer to the vertex data on the CPU. */
+    int vertex_count;       /**< Number of vertices in the mesh. */
+    int* indices;           /**< Pointer to the index data on the CPU. */
+    int index_count;        /**< Number of indices in the mesh. */
+    Vector3 aabb_min;       /**< The minimum corner of the mesh's axis-aligned bounding box. */
+    Vector3 aabb_max;       /**< The maximum corner of the mesh's axis-aligned bounding box. */
+    bool loaded;            /**< Flag indicating if the mesh data is loaded. */
     struct MeshGpuResources* gpu_resources; /**< Opaque pointer to GPU-specific resource handles. */
 } Mesh;
 
 /**
  * @brief Represents a 2D texture asset.
  */
-typedef struct {
-    char name[64];              /**< Unique name of the texture. */
-    char filepath[256];         /**< Full path to the source image file. */
-    uint32_t width, height;     /**< Dimensions of the texture in pixels. */
-    bool loaded;                /**< Flag indicating if the texture data is loaded. */
-    struct TextureGpuResources* gpu_resources; /**< Opaque pointer to GPU-specific resource handles. */
+typedef struct
+{
+    char name[64];          /**< Unique name of the texture. */
+    char filepath[256];     /**< Full path to the source image file. */
+    uint32_t width, height; /**< Dimensions of the texture in pixels. */
+    bool loaded;            /**< Flag indicating if the texture data is loaded. */
+    struct TextureGpuResources*
+        gpu_resources; /**< Opaque pointer to GPU-specific resource handles. */
 } Texture;
 
 /**
  * @brief Represents the material properties of a surface for PBR rendering.
  */
-typedef struct {
-    char name[64];              /**< Unique name of the material. */
-    
+typedef struct
+{
+    char name[64]; /**< Unique name of the material. */
+
     // Basic material properties
-    Vector3 diffuse_color;      /**< Base color of the material (albedo). */
-    Vector3 ambient_color;      /**< Ambient color component. */
-    Vector3 specular_color;     /**< Specular color component. */
-    Vector3 emission_color;     /**< Emissive color for glowing surfaces. */
-    float shininess;            /**< Shininess factor for specular highlights. */
-    float roughness;            /**< Surface roughness (0.0 = smooth, 1.0 = rough). */
-    float metallic;             /**< Metallic factor (0.0 = dielectric, 1.0 = metal). */
-    
+    Vector3 diffuse_color;  /**< Base color of the material (albedo). */
+    Vector3 ambient_color;  /**< Ambient color component. */
+    Vector3 specular_color; /**< Specular color component. */
+    Vector3 emission_color; /**< Emissive color for glowing surfaces. */
+    float shininess;        /**< Shininess factor for specular highlights. */
+    float roughness;        /**< Surface roughness (0.0 = smooth, 1.0 = rough). */
+    float metallic;         /**< Metallic factor (0.0 = dielectric, 1.0 = metal). */
+
     // Multi-texture support
-    char diffuse_texture[64];   /**< Filename of the diffuse (albedo) texture map. */
-    char normal_texture[64];    /**< Filename of the normal map. */
-    char specular_texture[64];  /**< Filename of the specular map. */
-    char emission_texture[64];  /**< Filename of the emissive map. */
-    
-    bool loaded;                /**< Flag indicating if the material data is loaded. */
+    char diffuse_texture[64];  /**< Filename of the diffuse (albedo) texture map. */
+    char normal_texture[64];   /**< Filename of the normal map. */
+    char specular_texture[64]; /**< Filename of the specular map. */
+    char emission_texture[64]; /**< Filename of the emissive map. */
+
+    bool loaded; /**< Flag indicating if the material data is loaded. */
 } Material;
 
 /**
  * @brief A central registry that holds all loaded game assets.
  */
-typedef struct {
-    Mesh meshes[MAX_MESHES];            /**< Array of loaded meshes. */
-    Texture textures[MAX_TEXTURES];     /**< Array of loaded textures. */
-    Material materials[MAX_MATERIALS];  /**< Array of loaded materials. */
-    
-    uint32_t mesh_count;                /**< Current number of loaded meshes. */
-    uint32_t texture_count;             /**< Current number of loaded textures. */
-    uint32_t material_count;            /**< Current number of loaded materials. */
-    
-    char asset_root[256];               /**< The root directory for all game assets. */
+typedef struct
+{
+    Mesh meshes[MAX_MESHES];           /**< Array of loaded meshes. */
+    Texture textures[MAX_TEXTURES];    /**< Array of loaded textures. */
+    Material materials[MAX_MATERIALS]; /**< Array of loaded materials. */
+
+    uint32_t mesh_count;     /**< Current number of loaded meshes. */
+    uint32_t texture_count;  /**< Current number of loaded textures. */
+    uint32_t material_count; /**< Current number of loaded materials. */
+
+    char asset_root[256]; /**< The root directory for all game assets. */
 } AssetRegistry;
 
 // ============================================================================
@@ -124,7 +131,8 @@ void assets_cleanup(AssetRegistry* registry);
 /**
  * @brief Loads a texture from a file and uploads it to the GPU.
  * @param registry The asset registry to load into.
- * @param texture_path Path to the texture file, relative to the asset root's 'textures' subdirectory.
+ * @param texture_path Path to the texture file, relative to the asset root's 'textures'
+ * subdirectory.
  * @param texture_name A unique name to assign to the loaded texture.
  * @return True if the texture was loaded successfully, false otherwise.
  */
@@ -137,7 +145,8 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
  * @param mesh_name A unique name to assign to the loaded mesh.
  * @return True if the mesh was loaded successfully, false otherwise.
  */
-bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
+bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
+                         const char* mesh_name);
 
 /**
  * @brief Gets a pointer to a loaded mesh by its unique name.
@@ -183,7 +192,8 @@ bool assets_load_all_in_directory(AssetRegistry* registry);
  * @param renderable A pointer to the Renderable component to populate.
  * @return True on success, false if the mesh is not found or has invalid GPU resources.
  */
-bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable);
+bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name,
+                                        struct Renderable* renderable);
 
 // ============================================================================
 // SHADER LOADING FUNCTIONS
@@ -192,7 +202,8 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
 /**
  * @brief Loads shader source code from a file into a string.
  * @param shader_path The path to the shader file.
- * @return A dynamically allocated string with the shader code, or NULL on failure. The caller is responsible for freeing this memory.
+ * @return A dynamically allocated string with the shader code, or NULL on failure. The caller is
+ * responsible for freeing this memory.
  */
 char* load_shader_source(const char* shader_path);
 
@@ -219,14 +230,15 @@ const char* get_shader_path(const char* base_name, const char* stage);
  * This struct defines the exact binary layout of the file's header,
  * allowing for direct, high-performance loading.
  */
-typedef struct {
-    char magic[4];           /**< Magic number to identify the file type ("CGMF"). */
-    uint32_t version;        /**< Format version number. */
-    uint32_t vertex_count;   /**< The total number of vertices in the mesh. */
-    uint32_t index_count;    /**< The total number of indices in the mesh. */
-    Vector3 aabb_min;        /**< The minimum corner of the mesh's axis-aligned bounding box. */
-    Vector3 aabb_max;        /**< The maximum corner of the mesh's axis-aligned bounding box. */
-    uint32_t reserved[8];    /**< Reserved for future use, ensures header alignment. */
+typedef struct
+{
+    char magic[4];         /**< Magic number to identify the file type ("CGMF"). */
+    uint32_t version;      /**< Format version number. */
+    uint32_t vertex_count; /**< The total number of vertices in the mesh. */
+    uint32_t index_count;  /**< The total number of indices in the mesh. */
+    Vector3 aabb_min;      /**< The minimum corner of the mesh's axis-aligned bounding box. */
+    Vector3 aabb_max;      /**< The maximum corner of the mesh's axis-aligned bounding box. */
+    uint32_t reserved[8];  /**< Reserved for future use, ensures header alignment. */
 } COBJHeader;
 
-#endif // ASSETS_H
+#endif  // ASSETS_H

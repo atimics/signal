@@ -1,6 +1,7 @@
 // tests/test_main.c
-#include "vendor/unity.h"
 #include <stdio.h>
+
+#include "vendor/unity.h"
 
 // This file declares the test suites that the test runner will execute.
 // The actual test runner is in `test_runner.c`.
@@ -12,7 +13,11 @@ void suite_rendering(void);
 
 // These are required by Unity, but we can leave them empty if no
 // global setup/teardown is needed for most tests.
-void setUp(void) {}
-void tearDown(void) {}
+void setUp(void)
+{
+}
+void tearDown(void)
+{
+}
 
 // The main function is in test_runner.c
