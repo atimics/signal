@@ -18,8 +18,8 @@ int main() {
     printf("===== Running Sprint 10.5 Test Suite =====\n");
     
     // Call tests from each task
-    test_asset_path_resolution();
-    test_mesh_parser_stability();
+    run_task_1_tests();
+    run_task_2_tests();
 
     printf("===== All Sprint 10.5 tests passed! =====\n");
     return 0;

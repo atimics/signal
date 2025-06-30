@@ -66,5 +66,7 @@ void test_mesh_parser_stability() {
     printf("Test Finished: test_mesh_parser_stability\n\n");
 }
 
-// We will replace the main in runner.c to call our tests
-// in the correct order.
+void run_task_2_tests() {
+    test_mesh_parser_stability();
+    printf("All Task 2 tests passed!\n");
+}

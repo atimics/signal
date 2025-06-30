@@ -1,6 +1,7 @@
 // R06 Implementation: PIMPL pattern for graphics resources
 // Industry Standard: Hide Sokol GFX types from core headers
 
+#include "sokol_gfx.h"
 #include "core.h"
 #include "graphics_api.h"
 #include <stdlib.h>

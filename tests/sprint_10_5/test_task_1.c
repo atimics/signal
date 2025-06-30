@@ -46,8 +46,7 @@ void test_asset_path_resolution() {
     printf("Test Finished: test_asset_path_resolution\n\n");
 }
 
-int main() {
+void run_task_1_tests() {
     test_asset_path_resolution();
     printf("All Task 1 tests passed!\n");
-    return 0;
 }
