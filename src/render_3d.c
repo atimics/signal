@@ -353,13 +353,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         return;
     }
     
-    // Begin the swapchain render pass (correct Sokol API)
-    sg_begin_pass(&(sg_pass){
-        .action = {
-            .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = { 0.1f, 0.2f, 0.6f, 1.0f } }
-        },
-        .swapchain = sglue_swapchain()
-    });
+    // Pipeline is already set up in main.c render pass
+    // Just apply the rendering pipeline here
     
     // Apply the rendering pipeline
     sg_apply_pipeline(render_state.pipeline);
