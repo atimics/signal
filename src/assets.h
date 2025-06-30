@@ -91,7 +91,6 @@ bool assets_init(AssetRegistry* registry, const char* asset_root);
 void assets_cleanup(AssetRegistry* registry);
 
 // Load individual assets
-bool load_compiled_mesh(AssetRegistry* registry, const char* geometry, const char* mesh_name);
 bool load_material(AssetRegistry* registry, const char* material);
 bool load_texture(AssetRegistry* registry, const char* texture, const char* texture_name);
 
@@ -107,7 +106,6 @@ bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_n
 void assets_list_loaded(AssetRegistry* registry);
 bool assets_load_all_in_directory(AssetRegistry* registry);
 bool load_assets_from_metadata(AssetRegistry* registry);
-bool load_legacy_metadata(AssetRegistry* registry);
 bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_path);
 
 // OBJ file parsing helpers
@@ -115,8 +113,7 @@ bool parse_obj_file(const char* filepath, Mesh* mesh);
 bool parse_mtl_file(const char* filepath, AssetRegistry* registry);
 
 // Mesh loading functions
-bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
-bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
+bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
 
 // ============================================================================
 // MATERIAL REPOSITORY FUNCTIONS
