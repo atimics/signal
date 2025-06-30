@@ -102,21 +102,19 @@ release: CFLAGS += -DNDEBUG -O3
 release: clean $(TARGET)
 
 # WebAssembly build (requires Emscripten)
-wasm:
+wasm: | $(BUILD_DIR)
 	@echo "🌐 Building for WebAssembly..."
 	@echo "📋 Note: This requires Emscripten SDK to be installed and activated"
 	@echo "📋 Install with: https://emscripten.org/docs/getting_started/downloads.html"
-	emcc -Wall -Wextra -std=c99 -O2 -Isrc \
+	emcc -std=c99 -O2 -Isrc \
 		-DSOKOL_GLES3 \
-		-DNK_PRINTF_FORMAT_STRING="" \
-		-DNK_PRINTF_VARARG_FUNC\(x\)="" \
-		-DNK_PRINTF_VALIST_FUNC\(x\)="" \
-		-Wno-incompatible-pointer-types \
+		-DSOKOL_IMPL \
+		-DNUKLEAR_IMPLEMENTATION \
 		-s USE_WEBGL2=1 -s FULL_ES3=1 \
 		-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
+		-s EXPORTED_FUNCTIONS='["_main"]' \
 		--shell-file src/shell.html \
-		--preload-file assets \
-		$(addprefix $(SRC_DIR)/,$(SOURCES)) \
+		src/main.c \
 		-o $(BUILD_DIR)/cgame.html
 
 .PHONY: all with-assets clean clean-assets assets assets-force run profile debug release wasm
