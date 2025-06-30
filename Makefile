@@ -148,8 +148,8 @@ TEST_MATH_SRC = tests/test_main_simple.c tests/test_core_math.c tests/core_math.
 TEST_MATH_TARGET = $(BUILD_DIR)/cgame_tests_math
 
 # Phase 2 & 3: Full Integration Tests (With Sokol and engine dependencies)
-TEST_FULL_SRC = tests/test_main.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/core_math.c tests/vendor/unity.c
-ENGINE_SRC_FOR_TEST = src/assets.c src/render_mesh.c src/render_gpu.c src/gpu_resources.c src/graphics_api.c src/data.c
+TEST_FULL_SRC = tests/test_runner.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/core_math.c tests/vendor/unity.c
+ENGINE_SRC_FOR_TEST = src/assets.c src/render_mesh.c src/render_gpu.c src/gpu_resources.c
 TEST_FULL_TARGET = $(BUILD_DIR)/cgame_tests_full
 
 # Default test target - run Phase 1 (stable math tests)
@@ -176,9 +176,9 @@ $(TEST_MATH_TARGET): $(TEST_MATH_SRC) | $(BUILD_DIR)
 $(TEST_FULL_TARGET): $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) | $(BUILD_DIR)
 	@echo "🔨 Building full test suite (experimental)..."
 ifeq ($(OS),Darwin)
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm
 else
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -D_POSIX_C_SOURCE=199309L -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm -lGL -lX11 -lXi -lXcursor -lXrandr
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -D_POSIX_C_SOURCE=199309L -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm -lGL -lX11 -lXi -lXcursor -lXrandr
 endif
 
 # Sprint 10.5 Task 1: Test index.json path resolution

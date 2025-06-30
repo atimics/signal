@@ -1549,7 +1549,6 @@ bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_n
         // Calculate the path length
         size_t path_length = quote2 - quote1;
         
-        // Check if the output buffer is large enough
         if (path_length >= out_size) {
             free(file_content);
             return false;
