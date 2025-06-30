@@ -140,24 +140,46 @@ assets-wasm: $(BUILD_ASSETS_DIR)
 	@echo "📋 Using existing compiled assets from build/assets/"
 
 # ============================================================================
-# TEST TARGETS
+# TEST TARGETS - Sprint 15: Unity Testing Framework Integration
 # ============================================================================
 
-# Sprint 15: Unity Testing Framework Integration - Phase 1 (Math Tests Only)
-TEST_SRC = tests/test_main_simple.c tests/test_core_math.c tests/core_math.c tests/vendor/unity.c
-ENGINE_SRC_FOR_TEST = 
-TEST_TARGET = $(BUILD_DIR)/cgame_tests
+# Phase 1: Core Math Tests (No dependencies)
+TEST_MATH_SRC = tests/test_main_simple.c tests/test_core_math.c tests/core_math.c tests/vendor/unity.c
+TEST_MATH_TARGET = $(BUILD_DIR)/cgame_tests_math
 
-# Main test target - compile and run all Unity tests
-test: $(TEST_TARGET)
-	@echo "🧪 Running Unity test suite..."
-	./$(TEST_TARGET)
+# Phase 2 & 3: Full Integration Tests (With Sokol and engine dependencies)
+TEST_FULL_SRC = tests/test_main.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/core_math.c tests/vendor/unity.c
+ENGINE_SRC_FOR_TEST = src/assets.c src/render_mesh.c src/render_gpu.c src/gpu_resources.c src/graphics_api.c src/data.c
+TEST_FULL_TARGET = $(BUILD_DIR)/cgame_tests_full
+
+# Default test target - run Phase 1 (stable math tests)
+test: test-math
+
+# Phase 1: Math tests only (stable and fast)
+test-math: $(TEST_MATH_TARGET)
+	@echo "🧪 Running Phase 1: Core Math Tests..."
+	./$(TEST_MATH_TARGET)
+	@echo "✅ Phase 1 tests completed"
+
+# Phase 2 & 3: Full integration tests (experimental)
+test-full: $(TEST_FULL_TARGET)
+	@echo "🧪 Running Full Test Suite (Phases 1-3)..."
+	./$(TEST_FULL_TARGET)
 	@echo "✅ All tests completed"
 
-# Build the test executable
-$(TEST_TARGET): $(TEST_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building Unity test suite..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Itests -Itests/vendor -DUNITY_TESTING -o $@ $(TEST_SRC) -lm
+# Build Phase 1 test executable (math only)
+$(TEST_MATH_TARGET): $(TEST_MATH_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building Phase 1 test suite (math only)..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Itests -Itests/vendor -DUNITY_TESTING -o $@ $(TEST_MATH_SRC) -lm
+
+# Build full test executable (all phases)
+$(TEST_FULL_TARGET): $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) | $(BUILD_DIR)
+	@echo "🔨 Building full test suite (experimental)..."
+ifeq ($(OS),Darwin)
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm
+else
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -D_POSIX_C_SOURCE=199309L -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm -lGL -lX11 -lXi -lXcursor -lXrandr
+endif
 
 # Sprint 10.5 Task 1: Test index.json path resolution
 test_sprint_10_5_task_1: | $(BUILD_DIR)
@@ -173,7 +195,7 @@ test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
 	./$(BUILD_DIR)/test_task_1_integration
 	@echo "✅ Sprint 10.5 Task 1 integration test complete"
 
-.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration
+.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test-math test-full test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration
 
 # Sprint 10.5 Task 2: Test dynamic memory allocation in mesh parser
 test_sprint_10_5_task_2: | $(BUILD_DIR)

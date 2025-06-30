@@ -20,7 +20,7 @@ jobs:
           sudo apt-get install -y libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev
 
       - name: Run Unity Test Suite
-        run: make test
+        run: make test-math
 
       - name: Generate Test Report
         if: always()
@@ -31,12 +31,12 @@ jobs:
           echo "**Commit:** ${{ github.sha }}" >> test-report.md
           echo "" >> test-report.md
           
-          if [ -f build/cgame_tests ]; then
+          if [ -f build/cgame_tests_math ]; then
             echo "## ✅ Test Build Status: SUCCESS" >> test-report.md
             echo "" >> test-report.md
             echo "### Test Execution Results:" >> test-report.md
             echo '```' >> test-report.md
-            ./build/cgame_tests 2>&1 >> test-report.md || echo "Exit code: $?" >> test-report.md
+            ./build/cgame_tests_math 2>&1 >> test-report.md || echo "Exit code: $?" >> test-report.md
             echo '```' >> test-report.md
           else
             echo "## ❌ Test Build Status: FAILED" >> test-report.md
@@ -71,7 +71,7 @@ jobs:
         if: always()
         with:
           name: cgame-tests-executable
-          path: build/cgame_tests
+          path: build/cgame_tests_math
 
   matrix-test:
     name: Cross-Platform Tests
@@ -97,13 +97,13 @@ jobs:
         run: brew install pkg-config
 
       - name: Run Tests
-        run: make test
+        run: make test-math
 
       - name: Test Results Summary
         if: always()
         run: |
           echo "## Test Results on ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
-          if [ -f build/cgame_tests ]; then
+          if [ -f build/cgame_tests_math ]; then
             echo "✅ Tests built and executed successfully" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Test build failed" >> $GITHUB_STEP_SUMMARY
