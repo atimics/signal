@@ -8,11 +8,11 @@
 // Test Fixtures: setUp and tearDown
 // ============================================================================
 
-// The setUp function is called by Unity before each test in this file.
+// The setUpAssets function is called manually in the assets test suite.
 // Its purpose is to create a clean, predictable environment for each test.
 // Here, we create a temporary mock filesystem to isolate the test from
 // the actual game assets.
-void setUp(void) {
+void setUpAssets(void) {
     // Using system() is perfectly acceptable for a test utility like this.
     system("mkdir -p tests/temp_assets/props/test_ship");
 
@@ -29,10 +29,10 @@ void setUp(void) {
     fclose(f);
 }
 
-// The tearDown function is called by Unity after each test in this file.
-// Its purpose is to clean up any resources created in setUp, ensuring
+// The tearDownAssets function is called manually in the assets test suite.
+// Its purpose is to clean up any resources created in setUpAssets, ensuring
 // that tests do not have side effects that could affect other tests.
-void tearDown(void) {
+void tearDownAssets(void) {
     system("rm -rf tests/temp_assets");
 }
 
