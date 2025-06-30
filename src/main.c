@@ -105,10 +105,8 @@ static EntityID create_player(struct World* world, Vector3 position) {
         // If wedge_ship not available, try wedge_ship_mk2
         if (!assets_create_renderable_from_mesh(get_asset_registry(), "wedge_ship_mk2", renderable)) {
             printf("⚠️  No suitable mesh found for player, using default resources\n");
-            // Set up with invalid handles - will skip rendering
-            renderable->vbuf.id = SG_INVALID_ID;
-            renderable->ibuf.id = SG_INVALID_ID;
-            renderable->tex.id = SG_INVALID_ID;
+            // Create empty GPU resources - will skip rendering
+            renderable->gpu_resources = gpu_resources_create();
             renderable->index_count = 0;
             renderable->visible = false;
         }
