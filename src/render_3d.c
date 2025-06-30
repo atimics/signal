@@ -89,7 +89,7 @@ static bool render_sokol_init(void) {
     
     // Load shader sources from files
     const char* vs_path = get_shader_path("basic_3d", "vert");
-    const char* fs_path = get_shader_path("basic_3d_simple", "frag");
+    const char* fs_path = get_shader_path("basic_3d", "frag");  // Use textured fragment shader
     
     printf("📂 Loading vertex shader: %s\n", vs_path);
     render_state.vertex_shader_source = load_shader_source(vs_path);
@@ -133,13 +133,12 @@ static bool render_sokol_init(void) {
                 .stage = SG_SHADERSTAGE_VERTEX,
                 .size = sizeof(vs_uniforms_t),
                 .layout = SG_UNIFORMLAYOUT_NATIVE
+            },
+            [1] = {
+                .stage = SG_SHADERSTAGE_FRAGMENT,
+                .size = sizeof(fs_uniforms_t),
+                .layout = SG_UNIFORMLAYOUT_NATIVE
             }
-            // Fragment shader uniform temporarily disabled
-            // [1] = {
-            //     .stage = SG_SHADERSTAGE_FRAGMENT,
-            //     .size = sizeof(fs_uniforms_t),
-            //     .layout = SG_UNIFORMLAYOUT_NATIVE
-            // }
         },
         .images = {
             [0] = { .stage = SG_SHADERSTAGE_FRAGMENT, .image_type = SG_IMAGETYPE_2D, .sample_type = SG_IMAGESAMPLETYPE_FLOAT }
@@ -519,6 +518,14 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         vs_uniforms_t vs_params;
         memcpy(vs_params.mvp, mvp, sizeof(mvp));
         sg_apply_uniforms(0, &SG_RANGE(vs_params));
+        
+        // Apply fragment shader uniforms (lighting)
+        fs_uniforms_t fs_params;
+        fs_params.light_dir[0] = 0.3f;
+        fs_params.light_dir[1] = -0.7f;
+        fs_params.light_dir[2] = 0.2f;
+        fs_params._pad = 0.0f;
+        sg_apply_uniforms(1, &SG_RANGE(fs_params));
         
         // Debug first entity's matrix in first few frames
         if (frame_count < 3 && entity->id == 1) {
