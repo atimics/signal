@@ -32,6 +32,15 @@
 // APPLICATION STATE
 // ============================================================================
 
+// Loading screen state
+typedef struct {
+    bool active;
+    float rotation;
+    EntityID cube_entity;
+    float progress;
+    char status_text[256];
+} LoadingScreen;
+
 static struct {
     // Core ECS
     struct World world;
@@ -49,7 +58,92 @@ static struct {
     
     // Scene management
     char current_scene[64];
+    
+    // Loading screen
+    LoadingScreen loading_screen;
 } app_state = {0};
+
+// ============================================================================
+// LOADING SCREEN MANAGEMENT
+// ============================================================================
+
+static void loading_screen_init(LoadingScreen* loading) {
+    loading->active = true;
+    loading->rotation = 0.0f;
+    loading->progress = 0.0f;
+    loading->cube_entity = INVALID_ENTITY;
+    strcpy(loading->status_text, "Initializing...");
+}
+
+static void loading_screen_create_cube(LoadingScreen* loading, struct World* world, AssetRegistry* assets) {
+    // Create a simple rotating cube entity for the loading screen
+    loading->cube_entity = world_create_entity(world);
+    
+    if (loading->cube_entity == INVALID_ENTITY) {
+        printf("❌ Failed to create loading screen cube entity\n");
+        return;
+    }
+    
+    // Add transform component
+    struct Entity* entity = world_get_entity(world, loading->cube_entity);
+    entity->component_mask |= COMPONENT_TRANSFORM;
+    entity->transform = calloc(1, sizeof(struct Transform));
+    if (entity->transform) {
+        entity->transform->position = (Vector3){0.0f, 0.0f, 0.0f};
+        entity->transform->rotation = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
+        entity->transform->scale = (Vector3){1.0f, 1.0f, 1.0f};
+        entity->transform->dirty = true;
+    }
+    
+    // Add mesh component - we'll create a simple cube mesh
+    entity->component_mask |= COMPONENT_MESH;
+    entity->mesh_name = calloc(1, 64);
+    if (entity->mesh_name) {
+        strcpy(entity->mesh_name, "loading_cube");
+    }
+    
+    printf("📦 Created loading screen cube entity: %d\n", loading->cube_entity);
+}
+
+static void loading_screen_update(LoadingScreen* loading, float dt) {
+    if (!loading->active) return;
+    
+    // Rotate the cube
+    loading->rotation += dt * 2.0f; // 2 radians per second
+    if (loading->rotation > 2.0f * M_PI) {
+        loading->rotation -= 2.0f * M_PI;
+    }
+    
+    // Update cube rotation if entity exists
+    if (loading->cube_entity != INVALID_ENTITY) {
+        struct Entity* entity = world_get_entity(&app_state.world, loading->cube_entity);
+        if (entity && entity->transform) {
+            // Rotate around Y axis
+            float half_angle = loading->rotation * 0.5f;
+            entity->transform->rotation = (Quaternion){
+                0.0f, 
+                sinf(half_angle), 
+                0.0f, 
+                cosf(half_angle)
+            };
+            entity->transform->dirty = true;
+        }
+    }
+}
+
+static void loading_screen_set_progress(LoadingScreen* loading, float progress, const char* status) {
+    loading->progress = progress;
+    if (status) {
+        strncpy(loading->status_text, status, sizeof(loading->status_text) - 1);
+        loading->status_text[sizeof(loading->status_text) - 1] = '\0';
+    }
+    printf("📋 Loading: %.1f%% - %s\n", progress * 100.0f, loading->status_text);
+}
+
+static void loading_screen_finish(LoadingScreen* loading) {
+    loading->active = false;
+    printf("✅ Loading screen completed\n");
+}
 
 // ============================================================================
 // SCENE MANAGEMENT
@@ -207,6 +301,19 @@ static void init(void) {
     
     load_scene_by_name(&app_state.world, scene_to_load, &app_state.player_id);
     list_available_cameras(&app_state.world);
+    
+    // Load logo texture for demonstration
+    printf("🖼️  Loading logo texture...\n");
+    AssetRegistry* asset_registry = get_asset_registry();
+    if (load_texture(asset_registry, "logo.png", "game_logo")) {
+        printf("✅ Logo texture loaded successfully!\n");
+    } else {
+        printf("⚠️  Logo texture loading failed (trying from textures/ directory)\n");
+        // Try from textures directory as fallback
+        if (load_texture(asset_registry, "textures/logo.png", "game_logo")) {
+            printf("✅ Logo texture loaded from textures/ directory!\n");
+        }
+    }
     
     // Initialize application state
     app_state.frame_count = 0;
