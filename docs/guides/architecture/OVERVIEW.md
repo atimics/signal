@@ -1,281 +1,67 @@
-# Architecture Overview - CGame ECS Engine
+# CGame Engine Architecture Overview
 
-This document provides a comprehensive overview of the CGame engine's Entity-Component-System architecture, designed for high-performance 3D space simulation with emergent AI-driven gameplay.
+**Last Updated:** June 29, 2025
 
-## Core Architectural Principles
+This document provides a comprehensive overview of the CGame engine's architecture. It covers the core Entity-Component-System (ECS) design, the system scheduler, the asset pipeline, and the AI integration strategy.
 
-The architecture is built on four foundational principles:
+## 1. Core Philosophy: Data-Oriented Design
 
-1. **Entity-Component-System (ECS)**: Entities are containers with unique IDs, Components are pure data structures, and Systems process components to implement game logic. This provides excellent modularity and performance.
+The engine is built from the ground up using a data-oriented approach. This means we prioritize the layout and access patterns of our data to maximize performance. Instead of focusing on object-oriented hierarchies, we focus on:
 
-2. **Data-Oriented Design**: Components are stored in cache-friendly arrays, systems iterate over components by type, and memory layout is optimized for CPU cache efficiency. This enables processing thousands of entities at 60+ FPS.
+- **Data as the primary citizen:** Components are simple C structs containing only data.
+- **Cache-friendly operations:** Systems are functions that iterate over tightly packed arrays of components, minimizing cache misses.
+- **Decoupling:** Data and logic are kept separate, which makes the codebase easier to maintain, test, and reason about.
 
-3. **Scheduled Systems**: Each system runs at its optimal frequency - Physics at 60Hz, Collision at 20Hz, AI at 2-10Hz with level-of-detail optimization. This balances performance with gameplay requirements.
+## 2. Entity-Component-System (ECS)
 
-4. **Data-Driven Development**: Entities and scenes are defined in external data files rather than hardcoded, enabling rapid content creation and iteration without recompilation.
+The ECS is the backbone of the engine.
 
-## System Architecture Diagram
+-   **Entities:** Simple integer IDs that "own" a collection of components. An entity's identity and behavior are defined by the components attached to it.
+-   **Components:** Pure data structs that represent a single facet of an entity (e.g., `Transform`, `Physics`, `Material`). They are stored in contiguous arrays within the main `World` struct.
+-   **Systems:** Global functions that operate on entities that have a specific combination of components. For example, the `physics_system_update` function iterates over all entities that have both a `Transform` and a `Physics` component.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Main Game Loop                           │
-│  (SDL Event Processing → System Updates → Rendering)       │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────┼───────────────────────────────────────┐
-│             System Scheduler                                │
-│  ┌─────────────┐   ┌──────────────┐   ┌─────────────────┐  │
-│  │  Physics    │   │  Collision   │   │       AI        │  │
-│  │  System     │   │   System     │   │    System       │  │
-│  │  (60 FPS)   │   │  (20 FPS)    │   │  (2-10 FPS)     │  │
-│  └─────────────┘   └──────────────┘   └─────────────────┘  │
-└─────────────────────┼───────────────────────────────────────┘
-                      │
-┌─────────────────────┼───────────────────────────────────────┐
-│                ECS Core                                     │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                   World                             │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │   │
-│  │  │   Entity    │  │   Entity    │  │   Entity    │  │   │
-│  │  │   Pool      │  │   Pool      │  │   Pool      │  │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘  │   │
-│  └─────────────────────────────────────────────────────┘   │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │               Component Storage                     │   │
-│  │ Transform │ Physics │ Collision │ AI │ Renderable │  │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────┼───────────────────────────────────────┘
-                      │
-┌─────────────────────┼───────────────────────────────────────┐
-│               Support Systems                               │
-│  ┌─────────────┐   ┌──────────────┐   ┌─────────────────┐  │
-│  │   Asset     │   │    Data      │   │     Render      │  │
-│  │ Management  │   │   System     │   │    System       │  │
-│  │   System    │   │  (Templates) │   │   (3D SDL2)     │  │
-│  └─────────────┘   └──────────────┘   └─────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
+This design allows for extreme flexibility and avoids the rigid hierarchies of traditional inheritance-based models, enabling emergent gameplay behaviors.
 
-## Component System Design
+## 3. System Scheduler
 
-### Core Components (Pure Data Structures)
+To manage the execution of game logic, the engine uses a simple, frequency-based scheduler located in `src/systems.c`.
 
-#### Transform Component
-```c
-struct Transform {
-    Vector3 position;      // World position (x, y, z)
-    Quaternion rotation;   // Orientation quaternion
-    Vector3 scale;         // Scale factors
-    bool dirty;            // Needs matrix recalculation
-};
-```
-**Purpose**: Defines object position, rotation, and scale in 3D space.
+-   **Frequency-based Execution:** Each system (e.g., Physics, AI, Rendering) is assigned an update frequency in Hz.
+-   **Performance Optimization:** This allows us to run expensive systems, like AI, less frequently than critical systems like Physics and Rendering, ensuring optimal performance. For example:
+    -   Physics: 60Hz
+    -   Rendering: 60Hz
+    -   AI: 10Hz (or dynamically adjusted based on LOD)
 
-#### Physics Component
-```c
-struct Physics {
-    Vector3 velocity;      // Current velocity vector
-    Vector3 acceleration;  // Applied acceleration
-    float mass;            // Object mass for force calculations
-    float drag;            // Drag coefficient (0.0-1.0)
-    bool kinematic;        // Immune to physics forces
-};
-```
-**Purpose**: Enables realistic movement and force-based interactions.
+## 4. Asset & Rendering Pipeline
 
-#### Collision Component
-```c
-struct Collision {
-    float radius;          // Collision sphere radius
-    uint32_t layer_mask;   // Which collision layers to interact with
-    bool is_trigger;       // Ghost collision (no physical response)
-    Vector3 offset;        // Offset from transform position
-};
-```
-**Purpose**: Defines collision boundaries and interaction rules.
+The asset pipeline is designed to separate slow, offline compilation from fast, runtime loading.
 
-#### AI Component
-```c
-struct AI {
-    int state;             // Current behavior state
-    float update_frequency; // How often to process AI (Hz)
-    float decision_timer;   // Time of last decision
-    float reaction_cooldown;// Prevents decision spam
-    Vector3 target_position;// Current movement target
-};
-```
-**Purpose**: Enables autonomous behavior and decision-making.
+### 4.1. Offline Asset Compilation
 
-#### Renderable Component
-```c
-struct Renderable {
-    struct Mesh* mesh;     // 3D geometry
-    struct Material* material; // Texture and appearance
-    bool visible;          // Render this frame
-    float lod_distance;    // Level-of-detail threshold
-};
-```
-**Purpose**: Defines visual representation and rendering parameters.
+-   **Source Assets:** Raw art assets (e.g., `.obj`, `.png`, `.svg`) are stored in the `/assets` directory.
+-   **Metadata:** Each asset is described by a `metadata.json` file, which includes tags for the semantic material system.
+-   **Compiler:** The Python script at `tools/asset_compiler.py` reads the source assets and metadata.
+-   **Output:** The compiler processes this data and outputs optimized, game-ready binary files into the `/build/assets` directory. This is the data the engine actually loads.
 
-## System Processing Architecture
+### 4.2. Semantic Material System
 
-### 1. Physics System (60 FPS)
-- **Responsibility**: Apply forces, update velocities, move entities
-- **Input**: Transform + Physics components
-- **Output**: Updated Transform.position based on Physics.velocity
-- **Performance**: Processes ~1000 entities efficiently per frame
+The engine uses a powerful, tag-based system to automate material creation, ensuring a consistent and professional art style.
 
-### 2. Collision System (20 FPS)
-- **Responsibility**: Detect intersections, generate collision events
-- **Input**: Transform + Collision components
-- **Algorithm**: Spatial partitioning (octree/grid) for broad phase
-- **Output**: Collision events for game logic systems
+-   **Tagging:** Artists assign tags (e.g., `military`, `spacecraft`, `star`) to assets in their `metadata.json` file.
+-   **Definitions:** A central file, `assets/material_definitions.json`, defines PBR-style material properties (color palettes, roughness, metallic, emission) for each tag.
+-   **Automatic Generation:** During asset compilation, the system reads an asset's tags and generates the appropriate material files (`.mtl`) and texture templates based on the definitions. This allows for global art direction changes by modifying a single file.
 
-### 3. AI System (2-10 FPS, LOD-based)
-- **Responsibility**: Autonomous behavior, pathfinding, decision-making
-- **Input**: Transform + AI components, world state
-- **LOD Strategy**: 
-  - Near entities (< 100 units): 10 FPS updates
-  - Medium entities (100-500 units): 5 FPS updates  
-  - Far entities (> 500 units): 2 FPS updates
-- **Output**: Movement commands, behavior state changes
+### 4.3. Runtime Loading & Rendering
 
-### 4. Render System (60 FPS)
-- **Responsibility**: 3D rendering, frustum culling, LOD selection
-- **Input**: Transform + Renderable components
-- **Pipeline**: SDL2 → OpenGL-style matrix transforms → mesh rendering
-- **Optimizations**: Frustum culling, distance-based LOD, batch rendering
+-   **Loading:** At runtime, the engine only loads the optimized binary assets from the `/build/assets` directory.
+-   **Sokol GFX:** The rendering system uses the `sokol_gfx` API. The asset pipeline is responsible for creating the necessary `sg_buffer` (for meshes) and `sg_image` (for textures) resources that the GPU needs for rendering.
 
-## Data-Driven Entity Creation
+## 5. AI Integration
 
-### Entity Templates System
-Entities are defined in external data files for easy content creation:
+The AI system is designed for scalability, aiming to support thousands of intelligent agents in a persistent universe.
 
-```
-# data/templates/entities.txt
-template player_ship {
-    name: "Player Ship"
-    components: transform physics collision renderable player
-    mass: 80.0
-    collision_radius: 4.0
-    mesh: "unique_ship"
-    material: "unique_ship"
-}
-
-template ai_patrol {
-    name: "Patrol Ship"
-    components: transform physics collision ai renderable
-    mass: 100.0
-    ai_state: patrolling
-    ai_frequency: 5.0
-    mesh: "wedge_ship"
-}
-```
-
-### Scene Loading System
-Complete game scenes are loaded from configuration files:
-
-```
-# data/scenes/spaceport.txt
-scene spaceport {
-    player: player_ship at (0, 0, 0)
-    
-    spawn ai_patrol at (100, 0, 50) patrol_route circle
-    spawn ai_patrol at (-80, 0, -40) patrol_route line
-    
-    spawn sun at (0, 1000, 0) scale 10.0
-    spawn station at (200, 0, 200) faction friendly
-}
-```
-
-## Performance Architecture
-
-### Memory Layout Optimization
-- **Component Arrays**: Components stored in contiguous arrays by type
-- **Cache-Friendly Iteration**: Systems iterate over component arrays, not entities
-- **Minimal Allocation**: Pre-allocated component pools, no malloc in game loop
-- **Entity References**: Use EntityID (uint32_t), not pointers (can be invalidated)
-
-### System Scheduling Optimization
-```c
-// Example scheduling logic
-if (scheduler->systems[SYSTEM_PHYSICS].last_update + (1.0f/60.0f) <= current_time) {
-    physics_system_update(world, delta_time);
-    scheduler->systems[SYSTEM_PHYSICS].last_update = current_time;
-}
-
-if (scheduler->systems[SYSTEM_AI].last_update + ai_update_interval <= current_time) {
-    ai_system_update(world, delta_time);  // LOD-based frequency
-    scheduler->systems[SYSTEM_AI].last_update = current_time;
-}
-```
-
-### Level-of-Detail (LOD) Strategy
-- **AI Processing**: Update frequency scales with distance to player
-- **Rendering**: Switch mesh detail based on distance
-- **Collision**: Use simplified shapes for distant objects
-- **Audio**: 3D positional audio with distance attenuation (planned)
-
-## Asset Management Architecture
-
-### Mesh Loading Pipeline
-1. **OBJ File Parsing**: Load vertices, faces, UV coordinates, normals
-2. **Material Loading**: Parse MTL files for texture and appearance data
-3. **Texture Loading**: SDL2 surface → GPU texture conversion
-4. **Caching**: Keep frequently used assets in memory
-5. **Reference Counting**: Automatic cleanup of unused assets
-
-### Asset Directory Structure
-```
-assets/
-├── meshes/
-│   ├── platonic_solids/    # Basic geometric shapes
-│   ├── ships/              # Spacecraft models
-│   └── environment/        # Environmental objects
-├── textures/               # Material textures
-└── sounds/                 # Audio files (planned)
-```
-
-## Future Architecture Extensions
-
-### Planned System Additions
-- **Audio System**: 3D positional audio with SDL2_mixer
-- **Particle System**: Engine exhaust, weapon effects, explosions
-- **Network System**: Client-server multiplayer architecture
-- **Script System**: Lua/JavaScript integration for modding
-- **UI System**: Immediate-mode GUI for HUD and menus
-
-### AI System Enhancement
-- **Neural Integration**: LLM-driven entity personalities and dialog
-- **Behavior Trees**: Visual scripting for complex AI behaviors
-- **Goal-Oriented Action Planning**: Dynamic quest and objective generation
-- **Faction System**: Emergent political and economic relationships
-
-### Performance Scaling
-- **Multithreading**: Parallel system execution with job queues
-- **GPU Compute**: Physics and collision detection on GPU
-- **Streaming**: Dynamic loading/unloading of distant sectors
-- **Procedural Generation**: Infinite universe with deterministic seeding
-
-## Development Guidelines
-
-### Adding New Components
-1. Define pure data structure in `core.h`
-2. Add component flag to `ComponentType` enum
-3. Add component pointer to `Entity` struct
-4. Implement add/remove/get functions in `core.c`
-5. Update relevant systems to process the new component
-
-### Adding New Systems
-1. Define system function in `systems.h`
-2. Implement update logic in `systems.c`
-3. Add to `SystemType` enum and scheduler configuration
-4. Set appropriate update frequency for performance
-5. Document system purpose and component dependencies
-
-### Best Practices
-- **Single Responsibility**: Each system handles one aspect of game logic
-- **Component Composition**: Use multiple components rather than complex single components
-- **Data Validation**: Always check component existence before access
-- **Performance Monitoring**: Profile system update times and entity counts
-- **Documentation**: Comment complex algorithms and architectural decisions
+-   **Inference Engine:** The architecture is designed to integrate with a lightweight, C-based neural inference engine. The current plan is to use **`gemma.cpp`** for its high performance on CPUs.
+-   **Task-Based System:** AI logic is managed by a centralized task system.
+    -   **Priority Queue:** Tasks are prioritized (e.g., Dialog > Combat > Navigation) to ensure that critical AI decisions are handled with low latency.
+    -   **LOD Scheduling:** The update frequency of an entity's AI is determined by its distance from the player, drastically reducing the computational load of agents that are out of sight.
+-   **Data-Driven Behavior:** AI personalities and decision-making logic are defined by data (base prompts and behavior trees), allowing for rich, emergent AI without hardcoding behaviors.
