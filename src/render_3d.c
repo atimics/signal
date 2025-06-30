@@ -45,12 +45,12 @@ static struct {
     char* fragment_shader_source;
 } render_state = {0};
 
-// Test triangle vertices (position, normal, texcoord) - Simple NDC triangle
+// Test triangle vertices (position, normal, texcoord) - Larger triangle in world space
 static float test_vertices[] = {
     // Position        Normal          TexCoord
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
-    -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
-     0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
+     0.0f,  5.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
+    -5.0f, -5.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
+     5.0f, -5.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
 };
 
 static uint16_t test_indices[] = { 0, 1, 2 };
@@ -511,6 +511,16 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         if (active_camera && !active_camera->matrices_dirty) {
             // Use cached camera matrices
             mat4_multiply(mvp, active_camera->view_projection_matrix, model);
+            
+            // Debug camera info occasionally 
+            static int debug_counter = 0;
+            debug_counter++;
+            if (debug_counter % 180 == 0) {  // Every 3 seconds
+                printf("📷 Camera pos:(%.1f,%.1f,%.1f) target:(%.1f,%.1f,%.1f) fov:%.1f\n",
+                       active_camera->position.x, active_camera->position.y, active_camera->position.z,
+                       active_camera->target.x, active_camera->target.y, active_camera->target.z,
+                       active_camera->fov);
+            }
         } else {
             // Fallback: create matrices on the fly
             float view[16], proj[16], temp[16];

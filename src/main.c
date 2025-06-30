@@ -196,8 +196,20 @@ static void list_available_cameras(struct World* world) {
                 case 3: behavior_name = "Chase"; break;
                 case 4: behavior_name = "Orbital"; break;
             }
-            printf("   %d: Entity %d (%s)\n", camera_count, entity->id, behavior_name);
+            printf("   %d: Entity %d (%s) pos:(%.1f,%.1f,%.1f) target:(%.1f,%.1f,%.1f) fov:%.1f\n", 
+                   camera_count, entity->id, behavior_name,
+                   camera->position.x, camera->position.y, camera->position.z,
+                   camera->target.x, camera->target.y, camera->target.z,
+                   camera->fov);
         }
+    }
+    
+    // Show active camera
+    EntityID active_id = world_get_active_camera(world);
+    if (active_id != INVALID_ENTITY) {
+        printf("   🎯 Active camera: Entity %d\n", active_id);
+    } else {
+        printf("   ⚠️  No active camera set\n");
     }
     printf("\n");
 }

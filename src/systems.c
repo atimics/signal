@@ -467,28 +467,41 @@ void camera_system_update(struct World* world, float delta_time) {
                 struct Camera* camera = entity->camera;
                 if (camera) {
                     // Set default camera properties if not already set
-                    if (camera->fov == 0.0f) camera->fov = 45.0f;
+                    if (camera->fov == 0.0f) camera->fov = 60.0f;  // Wider FOV for better view
                     if (camera->near_plane == 0.0f) camera->near_plane = 0.1f;
                     if (camera->far_plane == 0.0f) camera->far_plane = 1000.0f;
                     if (camera->aspect_ratio == 0.0f) camera->aspect_ratio = 16.0f / 9.0f;
                     
-                    // Initialize position and target if not set
+                    // Initialize position and target if not set - better default positions
                     if (camera->position.x == 0.0f && camera->position.y == 0.0f && camera->position.z == 0.0f) {
-                        camera->position = (Vector3){0.0f, 5.0f, 10.0f};
-                    }
-                    if (camera->target.x == 0.0f && camera->target.y == 0.0f && camera->target.z == 0.0f) {
-                        camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                        // Different positions for different camera types
+                        switch (camera->behavior) {
+                            case CAMERA_BEHAVIOR_THIRD_PERSON:
+                            case CAMERA_BEHAVIOR_CHASE:
+                                camera->position = (Vector3){10.0f, 20.0f, 30.0f};  // Behind and above
+                                camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                                break;
+                            case CAMERA_BEHAVIOR_STATIC:
+                                camera->position = (Vector3){-30.0f, 25.0f, -30.0f};  // Corner view
+                                camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                                break;
+                            default:
+                                camera->position = (Vector3){0.0f, 15.0f, 25.0f};  // General overhead
+                                camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                                break;
+                        }
                     }
                     camera->up = (Vector3){0.0f, 1.0f, 0.0f};
                     
-                    // Set follow target for chase cameras
+                    // Set follow target for chase cameras with better default offsets
                     if (camera->follow_target == INVALID_ENTITY) {
                         if ((entity->component_mask & COMPONENT_PLAYER) || 
                             (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
                              camera->behavior == CAMERA_BEHAVIOR_CHASE)) {
                             camera->follow_target = player_id;
-                            camera->follow_offset = (Vector3){5.0f, 15.0f, 25.0f};
-                            camera->follow_smoothing = 0.02f;
+                            // Better chase camera positioning
+                            camera->follow_offset = (Vector3){8.0f, 20.0f, 30.0f};  // Further back and higher
+                            camera->follow_smoothing = 0.05f;  // Slightly more responsive
                         }
                     }
                     
@@ -566,16 +579,20 @@ static void camera_update_behavior(struct World* world, EntityID camera_id, floa
                         target_pos.z + camera->follow_offset.z
                     };
                     
-                    // Smooth camera movement
+                    // Smooth camera movement - more responsive
                     float lerp = camera->follow_smoothing * delta_time * 60.0f; // Frame rate independent
                     if (lerp > 1.0f) lerp = 1.0f; // Clamp to prevent overshooting
+                    
+                    // Apply smoothing factor for stability but make it more responsive
+                    lerp *= 3.0f;  // Make camera more responsive
+                    if (lerp > 0.3f) lerp = 0.3f;  // But not too fast
                     
                     Vector3 old_pos = camera->position;
                     camera->position.x += (desired_pos.x - camera->position.x) * lerp;
                     camera->position.y += (desired_pos.y - camera->position.y) * lerp;
                     camera->position.z += (desired_pos.z - camera->position.z) * lerp;
                     
-                    // Always look at the target
+                    // Always look at the target entity for proper framing
                     camera->target = target_pos;
                     
                     // Check if position changed
