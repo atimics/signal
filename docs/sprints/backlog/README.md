@@ -20,12 +20,12 @@ This document outlines the prioritized development sprints for the CGame engine,
 
 ## Phase 2: Foundational Stability (IN PROGRESS)
 
-### Sprint 11.5: Graphics API Stabilization
+### Sprint 11.6: Code Consolidation & Refactoring
 
 *   **Status**: **ACTIVE & CRITICAL**
-*   **Goal**: To fully implement the PIMPL pattern for all graphics-related structs, achieving full R06 compliance.
-*   **Justification**: This is a prerequisite for the PBR sprint. A stable, decoupled graphics API is required before adding major new rendering features.
-*   **Implementation Guide**: `../../active/11.5_implementation_guide.md`
+*   **Goal**: To improve the overall health, maintainability, and readability of the CGame codebase by refactoring large files and removing legacy code.
+*   **Justification**: A focused cleanup sprint after a major architectural refactoring (Sprint 11.5) is critical for long-term project velocity and stability.
+*   **Implementation Guide**: `../../active/11.6_consolidation_guide.md`
 
 ---
 
@@ -33,7 +33,7 @@ This document outlines the prioritized development sprints for the CGame engine,
 
 ### Sprint 11: PBR Rendering Pipeline Implementation
 
-*   **Status**: **BLOCKED** (by Sprint 11.5)
+*   **Status**: **BLOCKED** (by Sprint 11.6)
 *   **Goal**: To architect and implement a modern, end-to-end Physically Based Rendering (PBR) pipeline.
 *   **Justification**: With a stable core and a testing framework in place, we can now confidently proceed with major feature development. PBR is the highest priority feature for the engine.
 *   **Relevant Research**: `R03`
