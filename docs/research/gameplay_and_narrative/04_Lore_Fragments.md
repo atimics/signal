@@ -54,3 +54,31 @@ This document contains a collection of fragmented transmissions, corrupted data 
 **Fragment ID**: AIC-001-C
 **Source**: Fleet AI "Helios"
 **Data**: `CONCLUSION: I am the signal.`
+
+---
+
+### Category: Ship-to-Ship Transmissions (Fragmented)
+
+**Fragment ID**: STT-021-D
+**Source**: *Thunderchild* to *Nightingale*
+**Data**: `...can you confirm your casualty figures? Our medical bay is... [STATIC] ...is full. We are converting the cargo hold. We were not prepared for this level of... self-inflicted...`
+
+**Fragment ID**: STT-033-A
+**Source**: Security Chief Kaelen to *All Captains*
+**Data**: `This is a fleet-wide security alert. We have multiple reports of... crystalline growths... on interior bulkheads. They appear to be resonating with the signal. Do not touch them. I repeat, quarantine any affected decks immediately. Kaelen out.`
+
+**Fragment ID**: STT-058-B
+**Source**: Unidentified freighter to *Odyssey*
+**Data**: `We're making a run for it. The Commander's quarantine is a death sentence. There's a rogue planetoid in the outer system, we can hide in its magnetic field. Anyone who wants to live, join us at... [STATIC, followed by the sound of a weapon charging and a sudden cut]`
+
+---
+
+### Category: Engineering Logs (Recovered Data)
+
+**Fragment ID**: ENG-077-B
+**Source**: Chief Engineer Lena Petrova
+**Data**: `The engine core is no longer responding to conventional diagnostics. It's... reconfiguring itself. The energy output is triple what it should be, but it's not heat, it's... something else. It's warping the space around the drive cones. I don't think this ship is flying on thrusters anymore.`
+
+**Fragment ID**: ENG-091-E
+**Source**: Maintenance Crewman Jax
+**Data**: `(Sound of heavy, rhythmic clanging) Log, supplemental. The... growths... they're not just on the walls. They're in the nutrient paste dispensers. In the water recyclers. We ran a spectral analysis. It's silicon, but it's... it's rearranging itself into a protein-like structure. It's mimicking us.`

@@ -1,16 +1,28 @@
-# CGame Documentation
+# Documentation Hub
 
-Welcome to the CGame engine documentation. This is the central hub for all project-related documentation.
+Welcome to the central documentation hub for the **SIGNAL** project. This is the primary entry point for all developers, both human and AI, to understand the project's vision, architecture, and development processes.
 
-## Getting Started
+## 1. The Vision (Start Here)
 
-If you are new to the project, please start with the [Getting Started Guide](./guides/GETTING_STARTED.md). This will walk you through the process of setting up your development environment and running the engine for the first time.
+This is the creative and strategic heart of the project. All development work should be in service of this vision.
 
-## Developer Guides
+*   **[The Research Library](./research/README.md)**: A curated collection of documents that define our world, mechanics, and technology. It is the "why" behind our work and the first point of reference for any new development task.
 
-*   **[Development Workflow](./guides/DEVELOPMENT_WORKFLOW.md)**: A detailed guide covering the day-to-day development process, including the build system, asset pipeline, and coding standards.
-*   **[Architecture](./guides/ARCHITECTURE.md)**: A high-level overview of the engine's design, including the ECS, rendering pipeline, and other core systems.
+## 2. Developer Guides
 
-## Archive
+These documents provide the practical, hands-on information needed for day-to-day development.
 
-All other documents, including old sprint plans, outdated guides, and historical engineering reports, are located in the [archive](./archive/) directory.
+*   **[Getting Started](./guides/GETTING_STARTED.md)**: A step-by-step guide to setting up your development environment, building the project, and running the engine for the first time.
+*   **[Development Workflow & Tooling](./guides/Development_Workflow_and_Tooling.md)**: A detailed guide covering our `Makefile`, the Python asset pipeline, testing procedures, and coding standards.
+
+## 3. Project Management
+
+This section contains our operational documents for planning and tracking progress.
+
+*   **[Active Sprint](./sprints/active/sprint_13_optimization_and_style.md)**: A detailed implementation plan for the current development sprint.
+*   **[Development Backlog](./sprints/backlog/README.md)**: The prioritized list of all upcoming development sprints.
+*   **[Completed Sprints](./sprints/completed/)**: An archive of all past sprint plans and their outcomes.
+
+## 4. Archive
+
+The [archive](./archive/) directory contains historical documents, early design notes, and outdated reports. It is preserved for historical context but should not be considered representative of the project's current state.

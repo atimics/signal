@@ -1,0 +1,16 @@
+# .clang-format
+# Google C++ Style Guide with modifications for C
+BasedOnStyle: Google
+Language: Cpp
+# Customizations for C-style development
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBraces: Allman
+Cpp11BracedListStyle: false
+PointerAlignment: Right

@@ -62,15 +62,19 @@ This area covers the offline tools and processes used to create and optimize gam
 
 ## 5. Gameplay & Narrative
 
-This section defines the creative vision and player experience goals that our technology aims to serve.
+This section defines the creative vision and player experience for "The Ghost Signal." It is organized into four core documents that provide a complete overview of the game's design.
 
-*   **[R17: Gameplay Vision](./gameplay_and_narrative/R17_Gameplay_Vision.md)**
-    *   **Synopsis**: The official, high-level design document for "The Ghost Signal." It outlines the core pillars of the game: desperate survival, exploration of derelict alien fleets, and the central mystery of the Ghost Signal.
-    *   **Strategic Importance**: **High**. This is the creative "north star" for the project. All technical development should ultimately be justifiable in its service to this vision.
+*   **[01: The Vision](./gameplay_and_narrative/01_Vision_The_Ghost_Signal.md)**
+    *   **Synopsis**: The official, high-level design document for "The Ghost Signal." It outlines the core pillars of the game: desperate survival, exploration of derelict alien fleets, and the central mystery of the Ghost Signal. This is the "What" of our game.
 
-*   **[LORE_01: The Ghost Signal - A Lore Book](./gameplay_and_narrative/The_Ghost_Signal_Lore.md)**
-    *   **Synopsis**: A living document containing a collection of in-game text fragments, audio logs, and corrupted data that players can discover. This is the primary vehicle for our emergent, non-linear narrative.
-    *   **Strategic Importance**: **High**. This document establishes the tone, mystery, and emotional core of the game world. It should be regularly updated with new content.
+*   **[02: The World Bible](./gameplay_and_narrative/02_World_Bible.md)**
+    *   **Synopsis**: The single source of truth for the game's lore. It details the history of the Aethelian Fleet, the nature of the Cataclysm, the motivations of the AI factions, and the player's place in the universe. This is the "Where" of our game.
+
+*   **[03: The Core Mechanics](./gameplay_and_narrative/03_Core_Mechanics.md)**
+    *   **Synopsis**: A detailed design document that defines the core gameplay loop. It introduces the "Resonance Cascade" system, where narrative fragments (Echoes) act as keys to unlock new gameplay opportunities and challenges. This is the "How" of our game.
+
+*   **[04: The Lore Fragments](./gameplay_and_narrative/04_Lore_Fragments.md)**
+    *   **Synopsis**: A living repository of all the in-game text fragments, audio logs, and corrupted data that players can discover. This is the primary vehicle for delivering our emergent, non-linear narrative. This is the "Content" of our game.
 
 ## 6. Artificial Intelligence
 

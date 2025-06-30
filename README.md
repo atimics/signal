@@ -1,18 +1,11 @@
-# CGame: A Data-Oriented 3D Game Engine
+# SIGNAL
 
 [![Build and Test](https://github.com/ratimics/cgame/actions/workflows/build.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/build.yml)
 [![Test Suite](https://github.com/ratimics/cgame/actions/workflows/test.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/test.yml)
 
-CGame is a high-performance, data-oriented 3D game engine written in C99. It features an advanced Entity-Component-System (ECS) architecture and uses the modern, cross-platform **Sokol** graphics API for rendering.
+**In the silent graveyards of space, a ghost signal is calling. And you are the only one who can answer.**
 
-## 🌟 Features
-
-*   **Data-Oriented Design**: Built from the ground up for performance with a focus on cache-friendly data layouts.
-*   **Pure ECS Architecture**: A flexible and scalable design that separates data (components) from logic (systems).
-*   **High-Performance Rendering**: Utilizes the modern `sokol_gfx` API for efficient, cross-platform rendering (OpenGL, Metal, etc.).
-*   **Frequency-Based System Scheduler**: Run expensive systems like AI less frequently than critical systems like physics and rendering.
-*   **Data-Driven Development**: Define entities and scenes using simple text files for rapid iteration.
-*   **Semantic Material System**: An automated, tag-based system for generating PBR-style materials.
+**SIGNAL** is a high-performance, data-oriented 3D game engine and the foundation for a single-player space exploration game. It is written in C99, features a pure Entity-Component-System (ECS) architecture, and uses the modern, cross-platform **Sokol** graphics API for rendering.
 
 ## 🚀 Getting Started
 
@@ -21,11 +14,12 @@ CGame is a high-performance, data-oriented 3D game engine written in C99. It fea
 - A C99-compliant compiler (e.g., `clang` or `gcc`).
 - **macOS**: Xcode Command Line Tools for Metal support.
 - **Linux**: `build-essential`, `libgl1-mesa-dev`, `libx11-dev`.
-- Python 3 for the asset compilation pipeline.
+- Python 3 for the asset compilation pipeline (`pip install -r requirements.txt`).
+- `clang-format` for code formatting (e.g., `brew install clang-format` or `apt-get install clang-format`).
 
 ### Building and Running
 
-The project uses a simple Makefile.
+The project uses a simple Makefile. The first build will automatically compile the assets.
 
 ```bash
 # Clean, build, and run the engine
@@ -35,36 +29,20 @@ make clean && make && make run
 make test
 ```
 
-## 🧪 Testing
+## 📚 Documentation Hub
 
-CGame uses the [Unity Test Framework](https://github.com/ThrowTheSwitch/Unity) for automated testing. The test suite includes:
-
-- **Unit Tests**: Core math functions, data structures, and utilities
-- **Integration Tests**: Asset loading, rendering pipeline, and system interactions
-- **Regression Tests**: Preventing the re-introduction of previously fixed bugs
-
-### Running Tests
-
-```bash
-# Run all tests
-make test
-
-# The test executable is built to: build/cgame_tests
-```
-
-## 📚 Documentation
-
-For detailed information about the engine's architecture, development workflow, and project status, please see the **[Documentation Hub](./docs/README.md)**.
+For detailed information about the engine's architecture, development workflow, and creative vision, please see the main **[Documentation Hub](./docs/README.md)**. This is the primary entry point for all developers.
 
 ## 📈 Project Status
 
 This project is under active development.
 
 **Recent Accomplishments**:
-*   **Sprint 10.5**: Repaired and stabilized the core mesh rendering pipeline.
-*   **Sprint 15**: Successfully integrated the Unity testing framework and established a CI workflow.
+*   **Asset Pipeline Overhaul**: Migrated from a slow, text-based asset system to a high-performance, pre-compiled binary format.
+*   **Rendering Stabilization**: Resolved all critical rendering bugs, enabling the stable loading and display of textured 3D models.
+*   **Vision Solidified**: Established a clear and compelling creative vision, "The Ghost Signal," to guide all future development.
 
 **Current Focus**:
-*   **Sprint 11.5**: A short, focused sprint to refactor the graphics API according to the PIMPL idiom, creating a fully decoupled and stable foundation for future rendering work.
+*   **Sprint 13**: Implementing foundational performance optimizations (View Frustum Culling) and paying down remaining technical debt by enforcing a universal code style.
 
-See the [Sprint Backlog](./docs/sprints/backlog/README.md) for more details.
+See the [Active Sprint Guide](./docs/sprints/active/sprint_13_optimization_and_style.md) for more details.
