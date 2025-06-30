@@ -107,8 +107,22 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     
     printf("🔍 DEBUG parse_obj_file: Starting two-pass parsing of file: %s\n", filepath);
     
-    // Initialize mesh data
+    // Initialize mesh data - preserve the name field that was already set
+    char preserved_name[64];
+    if (mesh->name[0] != '\0') {
+        strncpy(preserved_name, mesh->name, sizeof(preserved_name) - 1);
+        preserved_name[sizeof(preserved_name) - 1] = '\0';
+    } else {
+        preserved_name[0] = '\0';
+    }
+    
     memset(mesh, 0, sizeof(Mesh));
+    
+    // Restore the preserved name
+    if (preserved_name[0] != '\0') {
+        strncpy(mesh->name, preserved_name, sizeof(mesh->name) - 1);
+        mesh->name[sizeof(mesh->name) - 1] = '\0';
+    }
     
     // ============================================================================
     // PASS 1: Count vertices, normals, tex coords, and faces
@@ -517,6 +531,8 @@ bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_f
     // Find or create mesh slot
     Mesh* mesh = &registry->meshes[registry->mesh_count];
     strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
+    mesh->name[sizeof(mesh->name) - 1] = '\0';  // Ensure null termination
+    printf("🔍 DEBUG: Set mesh name to '%s' at index %d\n", mesh->name, registry->mesh_count);
     
     if (parse_obj_file(absolute_filepath, mesh)) {
         printf("✅ DEBUG: parse_obj_file succeeded - vertices=%d, indices=%d\n", 
@@ -632,11 +648,15 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name) {
     if (!registry || !name) return NULL;
     
+    printf("🔍 DEBUG: assets_get_mesh looking for '%s', registry has %d meshes\n", name, registry->mesh_count);
+    
     for (uint32_t i = 0; i < registry->mesh_count; i++) {
+        printf("🔍 DEBUG: Mesh %d: '%s'\n", i, registry->meshes[i].name);
         if (strcmp(registry->meshes[i].name, name) == 0) {
             return &registry->meshes[i];
         }
     }
+    printf("🔍 DEBUG: Mesh '%s' not found\n", name);
     return NULL;
 }
 
@@ -1264,17 +1284,24 @@ const char* get_shader_path(const char* base_name, const char* stage) {
 bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable) {
     if (!registry || !mesh_name || !renderable) return false;
     
+    printf("🔍 DEBUG: assets_create_renderable_from_mesh called with mesh_name='%s'\n", mesh_name);
+    
     // Find the mesh
     Mesh* mesh = assets_get_mesh(registry, mesh_name);
+    printf("🔍 DEBUG: Found mesh: %p\n", (void*)mesh);
     if (!mesh || !mesh->loaded) {
         printf("❌ Mesh '%s' not found or not loaded\n", mesh_name);
         return false;
     }
     
+    printf("🔍 DEBUG: Mesh loaded=%d, gpu_resources=%p\n", mesh->loaded, (void*)mesh->gpu_resources);
+    
     // Check if GPU resources were already created during mesh loading
     if (mesh->gpu_resources &&
         sg_query_buffer_state(mesh->gpu_resources->sg_vertex_buffer) == SG_RESOURCESTATE_VALID &&
         sg_query_buffer_state(mesh->gpu_resources->sg_index_buffer) == SG_RESOURCESTATE_VALID) {
+        
+        printf("🔍 DEBUG: GPU resources valid, creating renderable\n");
         
         // PIMPL: Allocate GPU resources struct
         renderable->gpu_resources = gpu_resources_create();
