@@ -1,8 +1,9 @@
-# Material file for wedge_ship
+# Material file generated from tags: ship, vehicle, spacecraft
+# Material definition: Advanced spacecraft with metallic hull
 
-newmtl WedgeShip
-Ka 0.2 0.2 0.3  # Ambient color (dark blue-gray)
-Kd 0.6 0.7 0.9  # Diffuse color (light blue-gray)
-Ks 0.8 0.8 0.8  # Specular color (white)
-Ns 32.0         # Shininess
+newmtl Wedge Ship
+Ka 0.2 0.2 0.3  # Ambient color
+Kd 0.6 0.7 0.9  # Diffuse color
+Ks 0.8 0.8 0.8  # Specular color
+Ns 64.0         # Shininess
 map_Kd texture.png

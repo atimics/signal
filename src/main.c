@@ -1,15 +1,4 @@
-#define SOKOL_IMPL
-
-// Platform-specific includes
-#ifdef __linux__
-#include <time.h>
-#include <stdarg.h>
-#endif
-
-#include "sokol_app.h"
-#include "sokol_gfx.h"
-#include "sokol_glue.h"
-#include "sokol_log.h"
+#include "graphics_api.h"
 
 // Nuklear implementation
 #define NK_INCLUDE_FIXED_TYPES
@@ -22,15 +11,10 @@
 #define NK_IMPLEMENTATION
 #include "nuklear.h"
 
-// Define nk_bool as int for sokol_nuklear compatibility
-typedef int nk_bool;
-
-#define SOKOL_NUKLEAR_IMPL
-#include "sokol_nuklear.h"
-
 #include "core.h"
 #include "systems.h"
 #include "render.h"
+#include "render_gpu.h"
 #include "data.h"
 #include "assets.h"
 #include "ui.h"
@@ -104,10 +88,8 @@ static EntityID create_player(struct World* world, Vector3 position) {
         // If wedge_ship not available, try wedge_ship_mk2
         if (!assets_create_renderable_from_mesh(get_asset_registry(), "wedge_ship_mk2", renderable)) {
             printf("⚠️  No suitable mesh found for player, using default resources\n");
-            // Set up with invalid handles - will skip rendering
-            renderable->vbuf.id = SG_INVALID_ID;
-            renderable->ibuf.id = SG_INVALID_ID;
-            renderable->tex.id = SG_INVALID_ID;
+            // Create empty GPU resources - will skip rendering
+            renderable->gpu_resources = gpu_resources_create();
             renderable->index_count = 0;
             renderable->visible = false;
         }

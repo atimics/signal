@@ -1,28 +1,46 @@
-# CGame Sprint Backlog
+# CGame Engine - Development Backlog
 
-This document outlines the planned development sprints for the CGame engine.
+**Last Updated**: June 30, 2025
+**Backlog Manager**: Gemini (Lead Scientist and Researcher)
 
-## Feature Backlog
+## Overview
 
-### [Sprint 10: PBR Materials & Advanced Lighting](./research/10_pbr_materials.md)
--   **Goal**: Implement Physically Based Rendering (PBR) materials with proper lighting calculations, enabling realistic material appearance with metallic, roughness, and normal mapping support.
+This document outlines the prioritized development sprints for the CGame engine, guided by the official [**Strategic Plan**](../../STRATEGIC_PLAN.md). The backlog is actively managed to reflect the current state of the codebase and strategic priorities. Sprints are ordered based on dependency and foundational importance.
 
-### [Sprint 11: Advanced Lighting & Shadow Mapping](./research/11_advanced_lighting.md)
--   **Goal**: Implement advanced lighting techniques including shadow mapping, point lights, spot lights, and environmental lighting.
+---
 
-### [Sprint 12: Decal System](./research/12_decal_system.md)
--   **Goal**: Implement a decal system for dynamic surface details like bullet holes, scorch marks, and projected textures.
+## Phase 1: Core System Repair
 
-### [Sprint 13: UI Finalization & Engine Polish](./research/13_ui_integration.md)
--   **Goal**: Finalize the UI system by building out a comprehensive suite of debug and development tools using Nuklear.
+### Sprint 10.5: Critical Mesh System Architecture Repair
 
-### [Sprint 14: Asynchronous AI System](./research/14_async_ai.md)
--   **Goal**: Integrate the `gemma.cpp` inference engine using an asynchronous, multi-threaded job system.
+*   **Status**: **ACTIVE & CRITICAL**
+*   **Goal**: To fix the fundamental architectural disconnect between the asset pipeline and the rendering system.
+*   **Justification**: This is the **highest priority** for the project. No other rendering work can proceed until the engine can reliably display a 3D model.
+*   **Relevant Research**: `R01`
+*   **Strategic Alignment**: This sprint is the sole focus of **Phase 1** of the strategic plan.
 
-## Technical Debt & Refactoring Backlog
+---
 
-### [Sprint 15: Rendering System Refactor](./research/15_rendering_refactor.md)
--   **Goal**: Refactor the core rendering pipeline to eliminate redundancies and improve modularity.
+## Phase 2: Foundational Stability
 
-### [Sprint 16: Asset Pipeline Refactor](./research/16_asset_pipeline_refactor.md)
--   **Goal**: Refactor the asset pipeline to be non-destructive and artist-friendly.
+### Sprint 15: Automated Testing Framework Integration
+
+*   **Status**: **BLOCKED** (by Sprint 10.5)
+*   **Goal**: To integrate a C unit testing framework and establish a strategy for unit, integration, and rendering tests.
+*   **Justification**: A testing framework is a foundational capability that will de-risk all future development and improve code quality. This should be implemented immediately after the mesh system is repaired.
+*   **Relevant Research**: `R02`
+*   **Strategic Alignment**: This sprint is the sole focus of **Phase 2** of the strategic plan.
+
+---
+
+## Phase 3: Feature Advancement
+
+### Sprint 11: PBR Rendering Pipeline Implementation
+
+*   **Status**: **BLOCKED** (by Sprints 10.5 and 15)
+*   **Goal**: To architect and implement a modern, end-to-end Physically Based Rendering (PBR) pipeline.
+*   **Justification**: PBR is the industry standard for realistic rendering and is the next major step in achieving modern visual fidelity.
+*   **Relevant Research**: `R03`
+*   **Strategic Alignment**: This sprint is the first major objective of **Phase 3** of the strategic plan.
+
+---

@@ -5,11 +5,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// Sokol types (matching the actual definitions) - only if not already defined
-#ifndef SOKOL_GFX_INCLUDED
-typedef struct { uint32_t id; } sg_buffer;
-typedef struct { uint32_t id; } sg_image;
-#endif
+// R06 Solution: PIMPL Idiom - Forward declaration for opaque graphics resources
+struct GpuResources;
 
 // ============================================================================
 // CORE TYPES
@@ -100,10 +97,8 @@ struct AI {
 };
 
 struct Renderable {
-    sg_buffer vbuf;        // Vertex buffer handle
-    sg_buffer ibuf;        // Index buffer handle 
-    sg_image tex;          // Texture handle
-    uint32_t index_count;  // Number of indices to draw
+    struct GpuResources* gpu_resources;  // PIMPL: Opaque pointer to implementation
+    uint32_t index_count;                // Number of indices to draw
     bool visible;
     float lod_distance;
     uint8_t lod_level;

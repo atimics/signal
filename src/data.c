@@ -1,6 +1,7 @@
-#include "sokol_gfx.h"
+#include "graphics_api.h"
 #include "data.h"
 #include "assets.h"
+#include "render_gpu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,7 +70,12 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path) {
     if (!registry || !templates_path) return false;
     
     char full_path[1024];
+#ifdef __EMSCRIPTEN__
+    // WASM uses preloaded virtual filesystem
+    snprintf(full_path, sizeof(full_path), "/assets/%s", templates_path);
+#else
     snprintf(full_path, sizeof(full_path), "%s/%s", registry->data_root, templates_path);
+#endif
     
     FILE* file = fopen(full_path, "r");
     if (!file) {
@@ -355,18 +361,14 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
             } else {
                 printf("⚠️  Entity %d failed to load mesh: %s - using fallback\n", 
                        id, template->mesh_name);
-                // Set up invalid handles - will be skipped during rendering
-                renderable->vbuf.id = SG_INVALID_ID;
-                renderable->ibuf.id = SG_INVALID_ID;
-                renderable->tex.id = SG_INVALID_ID;
+                // Create empty GPU resources - will be skipped during rendering
+                renderable->gpu_resources = gpu_resources_create();
                 renderable->index_count = 0;
                 renderable->visible = false;
             }
         } else {
             // No mesh specified - disable rendering
-            renderable->vbuf.id = SG_INVALID_ID;
-            renderable->ibuf.id = SG_INVALID_ID;
-            renderable->tex.id = SG_INVALID_ID;
+            renderable->gpu_resources = gpu_resources_create(); // Empty resources
             renderable->index_count = 0;
             renderable->visible = false;
             printf("⚠️  Entity %d has no mesh specified\n", id);

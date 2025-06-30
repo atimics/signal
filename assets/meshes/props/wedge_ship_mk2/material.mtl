@@ -1,5 +1,9 @@
+# Material file generated from tags: ship, vehicle, spacecraft, improved
+# Material definition: Advanced spacecraft with metallic hull
+
 newmtl Wedge Ship Mk2
-Ke 1.0 1.0 1.0
-map_Ke texture.png
-Kd 1.0 1.0 1.0
+Ka 0.2 0.2 0.3  # Ambient color
+Kd 0.6 0.7 0.9  # Diffuse color
+Ks 0.8 0.8 0.8  # Specular color
+Ns 64.0         # Shininess
 map_Kd texture.png

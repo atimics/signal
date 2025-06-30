@@ -1,12 +1,10 @@
-#include "sokol_app.h"
-#include "sokol_gfx.h"
-#include "sokol_glue.h"
-#include "sokol_log.h"
+#include "graphics_api.h"
 
 #include "render.h"
 #include "render_camera.h"
 #include "render_lighting.h"
 #include "render_mesh.h"
+#include "render_gpu.h"
 #include "assets.h"
 #include "ui.h"
 #include <stdio.h>
@@ -443,14 +441,17 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
                    entity->id, transform->position.x, transform->position.y, transform->position.z,
                    transform->scale.x, transform->scale.y, transform->scale.z, renderable->index_count);
             printf("   VB ID:%d, IB ID:%d, TEX ID:%d\n", 
-                   renderable->vbuf.id, renderable->ibuf.id, renderable->tex.id);
+                   gpu_resources_get_vertex_buffer(renderable->gpu_resources).id,
+                   gpu_resources_get_index_buffer(renderable->gpu_resources).id,
+                   gpu_resources_get_texture(renderable->gpu_resources).id);
         }
         
         // Apply bindings (VBO, IBO, textures)
         sg_bindings binds = {
-            .vertex_buffers[0] = renderable->vbuf,
-            .index_buffer = renderable->ibuf,
-            .images[0] = (renderable->tex.id != SG_INVALID_ID) ? renderable->tex : render_state.default_texture,
+            .vertex_buffers[0] = gpu_resources_get_vertex_buffer(renderable->gpu_resources),
+            .index_buffer = gpu_resources_get_index_buffer(renderable->gpu_resources),
+            .images[0] = gpu_resources_is_texture_valid(renderable->gpu_resources) ? 
+                         gpu_resources_get_texture(renderable->gpu_resources) : render_state.default_texture,
             .samplers[0] = render_state.sampler
         };
         sg_apply_bindings(&binds);
@@ -690,16 +691,18 @@ static bool validate_entity_for_rendering(struct Entity* entity, struct Transfor
     // GPU resource validation with detailed error reporting
     bool gpu_resources_valid = true;
     
-    if (renderable->vbuf.id == SG_INVALID_ID) {
+    if (!gpu_resources_is_vertex_buffer_valid(renderable->gpu_resources)) {
         if (frame_count < 10) {
-            printf("❌ Entity %d: Invalid vertex buffer (ID: %d)\n", entity->id, renderable->vbuf.id);
+            printf("❌ Entity %d: Invalid vertex buffer (ID: %d)\n", entity->id, 
+                   gpu_resources_get_vertex_buffer(renderable->gpu_resources).id);
         }
         gpu_resources_valid = false;
     }
     
-    if (renderable->ibuf.id == SG_INVALID_ID) {
+    if (!gpu_resources_is_index_buffer_valid(renderable->gpu_resources)) {
         if (frame_count < 10) {
-            printf("❌ Entity %d: Invalid index buffer (ID: %d)\n", entity->id, renderable->ibuf.id);
+            printf("❌ Entity %d: Invalid index buffer (ID: %d)\n", entity->id, 
+                   gpu_resources_get_index_buffer(renderable->gpu_resources).id);
         }
         gpu_resources_valid = false;
     }

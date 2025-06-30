@@ -1,6 +1,7 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
+#include "graphics_api.h"
 #include "core.h"
 #include <stdint.h>
 #include <stdbool.h>
@@ -91,14 +92,17 @@ bool assets_init(AssetRegistry* registry, const char* asset_root);
 void assets_cleanup(AssetRegistry* registry);
 
 // Load individual assets
-bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
-bool load_material(AssetRegistry* registry, const char* filename);
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name);
+bool load_compiled_mesh(AssetRegistry* registry, const char* geometry, const char* mesh_name);
+bool load_material(AssetRegistry* registry, const char* material);
+bool load_texture(AssetRegistry* registry, const char* texture, const char* texture_name);
 
 // Asset lookup
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name);
 Material* assets_get_material(AssetRegistry* registry, const char* name);
 Texture* assets_get_texture(AssetRegistry* registry, const char* name);
+
+// Path resolution from index.json
+bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_name, char* out_path, size_t out_size);
 
 // Utility functions
 void assets_list_loaded(AssetRegistry* registry);
@@ -110,6 +114,10 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
 // OBJ file parsing helpers
 bool parse_obj_file(const char* filepath, Mesh* mesh);
 bool parse_mtl_file(const char* filepath, AssetRegistry* registry);
+
+// Mesh loading functions
+bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
+bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
 
 // ============================================================================
 // MATERIAL REPOSITORY FUNCTIONS
@@ -146,6 +154,9 @@ const char* get_shader_path(const char* base_name, const char* stage); // stage:
 
 // Create GPU resources from loaded mesh data and populate Renderable component
 bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable);
+
+// Upload mesh data to GPU and validate before buffer creation
+bool assets_upload_mesh_to_gpu(Mesh* mesh);
 
 // Create GPU texture from loaded texture data  
 sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name);

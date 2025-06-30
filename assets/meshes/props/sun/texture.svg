@@ -1,0 +1,31 @@
+<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="semantic_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFDF33" />
+      <stop offset="100%" stop-color="#CC8400" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#111"/>
+  <polygon points="656.09814453125,702.87548828125 451.14111328125,584.7518310546875 656.09814453125,466.6279602050781" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="744.8343505859375,494.7899169921875 539.8773193359375,376.66619873046875 744.8343505859375,258.5423889160156" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="401.668701171875,199.08937072753906 606.6257934570312,80.96562194824219 606.6257934570312,317.213134765625" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="3.5337424278259277,744.3361206054688 240.68711853027344,744.3361206054688 122.11038970947266,540.1619262695312" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="188.85890197753906,625.4301147460938 426.01226806640625,625.4301147460938 307.4354553222656,421.25592041015625" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="871.263916015625,819.4346923828125 752.6871337890625,1023.60888671875 989.8405151367188,1023.60888671875" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="950.57666015625,206.91213989257812 950.57666015625,443.15966796875 745.61962890625,325.03570556640625" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="608.1962890625,143.54794311523438 813.1533813476562,25.423988342285156 813.1533813476562,261.6715087890625" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="151.950927734375,901.57373046875 389.10430908203125,901.57373046875 270.5274963378906,697.3995361328125" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1023.6073608398438,11.343009948730469 1023.6073608398438,247.5905303955078 818.6503295898438,129.46669006347656" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="707.1409301757812,632.4705810546875 588.5643920898438,836.644775390625 825.7177734375,836.644775390625" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1018.8956909179688,665.3262329101562 1018.8956909179688,901.57373046875 813.9386596679688,783.4500732421875" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="406.38037109375,1004.834228515625 643.5337524414062,1004.834228515625 524.9569702148438,800.6600341796875" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="659.2392578125,584.7516479492188 864.1962890625,466.6279602050781 864.1962890625,702.87548828125" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="452.7115173339844,594.1390380859375 334.1349792480469,798.313232421875 571.288330078125,798.313232421875" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="532.0245361328125,296.87396240234375 532.0245361328125,533.1214599609375 327.0674743652344,414.9976501464844" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="150.38037109375,376.6661682128906 387.53375244140625,376.6661682128906 268.9569396972656,172.49197387695312" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="399.3128967285156,245.2436981201172 194.3558349609375,127.12004852294922 399.3128967285156,8.996180534362793" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="237.54600524902344,539.3796997070312 118.96937561035156,335.20550537109375 0.39263802766799927,539.3796997070312" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="118.96931457519531,0.3911382853984833 0.39263802766799927,204.56532287597656 237.54600524902344,204.56532287597656" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <text x="10" y="30" fill="white" font-family="Arial" font-size="20" font-weight="bold">Sun UV Layout</text>
+  <text x="10" y="50" fill="#fff" font-family="Arial" font-size="12">This is the UV layout for the mesh. Edit this file to apply textures.</text>
+</svg>
