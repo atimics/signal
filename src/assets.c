@@ -322,6 +322,34 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
         renderable->index_count = mesh->index_count;
         renderable->visible = true;
         
+        // Look up and assign material/texture if available
+        if (mesh->material_name[0] != '\0') {
+            Material* material = assets_get_material(registry, mesh->material_name);
+            if (material && material->loaded) {
+                // Try to get texture from material
+                const char* texture_name = material->texture_name[0] != '\0' ? 
+                                          material->texture_name : material->diffuse_texture;
+                
+                if (texture_name[0] != '\0') {
+                    Texture* texture = assets_get_texture(registry, texture_name);
+                    if (texture && texture->loaded && texture->gpu_resources) {
+                        // Assign texture to renderable (convert sg_image to gpu_image_t)
+                        gpu_image_t gpu_texture = {.id = texture->gpu_resources->sg_image.id};
+                        gpu_resources_set_texture(renderable->gpu_resources, gpu_texture);
+                        printf("✅ Assigned texture '%s' to mesh '%s'\n", texture_name, mesh_name);
+                    } else {
+                        printf("⚠️  Texture '%s' not found or not loaded for mesh '%s'\n", 
+                               texture_name, mesh_name);
+                    }
+                } else {
+                    printf("⚠️  No texture specified in material '%s' for mesh '%s'\n", 
+                           mesh->material_name, mesh_name);
+                }
+            } else {
+                printf("⚠️  Material '%s' not found for mesh '%s'\n", mesh->material_name, mesh_name);
+            }
+        }
+        
         printf("✅ Created renderable from mesh '%s': %d indices\n", 
                mesh_name, renderable->index_count);
         

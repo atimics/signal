@@ -426,19 +426,65 @@ void mat4_scale(float* m, Vector3 scale) {
 }
 
 void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale) {
-    // For now, use Euler angles from quaternion (simplified)
-    // TODO: Implement proper quaternion to matrix conversion
-    float translation[16], rot_y[16], scaling[16];
+    // Proper quaternion to matrix conversion
+    float translation[16], rot_matrix[16], scaling[16];
     float temp[16];
     
     // Create individual matrices
     mat4_translate(translation, position);
-    mat4_rotation_y(rot_y, rotation.y); // Use Y rotation for now
+    mat4_from_quaternion(rot_matrix, rotation); // Use proper quaternion conversion
     mat4_scale(scaling, scale);
     
     // Combine: T * R * S
-    mat4_multiply(temp, rot_y, scaling);
+    mat4_multiply(temp, rot_matrix, scaling);
     mat4_multiply(result, translation, temp);
+}
+
+void mat4_from_quaternion(float* m, Quaternion q) {
+    // Normalize quaternion to avoid scaling issues
+    float length = sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
+    if (length == 0.0f) {
+        // Handle invalid quaternion - use identity
+        mat4_identity(m);
+        return;
+    }
+    
+    float nx = q.x / length;
+    float ny = q.y / length;
+    float nz = q.z / length;
+    float nw = q.w / length;
+    
+    // Calculate matrix components (column-major order)
+    float xx = nx * nx;
+    float yy = ny * ny; 
+    float zz = nz * nz;
+    float xy = nx * ny;
+    float xz = nx * nz;
+    float yz = ny * nz;
+    float wx = nw * nx;
+    float wy = nw * ny;
+    float wz = nw * nz;
+    
+    // Build 4x4 rotation matrix in column-major order
+    m[0] = 1.0f - 2.0f * (yy + zz);
+    m[1] = 2.0f * (xy + wz);
+    m[2] = 2.0f * (xz - wy);
+    m[3] = 0.0f;
+    
+    m[4] = 2.0f * (xy - wz);
+    m[5] = 1.0f - 2.0f * (xx + zz);
+    m[6] = 2.0f * (yz + wx);
+    m[7] = 0.0f;
+    
+    m[8] = 2.0f * (xz + wy);
+    m[9] = 2.0f * (yz - wx);
+    m[10] = 1.0f - 2.0f * (xx + yy);
+    m[11] = 0.0f;
+    
+    m[12] = 0.0f;
+    m[13] = 0.0f;
+    m[14] = 0.0f;
+    m[15] = 1.0f;
 }
 
 // ============================================================================

@@ -267,6 +267,7 @@ void mat4_rotation_x(float* m, float angle_radians);
 void mat4_rotation_y(float* m, float angle_radians);
 void mat4_rotation_z(float* m, float angle_radians);
 void mat4_scale(float* m, Vector3 scale);
+void mat4_from_quaternion(float* m, Quaternion q);
 void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale);
 
 #endif // CORE_H
