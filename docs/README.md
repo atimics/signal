@@ -1,31 +1,27 @@
 # CGame Documentation Hub
 
-Welcome to the central documentation hub for the CGame engine. This document provides a curated list of the most important and up-to-date documents to help you understand, develop, and contribute to the project.
+Welcome to the central documentation hub for the CGame engine. This document provides a roadmap to help you find the information you need, whether you're a new contributor, an experienced developer, or an end-user.
 
-## 1. Getting Started
+## For New Developers
 
-If you are new to the project, start here.
+If you're new to the project, here's a recommended reading order to get you up to speed:
 
-- **[Project README.md](../../README.md)**: The main project README with instructions on how to get the engine running.
-- **[Comprehensive Project Review](./project/COMPREHENSIVE_PROJECT_REVIEW.md)**: A high-level analysis of the project's current status, strengths, and weaknesses.
-- **[Current Status](./project/CURRENT_STATUS.md)**: A live document detailing the current technology stack and development phase.
+1.  **[Project Vision](project/VISION.md)**: Understand the high-level goals of the project.
+2.  **[Development Guide](guides/development/DEVELOPMENT_GUIDE.md)**: The primary guide for contributors. It covers everything from setting up your environment to coding standards.
+3.  **[Architectural Overview](guides/architecture/OVERVIEW.md)**: Get a high-level view of how the engine's components fit together.
 
-## 2. Developer Guides
+## Core Documentation
 
-These guides provide detailed information for developers working on the engine.
+-   **[Guides](guides/)**: Contains detailed guides for development, architecture, and the rendering pipeline.
+-   **[API Reference](api/)**: Technical documentation for the engine's API.
+-   **[Project](project/)**: High-level project documents, including the roadmap and current status.
+-   **[User Manual](user/MANUAL.md)**: Documentation for end-users of the engine.
 
-- **[Development Guide](./guides/development/DEVELOPMENT_GUIDE.md)**: The primary guide for setting up the development environment, building the project, and understanding the workflow.
-- **[Architecture Overview](./guides/architecture/OVERVIEW.md)**: A deep dive into the Entity-Component-System (ECS) design, system scheduler, asset pipeline, and AI integration strategy.
-- **[Nuklear UI Integration Report](./engineering/NUKLEAR_INTEGRATION_REPORT.md)**: A detailed report on the implementation of the Nuklear UI.
-- **[Sprint 4.1 Engineering Brief](./engineering/SPRINT_4.1_ENGINEERING_BRIEF.md)**: Best practices and technical guidance for the current rendering sprint.
+## Historical Archives
 
-## 3. Project Management
+-   **[Archive](archive/)**: Contains historical documents, design notes, and engineering reports that are no longer current but may provide valuable context.
+-   **[Sprints](sprints/)**: A log of the project's development sprints. This serves as a project journal.
 
-- **[Project Vision](./project/VISION.md)**: The long-term goals and philosophy of the engine.
-- **[Project Roadmap](./project/ROADMAP.md)**: A high-level overview of planned features and development milestones.
-- **[Sprints Index](./sprints/README.md)**: Documentation for ongoing and upcoming development sprints.
+---
 
-## 4. Archives
-
-- **[Sprint Archives](./sprints/archives/)**: Records of completed sprints and reviews.
-- **[Archived Documentation](./archive/)**: Outdated or superseded design documents.
+This documentation is a living resource. If you find something that is unclear or out of date, please [open an issue](https://github.com/your-repo/cgame/issues) or submit a pull request to improve it.

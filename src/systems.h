@@ -58,10 +58,6 @@ void ai_system_update(struct World* world, float delta_time);
 void camera_system_update(struct World* world, float delta_time);
 void render_system_update(struct World* world, float delta_time);
 
-// Camera system helpers (for Sprint 7)
-void camera_update_behavior(struct World* world, EntityID camera_id, float delta_time);
-void update_legacy_render_config(struct Camera* camera);
-
 // Data Access
 DataRegistry* get_data_registry(void);
 RenderConfig* get_render_config(void);

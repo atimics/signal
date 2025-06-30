@@ -385,6 +385,13 @@ void mat4_multiply(float* result, const float* a, const float* b) {
     }
 }
 
+void mat4_translate(float* m, Vector3 t) {
+    mat4_identity(m);
+    m[12] = t.x;
+    m[13] = t.y;
+    m[14] = t.z;
+}
+
 // ============================================================================
 // CAMERA UTILITY FUNCTIONS
 // ============================================================================

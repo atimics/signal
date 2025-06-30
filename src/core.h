@@ -267,5 +267,6 @@ void mat4_identity(float* m);
 void mat4_perspective(float* m, float fov, float aspect, float near, float far);
 void mat4_lookat(float* m, Vector3 eye, Vector3 target, Vector3 up);
 void mat4_multiply(float* result, const float* a, const float* b);
+void mat4_translate(float* m, Vector3 t);
 
 #endif // CORE_H

@@ -8,6 +8,10 @@
 #include <time.h>
 #include <stdlib.h>
 
+// Forward declarations for camera system helpers
+static void camera_update_behavior(struct World* world, EntityID camera_id, float delta_time);
+static void update_legacy_render_config(struct Camera* camera);
+
 // Global render configuration and asset registry
 static RenderConfig g_render_config;
 AssetRegistry g_asset_registry;  // Make this globally accessible
@@ -564,7 +568,7 @@ static void camera_update_behavior(struct World* world, EntityID camera_id, floa
                     
                     // Smooth camera movement
                     float lerp = camera->follow_smoothing * delta_time * 60.0f; // Frame rate independent
-                    lerp = fminf(lerp, 1.0f); // Clamp to prevent overshooting
+                    if (lerp > 1.0f) lerp = 1.0f; // Clamp to prevent overshooting
                     
                     Vector3 old_pos = camera->position;
                     camera->position.x += (desired_pos.x - camera->position.x) * lerp;

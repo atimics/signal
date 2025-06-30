@@ -56,64 +56,6 @@ static float test_vertices[] = {
 static uint16_t test_indices[] = { 0, 1, 2 };
 
 // ============================================================================
-// MATRIX MATH HELPERS
-// ============================================================================
-
-// Math helper functions
-static void mat4_identity(float* m) {
-    memset(m, 0, 16 * sizeof(float));
-    m[0] = m[5] = m[10] = m[15] = 1.0f;
-}
-
-static void mat4_perspective(float* m, float fov, float aspect, float near, float far) {
-    mat4_identity(m);
-    float f = 1.0f / tanf(fov * 0.5f);
-    m[0] = f / aspect;
-    m[5] = f;
-    m[10] = (far + near) / (near - far);
-    m[11] = -1.0f;
-    m[14] = (2.0f * far * near) / (near - far);
-    m[15] = 0.0f;
-}
-
-static void mat4_lookat(float* m, Vector3 eye, Vector3 target, Vector3 up) {
-    // Calculate camera basis vectors
-    Vector3 f = {target.x - eye.x, target.y - eye.y, target.z - eye.z};
-    float len = sqrtf(f.x*f.x + f.y*f.y + f.z*f.z);
-    if (len > 0) { f.x /= len; f.y /= len; f.z /= len; }
-    
-    Vector3 s = {f.y*up.z - f.z*up.y, f.z*up.x - f.x*up.z, f.x*up.y - f.y*up.x};
-    len = sqrtf(s.x*s.x + s.y*s.y + s.z*s.z);
-    if (len > 0) { s.x /= len; s.y /= len; s.z /= len; }
-    
-    Vector3 u = {s.y*f.z - s.z*f.y, s.z*f.x - s.x*f.z, s.x*f.y - s.y*f.x};
-    
-    // Build matrix
-    mat4_identity(m);
-    m[0] = s.x; m[4] = s.y; m[8] = s.z; m[12] = -(s.x*eye.x + s.y*eye.y + s.z*eye.z);
-    m[1] = u.x; m[5] = u.y; m[9] = u.z; m[13] = -(u.x*eye.x + u.y*eye.y + u.z*eye.z);
-    m[2] = -f.x; m[6] = -f.y; m[10] = -f.z; m[14] = (f.x*eye.x + f.y*eye.y + f.z*eye.z);
-}
-
-static void mat4_multiply(float* result, const float* a, const float* b) {
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            result[i*4 + j] = 0;
-            for (int k = 0; k < 4; k++) {
-                result[i*4 + j] += a[i*4 + k] * b[k*4 + j];
-            }
-        }
-    }
-}
-
-static void mat4_translate(float* m, Vector3 t) {
-    mat4_identity(m);
-    m[12] = t.x;
-    m[13] = t.y;
-    m[14] = t.z;
-}
-
-// ============================================================================
 // SOKOL INITIALIZATION
 // ============================================================================
 
@@ -494,6 +436,8 @@ void render_cleanup(RenderConfig* config) {
 }
 
 void render_frame(struct World* world, RenderConfig* config, EntityID player_id, float delta_time) {
+    (void)config; // Unused for now 
+    (void)player_id; // Unused for now
     (void)delta_time; // Unused for now
     
     if (!render_state.initialized) {
@@ -550,51 +494,59 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         sg_apply_bindings(&binds);
         
         // Calculate MVP matrix from transform component
-        float model[16], view[16], proj[16], mvp[16], temp[16];
+        float model[16], mvp[16];
         
         // Create model matrix from transform
         mat4_translate(model, transform->position);
         // TODO: Apply rotation and scale - for now just use translation
-        // For now, use identity matrix
         
-        // Get active camera or use default
-        Vector3 camera_pos = {0.0f, 0.0f, 10.0f};
-        Vector3 camera_target = {0.0f, 0.0f, 0.0f};
-        Vector3 camera_up = {0.0f, 1.0f, 0.0f};
-        float fov = 45.0f * M_PI / 180.0f;
-        float aspect = 16.0f/9.0f;
-        float near_plane = 0.1f;
-        float far_plane = 100.0f;
+        // Get active camera matrices
+        EntityID active_camera_id = world_get_active_camera(world);
+        struct Camera* active_camera = NULL;
         
-        // Find active camera component
-        for (uint32_t j = 0; j < world->entity_count; j++) {
-            struct Entity* cam_entity = &world->entities[j];
-            if (!(cam_entity->component_mask & COMPONENT_CAMERA)) continue;
-            
-            struct Camera* camera = entity_get_camera(world, cam_entity->id);
-            if (camera && camera->is_active) {
-                // Get camera transform
-                struct Transform* cam_transform = entity_get_transform(world, cam_entity->id);
-                if (cam_transform) {
-                    camera_pos = cam_transform->position;
-                    // For now, look towards origin + offset
-                    camera_target = (Vector3){camera_pos.x, camera_pos.y - 5.0f, camera_pos.z - 10.0f};
-                }
-                fov = camera->fov * M_PI / 180.0f;
-                aspect = camera->aspect_ratio;
-                near_plane = camera->near_plane;
-                far_plane = camera->far_plane;
-                break;
-            }
+        if (active_camera_id != INVALID_ENTITY) {
+            active_camera = entity_get_camera(world, active_camera_id);
         }
         
-        // Create view and projection matrices
-        mat4_lookat(view, camera_pos, camera_target, camera_up);
-        mat4_perspective(proj, fov, aspect, near_plane, far_plane);
-        
-        // Combine matrices
-        mat4_multiply(temp, view, model);
-        mat4_multiply(mvp, proj, temp);
+        if (active_camera && !active_camera->matrices_dirty) {
+            // Use cached camera matrices
+            mat4_multiply(mvp, active_camera->view_projection_matrix, model);
+        } else {
+            // Fallback: create matrices on the fly
+            float view[16], proj[16], temp[16];
+            
+            Vector3 camera_pos = {0.0f, 5.0f, 10.0f};
+            Vector3 camera_target = {0.0f, 0.0f, 0.0f};
+            Vector3 camera_up = {0.0f, 1.0f, 0.0f};
+            float fov = 45.0f;
+            float aspect = 16.0f/9.0f;
+            float near_plane = 0.1f;
+            float far_plane = 1000.0f;
+            
+            if (active_camera) {
+                camera_pos = active_camera->position;
+                camera_target = active_camera->target;
+                camera_up = active_camera->up;
+                fov = active_camera->fov;
+                aspect = active_camera->aspect_ratio;
+                near_plane = active_camera->near_plane;
+                far_plane = active_camera->far_plane;
+            }
+            
+            // Create view and projection matrices
+            mat4_lookat(view, camera_pos, camera_target, camera_up);
+            mat4_perspective(proj, fov, aspect, near_plane, far_plane);
+            
+            // Combine matrices: MVP = Projection * View * Model
+            mat4_multiply(temp, view, model);
+            mat4_multiply(mvp, proj, temp);
+            
+            // If we have a camera, cache the view-projection matrix for next time
+            if (active_camera) {
+                mat4_multiply(active_camera->view_projection_matrix, proj, view);
+                active_camera->matrices_dirty = false;
+            }
+        }
         
         // Apply uniforms (MVP matrix)
         vs_uniforms_t vs_params;
@@ -631,9 +583,23 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             .samplers[0] = render_state.sampler
         });
         
-        // Create simple identity MVP matrix
+        // Get active camera for fallback triangle
+        EntityID active_camera_id = world_get_active_camera(world);
+        struct Camera* active_camera = NULL;
+        
+        if (active_camera_id != INVALID_ENTITY) {
+            active_camera = entity_get_camera(world, active_camera_id);
+        }
+        
+        // Create MVP matrix for triangle
         vs_uniforms_t uniforms;
-        mat4_identity(uniforms.mvp);
+        if (active_camera && !active_camera->matrices_dirty) {
+            // Use camera's cached view-projection matrix
+            memcpy(uniforms.mvp, active_camera->view_projection_matrix, sizeof(uniforms.mvp));
+        } else {
+            // Fallback to identity matrix
+            mat4_identity(uniforms.mvp);
+        }
         
         // Apply uniforms
         sg_apply_uniforms(0, &SG_RANGE(uniforms));

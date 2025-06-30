@@ -275,7 +275,7 @@ static void init(void) {
     };
     
     // Load default scene
-    const char* scene_to_load = "mesh_test";
+    const char* scene_to_load = "camera_test";
     strcpy(app_state.current_scene, scene_to_load);
     printf("ℹ️ Loading default scene: %s\n", scene_to_load);
     
@@ -360,18 +360,16 @@ static void event(const sapp_event* ev) {
             else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9) {
                 int camera_index = ev->key_code - SAPP_KEYCODE_1; // 0-8
                 
-                // Find camera entities
-                int found_cameras = 0;
-                for (uint32_t i = 0; i < app_state.world.entity_count; i++) {
-                    struct Entity* entity = &app_state.world.entities[i];
-                    if (entity->component_mask & COMPONENT_CAMERA) {
-                        if (found_cameras == camera_index) {
-                            world_set_active_camera(&app_state.world, entity->id);
-                            printf("📹 Switched to camera %d (Entity %d)\n", camera_index + 1, entity->id);
-                            break;
-                        }
-                        found_cameras++;
-                    }
+                // Use the new switch_to_camera function
+                if (switch_to_camera(&app_state.world, camera_index)) {
+                    printf("📹 Switched to camera %d\n", camera_index + 1);
+                    
+                    // Update aspect ratio for the new camera
+                    float aspect_ratio = (float)app_state.render_config.screen_width / 
+                                       (float)app_state.render_config.screen_height;
+                    update_camera_aspect_ratio(&app_state.world, aspect_ratio);
+                } else {
+                    printf("📹 Camera %d not found\n", camera_index + 1);
                 }
             }
             break;
