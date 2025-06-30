@@ -14,6 +14,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install system dependencies
+        run: brew install cairo pkg-config
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -43,10 +46,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-dev libx11-dev
+          sudo apt-get install -y libcairo2-dev pkg-config libgl1-mesa-dev libx11-dev
 
       - name: Set up Python
         uses: actions/setup-python@v5
