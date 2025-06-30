@@ -14,7 +14,7 @@ int main(void) {
     UNITY_BEGIN();
 
     // Run the test suites
-    RUN_TEST_SUITE(suite_core_math);
+    suite_core_math();
 
     return UNITY_END();
 }
