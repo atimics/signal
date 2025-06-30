@@ -101,7 +101,7 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path) {
             strncpy(current_template->name, name_start, sizeof(current_template->name) - 1);
             
             // Set defaults
-            current_template->scale = (Vector3){1.0f, 1.0f, 1.0f};
+            current_template->scale = (Vector3){5.0f, 5.0f, 5.0f};  // Make entities larger by default
             current_template->mass = 1.0f;
             current_template->drag = 0.99f;
             current_template->collision_radius = 1.0f;
@@ -269,7 +269,7 @@ bool load_scene_templates(DataRegistry* registry, const char* scenes_path) {
             memset(spawn, 0, sizeof(EntitySpawn));
             
             // Default scale
-            spawn->scale = (Vector3){1.0f, 1.0f, 1.0f};
+            spawn->scale = (Vector3){5.0f, 5.0f, 5.0f};  // Make spawned entities larger
             
             // Parse spawn line: "spawn: entity_type x y z"
             char* tokens = trimmed_line + strlen(spawn_keyword);

@@ -79,7 +79,7 @@ static EntityID create_player(struct World* world, Vector3 position) {
     // Configure components
     struct Transform* transform = entity_get_transform(world, id);
     transform->position = position;
-    transform->scale = (Vector3){1.0f, 1.0f, 1.0f};
+    transform->scale = (Vector3){5.0f, 5.0f, 5.0f};  // Make entities much larger
     transform->rotation = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
     transform->dirty = true;
     

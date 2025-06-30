@@ -558,7 +558,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     }
     
     // Fallback: draw test triangle if no entities were rendered (or for debugging)
-    if (rendered_count == 0) {  // Draw triangle if no entities rendered
+    if (rendered_count == 0) {  // Only draw triangle if no entities rendered
         // Apply test triangle bindings
         sg_apply_bindings(&(sg_bindings){
             .vertex_buffers[0] = render_state.vertex_buffer,
@@ -575,14 +575,34 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             active_camera = entity_get_camera(world, active_camera_id);
         }
         
-        // Create MVP matrix for triangle
+        // Create MVP matrix for triangle with proper positioning
         vs_uniforms_t uniforms;
+        float triangle_model[16], triangle_mvp[16];
+        
+        // Position triangle in front of camera at origin
+        Vector3 triangle_pos = {0.0f, 0.0f, 0.0f};  // At world origin
+        Vector3 triangle_scale = {1.0f, 1.0f, 1.0f};
+        Quaternion triangle_rot = {0.0f, 0.0f, 0.0f, 1.0f};  // No rotation
+        mat4_compose_transform(triangle_model, triangle_pos, triangle_rot, triangle_scale);
+        
         if (active_camera && !active_camera->matrices_dirty) {
-            // Use camera's cached view-projection matrix
-            memcpy(uniforms.mvp, active_camera->view_projection_matrix, sizeof(uniforms.mvp));
+            // Use camera's view-projection matrix with model transform
+            mat4_multiply(triangle_mvp, active_camera->view_projection_matrix, triangle_model);
+            memcpy(uniforms.mvp, triangle_mvp, sizeof(uniforms.mvp));
         } else {
-            // Fallback to identity matrix
-            mat4_identity(uniforms.mvp);
+            // Fallback: create a simple perspective view looking at origin
+            float view[16], proj[16], temp[16];
+            Vector3 cam_pos = {0.0f, 5.0f, 15.0f};  // Position camera back and up
+            Vector3 cam_target = {0.0f, 0.0f, 0.0f};  // Look at origin
+            Vector3 cam_up = {0.0f, 1.0f, 0.0f};
+            
+            mat4_lookat(view, cam_pos, cam_target, cam_up);
+            mat4_perspective(proj, 60.0f, 16.0f/9.0f, 0.1f, 1000.0f);
+            
+            // MVP = Projection * View * Model
+            mat4_multiply(temp, view, triangle_model);
+            mat4_multiply(triangle_mvp, proj, temp);
+            memcpy(uniforms.mvp, triangle_mvp, sizeof(uniforms.mvp));
         }
         
         // Apply uniforms
@@ -592,7 +612,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         sg_draw(0, 3, 1);
         
         if (frame_count % 300 == 0) {
-            printf("🔴 Fallback triangle drawn - no valid mesh entities\n");
+            printf("🔴 Debug triangle drawn at origin with proper MVP transform\n");
+            if (active_camera) {
+                printf("🔴 Camera: pos(%.1f,%.1f,%.1f) target(%.1f,%.1f,%.1f)\n",
+                       active_camera->position.x, active_camera->position.y, active_camera->position.z,
+                       active_camera->target.x, active_camera->target.y, active_camera->target.z);
+            }
         }
     }
     
