@@ -1546,6 +1546,20 @@ bool assets_upload_mesh_to_gpu(Mesh* mesh) {
         .label = mesh->name
     });
 
+    // Post-creation validation: Ensure GPU buffers were created successfully
+    if (sg_query_buffer_state(mesh->sg_vertex_buffer) != SG_RESOURCESTATE_VALID ||
+        sg_query_buffer_state(mesh->sg_index_buffer) != SG_RESOURCESTATE_VALID) {
+        printf("❌ Sokol failed to create buffers for mesh '%s'\n", mesh->name);
+        return false;
+    }
+
+    // Free CPU-side memory after successful upload (Task 4 requirement)
+    // This is a critical optimization to reduce memory footprint
+    free(mesh->vertices);
+    mesh->vertices = NULL;
+    free(mesh->indices);
+    mesh->indices = NULL;
+
     printf("✅ Mesh '%s' uploaded to GPU successfully\n", mesh->name);
     return true;
 }
