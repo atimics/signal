@@ -31,7 +31,21 @@ For a detailed guide on the asset pipeline and its capabilities, see the [Asset 
     *   `UPPER_SNAKE_CASE` for constants and macros.
 *   **Comments**: Use comments to explain the *why*, not the *what*. Focus on complex logic or design decisions.
 
-## 4. Debugging
+## 4. Automated Testing
+
+The engine uses the **Unity Test Framework** to ensure code quality and prevent regressions. A robust suite of automated tests is a cornerstone of our development process.
+
+*   **Running Tests**: The entire test suite can be run from the command line:
+    ```bash
+    make test
+    ```
+*   **Writing Tests**:
+    *   All new features or bug fixes should be accompanied by corresponding tests.
+    *   Unit tests for core logic should be placed in `tests/`.
+    *   Follow the existing structure in `tests/test_core_math.c` as a template for new test suites.
+*   **Continuous Integration (CI)**: The test suite is run automatically by GitHub Actions on every commit and pull request. A commit will not be merged if the test suite fails.
+
+## 5. Debugging
 
 *   **Debug UI**: The engine includes a Nuklear-based debug UI with various panels for inspecting engine state.
 *   **Logging**: Use the `printf`-based logging for temporary debugging. Remove debug logs before committing.

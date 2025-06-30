@@ -1,7 +1,10 @@
 #include "sokol_gfx.h"
 #include "graphics_api.h"
 #include "assets.h"
-#include "render_gpu.h"
+#include "gpu_resources.h"
+#include "asset_loader/asset_loader_index.h"
+#include "asset_loader/asset_loader_mesh.h"
+#include "asset_loader/asset_loader_material.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +12,16 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+// Define the actual implementation of our opaque structs
+struct MeshGpuResources {
+    sg_buffer sg_vertex_buffer;
+    sg_buffer sg_index_buffer;
+};
+
+struct TextureGpuResources {
+    sg_image sg_image;
+};
 
 
 #ifndef M_PI
@@ -53,6 +66,30 @@ void assets_cleanup(AssetRegistry* registry) {
         Mesh* mesh = &registry->meshes[i];
         if (mesh->vertices) free(mesh->vertices);
         if (mesh->indices) free(mesh->indices);
+        if (mesh->gpu_resources) {
+            // Destroy Sokol resources
+            if (mesh->gpu_resources->sg_vertex_buffer.id != SG_INVALID_ID) {
+                sg_destroy_buffer(mesh->gpu_resources->sg_vertex_buffer);
+            }
+            if (mesh->gpu_resources->sg_index_buffer.id != SG_INVALID_ID) {
+                sg_destroy_buffer(mesh->gpu_resources->sg_index_buffer);
+            }
+            // Free the PIMPL struct
+            free(mesh->gpu_resources);
+        }
+    }
+    
+    // Free all loaded textures
+    for (uint32_t i = 0; i < registry->texture_count; i++) {
+        Texture* texture = &registry->textures[i];
+        if (texture->gpu_resources) {
+            // Destroy Sokol resources
+            if (texture->gpu_resources->sg_image.id != SG_INVALID_ID) {
+                sg_destroy_image(texture->gpu_resources->sg_image);
+            }
+            // Free the PIMPL struct
+            free(texture->gpu_resources);
+        }
     }
     
     printf("🎨 Asset system cleaned up\n");
@@ -73,8 +110,22 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     
     printf("🔍 DEBUG parse_obj_file: Starting two-pass parsing of file: %s\n", filepath);
     
-    // Initialize mesh data
+    // Initialize mesh data - preserve the name field that was already set
+    char preserved_name[64];
+    if (mesh->name[0] != '\0') {
+        strncpy(preserved_name, mesh->name, sizeof(preserved_name) - 1);
+        preserved_name[sizeof(preserved_name) - 1] = '\0';
+    } else {
+        preserved_name[0] = '\0';
+    }
+    
     memset(mesh, 0, sizeof(Mesh));
+    
+    // Restore the preserved name
+    if (preserved_name[0] != '\0') {
+        strncpy(mesh->name, preserved_name, sizeof(mesh->name) - 1);
+        mesh->name[sizeof(mesh->name) - 1] = '\0';
+    }
     
     // ============================================================================
     // PASS 1: Count vertices, normals, tex coords, and faces
@@ -429,8 +480,15 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
             return false;
         }
         
+        // Allocate memory for our opaque struct
+        mesh->gpu_resources = calloc(1, sizeof(struct MeshGpuResources));
+        if (!mesh->gpu_resources) {
+            printf("❌ DEBUG: Failed to allocate GPU resources\n");
+            return false;
+        }
+        
         // Create vertex buffer
-        mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+        mesh->gpu_resources->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
             .data = {
                 .ptr = mesh->vertices,
                 .size = mesh->vertex_count * sizeof(Vertex)
@@ -440,7 +498,7 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
         });
 
         // Create index buffer
-        mesh->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+        mesh->gpu_resources->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
             .data = {
                 .ptr = mesh->indices,
                 .size = mesh->index_count * sizeof(int)
@@ -476,6 +534,7 @@ bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_f
     // Find or create mesh slot
     Mesh* mesh = &registry->meshes[registry->mesh_count];
     strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
+    mesh->name[sizeof(mesh->name) - 1] = '\0';  // Ensure null termination
     
     if (parse_obj_file(absolute_filepath, mesh)) {
         printf("✅ DEBUG: parse_obj_file succeeded - vertices=%d, indices=%d\n", 
@@ -507,8 +566,15 @@ bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_f
         printf("🔍 DEBUG: Creating GPU buffers - VB=%zu bytes, IB=%zu bytes\n", 
                vertex_buffer_size, index_buffer_size);
         
+        // Allocate memory for our opaque struct
+        mesh->gpu_resources = calloc(1, sizeof(struct MeshGpuResources));
+        if (!mesh->gpu_resources) {
+            printf("❌ DEBUG: Failed to allocate GPU resources\n");
+            return false;
+        }
+        
         // Create vertex buffer
-        mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+        mesh->gpu_resources->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
             .data = {
                 .ptr = mesh->vertices,
                 .size = vertex_buffer_size
@@ -518,7 +584,7 @@ bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_f
         });
 
         // Create index buffer
-        mesh->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+        mesh->gpu_resources->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
             .data = {
                 .ptr = mesh->indices,
                 .size = index_buffer_size
@@ -552,7 +618,16 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
     if (data) {
         texture->width = width;
         texture->height = height;
-        texture->sg_image = sg_make_image(&(sg_image_desc){
+        
+        // Allocate memory for our opaque struct
+        texture->gpu_resources = calloc(1, sizeof(struct TextureGpuResources));
+        if (!texture->gpu_resources) {
+            printf("❌ Failed to allocate GPU resources for texture\n");
+            stbi_image_free(data);
+            return false;
+        }
+        
+        texture->gpu_resources->sg_image = sg_make_image(&(sg_image_desc){
             .width = width,
             .height = height,
             .pixel_format = SG_PIXELFORMAT_RGBA8,
@@ -1215,8 +1290,9 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
     }
     
     // Check if GPU resources were already created during mesh loading
-    if (sg_query_buffer_state(mesh->sg_vertex_buffer) == SG_RESOURCESTATE_VALID &&
-        sg_query_buffer_state(mesh->sg_index_buffer) == SG_RESOURCESTATE_VALID) {
+    if (mesh->gpu_resources &&
+        sg_query_buffer_state(mesh->gpu_resources->sg_vertex_buffer) == SG_RESOURCESTATE_VALID &&
+        sg_query_buffer_state(mesh->gpu_resources->sg_index_buffer) == SG_RESOURCESTATE_VALID) {
         
         // PIMPL: Allocate GPU resources struct
         renderable->gpu_resources = gpu_resources_create();
@@ -1226,8 +1302,8 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
         }
         
         // Use existing GPU resources through PIMPL interface
-        gpu_resources_set_vertex_buffer(renderable->gpu_resources, mesh->sg_vertex_buffer);
-        gpu_resources_set_index_buffer(renderable->gpu_resources, mesh->sg_index_buffer);
+        gpu_resources_set_vertex_buffer(renderable->gpu_resources, (gpu_buffer_t){mesh->gpu_resources->sg_vertex_buffer.id});
+        gpu_resources_set_index_buffer(renderable->gpu_resources, (gpu_buffer_t){mesh->gpu_resources->sg_index_buffer.id});
         renderable->index_count = mesh->index_count;
         renderable->visible = true;
         renderable->lod_distance = 100.0f;  // Default LOD distance
@@ -1237,11 +1313,11 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
         Texture* texture = assets_get_texture(registry, texture_name);
-        if (texture && texture->loaded) {
-            gpu_resources_set_texture(renderable->gpu_resources, texture->sg_image);
+        if (texture && texture->loaded && texture->gpu_resources) {
+            gpu_resources_set_texture(renderable->gpu_resources, (gpu_image_t){texture->gpu_resources->sg_image.id});
         } else {
             // Use invalid texture handle - shader should handle this
-            sg_image invalid_tex = {SG_INVALID_ID};
+            gpu_image_t invalid_tex = {SG_INVALID_ID};
             gpu_resources_set_texture(renderable->gpu_resources, invalid_tex);
         }
         
@@ -1253,22 +1329,22 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
     return false;
 }
 
-sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name) {
+gpu_image_t assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name) {
     if (!registry || !texture_name) {
-        return (sg_image){.id = SG_INVALID_ID};
+        return (gpu_image_t){.id = SG_INVALID_ID};
     }
     
     Texture* texture = assets_get_texture(registry, texture_name);
-    if (!texture || !texture->loaded) {
+    if (!texture || !texture->loaded || !texture->gpu_resources) {
         printf("❌ Texture '%s' not found or not loaded\n", texture_name);
-        return (sg_image){.id = SG_INVALID_ID};
+        return (gpu_image_t){.id = SG_INVALID_ID};
     }
     
-    return texture->sg_image;
+    return (gpu_image_t){.id = texture->gpu_resources->sg_image.id};
 }
 
 // Helper function to create a default white texture for entities without textures
-sg_image assets_create_default_texture(void) {
+gpu_image_t assets_create_default_texture(void) {
     // Create a 1x1 white pixel texture
     uint32_t white_pixel = 0xFFFFFFFF;  // RGBA white
     
@@ -1283,8 +1359,32 @@ sg_image assets_create_default_texture(void) {
         .label = "default_white_texture"
     });
     
-    return default_tex;
+    return (gpu_image_t){.id = default_tex.id};
 }
+
+// ============================================================================
+// ACCESSOR FUNCTIONS FOR TESTS (Task 4: PIMPL compliance)
+// ============================================================================
+
+#ifdef CGAME_TESTING
+void mesh_get_gpu_buffers(const Mesh* mesh, sg_buffer* out_vbuf, sg_buffer* out_ibuf) {
+    if (mesh && mesh->gpu_resources && out_vbuf && out_ibuf) {
+        *out_vbuf = mesh->gpu_resources->sg_vertex_buffer;
+        *out_ibuf = mesh->gpu_resources->sg_index_buffer;
+    } else {
+        if (out_vbuf) *out_vbuf = (sg_buffer){SG_INVALID_ID};
+        if (out_ibuf) *out_ibuf = (sg_buffer){SG_INVALID_ID};
+    }
+}
+
+void texture_get_gpu_image(const Texture* texture, sg_image* out_image) {
+    if (texture && texture->gpu_resources && out_image) {
+        *out_image = texture->gpu_resources->sg_image;
+    } else {
+        if (out_image) *out_image = (sg_image){SG_INVALID_ID};
+    }
+}
+#endif
 
 // ============================================================================
 // GPU RESOURCE INITIALIZATION FUNCTIONS
@@ -1306,7 +1406,7 @@ bool assets_load_all_textures_to_gpu(AssetRegistry* registry) {
         Texture* texture = &registry->textures[i];
         
         // Skip if already loaded to GPU
-        if (texture->sg_image.id != SG_INVALID_ID) {
+        if (texture->gpu_resources && texture->gpu_resources->sg_image.id != SG_INVALID_ID) {
             success_count++;
             printf("✅ Texture '%s' already loaded to GPU\n", texture->name);
             continue;
@@ -1323,7 +1423,17 @@ bool assets_load_all_textures_to_gpu(AssetRegistry* registry) {
         unsigned char* data = stbi_load(texture->filepath, &width, &height, &channels, 4);
         
         if (data) {
-            texture->sg_image = sg_make_image(&(sg_image_desc){
+            // Allocate GPU resources if not already allocated
+            if (!texture->gpu_resources) {
+                texture->gpu_resources = calloc(1, sizeof(struct TextureGpuResources));
+                if (!texture->gpu_resources) {
+                    printf("❌ Failed to allocate GPU resources for texture '%s'\n", texture->name);
+                    stbi_image_free(data);
+                    continue;
+                }
+            }
+            
+            texture->gpu_resources->sg_image = sg_make_image(&(sg_image_desc){
                 .width = width,
                 .height = height,
                 .pixel_format = SG_PIXELFORMAT_RGBA8,
@@ -1360,7 +1470,9 @@ bool assets_initialize_gpu_resources(AssetRegistry* registry) {
     bool meshes_ok = true; // Assume meshes are already loaded
     for (uint32_t i = 0; i < registry->mesh_count; i++) {
         Mesh* mesh = &registry->meshes[i];
-        if (mesh->loaded && (mesh->sg_vertex_buffer.id == SG_INVALID_ID || mesh->sg_index_buffer.id == SG_INVALID_ID)) {
+        if (mesh->loaded && (!mesh->gpu_resources || 
+            mesh->gpu_resources->sg_vertex_buffer.id == SG_INVALID_ID || 
+            mesh->gpu_resources->sg_index_buffer.id == SG_INVALID_ID)) {
             printf("⚠️  Mesh '%s' missing GPU buffers\n", mesh->name);
             meshes_ok = false;
         }
@@ -1455,7 +1567,6 @@ bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_n
         // Calculate the path length
         size_t path_length = quote2 - quote1;
         
-        // Check if the output buffer is large enough
         if (path_length >= out_size) {
             free(file_content);
             return false;
@@ -1527,8 +1638,15 @@ bool assets_upload_mesh_to_gpu(Mesh* mesh) {
     printf("🔍 DEBUG: Uploading mesh '%s' to GPU - VB=%zu bytes, IB=%zu bytes\n", 
            mesh->name, vertex_buffer_size, index_buffer_size);
     
+    // Allocate memory for our opaque struct
+    mesh->gpu_resources = calloc(1, sizeof(struct MeshGpuResources));
+    if (!mesh->gpu_resources) {
+        printf("❌ Failed to allocate GPU resources for mesh '%s'\n", mesh->name);
+        return false;
+    }
+    
     // All validation passed - now create GPU buffers
-    mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+    mesh->gpu_resources->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
         .data = {
             .ptr = mesh->vertices,
             .size = vertex_buffer_size
@@ -1537,7 +1655,7 @@ bool assets_upload_mesh_to_gpu(Mesh* mesh) {
         .label = mesh->name
     });
 
-    mesh->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+    mesh->gpu_resources->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
         .data = {
             .ptr = mesh->indices,
             .size = index_buffer_size
@@ -1545,6 +1663,20 @@ bool assets_upload_mesh_to_gpu(Mesh* mesh) {
         .usage = { .index_buffer = true },
         .label = mesh->name
     });
+
+    // Post-creation validation: Ensure GPU buffers were created successfully
+    if (sg_query_buffer_state(mesh->gpu_resources->sg_vertex_buffer) != SG_RESOURCESTATE_VALID ||
+        sg_query_buffer_state(mesh->gpu_resources->sg_index_buffer) != SG_RESOURCESTATE_VALID) {
+        printf("❌ Sokol failed to create buffers for mesh '%s'\n", mesh->name);
+        return false;
+    }
+
+    // Free CPU-side memory after successful upload (Task 4 requirement)
+    // This is a critical optimization to reduce memory footprint
+    free(mesh->vertices);
+    mesh->vertices = NULL;
+    free(mesh->indices);
+    mesh->indices = NULL;
 
     printf("✅ Mesh '%s' uploaded to GPU successfully\n", mesh->name);
     return true;

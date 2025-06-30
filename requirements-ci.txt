@@ -1,8 +1,12 @@
 # Minimal CI requirements for asset compilation
 # This is a lighter version of requirements.txt for faster CI builds
 
+# Minimal CI requirements for asset compilation
+# This is a lighter version of requirements.txt for faster CI builds
+
 # Core dependencies for asset processing
 trimesh==4.6.13
+xatlas==0.1.1  # Added for UV unwrapping
 numpy==2.3.1
 scipy==1.16.0
 

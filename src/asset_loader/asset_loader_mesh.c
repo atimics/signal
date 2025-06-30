@@ -1,41 +1,9 @@
-// tests/sprint_10_5/test_task_2_standalone.c
-// Standalone test for dynamic memory allocation in parse_obj_file
+#include "../assets.h"
 #include <stdio.h>
-#include <assert.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-// Minimal definitions needed for testing
-typedef struct {
-    float x, y, z;
-} Vector3;
-
-typedef struct {
-    float u, v;
-} Vector2;
-
-typedef struct {
-    Vector3 position;
-    Vector3 normal;
-    Vector2 tex_coord;
-} Vertex;
-
-typedef struct {
-    char name[64];
-    char material_name[64];
-    Vertex* vertices;
-    int vertex_count;
-    int* indices;
-    int index_count;
-    bool loaded;
-    // Omit GPU-related fields for this test
-} Mesh;
-
-// Forward-declare the function we are testing
-bool parse_obj_file(const char* filepath, Mesh* mesh);
-
-// Standalone implementation of parse_obj_file with dynamic memory allocation
 bool parse_obj_file(const char* filepath, Mesh* mesh) {
     if (!filepath || !mesh) return false;
     
@@ -47,8 +15,22 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     
     printf("🔍 DEBUG parse_obj_file: Starting two-pass parsing of file: %s\n", filepath);
     
-    // Initialize mesh data
+    // Initialize mesh data - preserve the name field that was already set
+    char preserved_name[64];
+    if (mesh->name[0] != '\0') {
+        strncpy(preserved_name, mesh->name, sizeof(preserved_name) - 1);
+        preserved_name[sizeof(preserved_name) - 1] = '\0';
+    } else {
+        preserved_name[0] = '\0';
+    }
+    
     memset(mesh, 0, sizeof(Mesh));
+    
+    // Restore the preserved name
+    if (preserved_name[0] != '\0') {
+        strncpy(mesh->name, preserved_name, sizeof(mesh->name) - 1);
+        mesh->name[sizeof(mesh->name) - 1] = '\0';
+    }
     
     // ============================================================================
     // PASS 1: Count vertices, normals, tex coords, and faces
@@ -259,65 +241,54 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     return true;
 }
 
-// Helper to check if a pointer is to the heap (not foolproof, but good enough for this test)
-bool is_heap_pointer(void* p) {
-    // A simple check: stack pointers are usually very high in the address space.
-    // This is not guaranteed but is a reasonable heuristic for a test.
-    char stack_var;
-    return p < (void*)&stack_var;
-}
-
-void test_mesh_parser_stability() {
-    printf("Running Test: test_mesh_parser_stability\n");
-
-    Mesh small_mesh = {0};
-    Mesh large_mesh = {0};
-
-    // --- Test Case 1: Parse small mesh ---
-    printf("  Case 1: Parse small_mesh.cobj...\n");
-    bool small_parsed = parse_obj_file("tests/sprint_10_5/small_mesh.cobj", &small_mesh);
-    assert(small_parsed == true);
-    assert(small_mesh.vertex_count == 3);
-    assert(small_mesh.index_count == 3);
-    assert(small_mesh.vertices != NULL);
-    assert(small_mesh.indices != NULL);
-    // Verify memory is from the heap, not the stack
-    assert(is_heap_pointer(small_mesh.vertices));
-    assert(is_heap_pointer(small_mesh.indices));
-    printf("    ... PASSED\n");
-
-    // --- Test Case 2: Parse large mesh ---
-    printf("  Case 2: Parse large_mesh.cobj...\n");
-    bool large_parsed = parse_obj_file("tests/sprint_10_5/large_mesh.cobj", &large_mesh);
-    assert(large_parsed == true);
-    assert(large_mesh.vertex_count == (20000 - 2) * 3); // Each face adds 3 vertices
-    assert(large_mesh.index_count == (20000 - 2) * 3);
-    assert(large_mesh.vertices != NULL);
-    assert(large_mesh.indices != NULL);
-    assert(is_heap_pointer(large_mesh.vertices));
-    assert(is_heap_pointer(large_mesh.indices));
-    printf("    ... PASSED\n");
-
-    // --- Test Case 3: Handle non-existent file ---
-    printf("  Case 3: Handle non-existent file...\n");
-    Mesh non_existent_mesh = {0};
-    bool non_existent_parsed = parse_obj_file("tests/sprint_10_5/no_such_file.cobj", &non_existent_mesh);
-    assert(non_existent_parsed == false);
-    assert(non_existent_mesh.vertex_count == 0);
-    assert(non_existent_mesh.vertices == NULL);
-    printf("    ... PASSED\n");
-
-    // Cleanup
-    free(small_mesh.vertices);
-    free(small_mesh.indices);
-    free(large_mesh.vertices);
-    free(large_mesh.indices);
-
-    printf("Test Finished: test_mesh_parser_stability\n\n");
-}
-
-int main() {
-    test_mesh_parser_stability();
-    printf("All Task 2 tests passed!\n");
-    return 0;
+bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name) {
+    if (!registry || !absolute_filepath || !mesh_name) return false;
+    
+    printf("🔍 DEBUG load_compiled_mesh_absolute: filepath='%s', mesh_name='%s'\n", absolute_filepath, mesh_name);
+    
+    // Find next available slot
+    int slot = -1;
+    for (int i = 0; i < 32; i++) {
+        if (!registry->meshes[i].loaded) {
+            slot = i;
+            break;
+        }
+    }
+    
+    if (slot == -1) {
+        printf("❌ No available mesh slots\n");
+        return false;
+    }
+    
+    // Clear the mesh and set name
+    Mesh* mesh = &registry->meshes[slot];
+    memset(mesh, 0, sizeof(Mesh));
+    strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
+    mesh->name[sizeof(mesh->name) - 1] = '\0';
+    
+    // Parse the mesh file
+    if (!parse_obj_file(absolute_filepath, mesh)) {
+        printf("❌ Failed to parse mesh file: %s\n", absolute_filepath);
+        memset(mesh, 0, sizeof(Mesh));  // Clear on failure
+        return false;
+    }
+    
+    registry->mesh_count++;
+    
+    // Create GPU resources for the mesh
+    if (mesh->vertex_count > 0 && mesh->index_count > 0) {
+        mesh->gpu_resources = gpu_resources_create();
+        if (mesh->gpu_resources) {
+            if (!gpu_resources_upload_mesh(mesh->gpu_resources, mesh)) {
+                printf("⚠️  Failed to upload mesh to GPU: %s\n", mesh_name);
+                gpu_resources_destroy(mesh->gpu_resources);
+                mesh->gpu_resources = NULL;
+            }
+        }
+    }
+    
+    printf("✅ Loaded mesh: %s (%d vertices, %d indices)\n", 
+           mesh_name, mesh->vertex_count, mesh->index_count);
+    
+    return true;
 }

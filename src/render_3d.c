@@ -1,16 +1,27 @@
 #include "graphics_api.h"
+#include "sokol_gfx.h" // Direct inclusion for rendering implementation
 
 #include "render.h"
 #include "render_camera.h"
 #include "render_lighting.h"
 #include "render_mesh.h"
-#include "render_gpu.h"
+#include "gpu_resources.h"
 #include "assets.h"
 #include "ui.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+// Internal conversion functions for PIMPL pattern
+// These are only used within the rendering implementation
+static sg_buffer gpu_buffer_to_sg(gpu_buffer_t buf) {
+    return (sg_buffer){.id = buf.id};
+}
+
+static sg_image gpu_image_to_sg(gpu_image_t img) {
+    return (sg_image){.id = img.id};
+}
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -448,10 +459,10 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         
         // Apply bindings (VBO, IBO, textures)
         sg_bindings binds = {
-            .vertex_buffers[0] = gpu_resources_get_vertex_buffer(renderable->gpu_resources),
-            .index_buffer = gpu_resources_get_index_buffer(renderable->gpu_resources),
+            .vertex_buffers[0] = gpu_buffer_to_sg(gpu_resources_get_vertex_buffer(renderable->gpu_resources)),
+            .index_buffer = gpu_buffer_to_sg(gpu_resources_get_index_buffer(renderable->gpu_resources)),
             .images[0] = gpu_resources_is_texture_valid(renderable->gpu_resources) ? 
-                         gpu_resources_get_texture(renderable->gpu_resources) : render_state.default_texture,
+                         gpu_image_to_sg(gpu_resources_get_texture(renderable->gpu_resources)) : render_state.default_texture,
             .samplers[0] = render_state.sampler
         };
         sg_apply_bindings(&binds);

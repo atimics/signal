@@ -2,16 +2,14 @@
 #ifndef RENDER_MESH_H
 #define RENDER_MESH_H
 
-#include "render.h"
 #include "core.h"
 
-#include "graphics_api.h"
+// Forward-declare the opaque struct
+struct MeshRendererGpuResources;
 
 // Mesh renderer structure
 typedef struct {
-    sg_pipeline pipeline;
-    sg_shader shader;
-    sg_sampler sampler;
+    struct MeshRendererGpuResources* gpu_resources; // Opaque pointer
 } MeshRenderer;
 
 // Mesh renderer functions

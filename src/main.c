@@ -14,7 +14,7 @@
 #include "core.h"
 #include "systems.h"
 #include "render.h"
-#include "render_gpu.h"
+#include "gpu_resources.h"
 #include "data.h"
 #include "assets.h"
 #include "ui.h"

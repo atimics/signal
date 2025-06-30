@@ -1,5 +1,8 @@
 # CGame: A Data-Oriented 3D Game Engine
 
+[![Build and Test](https://github.com/ratimics/cgame/actions/workflows/build.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/build.yml)
+[![Test Suite](https://github.com/ratimics/cgame/actions/workflows/test.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/test.yml)
+
 CGame is a high-performance, data-oriented 3D game engine written in C99. It features an advanced Entity-Component-System (ECS) architecture and uses the modern, cross-platform **Sokol** graphics API for rendering.
 
 ## 🌟 Features
@@ -27,6 +30,26 @@ The project uses a simple Makefile.
 ```bash
 # Clean, build, and run the engine
 make clean && make && make run
+
+# Run the automated test suite
+make test
+```
+
+## 🧪 Testing
+
+CGame uses the [Unity Test Framework](https://github.com/ThrowTheSwitch/Unity) for automated testing. The test suite includes:
+
+- **Unit Tests**: Core math functions, data structures, and utilities
+- **Integration Tests**: Asset loading, rendering pipeline, and system interactions
+- **Regression Tests**: Preventing the re-introduction of previously fixed bugs
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# The test executable is built to: build/cgame_tests
 ```
 
 ## 📚 Documentation
@@ -35,4 +58,13 @@ For detailed information about the engine's architecture, development workflow, 
 
 ## 📈 Project Status
 
-This project is under active development. The current focus is on implementing a full Physically-Based Rendering (PBR) workflow, which includes a new UV unwrapping system in the asset pipeline, advanced lighting and shadow mapping, and a refactored rendering pipeline. See the [Sprint Backlog](./docs/sprints/backlog/README.md) for more details.
+This project is under active development.
+
+**Recent Accomplishments**:
+*   **Sprint 10.5**: Repaired and stabilized the core mesh rendering pipeline.
+*   **Sprint 15**: Successfully integrated the Unity testing framework and established a CI workflow.
+
+**Current Focus**:
+*   **Sprint 11.5**: A short, focused sprint to refactor the graphics API according to the PIMPL idiom, creating a fully decoupled and stable foundation for future rendering work.
+
+See the [Sprint Backlog](./docs/sprints/backlog/README.md) for more details.
