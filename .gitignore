@@ -8,6 +8,11 @@ cgame
 # Asset Build artifacts
 build/assets/
 
+# Build monitoring
+.build_status
+.build_check
+build.log
+
 # macOS
 .DS_Store
 .AppleDouble
