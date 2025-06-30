@@ -40,8 +40,8 @@ typedef struct SystemScheduler {
 // ============================================================================
 
 // System Scheduler
-bool scheduler_init(SystemScheduler* scheduler);
-void scheduler_destroy(SystemScheduler* scheduler);
+bool scheduler_init(SystemScheduler* scheduler, RenderConfig* config);
+void scheduler_destroy(SystemScheduler* scheduler, RenderConfig* config);
 void scheduler_update(SystemScheduler* scheduler, struct World* world, RenderConfig* render_config, float delta_time);
 void scheduler_print_stats(SystemScheduler* scheduler);
 

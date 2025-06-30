@@ -16,6 +16,7 @@ If you're new to the project, here's a recommended reading order to get you up t
 -   **[API Reference](api/)**: Technical documentation for the engine's API.
 -   **[Project](project/)**: High-level project documents, including the roadmap and current status.
 -   **[User Manual](user/MANUAL.md)**: Documentation for end-users of the engine.
+-   **[Engineering](engineering/)**: Contains technical reports and analyses of specific issues.
 
 ## Historical Archives
 

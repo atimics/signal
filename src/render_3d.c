@@ -10,6 +10,7 @@
 #include "assets.h"
 #include "ui.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
@@ -335,6 +336,11 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     (void)player_id; // Unused for now
     (void)delta_time; // Unused for now
     
+    // Debug counters
+    static bool first_frame = true;
+    static int frame_count = 0;
+    frame_count++;
+    
     if (!render_state.initialized) {
         printf("⚠️ Render state not initialized, skipping frame\n");
         return;
@@ -391,9 +397,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         // Calculate MVP matrix from transform component
         float model[16], mvp[16];
         
-        // Create model matrix from transform
-        mat4_translate(model, transform->position);
-        // TODO: Apply rotation and scale - for now just use translation
+        // Create proper model matrix from transform (include scale and rotation)
+        mat4_compose_transform(model, transform->position, transform->rotation, transform->scale);
         
         // Get active camera matrices
         EntityID active_camera_id = world_get_active_camera(world);
@@ -406,6 +411,13 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         if (active_camera) {
             // Use cached camera matrices
             mat4_multiply(mvp, active_camera->view_projection_matrix, model);
+            
+            // Debug info for first few renders
+            if (rendered_count == 0 && frame_count < 10) {
+                printf("🔍 Entity %d: pos:(%.1f,%.1f,%.1f) scale:(%.1f,%.1f,%.1f) indices:%d\n",
+                       entity->id, transform->position.x, transform->position.y, transform->position.z,
+                       transform->scale.x, transform->scale.y, transform->scale.z, renderable->index_count);
+            }
             
             // Debug camera info occasionally 
             static int debug_counter = 0;
@@ -448,10 +460,6 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     }
     
     // Debug first frame and periodically
-    static bool first_frame = true;
-    static int frame_count = 0;
-    frame_count++;
-    
     if (first_frame) {
         printf("🎨 Sokol ECS rendering active: pipeline_state=%d, renderable_entities=%d\n", 
                pipeline_state, renderable_count);
@@ -530,4 +538,60 @@ bool render_take_screenshot_from_position(struct World* world, RenderConfig* con
     (void)world; (void)config; (void)position; (void)target; (void)filename;
     printf("📸 Positioned screenshot requested: %s (not implemented yet)\n", filename);
     return false;
+}
+
+// ============================================================================
+// RENDER SYSTEM CLEANUP
+// ============================================================================
+
+void render_cleanup(RenderConfig* config) {
+    (void)config; // Unused parameter
+    
+    if (!render_state.initialized) {
+        return;
+    }
+    
+    // Cleanup Sokol resources
+    if (render_state.pipeline.id != SG_INVALID_ID) {
+        sg_destroy_pipeline(render_state.pipeline);
+    }
+    if (render_state.shader.id != SG_INVALID_ID) {
+        sg_destroy_shader(render_state.shader);
+    }
+    if (render_state.vertex_buffer.id != SG_INVALID_ID) {
+        sg_destroy_buffer(render_state.vertex_buffer);
+    }
+    if (render_state.index_buffer.id != SG_INVALID_ID) {
+        sg_destroy_buffer(render_state.index_buffer);
+    }
+    if (render_state.default_texture.id != SG_INVALID_ID) {
+        sg_destroy_image(render_state.default_texture);
+    }
+    if (render_state.sampler.id != SG_INVALID_ID) {
+        sg_destroy_sampler(render_state.sampler);
+    }
+    
+    // Free shader source memory
+    if (render_state.vertex_shader_source) {
+        free(render_state.vertex_shader_source);
+    }
+    if (render_state.fragment_shader_source) {
+        free(render_state.fragment_shader_source);
+    }
+    
+    // Reset state
+    memset(&render_state, 0, sizeof(render_state));
+    
+    printf("🧹 Render system cleaned up\n");
+}
+
+// Global render config getter for UI system
+static RenderConfig* g_render_config_ptr = NULL;
+
+void set_render_config(RenderConfig* config) {
+    g_render_config_ptr = config;
+}
+
+RenderConfig* get_render_config(void) {
+    return g_render_config_ptr;
 }

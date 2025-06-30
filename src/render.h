@@ -160,6 +160,10 @@ bool render_take_screenshot_from_position(struct World* world, RenderConfig* con
                                          Vector3 camera_pos, Vector3 look_at_pos, 
                                          const char* filename);
 
+// Global render config access for UI system
+void set_render_config(RenderConfig* config);
+RenderConfig* get_render_config(void);
+
 // Include modular render components
 #include "render_camera.h"
 #include "render_lighting.h"

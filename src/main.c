@@ -343,9 +343,9 @@ static void cleanup(void) {
     printf("\n🏁 Simulation complete!\n");
     
     ui_shutdown();
-    render_shutdown(&app_state.render_config);
+    render_cleanup(&app_state.render_config);
     // Assets are cleaned up by the scheduler
-    scheduler_destroy(&app_state.scheduler);
+    scheduler_destroy(&app_state.scheduler, &app_state.render_config);
     world_destroy(&app_state.world);
     
     sg_shutdown();
