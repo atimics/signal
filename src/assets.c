@@ -381,3 +381,14 @@ bool assets_initialize_gpu_resources(AssetRegistry* registry) {
     
     return meshes_ok;
 }
+
+void mesh_get_gpu_buffers(const Mesh* mesh, sg_buffer* out_vbuf, sg_buffer* out_ibuf) {
+    if (!mesh || !mesh->gpu_resources || !out_vbuf || !out_ibuf) {
+        if (out_vbuf) *out_vbuf = (sg_buffer){0};
+        if (out_ibuf) *out_ibuf = (sg_buffer){0};
+        return;
+    }
+    
+    *out_vbuf = mesh->gpu_resources->sg_vertex_buffer;
+    *out_ibuf = mesh->gpu_resources->sg_index_buffer;
+}
