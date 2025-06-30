@@ -2,6 +2,9 @@
 #include "graphics_api.h"
 #include "assets.h"
 #include "gpu_resources.h"
+#include "asset_loader/asset_loader_index.h"
+#include "asset_loader/asset_loader_mesh.h"
+#include "asset_loader/asset_loader_material.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

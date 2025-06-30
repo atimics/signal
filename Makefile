@@ -33,7 +33,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c assets.c render_3d.c render_camera.c render_lighting.c render_mesh.c render_gpu.c ui.c data.c graphics_api.c main.c
+SOURCES = core.c systems.c assets.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -131,7 +131,7 @@ wasm: assets-wasm | $(BUILD_DIR)
 		--preload-file $(BUILD_ASSETS_DIR)@/assets \
 		--shell-file src/shell.html \
 		src/core.c src/systems.c src/render_3d.c src/render_camera.c \
-		src/render_lighting.c src/render_mesh.c src/ui.c src/data.c src/main.c \
+		src/render_lighting.c src/render_mesh.c src/ui.c src/data.c src/graphics_api.c src/gpu_resources.c src/main.c \
 		-o $(BUILD_DIR)/cgame.html
 
 # Compile assets for WASM (simplified)
