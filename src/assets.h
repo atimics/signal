@@ -140,4 +140,17 @@ void free_shader_source(char* source);
 // Get platform-specific shader path
 const char* get_shader_path(const char* base_name, const char* stage); // stage: "vert" or "frag"
 
+// ============================================================================
+// GPU RESOURCE CREATION FUNCTIONS
+// ============================================================================
+
+// Create GPU resources from loaded mesh data and populate Renderable component
+bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable);
+
+// Create GPU texture from loaded texture data  
+sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name);
+
+// Helper function to create a default white texture
+sg_image assets_create_default_texture(void);
+
 #endif // ASSETS_H

@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include "sokol_gfx.h"  // For sg_buffer, sg_image types
 
 // ============================================================================
 // CORE TYPES
@@ -94,8 +95,10 @@ struct AI {
 };
 
 struct Renderable {
-    uint32_t mesh_id;
-    uint32_t material_id;
+    sg_buffer vbuf;        // Vertex buffer handle
+    sg_buffer ibuf;        // Index buffer handle 
+    sg_image tex;          // Texture handle
+    uint32_t index_count;  // Number of indices to draw
     bool visible;
     float lod_distance;
     uint8_t lod_level;

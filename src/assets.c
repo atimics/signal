@@ -929,3 +929,81 @@ const char* get_shader_path(const char* base_name, const char* stage) {
     snprintf(path, 512, "assets/shaders/%s.%s.%s", base_name, stage, extension);
     return path;
 }
+
+// ============================================================================
+// GPU RESOURCE CREATION FUNCTIONS
+// ============================================================================
+
+bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable) {
+    if (!registry || !mesh_name || !renderable) return false;
+    
+    // Find the mesh
+    Mesh* mesh = assets_get_mesh(registry, mesh_name);
+    if (!mesh || !mesh->loaded) {
+        printf("❌ Mesh '%s' not found or not loaded\n", mesh_name);
+        return false;
+    }
+    
+    // Check if GPU resources were already created during mesh loading
+    if (sg_query_buffer_state(mesh->sg_vertex_buffer) == SG_RESOURCESTATE_VALID &&
+        sg_query_buffer_state(mesh->sg_index_buffer) == SG_RESOURCESTATE_VALID) {
+        
+        // Use existing GPU resources
+        renderable->vbuf = mesh->sg_vertex_buffer;
+        renderable->ibuf = mesh->sg_index_buffer;
+        renderable->index_count = mesh->index_count;
+        renderable->visible = true;
+        renderable->lod_distance = 100.0f;  // Default LOD distance
+        renderable->lod_level = 0;
+        
+        // Try to find associated texture
+        char texture_name[128];
+        snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
+        Texture* texture = assets_get_texture(registry, texture_name);
+        if (texture && texture->loaded) {
+            renderable->tex = texture->sg_image;
+        } else {
+            // Use invalid texture handle - shader should handle this
+            renderable->tex.id = SG_INVALID_ID;
+        }
+        
+        printf("✅ Created Renderable from mesh '%s' (%d indices)\n", mesh_name, mesh->index_count);
+        return true;
+    }
+    
+    printf("❌ GPU resources not available for mesh '%s'\n", mesh_name);
+    return false;
+}
+
+sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name) {
+    if (!registry || !texture_name) {
+        return (sg_image){.id = SG_INVALID_ID};
+    }
+    
+    Texture* texture = assets_get_texture(registry, texture_name);
+    if (!texture || !texture->loaded) {
+        printf("❌ Texture '%s' not found or not loaded\n", texture_name);
+        return (sg_image){.id = SG_INVALID_ID};
+    }
+    
+    return texture->sg_image;
+}
+
+// Helper function to create a default white texture for entities without textures
+sg_image assets_create_default_texture(void) {
+    // Create a 1x1 white pixel texture
+    uint32_t white_pixel = 0xFFFFFFFF;  // RGBA white
+    
+    sg_image default_tex = sg_make_image(&(sg_image_desc){
+        .width = 1,
+        .height = 1,
+        .pixel_format = SG_PIXELFORMAT_RGBA8,
+        .data.subimage[0][0] = {
+            .ptr = &white_pixel,
+            .size = 4
+        },
+        .label = "default_white_texture"
+    });
+    
+    return default_tex;
+}
