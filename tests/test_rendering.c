@@ -31,7 +31,7 @@ void test_full_mesh_to_renderable_pipeline(void) {
     TEST_ASSERT_NOT_EQUAL(SG_INVALID_ID, renderer.pipeline.id);
 
     // 5. Create a Renderable from the mesh
-    Renderable renderable = {0};
+    struct Renderable renderable = {0};
     bool renderable_created = assets_create_renderable_from_mesh(&registry, "wedge_ship", &renderable);
     TEST_ASSERT_TRUE(renderable_created);
     TEST_ASSERT_NOT_NULL(renderable.gpu_resources);
