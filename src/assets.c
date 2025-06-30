@@ -1326,7 +1326,7 @@ gpu_image_t assets_create_gpu_texture(AssetRegistry* registry, const char* textu
 }
 
 // Helper function to create a default white texture for entities without textures
-sg_image assets_create_default_texture(void) {
+gpu_image_t assets_create_default_texture(void) {
     // Create a 1x1 white pixel texture
     uint32_t white_pixel = 0xFFFFFFFF;  // RGBA white
     
@@ -1341,7 +1341,7 @@ sg_image assets_create_default_texture(void) {
         .label = "default_white_texture"
     });
     
-    return default_tex;
+    return (gpu_image_t){.id = default_tex.id};
 }
 
 // ============================================================================
