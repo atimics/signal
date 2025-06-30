@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "sokol_gfx.h"  // For sg_buffer, sg_image types
+
+// Forward declarations for sokol types - full definitions in sokol_gfx.h
+struct sg_buffer;
+struct sg_image;
 
 // ============================================================================
 // CORE TYPES
