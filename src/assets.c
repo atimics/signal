@@ -1008,3 +1008,81 @@ sg_image assets_create_default_texture(void) {
     
     return default_tex;
 }
+
+// ============================================================================
+// GPU RESOURCE INITIALIZATION FUNCTIONS
+// ============================================================================
+
+// Batch load all textures to GPU
+bool assets_load_all_textures_to_gpu(AssetRegistry* registry) {
+    if (!registry) {
+        printf("❌ Invalid registry for GPU texture loading\n");
+        return false;
+    }
+    
+    int success_count = 0;
+    int total_count = registry->texture_count;
+    
+    printf("🎨 Loading %d textures to GPU...\n", total_count);
+    
+    for (uint32_t i = 0; i < registry->texture_count; i++) {
+        Texture* texture = &registry->textures[i];
+        
+        // Skip if already loaded to GPU
+        if (texture->sg_image.id != SG_INVALID_ID) {
+            success_count++;
+            continue;
+        }
+        
+        // Skip if texture data not loaded
+        if (!texture->loaded) {
+            printf("⚠️  Texture '%s' data not loaded, skipping GPU upload\n", texture->name);
+            continue;
+        }
+        
+        // Try to reload texture to GPU (the load_texture function handles GPU upload)
+        if (load_texture(registry, texture->filepath, texture->name)) {
+            success_count++;
+            printf("✅ Texture '%s' loaded to GPU\n", texture->name);
+        } else {
+            printf("❌ Failed to load texture '%s' to GPU\n", texture->name);
+        }
+    }
+    
+    printf("🎨 GPU texture loading complete: %d/%d successful\n", success_count, total_count);
+    return success_count == total_count;
+}
+
+// Initialize all GPU resources from loaded asset data
+bool assets_initialize_gpu_resources(AssetRegistry* registry) {
+    if (!registry) {
+        printf("❌ Invalid registry for GPU resource initialization\n");
+        return false;
+    }
+    
+    printf("🎨 Initializing GPU resources...\n");
+    
+    // Load all textures to GPU
+    bool textures_ok = assets_load_all_textures_to_gpu(registry);
+    
+    // Note: Meshes are already loaded to GPU during mesh loading
+    // as they use sg_make_buffer calls in the mesh loading process
+    
+    bool meshes_ok = true; // Assume meshes are already loaded
+    for (uint32_t i = 0; i < registry->mesh_count; i++) {
+        Mesh* mesh = &registry->meshes[i];
+        if (mesh->loaded && (mesh->sg_vertex_buffer.id == SG_INVALID_ID || mesh->sg_index_buffer.id == SG_INVALID_ID)) {
+            printf("⚠️  Mesh '%s' missing GPU buffers\n", mesh->name);
+            meshes_ok = false;
+        }
+    }
+    
+    if (textures_ok && meshes_ok) {
+        printf("✅ All GPU resources initialized successfully\n");
+        return true;
+    } else {
+        printf("❌ Some GPU resources failed to initialize (textures: %s, meshes: %s)\n", 
+               textures_ok ? "OK" : "FAILED", meshes_ok ? "OK" : "FAILED");
+        return false;
+    }
+}
