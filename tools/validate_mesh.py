@@ -214,11 +214,30 @@ def validate_cobj_file(cobj_path):
             # Skip reserved fields
             f.read(32)  # 8 * uint32_t
             
+            # Calculate expected file size
+            vertex_size = 32  # sizeof(Vertex) = 3*4 + 3*4 + 2*4 = 32 bytes
+            expected_vertex_data_size = vertex_count * vertex_size
+            expected_index_data_size = index_count * 4  # sizeof(uint32_t)
+            header_size = 72  # sizeof(COBJHeader) = 4 + 4 + 4 + 4 + 12 + 12 + 32 = 72 bytes
+            expected_total_size = header_size + expected_vertex_data_size + expected_index_data_size
+            
+            # Check actual file size
+            current_pos = f.tell()
+            f.seek(0, 2)  # Seek to end
+            actual_size = f.tell()
+            
             results['stats'] = {
                 'vertex_count': vertex_count,
                 'index_count': index_count,
                 'aabb_min': aabb_min,
-                'aabb_max': aabb_max
+                'aabb_max': aabb_max,
+                'file_size': {
+                    'actual': actual_size,
+                    'expected': expected_total_size,
+                    'header': header_size,
+                    'vertex_data': expected_vertex_data_size,
+                    'index_data': expected_index_data_size
+                }
             }
             
             # Validate header values
@@ -233,18 +252,6 @@ def validate_cobj_file(cobj_path):
             for i in range(3):
                 if aabb_min[i] > aabb_max[i]:
                     results['issues'].append(f"Invalid AABB: min[{i}]={aabb_min[i]} > max[{i}]={aabb_max[i]}")
-            
-            # Calculate expected file size
-            vertex_size = 32  # sizeof(Vertex) = 3*4 + 3*4 + 2*4 = 32 bytes
-            expected_vertex_data_size = vertex_count * vertex_size
-            expected_index_data_size = index_count * 4  # sizeof(uint32_t)
-            header_size = 64  # sizeof(COBJHeader)
-            expected_total_size = header_size + expected_vertex_data_size + expected_index_data_size
-            
-            # Check actual file size
-            current_pos = f.tell()
-            f.seek(0, 2)  # Seek to end
-            actual_size = f.tell()
             
             if actual_size != expected_total_size:
                 results['issues'].append(

@@ -128,6 +128,26 @@ def main():
         try:
             subprocess.run(command, check=True, capture_output=True, text=True)
             
+            # --- Validate the compiled binary mesh ---
+            validator_script = Path(__file__).parent / "validate_mesh.py"
+            validate_command = [
+                sys.executable,
+                str(validator_script),
+                str(output_cobj_file)
+            ]
+            
+            try:
+                subprocess.run(validate_command, check=True, capture_output=True, text=True)
+                print(f"   ✅ Validation passed for {asset_name}")
+            except subprocess.CalledProcessError as e:
+                print(f"   ❌ Validation failed for {asset_name}:")
+                if e.stdout:
+                    print(f"      {e.stdout.strip()}")
+                if e.stderr:
+                    print(f"      {e.stderr.strip()}")
+                error_count += 1
+                continue  # Skip metadata generation for invalid assets
+            
             # --- Generate the corresponding metadata.json in the build directory ---
             generate_and_write_metadata(source_meta_file, build_prop_dir)
             
