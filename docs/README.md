@@ -1,28 +1,16 @@
-# CGame Documentation Hub
+# CGame Documentation
 
-Welcome to the central documentation hub for the CGame engine. This document provides a roadmap to help you find the information you need, whether you're a new contributor, an experienced developer, or an end-user.
+Welcome to the CGame engine documentation. This is the central hub for all project-related documentation.
 
-## For New Developers
+## Getting Started
 
-If you're new to the project, here's a recommended reading order to get you up to speed:
+If you are new to the project, please start with the [Getting Started Guide](./guides/GETTING_STARTED.md). This will walk you through the process of setting up your development environment and running the engine for the first time.
 
-1.  **[Project Vision](project/VISION.md)**: Understand the high-level goals of the project.
-2.  **[Development Guide](guides/development/DEVELOPMENT_GUIDE.md)**: The primary guide for contributors. It covers everything from setting up your environment to coding standards.
-3.  **[Architectural Overview](guides/architecture/OVERVIEW.md)**: Get a high-level view of how the engine's components fit together.
+## Developer Guides
 
-## Core Documentation
+*   **[Development Workflow](./guides/DEVELOPMENT_WORKFLOW.md)**: A detailed guide covering the day-to-day development process, including the build system, asset pipeline, and coding standards.
+*   **[Architecture](./guides/ARCHITECTURE.md)**: A high-level overview of the engine's design, including the ECS, rendering pipeline, and other core systems.
 
--   **[Guides](guides/)**: Contains detailed guides for development, architecture, and the rendering pipeline.
--   **[API Reference](api/)**: Technical documentation for the engine's API.
--   **[Project](project/)**: High-level project documents, including the roadmap and current status.
--   **[User Manual](user/MANUAL.md)**: Documentation for end-users of the engine.
--   **[Engineering](engineering/)**: Contains technical reports and analyses of specific issues.
+## Archive
 
-## Historical Archives
-
--   **[Archive](archive/)**: Contains historical documents, design notes, and engineering reports that are no longer current but may provide valuable context.
--   **[Sprints](sprints/)**: A log of the project's development sprints. This serves as a project journal.
-
----
-
-This documentation is a living resource. If you find something that is unclear or out of date, please [open an issue](https://github.com/your-repo/cgame/issues) or submit a pull request to improve it.
+All other documents, including old sprint plans, outdated guides, and historical engineering reports, are located in the [archive](./archive/) directory.
