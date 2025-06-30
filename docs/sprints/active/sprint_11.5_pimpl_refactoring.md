@@ -24,18 +24,16 @@ This sprint is **DONE** when:
 The development team has made significant progress on the PIMPL refactoring, touching all the relevant source files as per the implementation guide.
 
 ### 3.2. Validation Failure Analysis
-A validation run of `make test-full` **failed with a linker error**: `Undefined symbols ... "_main"`.
+A validation run of `make test-full` **failed with a linker error**: `Undefined symbols ... "_RUN_TEST_SUITE"`.
 
-*   **Root Cause**: The `Makefile` is attempting to build the test suite using `tests/test_main.c` as the entry point. However, the `main` function for the test suite is correctly located in `tests/test_runner.c`. The build command is simply compiling the wrong file as its source of `main`.
+*   **Root Cause**: The new `tests/test_runner.c` file, which correctly contains the `main` function, is missing the necessary include for the Unity framework itself. It cannot find the definition for the `RUN_TEST_SUITE` macro.
 
 ### 3.3. Actionable Guidance for Development Team
 
-The sprint is on track, but a `Makefile` correction is required to complete the validation.
+The sprint is very close to completion. The `Makefile` has been correctly updated, but the test runner needs a final correction.
 
-*   **Primary Task**: Modify the `test-full` rule in the `Makefile`.
-    *   **Change**: The main source file for the `clang` command should be `tests/test_runner.c`.
-    *   **Do Not**: Do not compile `tests/test_main.c` directly. It is correctly included by `tests/test_runner.c`.
-*   **Secondary Task**: Once the `Makefile` is corrected, the build will likely reveal the same test failures I diagnosed previously (tests being out-of-sync with the PIMPL refactor). Proceed with fixing the tests by implementing and using the new PIMPL accessor functions as detailed in the implementation guide below.
+*   **Primary Task**: Add `#include "vendor/unity.h"` to the top of `tests/test_runner.c`. This will provide the necessary macros and resolve the linker error.
+*   **Secondary Task**: After fixing the include, run `make test-full` again. If there are any remaining test failures, they will be due to the PIMPL refactoring. Proceed with fixing those tests by implementing and using the new PIMPL accessor functions as detailed in the implementation guide below.
 
 The sprint is in a good state. Fixing the `Makefile` and the test assertions are the final steps to completion.
 
