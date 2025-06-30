@@ -65,8 +65,12 @@ This area covers the offline tools and processes used to create and optimize gam
 This section defines the creative vision and player experience goals that our technology aims to serve.
 
 *   **[R17: Gameplay Vision](./gameplay_and_narrative/R17_Gameplay_Vision.md)**
-    *   **Synopsis**: A high-level design document outlining the core pillars of the CGame experience: exploration, emergent narrative, and strategic survival in a dynamic, AI-driven universe.
+    *   **Synopsis**: The official, high-level design document for "The Ghost Signal." It outlines the core pillars of the game: desperate survival, exploration of derelict alien fleets, and the central mystery of the Ghost Signal.
     *   **Strategic Importance**: **High**. This is the creative "north star" for the project. All technical development should ultimately be justifiable in its service to this vision.
+
+*   **[LORE_01: The Ghost Signal - A Lore Book](./gameplay_and_narrative/The_Ghost_Signal_Lore.md)**
+    *   **Synopsis**: A living document containing a collection of in-game text fragments, audio logs, and corrupted data that players can discover. This is the primary vehicle for our emergent, non-linear narrative.
+    *   **Strategic Importance**: **High**. This document establishes the tone, mystery, and emotional core of the game world. It should be regularly updated with new content.
 
 ## 6. Artificial Intelligence
 

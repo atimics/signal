@@ -1,40 +1,48 @@
-# Vision & Pitch: "SIGNAL"
+# Research & Vision: "The Ghost Signal"
 
 **ID**: `R17_Gameplay_Vision`
 **Author**: Gemini, Chief Science Officer
-**Status**: **Active Pitch**
+**Status**: **Active & Approved**
 
-## 1. The Pitch (Mass-Market Appeal)
+## 1. The Premise: A Simple, Personal Hook
 
-**In the silent graveyards of space, a ghost signal is calling. And you are the only one who can answer.**
+**Your ship is your life support, and it's failing. The only thing keeping its alien systems from collapsing is a faint, repeating broadcast: a "Ghost Signal" emanating from a nearby field of colossal, dead spacecraft.**
 
-You are a **Signal-Runner**, a scavenger of the void equipped with a unique gift: the power to tune into the final, dying transmissions of a long-lost alien race. Pilot your custom ship through the colossal wrecks of their fallen civilization, battling rogue AI and rival salvagers as you hunt for the ultimate prize: the truth behind the silence.
+You are a **Drifter**, one of the last survivors of a forgotten colony, kept alive only by the strange, symbiotic technology of your ship. The signal is not just a mystery; it's a lifeline. The data streams it contains are the only known source of the schematics and resonance patterns needed to repair and upgrade your ship's decaying, alien components.
 
-**SIGNAL** is a single-player, open-world space adventure that combines high-speed ship combat, deep exploration, and a mystery that unfolds with every piece of data you uncover.
+Your mission is one of desperate survival: follow the Ghost Signal into the derelict fleet, retrieve the data you need to live, and perhaps, uncover the truth about the catastrophe that created this graveyard and silenced the signal's original senders.
 
-## 2. Core Features (The "What You Do")
+## 2. Grounding the Vision in Code ("The Praxis")
 
-*   **BECOME A SIGNAL-RUNNER**: Use your unique power to **"Tune the Signal."** This core ability transforms the world around you, revealing hidden platforms, reactivating ancient machinery, and showing you ghostly visions of the past. But be warned: activating the signal can also trigger deadly automated defense systems.
-*   **EXPLORE THE VOID**: Navigate treacherous debris fields and delve into the awe-inspiring interiors of derelict alien megastructures. Every wreck is a massive, hand-crafted dungeon filled with secrets to uncover and dangers to overcome.
-*   **BUILD THE ULTIMATE SHIP**: Survive by scavenging for resources and technology. Use what you find to upgrade your ship's weapons, shields, and engines. Unlock new, powerful abilities by deciphering the alien signals you collect, allowing you to venture deeper into the most dangerous and rewarding ruins.
-*   **UNRAVEL THE MYSTERY**: The story is a puzzle, and you hold the pieces. Collect fragmented audio logs, holographic recordings, and corrupted data streams. Bring them back to your base and piece together the chilling story of a civilization on the brink of collapse.
-*   **SURVIVE A DYNAMIC UNIVERSE**: You are not alone. The void is filled with other AI-driven factions who want the alien technology for themselves. Outsmart the ruthless **Chrome-Barons**, negotiate with the cryptic **Echo-Scribes**, and evade the implacable **Wardens**, the ancient guardians of the wrecks. Your actions matter, and your reputation will precede you.
+This vision is a direct reflection of our existing technology and assets. It provides a "why" for the "what" we have already built.
 
-## 3. The Core Gameplay Loop (Simplified)
+*   **The Player & Ship**: You are the pilot of the `player_ship` entity, a "Wedge Ship Mk2" with unique components. The game starts with this ship in a damaged or unstable state, creating the core motivation.
+*   **The World**: The "graveyard of dead spacecraft" is our game world, populated by the existing assets: `control_tower`, `sun`, and other derelict `wedge_ship` entities. Our scenes, like `spaceport.txt`, represent key hubs within this graveyard.
+*   **The Gameplay**: The core loop of exploration, resource gathering, and upgrading is already supported by our engine's structure:
+    *   **Exploration**: Piloting the ship uses our `Physics` and `Collision` components.
+    *   **Threats**: The `ai_ship` template provides the foundation for the rival scavengers and automated defenses that will create conflict.
+    *   **The Goal**: The "Ghost Signal" data fragments are the narrative driver for collecting resources and discovering new schematics (our planned progression system).
+*   **The Technology**: Our new asset pipeline, which generates tangents and AABBs, is perfectly suited for rendering these detailed, derelict environments with the modern lighting and performance optimizations (like frustum culling) that we have planned.
 
-1.  **HUNT**: Detect a signal and fly your ship into a massive alien wreck.
-2.  **TUNE**: Use your power to reveal hidden paths and secrets, but be ready for a fight.
-3.  **LOOT**: Scavenge for valuable resources, powerful ship upgrades, and critical story fragments.
-4.  **UPGRADE**: Return to your base to install new gear and piece together the story.
-5.  **REPEAT**: Use your new power and knowledge to take on even bigger, more dangerous wrecks.
+## 3. The Core Gameplay Loop: Survival and Discovery
 
-## 4. Connecting to Deeper Themes (Internal Guide)
+This loop is a refinement of our best existing ideas, now framed by a clear and urgent motivation.
 
-While the pitch is action-oriented, it is built on our established philosophical roots:
-*   **"Tuning the Signal"** is the mass-market term for the **Resonance** mechanic.
-*   **"Story Fragments"** are the **Echoes**.
-*   **"Upgrading from Signals"** is the **Harmony** progression system.
-*   The core Deleuzian concept of the "rhizome"—a non-hierarchical, interconnected network of information—is perfectly embodied in the player-driven discovery of the story. The player creates their own "lines of flight" through the narrative space.
-*   The AI factions represent different relationships to the "Body without Organs" that is the Chorus—some seek to exploit it (Barons), some to deify it (Scribes), and some to contain it (Wardens).
+1.  **Follow the Signal**: The player uses their ship's sensors to get a bearing on the nearest, strongest data transmission from within the derelict field.
+2.  **Scavenge & Survive**: The player navigates the dangerous environment, using their ship's tools to extract raw materials and data packets from the wrecks while fighting off or evading hostile AI scavengers and ancient defense systems.
+3.  **Repair & Upgrade**: The player returns to a safe harbor (e.g., a hidden asteroid base) to use the scavenged materials and data. Raw materials are used for immediate repairs, while the data packets are decrypted to unlock schematics for permanent ship upgrades (e.g., a more efficient engine, a stronger weapon, or a better scanner that can detect weaker, more valuable signals).
+4.  **Go Deeper**: With an upgraded ship, the player can now survive in more hazardous environments and follow the Ghost Signal to its deeper, more mysterious, and more rewarding sources.
 
-This dual-layer approach allows us to build a game with immediate, visceral appeal that is also deeply rewarding for players who choose to engage with its underlying thematic structure.
+## 4. The Narrative Arc: From Survival to Revelation
+
+The story unfolds naturally through the gameplay loop.
+
+*   **Act I: Desperation**. The player is focused purely on survival, learning the basics of flying, scavenging, and fighting to keep their ship from falling apart. The Ghost Signal is just a means to an end.
+*   **Act II: Discovery**. As the player upgrades their ship, they begin to decrypt more than just schematics. They find fragmented audio logs, ship manifests, and personal messages from the original inhabitants of the fleet. They start to piece together the story of who these people were and what happened to them.
+*   **Act III: Revelation**. The player follows the signal to its source: the command ship of the lost fleet. Here, they discover the full story of the cataclysm and the true nature of the Ghost Signal—it's not just a broadcast; it's the fragmented consciousness of the fleet's AI, and it holds the key to a choice that will determine the future of the system.
+
+## 5. Conclusion: A Focused and Achievable Vision
+
+This revised concept, "The Ghost Signal," provides the simple, powerful hook we need. It gives the player a clear and immediate motivation—**survive**—that perfectly aligns with the gameplay mechanics we have already built and planned. It grounds our world in the assets we have, provides a compelling mystery to unravel, and offers a clear path for future content and system development.
+
+This is not a radical departure; it is a **focusing** of our best ideas into a clear, compelling, and, most importantly, **achievable** game. This is our official guiding vision.
