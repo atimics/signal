@@ -49,7 +49,9 @@ void test_asset_path_resolution_from_index(void) {
 
     // Act: Attempt to resolve the path for the asset defined in our mock index.
     char resolved_path[512];
-    bool found = assets_get_mesh_path_from_index(registry.asset_root, "test_ship", resolved_path, sizeof(resolved_path));
+    char index_path[512];
+    snprintf(index_path, sizeof(index_path), "%s/index.json", registry.asset_root);
+    bool found = assets_get_mesh_path_from_index(index_path, "test_ship", resolved_path, sizeof(resolved_path));
 
     // Assert: Verify that the path was found and is correct.
     TEST_ASSERT_TRUE(found);

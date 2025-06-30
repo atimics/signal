@@ -38,7 +38,7 @@ void test_pipeline_loads_and_prepares_mesh_for_rendering(void) {
     TEST_ASSERT_TRUE(loaded);
 
     // 1. Was the mesh data loaded into the CPU correctly?
-    Mesh* ship_mesh = assets_get_mesh(&registry, "wedge_ship");
+    Mesh* ship_mesh = assets_get_mesh(&registry, "Wedge Ship");
     TEST_ASSERT_NOT_NULL(ship_mesh);
     TEST_ASSERT_TRUE(ship_mesh->loaded);
 
@@ -52,13 +52,15 @@ void test_pipeline_loads_and_prepares_mesh_for_rendering(void) {
 
     // 3. Can we create a final 'Renderable' component from the mesh?
     struct Renderable renderable = {0};
-    bool renderable_created = assets_create_renderable_from_mesh(&registry, "wedge_ship", &renderable);
+    bool renderable_created = assets_create_renderable_from_mesh(&registry, "Wedge Ship", &renderable);
     TEST_ASSERT_TRUE(renderable_created);
     TEST_ASSERT_NOT_NULL(renderable.gpu_resources);
     
     // 4. Does the renderable have the correct GPU resource handles?
-    sg_buffer renderable_vbuf = gpu_buffer_to_sg(gpu_resources_get_vertex_buffer(renderable.gpu_resources));
-    TEST_ASSERT_EQUAL_UINT32(vbuf.id, renderable_vbuf.id);
+    gpu_buffer_t renderable_vbuf = gpu_resources_get_vertex_buffer(renderable.gpu_resources);
+    // Convert sg_buffer to gpu_buffer_t for comparison
+    gpu_buffer_t expected_vbuf = {.id = vbuf.id};
+    TEST_ASSERT_EQUAL_UINT32(expected_vbuf.id, renderable_vbuf.id);
 
     // Cleanup
     gpu_resources_destroy(renderable.gpu_resources);
