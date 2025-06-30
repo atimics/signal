@@ -1,15 +1,4 @@
-#define SOKOL_IMPL
-
-// Platform-specific includes
-#ifdef __linux__
-#include <time.h>
-#include <stdarg.h>
-#endif
-
-#include "sokol_app.h"
-#include "sokol_gfx.h"
-#include "sokol_glue.h"
-#include "sokol_log.h"
+#include "graphics_api.h"
 
 // Nuklear implementation
 #define NK_INCLUDE_FIXED_TYPES
@@ -21,12 +10,6 @@
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
 #include "nuklear.h"
-
-// Define nk_bool as int for sokol_nuklear compatibility
-typedef int nk_bool;
-
-#define SOKOL_NUKLEAR_IMPL
-#include "sokol_nuklear.h"
 
 #include "core.h"
 #include "systems.h"

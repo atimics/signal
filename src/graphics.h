@@ -6,6 +6,6 @@
 #define CGAME_GRAPHICS_H
 
 // Include Sokol GFX header (implementation defined elsewhere)
-#include "sokol_gfx.h"
+#include "graphics_api.h"
 
 #endif // CGAME_GRAPHICS_H

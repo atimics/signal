@@ -33,7 +33,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c assets.c render_3d.c render_camera.c render_lighting.c render_mesh.c render_gpu.c ui.c data.c main.c
+SOURCES = core.c systems.c assets.c render_3d.c render_camera.c render_lighting.c render_mesh.c render_gpu.c ui.c data.c graphics_api.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -78,6 +78,8 @@ ifeq ($(OS),Darwin)
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -Wno-error=unused-but-set-variable -Wno-error=null-pointer-subtraction -x objective-c -c $< -o $@
 $(BUILD_DIR)/render_3d.o: $(SRC_DIR)/render_3d.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
+$(BUILD_DIR)/graphics_api.o: $(SRC_DIR)/graphics_api.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
 else
 # Linux - additional warning suppressions for third-party headers
@@ -137,4 +139,22 @@ assets-wasm: $(BUILD_ASSETS_DIR)
 	@echo "🔨 Preparing assets for WASM build..."
 	@echo "📋 Using existing compiled assets from build/assets/"
 
-.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm
+# ============================================================================
+# TEST TARGETS
+# ============================================================================
+
+# Sprint 10.5 Task 1: Test index.json path resolution
+test_sprint_10_5_task_1: | $(BUILD_DIR)
+	@echo "🧪 Building and running Sprint 10.5 Task 1 test (standalone)..."
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_1_standalone tests/sprint_10_5/test_task_1_standalone.c
+	./$(BUILD_DIR)/test_task_1_standalone
+	@echo "✅ Sprint 10.5 Task 1 test complete"
+
+# Sprint 10.5 Task 1: Integration test with actual assets.c (requires Objective-C)
+test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
+	@echo "🧪 Building and running Sprint 10.5 Task 1 integration test..."
+	$(CC) $(CFLAGS) -x objective-c -o $(BUILD_DIR)/test_task_1_integration tests/sprint_10_5/test_task_1.c src/assets.c src/render_gpu.c src/graphics_api.c $(LIBS)
+	./$(BUILD_DIR)/test_task_1_integration
+	@echo "✅ Sprint 10.5 Task 1 integration test complete"
+
+.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration

@@ -5,16 +5,13 @@
 #include "render.h"
 #include "core.h"
 
-// Forward declaration for Sokol types
-struct sg_pipeline;
-struct sg_shader;
-struct sg_sampler;
+#include "graphics_api.h"
 
 // Mesh renderer structure
 typedef struct {
-    struct sg_pipeline pipeline;
-    struct sg_shader shader;
-    struct sg_sampler sampler;
+    sg_pipeline pipeline;
+    sg_shader shader;
+    sg_sampler sampler;
 } MeshRenderer;
 
 // Mesh renderer functions

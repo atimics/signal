@@ -4,7 +4,7 @@
 #include "render_lighting.h"
 #include "render.h"
 #include "assets.h"
-#include "sokol_gfx.h"
+#include "graphics_api.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
