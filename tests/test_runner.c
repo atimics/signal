@@ -9,8 +9,14 @@
 #include "sokol_gfx.h"
 #include "sokol_log.h"
 
-// Include the declarations for the test suites.
-#include "test_main.c"
+// Forward declare the test suites - defined in their respective test files
+void suite_core_math(void);
+void suite_assets(void);
+void suite_rendering(void);
+
+// These are required by Unity for global setup/teardown
+void setUp(void) {}
+void tearDown(void) {}
 
 int main(void) {
     UNITY_BEGIN();
