@@ -4,8 +4,12 @@ This document outlines the planned and active development sprints for the CGame 
 
 ## Active Sprint
 
-### [Sprint 09: Texture System Implementation](./sprint_plans/09_texture_system.md)
+### [Sprint 09: Texture System Implementation](./02_active/09_texture_system.md)
 -   **Goal**: Implement a complete texture loading and GPU binding system, enabling meshes to display with proper textures instead of solid colors.
+-   **Status**: In Progress
+
+### [Sprint 9.1: Code Quality and Rendering Refactor](./02_active/09.1_code_quality_and_rendering_refactor.md)
+-   **Goal**: Improve the quality, maintainability, and modularity of the core C codebase, with a special focus on refactoring the rendering system.
 -   **Status**: In Progress
 
 ## Feature Backlog

@@ -29,53 +29,28 @@ Implement complete texture loading and GPU binding system, enabling meshes to di
 **For Research AI**: Please investigate the following areas to ensure best practices for texture system implementation with Sokol:
 
 ### Texture Management
-1.  **Texture Formats**: Comprehensive overview of modern texture formats (BC1-7, ASTC, ETC2) and their use cases.
-    *   **Best Practice**: Use block-based compression formats (like DXT/BCn) for most textures to significantly reduce memory bandwidth. Use uncompressed formats only when maximum quality is required.
-    *   **Resource**: [Understanding BCn Texture Compression Formats](https://www.fsdeveloper.com/wiki/index.php?title=DXT_compression_explained)
-2.  **Mipmap Generation**: Best practices for mipmap generation and filtering techniques.
-    *   **Best Practice**: Always generate a full mipmap chain for 3D assets to prevent aliasing and improve cache performance. Use trilinear filtering for smooth transitions between mip levels.
-    *   **Resource**: [Mipmapping (LearnOpenGL)](https://learnopengl.com/Getting-started/Textures#Mipmaps)
-3.  **Texture Compression**: Platform-specific texture compression strategies and quality trade-offs.
-    *   **Best Practice**: The asset pipeline should be capable of generating different compressed formats based on the target platform (e.g., BCn for desktop, ASTC for mobile).
-    *   **Resource**: [Texture Compression (NVIDIA Developer)](https://developer.nvidia.com/texture-compression)
-4.  **Texture Arrays**: Implementation of texture arrays and texture atlases for batching.
-    *   **Best Practice**: Use texture atlases for UI elements and small, frequently used textures to reduce draw calls. Use texture arrays for materials that share the same properties but have different textures.
-    *   **Resource**: [Texture Arrays (OpenGL Wiki)](https://www.khronos.org/opengl/wiki/Array_Texture)
+1. **Texture Formats**: Comprehensive overview of modern texture formats (BC1-7, ASTC, ETC2) and their use cases
+2. **Mipmap Generation**: Best practices for mipmap generation and filtering techniques
+3. **Texture Compression**: Platform-specific texture compression strategies and quality trade-offs
+4. **Texture Arrays**: Implementation of texture arrays and texture atlases for batching
 
 ### Asset Pipeline Integration
-1.  **Asset Loading**: Efficient techniques for loading and processing texture data.
-    *   **Best Practice**: Use a library like `stb_image` for its simplicity and broad format support. For production, consider a more robust library like `OpenImageIO`.
-    *   **Resource**: [stb_image.h (GitHub)](https://github.com/nothings/stb/blob/master/stb_image.h)
-2.  **Format Conversion**: Runtime and offline texture format conversion strategies.
-    *   **Best Practice**: Perform texture compression and format conversion offline in the asset pipeline. This avoids slow runtime conversions and ensures assets are optimized for the target platform.
-    *   **Resource**: [Basis Universal Texture Format](https://github.com/BinomialLLC/basis_universal)
-3.  **Streaming**: Techniques for streaming large textures and handling memory constraints.
-    *   **Best Practice**: Implement a system that loads only the required mip levels into memory based on the object's distance from the camera. This is essential for open-world games with large textures.
-    *   **Resource**: [Streaming Virtual Texturing](https://developer.nvidia.com/content/streaming-virtual-texturing-svt-part-1)
-4.  **Validation**: Methods for validating texture data and detecting corruption.
-    *   **Best Practice**: The asset pipeline should validate texture dimensions (power-of-two), format, and file integrity to prevent rendering errors.
+1. **Asset Loading**: Efficient techniques for loading and processing texture data
+2. **Format Conversion**: Runtime and offline texture format conversion strategies
+3. **Streaming**: Techniques for streaming large textures and handling memory constraints
+4. **Validation**: Methods for validating texture data and detecting corruption
 
 ### Performance Optimization
-1.  **Texture Caching**: Cache-friendly strategies for texture access and management.
-    *   **Best Practice**: Use a hash map to store loaded textures, with the texture's file path as the key. This prevents the same texture from being loaded into memory multiple times.
-2.  **GPU Memory Management**: Optimal allocation patterns for GPU texture memory.
-    *   **Best Practice**: Pre-allocate a large texture pool or use a buddy allocator to manage GPU memory and reduce fragmentation.
-3.  **Binding Optimization**: Minimizing texture binding state changes during rendering.
-    *   **Best Practice**: Group draw calls by material and texture to minimize the number of times the GPU needs to switch texture bindings. This is a key optimization for rendering performance.
-4.  **Batch Rendering**: Techniques for batching draw calls with different textures.
-    *   **Best Practice**: Use bindless textures or texture arrays to allow a single draw call to access multiple textures, significantly reducing CPU overhead.
-    *   **Resource**: [Bindless Textures (NVIDIA Developer)](https://developer.nvidia.com/blog/vulkan-dos-and-donts/)
+1. **Texture Caching**: Cache-friendly strategies for texture access and management
+2. **GPU Memory Management**: Optimal allocation patterns for GPU texture memory
+3. **Binding Optimization**: Minimizing texture binding state changes during rendering
+4. **Batch Rendering**: Techniques for batching draw calls with different textures
 
 ### Sokol-Specific Implementation
-1.  **Sokol Image API**: Best practices for using Sokol's image creation and management APIs.
-    *   **Best Practice**: Use `sg_make_image` to create textures and `sg_destroy_image` to release them. For dynamic textures, use `sg_update_image`.
-    *   **Resource**: [sokol_gfx.h API Documentation](https://github.com/floooh/sokol/blob/master/sokol_gfx.h)
-2.  **Sampler Objects**: Proper setup and management of texture samplers.
-    *   **Best Practice**: Create a small number of reusable sampler objects with different filtering and wrapping modes. Avoid creating new samplers per draw call.
-3.  **Resource Lifecycle**: Handling texture creation, updates, and destruction in Sokol.
-    *   **Best Practice**: Create all GPU resources (textures, buffers, pipelines) at initialization. Destroy them in the reverse order of creation at shutdown.
-4.  **Debug Visualization**: Techniques for debugging texture issues and visualizing texture data.
-    *   **Best Practice**: Use a debug UI (like Nuklear) to display texture thumbnails, dimensions, and formats. Implement a "texture picker" to visualize specific textures on a test mesh.
+1. **Sokol Image API**: Best practices for using Sokol's image creation and management APIs
+2. **Sampler Objects**: Proper setup and management of texture samplers
+3. **Resource Lifecycle**: Handling texture creation, updates, and destruction in Sokol
+4. **Debug Visualization**: Techniques for debugging texture issues and visualizing texture data
 
 Please provide code examples for efficient texture loading and management in C99, with specific focus on integration with the existing asset system and ECS architecture.
 
