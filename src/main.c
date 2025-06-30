@@ -64,6 +64,7 @@ static struct {
 // ENTITY FACTORY FUNCTIONS (from test.c)
 // ============================================================================
 
+static EntityID create_player(struct World* world, Vector3 position) __attribute__((unused));
 static EntityID create_player(struct World* world, Vector3 position) {
     EntityID id = entity_create(world);
     if (id == INVALID_ENTITY) return id;

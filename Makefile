@@ -71,7 +71,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 # Special rule for main.c on macOS to compile as Objective-C
 ifeq ($(OS),Darwin)
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
+	$(CC) $(CFLAGS) -Wno-error=unused-but-set-variable -Wno-error=null-pointer-subtraction -x objective-c -c $< -o $@
 $(BUILD_DIR)/render_3d.o: $(SRC_DIR)/render_3d.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
 endif
