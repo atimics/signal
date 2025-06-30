@@ -52,11 +52,20 @@ jobs:
           DYLD_LIBRARY_PATH: /opt/homebrew/lib:$DYLD_LIBRARY_PATH
         run: make
 
+      - name: Run Unit Tests
+        run: make test
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cgame-macos
           path: build/cgame
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-macos
+          path: build/cgame_tests
 
   build-linux:
     name: Build (Linux)
@@ -97,11 +106,20 @@ jobs:
       - name: Build Project
         run: make
 
+      - name: Run Unit Tests
+        run: make test
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cgame-linux
           path: build/cgame
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-linux
+          path: build/cgame_tests
 
   # Temporarily disabled due to compilation issues
   # TODO: Fix WebAssembly build compatibility
@@ -135,3 +153,42 @@ jobs:
   #           build/cgame.js
   #           build/cgame.wasm
   #           build/cgame.data
+
+  test-suite:
+    name: Unity Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev
+
+      - name: Build and Run Tests
+        run: make test
+
+      - name: Upload Test Executable
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unity-test-suite
+          path: build/cgame_tests
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "## Unity Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f build/cgame_tests ]; then
+            echo "✅ Test executable built successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Test Output:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            ./build/cgame_tests 2>&1 || echo "Tests completed with exit code $?"
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Test executable build failed" >> $GITHUB_STEP_SUMMARY
+          fi

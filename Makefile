@@ -157,7 +157,7 @@ test: $(TEST_TARGET)
 # Build the test executable
 $(TEST_TARGET): $(TEST_SRC) $(ENGINE_SRC_FOR_TEST) | $(BUILD_DIR)
 	@echo "🔨 Building Unity test suite..."
-	$(CC) $(CFLAGS) -Itests/vendor -o $@ $(TEST_SRC) $(ENGINE_SRC_FOR_TEST) $(LIBS)
+	$(CC) -Wall -Wextra -Werror -std=c99 -O2 -g -Isrc -Itests/vendor -DUNITY_TESTING -o $@ $(TEST_SRC) $(ENGINE_SRC_FOR_TEST) -lm
 
 # Sprint 10.5 Task 1: Test index.json path resolution
 test_sprint_10_5_task_1: | $(BUILD_DIR)

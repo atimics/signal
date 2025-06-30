@@ -1,5 +1,8 @@
 # CGame: A Data-Oriented 3D Game Engine
 
+[![Build and Test](https://github.com/ratimics/cgame/actions/workflows/build.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/build.yml)
+[![Test Suite](https://github.com/ratimics/cgame/actions/workflows/test.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/test.yml)
+
 CGame is a high-performance, data-oriented 3D game engine written in C99. It features an advanced Entity-Component-System (ECS) architecture and uses the modern, cross-platform **Sokol** graphics API for rendering.
 
 ## 🌟 Features
@@ -27,7 +30,38 @@ The project uses a simple Makefile.
 ```bash
 # Clean, build, and run the engine
 make clean && make && make run
+
+# Run the automated test suite
+make test
+
+# Run specific legacy tests (from previous sprints)
+make test_sprint_10_5_task_1
+make test_sprint_10_5_task_2
+make test_sprint_10_5_task_3
 ```
+
+## 🧪 Testing
+
+CGame uses the [Unity Test Framework](https://github.com/ThrowTheSwitch/Unity) for automated testing. The test suite includes:
+
+- **Unit Tests**: Core math functions, data structures, and utilities
+- **Integration Tests**: Asset loading, rendering pipeline, and system interactions
+- **Regression Tests**: Preventing the re-introduction of previously fixed bugs
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# The test executable is built to: build/cgame_tests
+```
+
+### Test Structure
+
+- `tests/test_main.c` - Test runner and orchestration
+- `tests/test_core_math.c` - Vector math and utility function tests
+- `tests/vendor/unity.*` - Unity testing framework source code
 
 ## 📚 Documentation
 
