@@ -45,7 +45,6 @@ static struct {
     // Core ECS
     struct World world;
     struct SystemScheduler scheduler;
-    AssetRegistry assets;
     
     // Application state
     EntityID player_id;
@@ -93,9 +92,9 @@ static EntityID create_player(struct World* world, Vector3 position) {
     
     // Configure renderable component - try to load wedge_ship mesh
     struct Renderable* renderable = entity_get_renderable(world, id);
-    if (renderable && !assets_create_renderable_from_mesh(&app_state.assets, "wedge_ship", renderable)) {
+    if (renderable && !assets_create_renderable_from_mesh(get_asset_registry(), "wedge_ship", renderable)) {
         // If wedge_ship not available, try wedge_ship_mk2
-        if (!assets_create_renderable_from_mesh(&app_state.assets, "wedge_ship_mk2", renderable)) {
+        if (!assets_create_renderable_from_mesh(get_asset_registry(), "wedge_ship_mk2", renderable)) {
             printf("⚠️  No suitable mesh found for player, using default resources\n");
             // Set up with invalid handles - will skip rendering
             renderable->vbuf.id = SG_INVALID_ID;
@@ -146,7 +145,7 @@ static void load_scene_by_name(struct World* world, const char* scene_name, Enti
     DataRegistry* data_registry = get_data_registry();
     
     // Load the scene from template
-    if (!load_scene(world, data_registry, (struct AssetRegistry*)&app_state.assets, scene_name)) {
+    if (!load_scene(world, data_registry, get_asset_registry(), scene_name)) {
         printf("❌ Failed to load scene: %s\n", scene_name);
         return;
     }
@@ -240,18 +239,13 @@ static void init(void) {
         return;
     }
     
-    // Initialize assets
-    if (!assets_init(&app_state.assets, "assets")) {
-        printf("❌ Failed to initialize assets\n");
-        sapp_quit();
-        return;
-    }
+    // Assets are initialized by the scheduler - use global registry
     
     // Initialize render config
     app_state.render_config = (RenderConfig){
         .screen_width = (int)sapp_width(),
         .screen_height = (int)sapp_height(),
-        .assets = &app_state.assets,
+        .assets = get_asset_registry(),
         .camera = {
             .position = {5.0f, 3.0f, 10.0f},
             .target = {0.0f, 0.0f, 0.0f},
@@ -265,7 +259,7 @@ static void init(void) {
     };
     
     // Initialize renderer
-    if (!render_init(&app_state.render_config, &app_state.assets, 
+    if (!render_init(&app_state.render_config, get_asset_registry(), 
                      (float)sapp_width(), (float)sapp_height())) {
         printf("❌ Failed to initialize renderer\n");
         sapp_quit();
@@ -341,7 +335,7 @@ static void cleanup(void) {
     
     ui_shutdown();
     render_cleanup(&app_state.render_config);
-    assets_cleanup(&app_state.assets);
+    // Assets are cleaned up by the scheduler
     scheduler_destroy(&app_state.scheduler);
     world_destroy(&app_state.world);
     

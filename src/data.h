@@ -1,11 +1,9 @@
 #pragma once
 
 #include "core.h"
+#include "assets.h"
 #include <stdint.h>
 #include <stdbool.h>
-
-// Forward declarations
-struct AssetRegistry;
 
 // ============================================================================
 // DATA-DRIVEN ENTITY SYSTEM
@@ -100,10 +98,10 @@ bool load_scene_templates(DataRegistry* registry, const char* scenes_path);
 
 // Entity creation from templates
 EntityID create_entity_from_template(struct World* world, DataRegistry* registry, 
-                                    struct AssetRegistry* assets, const char* template_name, Vector3 position);
+                                    AssetRegistry* assets, const char* template_name, Vector3 position);
 
 // Scene loading
-bool load_scene(struct World* world, DataRegistry* registry, struct AssetRegistry* assets, const char* scene_name);
+bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* assets, const char* scene_name);
 
 // Template queries
 EntityTemplate* find_entity_template(DataRegistry* registry, const char* name);

@@ -61,5 +61,6 @@ void render_system_update(struct World* world, float delta_time);
 // Data Access
 DataRegistry* get_data_registry(void);
 RenderConfig* get_render_config(void);
+AssetRegistry* get_asset_registry(void);  // Access to global asset registry
 
 #endif // SYSTEMS_H

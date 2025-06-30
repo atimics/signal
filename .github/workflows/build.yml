@@ -1,0 +1,55 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          # No specific dependencies needed for macOS Metal build yet
+          echo "Setup complete for macOS"
+
+      - name: Build Project
+        run: make
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgame-macos
+          path: build/cgame
+
+  build-wasm:
+    name: Build (WebAssembly)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v12
+        with:
+          version: 3.1.49
+
+      - name: Build Project for WASM
+        run: make wasm
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgame-wasm
+          path: build/
+          glob: |
+            build/cgame.html
+            build/cgame.js
+            build/cgame.wasm
+            build/cgame.data

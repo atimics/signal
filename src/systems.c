@@ -624,3 +624,7 @@ DataRegistry* get_data_registry(void) {
 RenderConfig* get_render_config(void) {
     return &g_render_config;
 }
+
+AssetRegistry* get_asset_registry(void) {
+    return &g_asset_registry;
+}

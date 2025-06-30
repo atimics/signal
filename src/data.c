@@ -297,7 +297,7 @@ bool load_scene_templates(DataRegistry* registry, const char* scenes_path) {
 // ============================================================================
 
 EntityID create_entity_from_template(struct World* world, DataRegistry* registry, 
-                                    struct AssetRegistry* assets, const char* template_name, Vector3 position) {
+                                    AssetRegistry* assets, const char* template_name, Vector3 position) {
     if (!world || !registry || !template_name) return INVALID_ENTITY;
     
     EntityTemplate* template = find_entity_template(registry, template_name);
@@ -405,7 +405,7 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
 // SCENE LOADING
 // ============================================================================
 
-bool load_scene(struct World* world, DataRegistry* registry, struct AssetRegistry* assets, const char* scene_name) {
+bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* assets, const char* scene_name) {
     if (!world || !registry || !scene_name) return false;
     
     SceneTemplate* scene = find_scene_template(registry, scene_name);
