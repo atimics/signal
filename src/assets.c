@@ -226,19 +226,60 @@ bool parse_mtl_file(const char* filepath, AssetRegistry* registry) {
 // ASSET LOADING
 // ============================================================================
 
-bool load_compiled_mesh(AssetRegistry* registry, const char* geometry, const char* mesh_name) {
-    if (!registry || !geometry || !mesh_name) return false;
+bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name) {
+    if (!registry || !filename || !mesh_name) return false;
     if (registry->mesh_count >= 32) return false;
+    
+    printf("🔍 DEBUG load_compiled_mesh: filename='%s', mesh_name='%s'\n", filename, mesh_name);
     
     // Build full path
     char filepath[512];
-    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, geometry);
+    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, filename);
+    
+    printf("🔍 DEBUG load_compiled_mesh: Full filepath='%s'\n", filepath);
+    
+    // Check if file exists
+    FILE* test_file = fopen(filepath, "r");
+    if (!test_file) {
+        printf("❌ DEBUG: Cannot open file '%s'\n", filepath);
+        return false;
+    }
+    fclose(test_file);
+    printf("✅ DEBUG: File exists and is readable\n");
     
     // Find or create mesh slot
     Mesh* mesh = &registry->meshes[registry->mesh_count];
     strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
     
     if (parse_obj_file(filepath, mesh)) {
+        printf("✅ DEBUG: parse_obj_file succeeded - vertices=%d, indices=%d\n", 
+               mesh->vertex_count, mesh->index_count);
+        
+        // Validate mesh data before creating buffers
+        if (mesh->vertex_count == 0 || mesh->index_count == 0) {
+            printf("❌ DEBUG: Mesh has zero vertices (%d) or indices (%d)\n", 
+                   mesh->vertex_count, mesh->index_count);
+            return false;
+        }
+        
+        if (!mesh->vertices || !mesh->indices) {
+            printf("❌ DEBUG: Mesh has NULL vertex (%p) or index (%p) data\n",
+                   (void*)mesh->vertices, (void*)mesh->indices);
+            return false;
+        }
+        
+        // Calculate buffer sizes
+        size_t vertex_buffer_size = mesh->vertex_count * sizeof(Vertex);
+        size_t index_buffer_size = mesh->index_count * sizeof(int);
+        
+        printf("🔍 DEBUG: Buffer sizes - VB=%zu bytes, IB=%zu bytes\n", 
+               vertex_buffer_size, index_buffer_size);
+        
+        if (vertex_buffer_size == 0 || index_buffer_size == 0) {
+            printf("❌ DEBUG: Would create zero-sized buffers\n");
+            return false;
+        }
+        
         // Create vertex buffer
         mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
             .data = {
@@ -497,24 +538,34 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
         return false;
     }
     
+    printf("🔍 DEBUG: Parsed metadata - name='%s', geometry='%s'\n", mesh_name, geometry_filename);
+    
     // Load the mesh file
     char mesh_path[512];
     snprintf(mesh_path, sizeof(mesh_path), "%s/%s", mesh_dir, geometry_filename);
+    
+    printf("🔍 DEBUG: Full mesh path: '%s'\n", mesh_path);
     
     // Convert absolute path to relative path from meshes directory
     char relative_mesh_path[512];
     char meshes_prefix[512];
     snprintf(meshes_prefix, sizeof(meshes_prefix), "%s/meshes/", registry->asset_root);
     
+    printf("🔍 DEBUG: Meshes prefix: '%s'\n", meshes_prefix);
+    
     if (strncmp(mesh_path, meshes_prefix, strlen(meshes_prefix)) == 0) {
         // Path starts with asset_root/meshes/, extract the relative part
         strcpy(relative_mesh_path, mesh_path + strlen(meshes_prefix));
+        printf("🔍 DEBUG: Using relative path: '%s'\n", relative_mesh_path);
     } else {
         // Path doesn't start with expected prefix, use as-is
         strcpy(relative_mesh_path, mesh_path);
+        printf("🔍 DEBUG: Using full path as-is: '%s'\n", relative_mesh_path);
     }
     
     // Load compiled mesh files (.cobj format from asset compiler)
+    printf("🔍 DEBUG: Calling load_compiled_mesh with: registry=%p, path='%s', name='%s'\n", 
+           (void*)registry, relative_mesh_path, mesh_name);
     bool loaded = load_compiled_mesh(registry, relative_mesh_path, mesh_name);
     
     if (!loaded) {
