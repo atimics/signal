@@ -167,15 +167,12 @@ static void load_scene_by_name(struct World* world, const char* scene_name, Enti
     }
     
     // Set up scene lighting
-    RenderConfig* render_config = get_render_config();
-    if (render_config) {
-        lighting_set_ambient(&render_config->lighting, (Vector3){0.1f, 0.15f, 0.2f}, 0.3f);
-        lighting_add_directional_light(&render_config->lighting, 
-                                      (Vector3){0.3f, -0.7f, 0.2f}, 
-                                      (Vector3){0.4f, 0.5f, 0.6f}, 
-                                      0.4f);
-        printf("💡 Scene lighting configured\n");
-    }
+    lighting_set_ambient(&app_state.render_config.lighting, (Vector3){0.1f, 0.15f, 0.2f}, 0.3f);
+    lighting_add_directional_light(&app_state.render_config.lighting, 
+                                  (Vector3){0.3f, -0.7f, 0.2f}, 
+                                  (Vector3){0.4f, 0.5f, 0.6f}, 
+                                  0.4f);
+    printf("💡 Scene lighting configured\n");
     
     printf("🌍 Scene loaded with %d entities\n", world->entity_count);
 }
@@ -245,7 +242,7 @@ static void init(void) {
     }
     
     // Initialize system scheduler
-    if (!scheduler_init(&app_state.scheduler)) {
+    if (!scheduler_init(&app_state.scheduler, &app_state.render_config)) {
         printf("❌ Failed to initialize scheduler\n");
         sapp_quit();
         return;
@@ -319,7 +316,7 @@ static void frame(void) {
     
     // Update world and systems
     world_update(&app_state.world, dt);
-    scheduler_update(&app_state.scheduler, &app_state.world, dt);
+    scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
     
     // Render frame
     sg_begin_pass(&(sg_pass){
@@ -346,7 +343,7 @@ static void cleanup(void) {
     printf("\n🏁 Simulation complete!\n");
     
     ui_shutdown();
-    render_cleanup(&app_state.render_config);
+    render_shutdown(&app_state.render_config);
     // Assets are cleaned up by the scheduler
     scheduler_destroy(&app_state.scheduler);
     world_destroy(&app_state.world);

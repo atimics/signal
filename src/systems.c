@@ -9,19 +9,18 @@
 #include <stdlib.h>
 
 // Forward declarations for camera system helpers
-static void camera_update_behavior(struct World* world, EntityID camera_id, float delta_time);
-static void update_legacy_render_config(struct Camera* camera);
+static void camera_update_behavior(struct World* world, RenderConfig* render_config, EntityID camera_id, float delta_time);
+static void update_legacy_render_config(RenderConfig* render_config, struct Camera* camera);
 
-// Global render configuration and asset registry
-static RenderConfig g_render_config;
-AssetRegistry g_asset_registry;  // Make this globally accessible
+// Global asset and data registries
+static AssetRegistry g_asset_registry;
 static DataRegistry g_data_registry;
 
 // ============================================================================
 // SYSTEM SCHEDULER IMPLEMENTATION
 // ============================================================================
 
-bool scheduler_init(struct SystemScheduler* scheduler) {
+bool scheduler_init(struct SystemScheduler* scheduler, RenderConfig* render_config) {
     if (!scheduler) return false;
     
     memset(scheduler, 0, sizeof(struct SystemScheduler));
@@ -45,13 +44,14 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
     
     // Initialize render system with asset registry FIRST
-    if (!render_init(&g_render_config, &g_asset_registry, 1200.0f, 800.0f)) {
+    if (!render_init(render_config, &g_asset_registry, 1200.0f, 800.0f)) {
         printf("❌ Failed to initialize render system\n");
         return false;
     }
     
     // Set camera for zoomed-out solar system view
-    camera_set_position(&g_render_config.camera, (Vector3){0, 100, 300});  // Position camera above and back
+    camera_set_position(&render_config->camera, (Vector3){0, 100, 300});  // Position camera above and back
+
     
     // Load assets from files (now that we have a renderer for textures)
     printf("🔍 Loading assets...\n");
@@ -91,19 +91,11 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
         .update_func = camera_system_update
     };
     
-    scheduler->systems[SYSTEM_RENDER] = (SystemInfo){
-        .name = "Render",
-        .frequency = 60.0f,      // Every frame
-        .enabled = true,
-        .update_func = render_system_update
-    };
-    
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
     printf("   Collision: %.1f Hz\n", scheduler->systems[SYSTEM_COLLISION].frequency);
     printf("   AI: %.1f Hz (base)\n", scheduler->systems[SYSTEM_AI].frequency);
     printf("   Camera: %.1f Hz\n", scheduler->systems[SYSTEM_CAMERA].frequency);
-    printf("   Render: %.1f Hz\n", scheduler->systems[SYSTEM_RENDER].frequency);
     
     return true;
 }
@@ -118,7 +110,7 @@ void scheduler_destroy(struct SystemScheduler* scheduler) {
     scheduler_print_stats(scheduler);
 }
 
-void scheduler_update(struct SystemScheduler* scheduler, struct World* world, float delta_time) {
+void scheduler_update(struct SystemScheduler* scheduler, struct World* world, RenderConfig* render_config, float delta_time) {
     if (!scheduler || !world) return;
     
     scheduler->total_time += delta_time;
@@ -136,7 +128,7 @@ void scheduler_update(struct SystemScheduler* scheduler, struct World* world, fl
         if (time_since_update >= update_interval) {
             clock_t start = clock();
             
-            system->update_func(world, delta_time);
+            system->update_func(world, render_config, delta_time);
             
             clock_t end = clock();
             float execution_time = ((float)(end - start)) / CLOCKS_PER_SEC;
@@ -202,7 +194,8 @@ void scheduler_set_frequency(struct SystemScheduler* scheduler, SystemType type,
 // PHYSICS SYSTEM
 // ============================================================================
 
-void physics_system_update(struct World* world, float delta_time) {
+void physics_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
+    (void)render_config; // Unused
     if (!world) return;
     
     uint32_t updates = 0;
@@ -247,7 +240,8 @@ void physics_system_update(struct World* world, float delta_time) {
 // COLLISION SYSTEM
 // ============================================================================
 
-void collision_system_update(struct World* world, float delta_time) {
+void collision_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
+    (void)render_config; // Unused
     if (!world) return;
     
     // Suppress unused parameter warning
@@ -353,7 +347,8 @@ void collision_system_update(struct World* world, float delta_time) {
 // AI SYSTEM
 // ============================================================================
 
-void ai_system_update(struct World* world, float delta_time) {
+void ai_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
+    (void)render_config; // Unused
     if (!world) return;
     
     // Suppress unused parameter warning
@@ -443,7 +438,7 @@ void ai_system_update(struct World* world, float delta_time) {
 // CAMERA SYSTEM
 // ============================================================================
 
-void camera_system_update(struct World* world, float delta_time) {
+void camera_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
     if (!world) return;
     
     // Set up camera follow targets if not already set
@@ -560,7 +555,7 @@ void camera_system_update(struct World* world, float delta_time) {
     if (!camera) return;
     
     // Update camera position and target based on behavior
-    camera_update_behavior(world, active_camera_id, delta_time);
+    camera_update_behavior(world, render_config, active_camera_id, delta_time);
     
     // Update matrices if camera changed
     if (camera->matrices_dirty) {
@@ -568,10 +563,10 @@ void camera_system_update(struct World* world, float delta_time) {
     }
     
     // Update legacy render config for backward compatibility
-    update_legacy_render_config(camera);
+    update_legacy_render_config(render_config, camera);
 }
 
-static void camera_update_behavior(struct World* world, EntityID camera_id, float delta_time) {
+static void camera_update_behavior(struct World* world, RenderConfig* render_config, EntityID camera_id, float delta_time) {
     struct Camera* camera = entity_get_camera(world, camera_id);
     if (!camera) return;
     
@@ -649,9 +644,8 @@ static void camera_update_behavior(struct World* world, EntityID camera_id, floa
     }
 }
 
-static void update_legacy_render_config(struct Camera* camera) {
+static void update_legacy_render_config(RenderConfig* render_config, struct Camera* camera) {
     // Update legacy render config for backward compatibility
-    RenderConfig* render_config = get_render_config();
     if (render_config && camera) {
         render_config->camera.position = camera->position;
         render_config->camera.target = camera->target;
@@ -663,27 +657,7 @@ static void update_legacy_render_config(struct Camera* camera) {
     }
 }
 
-// ============================================================================
-// RENDER SYSTEM
-// ============================================================================
 
-void render_system_update(struct World* world, float delta_time) {
-    if (!world) return;
-    
-    // Find player entity
-    EntityID player_id = INVALID_ENTITY;
-    for (uint32_t i = 0; i < world->entity_count; i++) {
-        struct Entity* entity = &world->entities[i];
-        if (entity->component_mask & COMPONENT_PLAYER) {
-            player_id = i + 1;  // Entity IDs are 1-based
-            break;
-        }
-    }
-    
-    // Note: Actual rendering is handled by main render loop, not here
-    // This system only updates render-related data and configurations
-    (void)player_id; (void)delta_time; // Suppress unused warnings for now
-}
 
 // ============================================================================
 // DATA ACCESS
@@ -697,9 +671,7 @@ DataRegistry* get_data_registry(void) {
 // GLOBAL SYSTEM ACCESSORS
 // ============================================================================
 
-RenderConfig* get_render_config(void) {
-    return &g_render_config;
-}
+
 
 AssetRegistry* get_asset_registry(void) {
     return &g_asset_registry;

@@ -268,5 +268,10 @@ void mat4_perspective(float* m, float fov, float aspect, float near, float far);
 void mat4_lookat(float* m, Vector3 eye, Vector3 target, Vector3 up);
 void mat4_multiply(float* result, const float* a, const float* b);
 void mat4_translate(float* m, Vector3 t);
+void mat4_rotation_x(float* m, float angle_radians);
+void mat4_rotation_y(float* m, float angle_radians);
+void mat4_rotation_z(float* m, float angle_radians);
+void mat4_scale(float* m, Vector3 scale);
+void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale);
 
 #endif // CORE_H

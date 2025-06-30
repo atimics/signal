@@ -392,6 +392,53 @@ void mat4_translate(float* m, Vector3 t) {
     m[14] = t.z;
 }
 
+void mat4_rotation_x(float* m, float angle_radians) {
+    mat4_identity(m);
+    float c = cosf(angle_radians);
+    float s = sinf(angle_radians);
+    m[5] = c;  m[6] = -s;
+    m[9] = s;  m[10] = c;
+}
+
+void mat4_rotation_y(float* m, float angle_radians) {
+    mat4_identity(m);
+    float c = cosf(angle_radians);
+    float s = sinf(angle_radians);
+    m[0] = c;   m[2] = s;
+    m[8] = -s;  m[10] = c;
+}
+
+void mat4_rotation_z(float* m, float angle_radians) {
+    mat4_identity(m);
+    float c = cosf(angle_radians);
+    float s = sinf(angle_radians);
+    m[0] = c;  m[1] = -s;
+    m[4] = s;  m[5] = c;
+}
+
+void mat4_scale(float* m, Vector3 scale) {
+    mat4_identity(m);
+    m[0] = scale.x;
+    m[5] = scale.y;
+    m[10] = scale.z;
+}
+
+void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale) {
+    // For now, use Euler angles from quaternion (simplified)
+    // TODO: Implement proper quaternion to matrix conversion
+    float translation[16], rot_y[16], scaling[16];
+    float temp[16];
+    
+    // Create individual matrices
+    mat4_translate(translation, position);
+    mat4_rotation_y(rot_y, rotation.y); // Use Y rotation for now
+    mat4_scale(scaling, scale);
+    
+    // Combine: T * R * S
+    mat4_multiply(temp, rot_y, scaling);
+    mat4_multiply(result, translation, temp);
+}
+
 // ============================================================================
 // CAMERA UTILITY FUNCTIONS
 // ============================================================================

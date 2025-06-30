@@ -274,31 +274,7 @@ bool render_init(RenderConfig* config, AssetRegistry* assets, float viewport_wid
     return true;
 }
 
-void render_shutdown() {
-    if (render_state.initialized) {
-        sg_destroy_buffer(render_state.vertex_buffer);
-        sg_destroy_buffer(render_state.index_buffer);
-        sg_destroy_buffer(render_state.uniform_buffer);  // Clean up uniform buffer
-        sg_destroy_image(render_state.default_texture);
-        sg_destroy_pipeline(render_state.pipeline);
-        sg_destroy_shader(render_state.shader);
-        sg_destroy_sampler(render_state.sampler);
-        
-        // Free loaded shader sources
-        if (render_state.vertex_shader_source) {
-            free_shader_source(render_state.vertex_shader_source);
-            render_state.vertex_shader_source = NULL;
-        }
-        if (render_state.fragment_shader_source) {
-            free_shader_source(render_state.fragment_shader_source);
-            render_state.fragment_shader_source = NULL;
-        }
-        
-        render_state.initialized = false;
-    }
-    sg_shutdown();
-    printf("🔄 Render system shut down\n");
-}
+
 
 void render_clear(float r, float g, float b, float a) {
     // Clear is now handled by render pass action in render_frame()
@@ -316,98 +292,17 @@ void render_present(RenderConfig* config) {
 // ECS INTEGRATION
 // ============================================================================
 
-void render_entity_3d(struct World* world, EntityID entity_id, RenderConfig* config) {
-    if (!render_state.initialized) {
-        return;
-    }
 
-    // Get entity components
-    struct Transform* transform = entity_get_transform(world, entity_id);
-    struct Renderable* renderable = entity_get_renderable(world, entity_id);
 
-    if (!transform || !renderable || !renderable->visible) {
-        return;
-    }
 
-    // Skip if GPU resources are invalid
-    if (renderable->vbuf.id == SG_INVALID_ID || 
-        renderable->ibuf.id == SG_INVALID_ID ||
-        renderable->index_count == 0) {
-        return;
-    }
 
-    // Apply bindings (VBO, IBO, textures)
-    sg_bindings bindings = {
-        .vertex_buffers[0] = renderable->vbuf,
-        .index_buffer = renderable->ibuf,
-        .images[0] = (renderable->tex.id != SG_INVALID_ID) ? renderable->tex : render_state.default_texture,
-        .samplers[0] = render_state.sampler
-    };
-    sg_apply_bindings(&bindings);
 
-    // Create MVP matrix
-    float model[16], view[16], proj[16], mvp[16], temp[16];
-    mat4_identity(model);
-    mat4_lookat(view, config->camera.position, config->camera.target, config->camera.up);
-    mat4_perspective(proj, config->camera.fov, config->camera.aspect_ratio, config->camera.near_plane, config->camera.far_plane);
-    mat4_multiply(temp, view, model);
-    mat4_multiply(mvp, proj, temp);
-
-    // Uniforms
-    vs_uniforms_t vs_uniforms;
-    memcpy(vs_uniforms.mvp, mvp, sizeof(mvp));
-    sg_apply_uniforms(0, &SG_RANGE(vs_uniforms));
-
-    // Draw
-    sg_draw(0, renderable->index_count, 1);
-}
-
-// ============================================================================
-// LEGACY COMPATIBILITY FUNCTIONS  
-// ============================================================================
-
-void render_set_camera(Vector3 position, Vector3 target) {
-    // Legacy function - camera is now handled through render_entity_3d config
-    printf("📷 Camera set: pos(%.1f,%.1f,%.1f) target(%.1f,%.1f,%.1f)\n", 
-           position.x, position.y, position.z, target.x, target.y, target.z);
-}
-
-void render_set_lighting(Vector3 direction, uint8_t r, uint8_t g, uint8_t b) {
-    // Legacy function - lighting is now handled in shaders
-    printf("💡 Lighting set: dir(%.2f,%.2f,%.2f) color(%d,%d,%d)\n", 
-           direction.x, direction.y, direction.z, r, g, b);
-}
-
-void render_add_mesh(Mesh* mesh) {
-    // Legacy function - meshes are now handled through ECS
-    if (mesh) {
-        printf("🔺 Mesh added: %s (%d vertices, %d indices)\n", 
-               mesh->name, mesh->vertex_count, mesh->index_count);
-    }
-}
-
-void render_apply_material(Material* material) {
-    // Legacy function - materials are now handled through uniform bindings
-    if (material) {
-        printf("🎨 Material applied: %s\n", material->name);
-    }
-}
-
-// ============================================================================
-// UI INTEGRATION
-// ============================================================================
-
-void render_add_comm_message(RenderConfig* config, const char* sender, const char* message, bool is_player) {
-    // Legacy UI function - preserved for compatibility
-    (void)config; (void)sender; (void)message; (void)is_player;
-    printf("💬 Comm message: %s: %s\n", sender, message);
-}
 
 // ============================================================================
 // MAIN RENDER INTERFACE FUNCTIONS
 // ============================================================================
 
-void render_cleanup(RenderConfig* config) {
+void render_shutdown(RenderConfig* config) {
     (void)config; // Unused for now
     
     if (render_state.initialized) {
@@ -508,7 +403,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             active_camera = entity_get_camera(world, active_camera_id);
         }
         
-        if (active_camera && !active_camera->matrices_dirty) {
+        if (active_camera) {
             // Use cached camera matrices
             mat4_multiply(mvp, active_camera->view_projection_matrix, model);
             
@@ -533,16 +428,6 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             float near_plane = 0.1f;
             float far_plane = 1000.0f;
             
-            if (active_camera) {
-                camera_pos = active_camera->position;
-                camera_target = active_camera->target;
-                camera_up = active_camera->up;
-                fov = active_camera->fov;
-                aspect = active_camera->aspect_ratio;
-                near_plane = active_camera->near_plane;
-                far_plane = active_camera->far_plane;
-            }
-            
             // Create view and projection matrices
             mat4_lookat(view, camera_pos, camera_target, camera_up);
             mat4_perspective(proj, fov, aspect, near_plane, far_plane);
@@ -550,12 +435,6 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             // Combine matrices: MVP = Projection * View * Model
             mat4_multiply(temp, view, model);
             mat4_multiply(mvp, proj, temp);
-            
-            // If we have a camera, cache the view-projection matrix for next time
-            if (active_camera) {
-                mat4_multiply(active_camera->view_projection_matrix, proj, view);
-                active_camera->matrices_dirty = false;
-            }
         }
         
         // Apply uniforms (MVP matrix)
