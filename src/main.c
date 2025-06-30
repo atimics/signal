@@ -1,4 +1,11 @@
 #define SOKOL_IMPL
+
+// Platform-specific includes
+#ifdef __linux__
+#include <time.h>
+#include <stdarg.h>
+#endif
+
 #include "sokol_app.h"
 #include "sokol_gfx.h"
 #include "sokol_glue.h"

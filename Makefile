@@ -10,8 +10,13 @@ ifeq ($(OS),Darwin)
     CFLAGS += -DSOKOL_METAL
     LIBS += -framework Metal -framework MetalKit -framework AppKit -framework QuartzCore
 else
-    # Linux
-    CFLAGS += -DSOKOL_GLCORE
+    # Linux - define POSIX for clock_gettime and suppress problematic warnings
+    CFLAGS += -DSOKOL_GLCORE -D_POSIX_C_SOURCE=199309L
+    CFLAGS += -Wno-error=implicit-function-declaration
+    CFLAGS += -Wno-error=missing-field-initializers
+    CFLAGS += -Wno-error=unused-but-set-variable
+    CFLAGS += -Wno-error=null-pointer-subtraction
+    CFLAGS += -Wno-error=implicit-int
     LIBS += -lGL -lX11 -lm
 endif
 
@@ -68,12 +73,16 @@ $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Special rule for main.c on macOS to compile as Objective-C
+# Special compilation rules for main.c (platform-specific)
 ifeq ($(OS),Darwin)
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -Wno-error=unused-but-set-variable -Wno-error=null-pointer-subtraction -x objective-c -c $< -o $@
 $(BUILD_DIR)/render_3d.o: $(SRC_DIR)/render_3d.c | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
+else
+# Linux - additional warning suppressions for third-party headers
+$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -Wno-error=implicit-function-declaration -Wno-error=implicit-int -c $< -o $@
 endif
 
 
