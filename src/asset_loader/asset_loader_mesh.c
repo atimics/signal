@@ -18,6 +18,11 @@ struct MeshGpuResources {
  * @return true if GPU resources were created successfully, false otherwise
  */
 static bool create_mesh_gpu_resources(Mesh* mesh) {
+#ifdef CGAME_TESTING
+    // Skip GPU resource creation in test mode
+    (void)mesh; // Suppress unused parameter warning in test builds
+    return true;
+#else
     if (!mesh || !mesh->vertices || !mesh->indices) {
         printf("❌ Invalid mesh data for GPU resource creation\n");
         return false;
@@ -80,6 +85,7 @@ static bool create_mesh_gpu_resources(Mesh* mesh) {
     
     printf("✅ GPU resources created successfully for mesh %s\n", mesh->name);
     return true;
+#endif
 }
 
 bool parse_obj_file(const char* filepath, Mesh* mesh) {
@@ -334,7 +340,7 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
     
     // Find next available slot
     int slot = -1;
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < MAX_MESHES; i++) {
         if (!registry->meshes[i].loaded) {
             slot = i;
             break;
@@ -397,8 +403,7 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
     mesh->indices = calloc(header.index_count, sizeof(int));
     if (!mesh->indices) {
         printf("❌ Failed to allocate memory for %u indices\n", header.index_count);
-        free(mesh->vertices);
-        mesh->vertices = NULL;
+        cleanup_mesh_on_error(mesh);
         fclose(file);
         return false;
     }
@@ -409,10 +414,7 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
     VertexEnhanced* enhanced_vertices = calloc(header.vertex_count, sizeof(VertexEnhanced));
     if (!enhanced_vertices) {
         printf("❌ Failed to allocate temporary enhanced vertex buffer\n");
-        free(mesh->vertices);
-        free(mesh->indices);
-        mesh->vertices = NULL;
-        mesh->indices = NULL;
+        cleanup_mesh_on_error(mesh);
         fclose(file);
         return false;
     }
@@ -474,11 +476,6 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
     mesh->aabb_max = header.aabb_max;
     
     // Create GPU resources for the loaded mesh
-    // Skip GPU resource creation in test mode
-#ifdef CGAME_TESTING
-    printf("🔍 Skipping GPU resource creation in test mode\n");
-    mesh->gpu_resources = NULL;
-#else
     if (!create_mesh_gpu_resources(mesh)) {
         printf("❌ Failed to create GPU resources for binary mesh: %s\n", mesh_name);
         // Clean up mesh data
@@ -487,7 +484,6 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
         memset(mesh, 0, sizeof(Mesh));
         return false;
     }
-#endif
     
     mesh->loaded = true;
     registry->mesh_count++;
@@ -554,11 +550,6 @@ bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
     }
     
     // Create GPU resources for the loaded mesh
-    // Skip GPU resource creation in test mode
-#ifdef CGAME_TESTING
-    printf("🔍 Skipping GPU resource creation in test mode\n");
-    mesh->gpu_resources = NULL;
-#else
     if (!create_mesh_gpu_resources(mesh)) {
         printf("❌ Failed to create GPU resources for mesh: %s\n", mesh_name);
         // Clean up mesh data
@@ -567,7 +558,6 @@ bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
         memset(mesh, 0, sizeof(Mesh));
         return false;
     }
-#endif
     
     registry->mesh_count++;
     
@@ -575,4 +565,26 @@ bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
            mesh_name, mesh->vertex_count, mesh->index_count);
     
     return true;
+}
+
+/**
+ * @brief Clean up a partially loaded mesh on error
+ * @param mesh The mesh to clean up
+ */
+static void cleanup_mesh_on_error(Mesh* mesh) {
+    if (!mesh) return;
+    
+    if (mesh->vertices) {
+        free(mesh->vertices);
+        mesh->vertices = NULL;
+    }
+    
+    if (mesh->indices) {
+        free(mesh->indices);
+        mesh->indices = NULL;
+    }
+    
+    mesh->vertex_count = 0;
+    mesh->index_count = 0;
+    mesh->loaded = false;
 }

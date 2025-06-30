@@ -178,11 +178,7 @@ static bool render_sokol_init(void) {
     });
     
     // Create pipeline - use default formats for swapchain compatibility  
-    // Note: Don't specify formats explicitly - let Sokol use defaults that match the swapchain
-    printf("� Creating pipeline with default swapchain-compatible formats\n");
-    
-    // Create pipeline - use default formats for swapchain compatibility  
-    // Note: Don't specify formats explicitly - let Sokol use defaults that match the swapchain
+    printf("🔧 Creating pipeline with default swapchain-compatible formats\n");
     printf("🔧 Creating pipeline with default swapchain-compatible formats\n");
     
     render_state.pipeline = sg_make_pipeline(&(sg_pipeline_desc){
@@ -194,7 +190,7 @@ static bool render_sokol_init(void) {
                 [2].format = SG_VERTEXFORMAT_FLOAT2   // texcoord
             }
         },
-        .index_type = SG_INDEXTYPE_UINT16,
+        .index_type = SG_INDEXTYPE_UINT32,  // Match our int indices (4 bytes)
         .depth = {
             .compare = SG_COMPAREFUNC_LESS_EQUAL,  // Standard depth testing
             .write_enabled = true                  // Write to depth buffer
@@ -204,8 +200,8 @@ static bool render_sokol_init(void) {
             // Don't specify pixel_format - let it default to match swapchain
         },
         // Don't specify sample_count - let it default to match swapchain
-        .cull_mode = SG_CULLMODE_BACK,  // Enable back-face culling for performance
-        .face_winding = SG_FACEWINDING_CW,  // Match asset winding order
+        .cull_mode = SG_CULLMODE_NONE,  // Disable culling for debugging
+        .face_winding = SG_FACEWINDING_CCW,  // Try counter-clockwise (standard)
         .label = "basic_3d_pipeline"
     });
     

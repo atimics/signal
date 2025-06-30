@@ -49,21 +49,19 @@ with-assets: assets $(TARGET)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Compile assets using Python asset compiler
+# Compile assets using the new binary pipeline
 assets: $(BUILD_ASSETS_DIR)
 
-$(BUILD_ASSETS_DIR): $(ASSET_COMPILER) $(shell find $(ASSETS_DIR) -name "*.obj" -o -name "*.mesh") | $(BUILD_DIR)
-	@echo "🔨 Compiling assets..."
-	@echo "📋 Note: Asset compilation requires Python dependencies (trimesh, cairo, numpy, scipy)"
-	@echo "📋 Install with: pip install trimesh cairosvg numpy scipy jsonschema"
-	$(PYTHON) $(ASSET_COMPILER) compile --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes
-	@echo "✅ Asset compilation attempted (check output above for any errors)"
+$(BUILD_ASSETS_DIR): | $(BUILD_DIR)
+	@echo "🔨 Compiling assets to binary format..."
+	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py
+	@echo "✅ Asset compilation complete."
 
 # Force asset recompilation
 assets-force:
 	@echo "🔨 Force recompiling assets..."
-	$(PYTHON) $(ASSET_COMPILER) compile --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes --overwrite
-	@echo "✅ Asset compilation complete"
+	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py --force
+	@echo "✅ Asset compilation complete."
 
 # Link executable
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)

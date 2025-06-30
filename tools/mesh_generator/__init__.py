@@ -64,83 +64,99 @@ def generate_wedge_ship_mk2():
     return vertices, faces
 
 def generate_control_tower():
-    """Generate a control tower structure."""
+    """
+    Generate a more detailed control tower with a cylindrical base,
+    an octagonal observation deck, and an antenna.
+    This version includes UV coordinates.
+    """
     vertices = []
     faces = []
+    uvs = []
+
+    sides = 12  # A smoother cylinder for the base
+
+    # --- 1. Cylindrical Base ---
+    base_radius = 1.5
+    base_height = 4.0
     
-    # Base cylinder (8 sides)
-    base_radius = 2.0
-    base_height = 0.5
-    sides = 8
-    
-    # Base vertices
+    # Bottom circle
     for i in range(sides):
         angle = 2 * math.pi * i / sides
-        x = base_radius * math.cos(angle)
-        z = base_radius * math.sin(angle)
-        vertices.extend([[x, 0, z], [x, base_height, z]])
-    
+        x, z = base_radius * math.cos(angle), base_radius * math.sin(angle)
+        vertices.append([x, 0, z])
+        uvs.append([i / sides, 0])
+    # Top circle
+    for i in range(sides):
+        angle = 2 * math.pi * i / sides
+        x, z = base_radius * math.cos(angle), base_radius * math.sin(angle)
+        vertices.append([x, base_height, z])
+        uvs.append([i / sides, 0.5]) # Use half the texture height for the base
+
     # Base faces
     for i in range(sides):
-        next_i = (i + 1) % sides
+        i_next = (i + 1) % sides
         # Side faces
-        faces.append([i*2, i*2+1, next_i*2+1, next_i*2])
-        # Bottom triangle
-        if i > 1:
-            faces.append([0, i*2, next_i*2])
-        # Top triangle  
-        if i > 1:
-            faces.append([1, next_i*2+1, i*2+1])
+        v1, v2 = i, i_next
+        v3, v4 = i + sides, i_next + sides
+        faces.append([v1, v2, v4, v3])
+
+    # --- 2. Octagonal Observation Deck ---
+    deck_sides = 8
+    deck_radius = 2.5
+    deck_height = 1.0
+    deck_y_start = base_height
+
+    deck_base_start_idx = len(vertices)
+    # Bottom octagon
+    for i in range(deck_sides):
+        angle = 2 * math.pi * i / deck_sides
+        x, z = deck_radius * math.cos(angle), deck_radius * math.sin(angle)
+        vertices.append([x, deck_y_start, z])
+        uvs.append([0.125 * i, 0.55])
+    # Top octagon
+    for i in range(deck_sides):
+        angle = 2 * math.pi * i / deck_sides
+        x, z = deck_radius * math.cos(angle), deck_radius * math.sin(angle)
+        vertices.append([x, deck_y_start + deck_height, z])
+        uvs.append([0.125 * i, 0.75])
+
+    # Deck faces
+    for i in range(deck_sides):
+        i_next = (i + 1) % deck_sides
+        v1 = deck_base_start_idx + i
+        v2 = deck_base_start_idx + i_next
+        v3 = deck_base_start_idx + i + deck_sides
+        v4 = deck_base_start_idx + i_next + deck_sides
+        faces.append([v1, v2, v4, v3]) # Side panels
+        faces.append([deck_base_start_idx, v2, v1]) # Bottom fan
+        faces.append([deck_base_start_idx + deck_sides, v3, v4]) # Top fan
+
+    # --- 3. Antenna Spire ---
+    spire_base_radius = 0.2
+    spire_height = 3.0
+    spire_y_start = deck_y_start + deck_height
     
-    # Tower shaft
-    shaft_radius = 1.0
-    shaft_height = 5.0
-    shaft_start = len(vertices)
-    
-    for i in range(sides):
-        angle = 2 * math.pi * i / sides
-        x = shaft_radius * math.cos(angle)
-        z = shaft_radius * math.sin(angle)
-        vertices.extend([[x, base_height, z], [x, base_height + shaft_height, z]])
-    
-    # Shaft faces
-    for i in range(sides):
-        next_i = (i + 1) % sides
-        base_idx = shaft_start + i * 2
-        next_base_idx = shaft_start + next_i * 2
-        faces.append([base_idx, base_idx+1, next_base_idx+1, next_base_idx])
-    
-    # Control room (glass cube on top)
-    room_size = 1.5
-    room_start = len(vertices)
-    room_y = base_height + shaft_height
-    
-    # Room vertices (cube)
-    room_verts = [
-        [-room_size, room_y, -room_size],
-        [room_size, room_y, -room_size], 
-        [room_size, room_y, room_size],
-        [-room_size, room_y, room_size],
-        [-room_size, room_y + room_size, -room_size],
-        [room_size, room_y + room_size, -room_size],
-        [room_size, room_y + room_size, room_size], 
-        [-room_size, room_y + room_size, room_size],
-    ]
-    vertices.extend(room_verts)
-    
-    # Room faces
-    room_faces = [
-        [0, 1, 2, 3],  # bottom
-        [4, 7, 6, 5],  # top
-        [0, 4, 5, 1],  # front
-        [2, 6, 7, 3],  # back
-        [0, 3, 7, 4],  # left
-        [1, 5, 6, 2],  # right
-    ]
-    for face in room_faces:
-        faces.append([room_start + i for i in face])
-    
-    return vertices, faces
+    spire_base_idx = len(vertices)
+    # Spire base
+    for i in range(4):
+        angle = 2 * math.pi * i / 4
+        x, z = spire_base_radius * math.cos(angle), spire_base_radius * math.sin(angle)
+        vertices.append([x, spire_y_start, z])
+        uvs.append([0.25 * i, 0.8])
+        
+    # Spire top
+    vertices.append([0, spire_y_start + spire_height, 0])
+    uvs.append([0.5, 1.0])
+    spire_top_idx = len(vertices) - 1
+
+    # Spire faces
+    for i in range(4):
+        i_next = (i + 1) % 4
+        v1 = spire_base_idx + i
+        v2 = spire_base_idx + i_next
+        faces.append([v1, v2, spire_top_idx])
+
+    return vertices, faces, uvs
 
 def generate_sun_sphere():
     """Generate a low-poly sphere for the sun."""
@@ -231,13 +247,13 @@ def generate_mesh_with_textures(mesh_name, generator_func, source_dir, build_dir
         metadata = create_mesh_metadata(
             "Wedge Ship Mk2",
             "An improved version of the wedge-shaped spacecraft with enhanced proportions",
-            ["ship", "vehicle", "spacecraft", "improved"]
+            ["ship", "vehicle", "spacecraft", "improved", "player"]
         )
     elif mesh_name == "control_tower":
         metadata = create_mesh_metadata(
             "Control Tower", 
-            "A control tower structure for spaceport environments",
-            ["building", "structure", "spaceport"]
+            "A detailed control tower with an observation deck and antenna.",
+            ["building", "structure", "spaceport", "tower", "architectural"]
         )
     elif mesh_name == "sun":
         metadata = create_mesh_metadata(

@@ -141,29 +141,43 @@ def compile_mesh(source_path, output_path):
     aabb_max = np.max(positions, axis=0)
 
     # --- 5. Pack data into binary format ---
-    # Header format: 4s I I I 3f 3f 8I
-    # magic, version, vertex_count, index_count, aabb_min, aabb_max, reserved
-    header_format = '<4sIIIffffffIIIIIIII'
+    # The format strings below must EXACTLY match the C structs.
+    # '<' means little-endian, which is standard.
+
+    # Header format:
+    #   - 4s: char[4] (magic number)
+    #   - I: uint32_t (version)
+    #   - I: uint32_t (vertex_count)
+    #   - I: uint32_t (index_count)
+    #   - 3f: float[3] (aabb_min)
+    #   - 3f: float[3] (aabb_max)
+    #   - 8I: uint32_t[8] (reserved)
+    header_format = '<4sIII3f3f8I'
     header = struct.pack(
-        '<4sIIIffffffIIIIIIII',
-        b'CGMF',          # Magic number
-        1,               # Version
+        header_format,
+        b'CGMF',
+        1, # Version
         len(final_vertices),
         len(indices),
-        aabb_min[0], aabb_min[1], aabb_min[2],
-        aabb_max[0], aabb_max[1], aabb_max[2],
+        *aabb_min,
+        *aabb_max,
         0, 0, 0, 0, 0, 0, 0, 0 # Reserved
     )
-    
-    # Vertex format: 3f (pos) + 3f (norm) + 3f (tan) + 2f (uv) + 2f (padding) = 13 floats
+
+    # Vertex format must match the C struct:
+    #   - 3f: position (Vector3)
+    #   - 3f: normal (Vector3)
+    #   - 3f: tangent (Vector3)
+    #   - 2f: tex_coord (Vector2)
+    #   - 1f: padding
+    vertex_format = '<3f3f3f2f1f'
     vertex_data = bytearray()
     for i in range(len(final_vertices)):
-        # Pad to 48 bytes (12 floats)
-        vertex_pack = struct.pack('<3f3f3f2f1f', 
-            positions[i][0], positions[i][1], positions[i][2],
-            normals[i][0], normals[i][1], normals[i][2],
-            tangents[i][0], tangents[i][1], tangents[i][2],
-            uvs[i][0], uvs[i][1],
+        vertex_pack = struct.pack(vertex_format,
+            *positions[i],
+            *normals[i],
+            *tangents[i],
+            *uvs[i],
             0.0 # Padding
         )
         vertex_data.extend(vertex_pack)

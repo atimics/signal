@@ -71,9 +71,9 @@ typedef struct {
 
 // Asset registry
 typedef struct {
-    Mesh meshes[32];        // Max 32 meshes
-    Texture textures[32];   // Max 32 textures  
-    Material materials[32]; // Max 32 materials
+    Mesh meshes[MAX_MESHES];        // Max meshes
+    Texture textures[MAX_TEXTURES]; // Max textures  
+    Material materials[MAX_MATERIALS]; // Max materials
     
     uint32_t mesh_count;
     uint32_t texture_count;
@@ -270,5 +270,10 @@ typedef struct {
     Vector3 tangent;         // Tangent for normal mapping
     float padding;           // Padding to 48 bytes total
 } VertexEnhanced;
+
+// Asset registry constants
+#define MAX_MESHES 32
+#define MAX_TEXTURES 32
+#define MAX_MATERIALS 32
 
 #endif // ASSETS_H
