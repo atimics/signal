@@ -353,10 +353,13 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         return;
     }
     
-    // Begin the default render pass
-    sg_begin_default_pass(&(sg_pass_action){
-        .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = { 0.1f, 0.2f, 0.6f, 1.0f } }
-    }, sapp_width(), sapp_height());
+    // Begin the swapchain render pass (correct Sokol API)
+    sg_begin_pass(&(sg_pass){
+        .action = {
+            .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = { 0.1f, 0.2f, 0.6f, 1.0f } }
+        },
+        .swapchain = sglue_swapchain()
+    });
     
     // Apply the rendering pipeline
     sg_apply_pipeline(render_state.pipeline);
