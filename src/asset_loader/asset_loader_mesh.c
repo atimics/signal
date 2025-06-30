@@ -411,46 +411,20 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
         return false;
     }
     
-    // Read vertex data directly into memory
-    // Note: For now we read into VertexEnhanced and convert to Vertex
-    // This will be optimized when we fully transition to the enhanced format
-    VertexEnhanced* enhanced_vertices = calloc(header.vertex_count, sizeof(VertexEnhanced));
-    if (!enhanced_vertices) {
-        printf("❌ Failed to allocate temporary enhanced vertex buffer\n");
+    // Read vertex data directly into the Vertex struct (32 bytes each)
+    // The binary format now matches exactly with the engine's Vertex struct
+    if (fread(mesh->vertices, sizeof(Vertex), header.vertex_count, file) != header.vertex_count) {
+        printf("❌ Failed to read vertex data from binary mesh file: %s\n", absolute_filepath);
         cleanup_mesh_on_error(mesh);
         fclose(file);
         return false;
     }
     
-    if (fread(enhanced_vertices, sizeof(VertexEnhanced), header.vertex_count, file) != header.vertex_count) {
-        printf("❌ Failed to read vertex data from binary mesh file: %s\n", absolute_filepath);
-        free(enhanced_vertices);
-        free(mesh->vertices);
-        free(mesh->indices);
-        mesh->vertices = NULL;
-        mesh->indices = NULL;
-        fclose(file);
-        return false;
-    }
-    
-    // Convert VertexEnhanced to Vertex (until we fully transition)
-    for (uint32_t i = 0; i < header.vertex_count; i++) {
-        mesh->vertices[i].position = enhanced_vertices[i].position;
-        mesh->vertices[i].normal = enhanced_vertices[i].normal;
-        mesh->vertices[i].tex_coord = enhanced_vertices[i].tex_coord;
-        // Note: tangent data is available but not used in current Vertex struct
-    }
-    
-    free(enhanced_vertices);
-    
     // Read index data directly into memory
     uint32_t* temp_indices = calloc(header.index_count, sizeof(uint32_t));
     if (!temp_indices) {
         printf("❌ Failed to allocate temporary index buffer\n");
-        free(mesh->vertices);
-        free(mesh->indices);
-        mesh->vertices = NULL;
-        mesh->indices = NULL;
+        cleanup_mesh_on_error(mesh);
         fclose(file);
         return false;
     }
@@ -458,10 +432,7 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
     if (fread(temp_indices, sizeof(uint32_t), header.index_count, file) != header.index_count) {
         printf("❌ Failed to read index data from binary mesh file: %s\n", absolute_filepath);
         free(temp_indices);
-        free(mesh->vertices);
-        free(mesh->indices);
-        mesh->vertices = NULL;
-        mesh->indices = NULL;
+        cleanup_mesh_on_error(mesh);
         fclose(file);
         return false;
     }

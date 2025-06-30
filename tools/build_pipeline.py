@@ -54,6 +54,15 @@ def generate_asset_index(build_dir, compiled_assets):
     
     print(f"✅ Generated asset index with {len(metadata_paths)} entries: {index_path}")
 
+import shutil
+
+def copy_supplementary_files(source_prop_dir, build_prop_dir):
+    """Copies .mtl and .png files from source to build."""
+    for ext in ["*.mtl", "*.png"]:
+        for source_file in source_prop_dir.glob(ext):
+            shutil.copy(source_file, build_prop_dir / source_file.name)
+            print(f"   Copied {source_file.name} to {build_prop_dir}")
+
 def main():
     parser = argparse.ArgumentParser(description="CGame Asset Pipeline - Binary Compiler")
     
@@ -91,7 +100,8 @@ def main():
         
         # Determine source and output paths
         source_obj_file = prop_dir / "geometry.obj"
-        output_cobj_file = build_dir / "props" / asset_name / "geometry.cobj"
+        build_prop_dir = build_dir / "props" / asset_name
+        output_cobj_file = build_prop_dir / "geometry.cobj"
         
         if not source_obj_file.exists():
             print(f"   ⚠️ WARNING: Skipping {asset_name}, geometry.obj not found.")
@@ -104,7 +114,7 @@ def main():
             continue
             
         # Ensure the output directory exists
-        output_cobj_file.parent.mkdir(parents=True, exist_ok=True)
+        build_prop_dir.mkdir(parents=True, exist_ok=True)
         
         # --- Compile the .obj to .cobj ---
         compiler_script = Path(__file__).parent / "compile_mesh.py"
@@ -119,7 +129,10 @@ def main():
             subprocess.run(command, check=True, capture_output=True, text=True)
             
             # --- Generate the corresponding metadata.json in the build directory ---
-            generate_and_write_metadata(source_meta_file, output_cobj_file.parent)
+            generate_and_write_metadata(source_meta_file, build_prop_dir)
+            
+            # --- Copy supplementary files ---
+            copy_supplementary_files(prop_dir, build_prop_dir)
             
             compiled_assets.append(asset_name)
             

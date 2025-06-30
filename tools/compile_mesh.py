@@ -164,21 +164,18 @@ def compile_mesh(source_path, output_path):
         0, 0, 0, 0, 0, 0, 0, 0 # Reserved
     )
 
-    # Vertex format must match the C struct:
-    #   - 3f: position (Vector3)
-    #   - 3f: normal (Vector3)
-    #   - 3f: tangent (Vector3)
-    #   - 2f: tex_coord (Vector2)
-    #   - 1f: padding
-    vertex_format = '<3f3f3f2f1f'
+    # Vertex format must match the engine's Vertex struct (32 bytes):
+    #   - 3f: position (Vector3) - 12 bytes
+    #   - 3f: normal (Vector3) - 12 bytes  
+    #   - 2f: tex_coord (Vector2) - 8 bytes
+    # Total: 32 bytes (matches src/assets.h Vertex struct)
+    vertex_format = '<3f3f2f'
     vertex_data = bytearray()
     for i in range(len(final_vertices)):
         vertex_pack = struct.pack(vertex_format,
             *positions[i],
             *normals[i],
-            *tangents[i],
-            *uvs[i],
-            0.0 # Padding
+            *uvs[i]
         )
         vertex_data.extend(vertex_pack)
 
