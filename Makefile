@@ -1,6 +1,6 @@
 # Component-Based Game Engine Makefile
 CC = clang
-CFLAGS = -Wall -Wextra -std=c99 -O2 -g -Isrc
+CFLAGS = -Wall -Wextra -Werror -std=c99 -O2 -g -Isrc
 LIBS = -lm
 OS := $(shell uname)
 

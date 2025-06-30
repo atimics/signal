@@ -34,6 +34,15 @@ static struct {
 } render_performance = {0};
 
 // ============================================================================
+// FUNCTION DECLARATIONS
+// ============================================================================
+
+// Forward declarations for static functions
+static bool validate_entity_for_rendering(struct Entity* entity, struct Transform* transform, 
+                                         struct Renderable* renderable, uint32_t frame_count);
+static void report_render_performance(void);
+
+// ============================================================================
 // SOKOL RENDERING DEFINITIONS
 // ============================================================================
 
@@ -323,15 +332,6 @@ void render_shutdown(RenderConfig* config) {
     (void)config; // Unused for now
     
     if (render_state.initialized) {
-        sg_destroy_buffer(render_state.vertex_buffer);
-        sg_destroy_buffer(render_state.index_buffer);
-        sg_destroy_buffer(render_state.uniform_buffer);  // Clean up uniform buffer
-        sg_destroy_image(render_state.default_texture);
-        sg_destroy_pipeline(render_state.pipeline);
-        sg_destroy_shader(render_state.shader);
-        sg_destroy_sampler(render_state.sampler);
-        
-        // Free loaded shader sources
         if (render_state.vertex_shader_source) {
             free_shader_source(render_state.vertex_shader_source);
             render_state.vertex_shader_source = NULL;
@@ -402,6 +402,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     // Iterate through renderable entities (Engineering Brief pattern)
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
+        render_performance.entities_processed++;
         
         // Debug first few frames
         if (frame_count < 3) {
@@ -422,23 +423,9 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         struct Transform* transform = entity_get_transform(world, entity->id);
         struct Renderable* renderable = entity_get_renderable(world, entity->id);
         
-        if (!transform || !renderable || !renderable->visible) {
-            if (frame_count < 10) {
-                printf("❌ Entity %d: Invalid components or invisible (T:%p R:%p V:%d)\n", 
-                       entity->id, (void*)transform, (void*)renderable, 
-                       renderable ? renderable->visible : 0);
-            }
-            continue;
-        }
-        
-        // Skip if GPU resources are invalid
-        if (renderable->vbuf.id == SG_INVALID_ID || 
-            renderable->ibuf.id == SG_INVALID_ID ||
-            renderable->index_count == 0) {
-            if (frame_count < 10) {
-                printf("❌ Entity %d: Invalid GPU resources (VB:%d IB:%d IC:%d)\n", 
-                       entity->id, renderable->vbuf.id, renderable->ibuf.id, renderable->index_count);
-            }
+        // Enhanced validation (Sprint 08 Review Action Item)
+        if (!validate_entity_for_rendering(entity, transform, renderable, frame_count)) {
+            render_performance.entities_culled++;
             continue;
         }
         
@@ -545,6 +532,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         
         // Draw
         sg_draw(0, renderable->index_count, 1);
+        render_performance.draw_calls++;
+        render_performance.entities_rendered++;
         rendered_count++;
     }
     
@@ -597,6 +586,9 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             printf("🔴 Fallback triangle drawn - no valid mesh entities\n");
         }
     }
+    
+    // Performance reporting (Sprint 08 Review Action Item)
+    report_render_performance();
     
     // Render pass is ended in main.c
 }
