@@ -1284,24 +1284,17 @@ const char* get_shader_path(const char* base_name, const char* stage) {
 bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable) {
     if (!registry || !mesh_name || !renderable) return false;
     
-    printf("🔍 DEBUG: assets_create_renderable_from_mesh called with mesh_name='%s'\n", mesh_name);
-    
     // Find the mesh
     Mesh* mesh = assets_get_mesh(registry, mesh_name);
-    printf("🔍 DEBUG: Found mesh: %p\n", (void*)mesh);
     if (!mesh || !mesh->loaded) {
         printf("❌ Mesh '%s' not found or not loaded\n", mesh_name);
         return false;
     }
     
-    printf("🔍 DEBUG: Mesh loaded=%d, gpu_resources=%p\n", mesh->loaded, (void*)mesh->gpu_resources);
-    
     // Check if GPU resources were already created during mesh loading
     if (mesh->gpu_resources &&
         sg_query_buffer_state(mesh->gpu_resources->sg_vertex_buffer) == SG_RESOURCESTATE_VALID &&
         sg_query_buffer_state(mesh->gpu_resources->sg_index_buffer) == SG_RESOURCESTATE_VALID) {
-        
-        printf("🔍 DEBUG: GPU resources valid, creating renderable\n");
         
         // PIMPL: Allocate GPU resources struct
         renderable->gpu_resources = gpu_resources_create();
