@@ -153,4 +153,10 @@ sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_
 // Helper function to create a default white texture
 sg_image assets_create_default_texture(void);
 
+// Load all loaded textures to GPU (batch operation)
+bool assets_load_all_textures_to_gpu(AssetRegistry* registry);
+
+// Initialize all GPU resources from loaded asset data
+bool assets_initialize_gpu_resources(AssetRegistry* registry);
+
 #endif // ASSETS_H

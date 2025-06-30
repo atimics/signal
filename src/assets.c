@@ -1031,21 +1031,33 @@ bool assets_load_all_textures_to_gpu(AssetRegistry* registry) {
         // Skip if already loaded to GPU
         if (texture->sg_image.id != SG_INVALID_ID) {
             success_count++;
+            printf("✅ Texture '%s' already loaded to GPU\n", texture->name);
             continue;
         }
         
         // Skip if texture data not loaded
         if (!texture->loaded) {
-            printf("⚠️  Texture '%s' data not loaded, skipping GPU upload\n", texture->name);
+            printf("⚠️  Texture '%s' data not loaded from file, skipping GPU upload\n", texture->name);
             continue;
         }
         
-        // Try to reload texture to GPU (the load_texture function handles GPU upload)
-        if (load_texture(registry, texture->filepath, texture->name)) {
+        // Load texture data to GPU directly (without reloading from file)
+        int width, height, channels;
+        unsigned char* data = stbi_load(texture->filepath, &width, &height, &channels, 4);
+        
+        if (data) {
+            texture->sg_image = sg_make_image(&(sg_image_desc){
+                .width = width,
+                .height = height,
+                .pixel_format = SG_PIXELFORMAT_RGBA8,
+                .data.subimage[0][0] = { .ptr = data, .size = (size_t)(width * height * 4) },
+                .label = texture->name
+            });
+            stbi_image_free(data);
             success_count++;
             printf("✅ Texture '%s' loaded to GPU\n", texture->name);
         } else {
-            printf("❌ Failed to load texture '%s' to GPU\n", texture->name);
+            printf("❌ Failed to reload texture '%s' from file for GPU upload\n", texture->name);
         }
     }
     

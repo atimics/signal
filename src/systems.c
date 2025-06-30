@@ -60,6 +60,12 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config) {
     printf("🔍 Loading assets...\n");
     assets_load_all_in_directory(&g_asset_registry);
     
+    // Initialize GPU resources for all loaded assets
+    if (!assets_initialize_gpu_resources(&g_asset_registry)) {
+        printf("❌ Failed to initialize GPU resources\n");
+        return false;
+    }
+    
     // Print loaded assets and templates
     assets_list_loaded(&g_asset_registry);
     list_entity_templates(&g_data_registry);
