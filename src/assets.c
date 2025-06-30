@@ -156,6 +156,15 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
     texture->width = width;
     texture->height = height;
     
+#ifdef CGAME_TESTING
+    // In test mode, skip GPU resource creation
+    texture->gpu_resources = NULL;
+    texture->loaded = true;
+    stbi_image_free(image_data);
+    registry->texture_count++;
+    printf("✅ Loaded texture (test mode): %s (%dx%d)\n", texture_name, width, height);
+    return true;
+#else
     // Allocate GPU resources
     texture->gpu_resources = calloc(1, sizeof(struct TextureGpuResources));
     if (!texture->gpu_resources) {
@@ -183,6 +192,7 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
     
     printf("✅ Loaded texture: %s (%dx%d)\n", texture_name, width, height);
     return true;
+#endif
 }
 
 // ============================================================================
