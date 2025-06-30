@@ -146,5 +146,19 @@ void mesh_renderer_render_entity(MeshRenderer* renderer, struct Entity* entity,
 
 void mesh_renderer_cleanup(MeshRenderer* renderer) {
     if (!renderer) return;
-    printf("🔧 Mesh renderer cleaned up\n");
+    
+    printf("🔧 Cleaning up mesh renderer...\n");
+    
+    // Destroy Sokol resources
+    if (renderer->pipeline.id != SG_INVALID_ID) {
+        sg_destroy_pipeline(renderer->pipeline);
+        renderer->pipeline.id = SG_INVALID_ID;
+    }
+    
+    if (renderer->shader.id != SG_INVALID_ID) {
+        sg_destroy_shader(renderer->shader);
+        renderer->shader.id = SG_INVALID_ID;
+    }
+    
+    printf("✅ Mesh renderer cleaned up\n");
 }
