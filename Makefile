@@ -56,13 +56,13 @@ $(BUILD_ASSETS_DIR): $(ASSET_COMPILER) $(shell find $(ASSETS_DIR) -name "*.obj" 
 	@echo "🔨 Compiling assets..."
 	@echo "📋 Note: Asset compilation requires Python dependencies (trimesh, cairo, numpy, scipy)"
 	@echo "📋 Install with: pip install trimesh cairosvg numpy scipy jsonschema"
-	$(PYTHON) $(ASSET_COMPILER) --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes
+	$(PYTHON) $(ASSET_COMPILER) compile --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes
 	@echo "✅ Asset compilation attempted (check output above for any errors)"
 
 # Force asset recompilation
 assets-force:
 	@echo "🔨 Force recompiling assets..."
-	$(PYTHON) $(ASSET_COMPILER) --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes --overwrite
+	$(PYTHON) $(ASSET_COMPILER) compile --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes --overwrite
 	@echo "✅ Asset compilation complete"
 
 # Link executable

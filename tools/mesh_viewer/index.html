@@ -158,6 +158,35 @@
             font-size: 11px;
             text-transform: uppercase;
         }
+        #texture-viewer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 256px;
+            height: 256px;
+            background-color: #252526;
+            border: 1px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 1001;
+            display: none; /* Initially hidden */
+            flex-direction: column;
+        }
+        #texture-viewer-header {
+            background-color: #3a3d41;
+            color: #fff;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        #texture-viewer-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
         .info-section p {
             margin: 0;
             font-size: 11px;
@@ -179,6 +208,10 @@
     </div>
     <div id="main-content">
         <div id="viewer-container"></div>
+        <div id="texture-viewer">
+            <div id="texture-viewer-header">Texture Preview</div>
+            <img id="texture-viewer-image" src="" alt="Texture"/>
+        </div>
     </div>
 
     <script type="module">
@@ -194,8 +227,21 @@
         const meshListContainer = document.getElementById('mesh-list-container');
         const viewerContainer = document.getElementById('viewer-container');
         const assetInfo = document.getElementById('asset-info');
+        const textureViewer = document.getElementById('texture-viewer');
+        const textureViewerImage = document.getElementById('texture-viewer-image');
         const sourceAssetsRoot = '../../assets/meshes/';
         const compiledAssetsRoot = '../../build/assets/meshes/';
+
+        // ... (rest of the script)
+
+        function showTexture(texturePath) {
+            textureViewerImage.src = texturePath;
+            textureViewer.style.display = 'flex';
+        }
+
+        function hideTexture() {
+            textureViewer.style.display = 'none';
+        }
 
         // Load material definitions for tag analysis
         async function loadMaterialDefinitions() {
@@ -524,9 +570,14 @@
                 clearScene();
                 centerAndAddObject(object);
 
+                // Show the texture
+                const texturePath = `${basePath}${meta.texture}`;
+                showTexture(texturePath);
+
             } catch (error) {
                 console.error(`Failed to load mesh: ${meta.name}`, error);
                 showMessage(`❌ Failed to load: ${meta.name}`, `Error: ${error.message}`);
+                hideTexture();
             }
         }
 
@@ -546,6 +597,7 @@
         }
         
         function clearScene() {
+            hideTexture();
             const toRemove = [];
             scene.traverse(child => {
                 if (child.isMesh || child.isGroup) toRemove.push(child);

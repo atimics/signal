@@ -35,6 +35,7 @@ import numpy as np
 from scipy.spatial import Delaunay
 import os
 import trimesh
+from trimesh.exchange.export import export_mesh
 from jsonschema import validate, ValidationError
 import cairosvg
 
@@ -219,82 +220,56 @@ def triangulate(faces):
                 tri_faces.append(tuple(tri))
     return tri_faces
 
-def generate_spritesheet_uvs_and_svg(original_faces, svg_path, svg_width=1024, svg_height=1024, mesh_name="", tags=None):
-    # Generate UV coordinates for faces in a spritesheet layout
-    num_faces = len(original_faces)
-    cols = math.ceil(math.sqrt(num_faces))
-    rows = math.ceil(num_faces / cols)
-    cell_width = 1.0 / cols
-    cell_height = 1.0 / rows
-    uv_coords_per_face = []
-    for i, face in enumerate(original_faces):
-        row = i // cols
-        col = i % cols
-        # Generate UVs for the polygon based on its vertices
-        local_coords = []
-        if len(face) == 3: # Triangle
-            local_coords = [np.array([0.1,0.1]), np.array([0.9,0.1]), np.array([0.5, 0.9])]
-        elif len(face) == 4: # Square
-            local_coords = [np.array([0.1,0.1]), np.array([0.9,0.1]), np.array([0.9,0.9]), np.array([0.1,0.9])]
-        elif len(face) == 5: # Pentagon
-            local_coords = [np.array([0.5, 0.9]), np.array([0.9, 0.6]), np.array([0.7, 0.1]), np.array([0.3, 0.1]), np.array([0.1, 0.6])]
-        else: # Generic polygon
-            center = np.mean([np.array([math.cos(2*math.pi*j/len(face)), math.sin(2*math.pi*j/len(face))]) for j in range(len(face))], axis=0)
-            local_coords = [0.5 * (np.array([math.cos(2*math.pi*j/len(face)), math.sin(2*math.pi*j/len(face))]) - center) + 0.5 for j in range(len(face))]
+def unwrap_and_generate_texture(mesh, svg_path, svg_width=1024, svg_height=1024, mesh_name="", tags=None):
+    """
+    Performs UV unwrapping on the mesh and generates an SVG texture
+    that visualizes the unwrapped UV layout with semantic colors.
+    """
+    # Perform UV unwrapping using trimesh
+    unwrapped = mesh.unwrap()
 
-        face_uvs = []
-        for lc in local_coords:
-            u = col * cell_width + lc[0] * cell_width
-            v = row * cell_height + lc[1] * cell_height
-            face_uvs.append((u, v))
-        uv_coords_per_face.append(face_uvs)
+    # The unwrapped mesh now has visual.uv set
+    uvs = unwrapped.visual.uv
 
-    # Generate semantic SVG template instead of random gradients
+    # Generate an SVG that visualizes the unwrapped UV layout
     with open(svg_path, 'w') as f:
         f.write(f'<svg width="{svg_width}" height="{svg_height}" xmlns="http://www.w3.org/2000/svg">\n')
         
-        # Add semantic color definitions
+        # Define semantic gradients
+        material_def = get_material_definition_from_tags(tags)
+        if material_def and 'colors' in material_def:
+            colors = material_def['colors']
+            primary_color = colors.get('primary', '#8C9BAB')
+            secondary_color = colors.get('secondary', '#4A90E2')
+        else:
+            primary_color = '#8C9BAB'
+            secondary_color = '#4A90E2'
+
         f.write('  <defs>\n')
-        for i in range(num_faces):
-            # Use semantic colors based on tags, fallback to mesh name
-            semantic_color = get_semantic_color_for_mesh(mesh_name, i, tags)
-            # Create subtle gradients for visual interest
-            lighter = lighten_color(semantic_color, 0.2)
-            darker = darken_color(semantic_color, 0.2)
-            
-            f.write(f'    <linearGradient id="grad{i}" x1="0%" y1="0%" x2="100%" y2="100%">\n')
-            f.write(f'      <stop offset="0%" stop-color="{lighter}" />\n')
-            f.write(f'      <stop offset="50%" stop-color="{semantic_color}" />\n')
-            f.write(f'      <stop offset="100%" stop-color="{darker}" />\n')
-            f.write('    </linearGradient>\n')
+        f.write(f'    <linearGradient id="semantic_gradient" x1="0%" y1="0%" x2="100%" y2="100%">\n')
+        f.write(f'      <stop offset="0%" stop-color="{lighten_color(primary_color, 0.2)}" />\n')
+        f.write(f'      <stop offset="100%" stop-color="{darken_color(secondary_color, 0.2)}" />\n')
+        f.write('    </linearGradient>\n')
         f.write('  </defs>\n')
         
-        # Dark background
-        f.write(f'  <rect width="100%" height="100%" fill="#111"/>\n')
-        
-        # Add UV seam guides as thin lines
-        f.write('  <!-- UV Seam Guides -->\n')
-        seam_color = "#333"  # Dark gray guides
-        for col in range(1, cols):
-            x = col * (svg_width / cols)
-            f.write(f'  <line x1="{x}" y1="0" x2="{x}" y2="{svg_height}" stroke="{seam_color}" stroke-width="1" opacity="0.5"/>\n')
-        for row in range(1, rows):
-            y = row * (svg_height / rows)
-            f.write(f'  <line x1="0" y1="{y}" x2="{svg_width}" y2="{y}" stroke="{seam_color}" stroke-width="1" opacity="0.5"/>\n')
-        
-        # Draw face polygons with semantic colors
-        for i, face_uvs in enumerate(uv_coords_per_face):
-            points = [f"{uv[0] * svg_width},{uv[1] * svg_height}" for uv in face_uvs]
-            f.write(f'  <polygon points="{" ".join(points)}" fill="url(#grad{i})" stroke="#000" stroke-width="0.5"/>\n')
-        
+        # Background
+        f.write('  <rect width="100%" height="100%" fill="#111"/>\n')
+
+        # Draw the UV layout with semantic gradients
+        for face_uv in uvs[unwrapped.faces]:
+            points = " ".join([f"{uv[0] * svg_width},{uv[1] * svg_height}" for uv in face_uv])
+            f.write(f'  <polygon points="{points}" fill="url(#semantic_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>\n')
+
         # Add title and instructions
         f.write('  <text x="10" y="30" fill="white" font-family="Arial" font-size="20" font-weight="bold">')
-        f.write(f'{mesh_name.replace("_", " ").title()} Texture Template</text>\n')
-        f.write('  <text x="10" y="50" fill="#ccc" font-family="Arial" font-size="12">')
-        f.write('Edit colors and details. Each section represents a mesh face.</text>\n')
+        f.write(f'{mesh_name.replace("_", " ").title()} UV Layout</text>\n')
+        f.write('  <text x="10" y="50" fill="#fff" font-family="Arial" font-size="12">')
+        f.write('This is the UV layout for the mesh. Edit this file to apply textures.</text>\n')
         
         f.write('</svg>\n')
-    return uv_coords_per_face
+
+    return unwrapped
+
 
 def lighten_color(hex_color, factor):
     """Lighten a hex color by a factor (0.0-1.0)."""
@@ -404,34 +379,15 @@ def write_mtl_file(mtl_path, material_name, texture_filename):
         f.write("Kd 1.0 1.0 1.0\n")
         f.write(f"map_Kd {texture_filename}\n")
 
-def write_compiled_obj(cobj_path, vertices, uvs, faces, uv_faces, mtl_filename, material_name):
-    """Writes the final compiled .cobj file with per-triangle UVs and correct winding."""
+def write_compiled_obj(cobj_path, mesh, mtl_filename, material_name):
+    """Writes the final compiled .cobj file with unwrapped UVs."""
     with open(cobj_path, 'w') as f:
         f.write(f"mtllib {Path(mtl_filename).name}\n")
         f.write(f"usemtl {material_name}\n\n")
-        for v in vertices:
-            f.write(f"v {' '.join(f'{c:.6f}' for c in v)}\n")
-        f.write("\n")
-        for u, v_coord in uvs:
-            f.write(f"vt {u:.6f} {1.0 - v_coord:.6f}\n") # Flip V for OBJ
-        f.write("\n")
         
-        all_face_normals = []
-        for v_indices in faces:
-            v0, v1, v2 = np.array(vertices[v_indices[0]]), np.array(vertices[v_indices[1]]), np.array(vertices[v_indices[2]])
-            normal = normalize(np.cross(v1 - v0, v2 - v0))
-            # Ensure normals point outwards from the origin for convex shapes
-            if np.dot(normal, v0) < 0:
-                normal = -normal
-            all_face_normals.append(normal)
-        
-        for vn in all_face_normals:
-            f.write(f"vn {' '.join(f'{c:.6f}' for c in vn)}\n")
-        f.write("\n")
+        # Use the export_mesh function to write the OBJ data
+        export_mesh(mesh, f, file_type='obj')
 
-        for i, (v_indices, vt_indices) in enumerate(zip(faces, uv_faces)):
-            f_parts = [f"{v_indices[j]+1}/{vt_indices[j]}/{i+1}" for j in range(3)]
-            f.write(f"f {' '.join(f_parts)}\n")
 
 # --- Metadata and Validation ---
 
@@ -511,25 +467,25 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
         str or None: The relative path to the compiled metadata file if
         successful, otherwise None.
     """
+    # Define source and build paths
     source_path = Path(source_path)
     mesh_name = source_path.stem
     
-    # Define build paths
-    relative_path = source_path.parent.relative_to(Path(args.source_dir))
-    target_dir = Path(build_dir) / relative_path
-    target_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Build filename based on source filename but with .cobj extension
-    source_filename = source_path.name
-    build_filename = f"{source_path.stem}.cobj"
-    
-    cobj_path = target_dir / build_filename
-    mtl_path = target_dir / "material.mtl"
-    png_path = target_dir / "texture.png"
-    metadata_path = target_dir / "metadata.json"
+    # Define source and build paths
+    source_dir = source_path.parent
+    relative_path = source_dir.relative_to(Path(args.source_dir))
+    build_dir_path = Path(build_dir) / relative_path
+    build_dir_path.mkdir(parents=True, exist_ok=True)
 
-    # Use a temporary path for the SVG
-    svg_path = Path(target_dir) / f"{mesh_name}.svg.tmp"
+    source_filename = source_path.name
+    cobj_path = build_dir_path / f"{source_path.stem}.cobj"
+    mtl_path = build_dir_path / "material.mtl"
+    build_png_path = build_dir_path / "texture.png"
+    metadata_path = build_dir_path / "metadata.json"
+
+    # Source asset paths
+    source_svg_path = source_dir / "texture.svg"
+    source_png_path = source_dir / "texture.png"
 
     if not overwrite and cobj_path.exists():
         print(f"Skipping '{mesh_name}', compiled asset already exists.")
@@ -589,56 +545,39 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
             return None
 
     mesh.fix_normals() # Ensure winding is correct
-    vertices = mesh.vertices
     
-    # Use Delaunay triangulation for robust face generation
-    hull = Delaunay(vertices)
-    triangulated_faces = hull.convex_hull
+    # 3. UV Unwrap and Texture Generation
+    unwrapped_mesh = unwrap_and_generate_texture(mesh, source_svg_path, mesh_name=asset_name, tags=asset_tags)
+    print(f"🎨 Generated artist-editable texture: {source_svg_path.relative_to(Path(args.source_dir).parent)}")
 
-    # 3. Auto-texture with semantic colors based on tags
-    original_faces = [tuple(f) for f in triangulated_faces] # Use triangles as original faces
-    uv_coords_per_face = generate_spritesheet_uvs_and_svg(original_faces, svg_path, 
-                                                         mesh_name=asset_name, tags=asset_tags)
-    convert_svg_to_png(svg_path, png_path)
-    
-    # Clean up temporary SVG file
-    os.remove(svg_path)
-    
+    # Generate PNG from SVG if it doesn't exist
+    if not source_png_path.exists():
+        print(f"🖼️ Generating default PNG texture from SVG...")
+        convert_svg_to_png(source_svg_path, source_png_path)
+    else:
+        print(f"✅ Using existing artist-provided texture: {source_png_path.relative_to(Path(args.source_dir).parent)}")
+
+    # Copy texture to build directory
+    import shutil
+    shutil.copy2(source_png_path, build_png_path)
+
     # 4. Create semantic MTL file based on tags
     if not copy_source_mtl_if_exists(args.source_dir, args.build_dir, mesh_name):
         material_name = asset_name
         
         # Try new tag-based MTL generation first
-        if asset_tags and generate_semantic_mtl_file_from_tags(mtl_path, material_name, png_path.name, asset_tags):
+        if asset_tags and generate_semantic_mtl_file_from_tags(mtl_path, material_name, "texture.png", asset_tags):
             print(f"🎨 Generated tag-based MTL file: {material_name} (tags: {', '.join(asset_tags)})")
         else:
             # Fallback to old mesh-name-based system
-            generate_semantic_mtl_file(mtl_path, material_name, png_path.name, mesh_name)
+            generate_semantic_mtl_file(mtl_path, material_name, "texture.png", mesh_name)
             print(f"🎨 Generated semantic MTL file: {material_name}")
     
     # Extract material name from the OBJ file or use the generated one
     material_name = extract_material_name_from_obj(source_path) or asset_name
 
     # 5. Write Compiled Mesh
-    all_uvs = []
-    uv_faces = []
-    uv_idx_counter = 1
-    for i, face in enumerate(original_faces):
-        face_uvs = uv_coords_per_face[i]
-        all_uvs.extend(face_uvs)
-        tris = triangulate([face])
-        for tri in tris:
-            uv_face = []
-            for v_idx in tri:
-                try:
-                    original_vertex_index_in_face = list(face).index(v_idx)
-                    uv_face.append(uv_idx_counter + original_vertex_index_in_face)
-                except ValueError:
-                    uv_face.append(uv_idx_counter)
-            uv_faces.append(uv_face)
-        uv_idx_counter += len(face_uvs)
-    
-    write_compiled_obj(cobj_path, vertices, all_uvs, triangulated_faces, uv_faces, mtl_path.name, material_name)
+    write_compiled_obj(cobj_path, unwrapped_mesh, "material.mtl", material_name)
 
     # 6. Create and Write Build Metadata
     build_meta = create_build_metadata(source_meta, schema_path, source_filename)
@@ -651,6 +590,26 @@ def compile_mesh_asset(source_path, build_dir, schema_path, overwrite=False):
     print(f"Successfully compiled '{asset_name}'.\n")
     return str(metadata_path.relative_to(build_dir))
 
+def clean_source_assets(source_dir):
+    """
+    Deletes generated files from the source asset directories.
+    """
+    print(f"Cleaning source assets in '{source_dir}'...")
+    files_to_delete = [
+        "texture.png",
+        "texture.svg",
+        "material.mtl",
+        "geometry.obj"
+    ]
+    
+    for file_name in files_to_delete:
+        for path in Path(source_dir).glob(f"**/{file_name}"):
+            try:
+                path.unlink()
+                print(f"Deleted {path}")
+            except OSError as e:
+                print(f"Error deleting {path}: {e}", file=sys.stderr)
+
 def main():
     """
     Main function to run the asset compiler.
@@ -660,11 +619,25 @@ def main():
     Finally, it generates the master asset index file.
     """
     parser = argparse.ArgumentParser(description="Compile mesh assets from the source directory to the build directory.")
-    parser.add_argument("--source_dir", default="assets/meshes", help="Source directory for mesh assets.")
-    parser.add_argument("--build_dir", default="build/assets/meshes", help="Build directory for compiled assets.")
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing files in the build directory.")
+    
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # Compile command
+    parser_compile = subparsers.add_parser("compile", help="Compile all assets.")
+    parser_compile.add_argument("--source_dir", default="assets/meshes", help="Source directory for mesh assets.")
+    parser_compile.add_argument("--build_dir", default="build/assets/meshes", help="Build directory for compiled assets.")
+    parser_compile.add_argument("--overwrite", action="store_true", help="Overwrite existing files in the build directory.")
+
+    # Clean command
+    parser_clean = subparsers.add_parser("clean", help="Clean generated files from source directories.")
+    parser_clean.add_argument("--source_dir", default="assets/meshes", help="Source directory for mesh assets.")
+
     global args
     args = parser.parse_args()
+
+    if args.command == "clean":
+        clean_source_assets(args.source_dir)
+        return
 
     source_dir = Path(args.source_dir)
     build_dir = Path(args.build_dir)

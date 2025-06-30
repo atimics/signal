@@ -35,4 +35,4 @@ For detailed information about the engine's architecture, development workflow, 
 
 ## 📈 Project Status
 
-This project is under active development. The current focus is on stabilizing the core engine, improving the rendering pipeline, and integrating advanced features like a decal system and PBR materials. See the [Roadmap](docs/project/ROADMAP.md) for more details.
+This project is under active development. The current focus is on implementing a full Physically-Based Rendering (PBR) workflow, which includes a new UV unwrapping system in the asset pipeline, advanced lighting and shadow mapping, and a refactored rendering pipeline. See the [Sprint Backlog](./docs/sprints/backlog/README.md) for more details.
