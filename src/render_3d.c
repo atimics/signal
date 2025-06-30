@@ -353,6 +353,11 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         return;
     }
     
+    // Begin the default render pass
+    sg_begin_default_pass(&(sg_pass_action){
+        .colors[0] = { .load_action = SG_LOADACTION_CLEAR, .clear_value = { 0.1f, 0.2f, 0.6f, 1.0f } }
+    }, sapp_width(), sapp_height());
+    
     // Apply the rendering pipeline
     sg_apply_pipeline(render_state.pipeline);
     
@@ -360,9 +365,30 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     int renderable_count = 0;
     int rendered_count = 0;
     
+    // Debug total entity count
+    if (first_frame) {
+        printf("🔍 Total entities in world: %d\n", world->entity_count);
+        for (uint32_t j = 0; j < world->entity_count; j++) {
+            struct Entity* debug_entity = &world->entities[j];
+            printf("🔍 Entity %d: components=0x%X (R:%d T:%d)\n", 
+                   debug_entity->id, debug_entity->component_mask,
+                   !!(debug_entity->component_mask & COMPONENT_RENDERABLE),
+                   !!(debug_entity->component_mask & COMPONENT_TRANSFORM));
+        }
+    }
+    
     // Iterate through renderable entities (Engineering Brief pattern)
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
+        
+        // Debug all entities in first few frames
+        if (frame_count < 5) {
+            printf("🔍 Processing Entity %d: components=0x%X (R:%d T:%d)\n", 
+                   entity->id, entity->component_mask,
+                   !!(entity->component_mask & COMPONENT_RENDERABLE),
+                   !!(entity->component_mask & COMPONENT_TRANSFORM));
+        }
+        
         if (!(entity->component_mask & COMPONENT_RENDERABLE) || 
             !(entity->component_mask & COMPONENT_TRANSFORM)) {
             continue;
@@ -375,6 +401,11 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         struct Renderable* renderable = entity_get_renderable(world, entity->id);
         
         if (!transform || !renderable || !renderable->visible) {
+            if (frame_count < 10) {
+                printf("❌ Entity %d: Invalid components or invisible (T:%p R:%p V:%d)\n", 
+                       entity->id, (void*)transform, (void*)renderable, 
+                       renderable ? renderable->visible : 0);
+            }
             continue;
         }
         
@@ -382,7 +413,18 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         if (renderable->vbuf.id == SG_INVALID_ID || 
             renderable->ibuf.id == SG_INVALID_ID ||
             renderable->index_count == 0) {
+            if (frame_count < 10) {
+                printf("❌ Entity %d: Invalid GPU resources (VB:%d IB:%d IC:%d)\n", 
+                       entity->id, renderable->vbuf.id, renderable->ibuf.id, renderable->index_count);
+            }
             continue;
+        }
+        
+        // If we get here, this entity should be rendered
+        if (frame_count < 10) {
+            printf("✅ Entity %d: Ready to render - pos:(%.1f,%.1f,%.1f) scale:(%.1f,%.1f,%.1f) indices:%d\n",
+                   entity->id, transform->position.x, transform->position.y, transform->position.z,
+                   transform->scale.x, transform->scale.y, transform->scale.z, renderable->index_count);
         }
         
         // Apply bindings (VBO, IBO, textures)
@@ -398,7 +440,13 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         float model[16], mvp[16];
         
         // Create proper model matrix from transform (include scale and rotation)
-        mat4_compose_transform(model, transform->position, transform->rotation, transform->scale);
+        // Scale up meshes to make them visible (they might be too small)
+        Vector3 render_scale = {
+            transform->scale.x * 5.0f,  // Scale up 5x
+            transform->scale.y * 5.0f, 
+            transform->scale.z * 5.0f
+        };
+        mat4_compose_transform(model, transform->position, transform->rotation, render_scale);
         
         // Get active camera matrices
         EntityID active_camera_id = world_get_active_camera(world);
@@ -411,13 +459,6 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         if (active_camera) {
             // Use cached camera matrices
             mat4_multiply(mvp, active_camera->view_projection_matrix, model);
-            
-            // Debug info for first few renders
-            if (rendered_count == 0 && frame_count < 10) {
-                printf("🔍 Entity %d: pos:(%.1f,%.1f,%.1f) scale:(%.1f,%.1f,%.1f) indices:%d\n",
-                       entity->id, transform->position.x, transform->position.y, transform->position.z,
-                       transform->scale.x, transform->scale.y, transform->scale.z, renderable->index_count);
-            }
             
             // Debug camera info occasionally 
             static int debug_counter = 0;
@@ -454,6 +495,15 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         memcpy(vs_params.mvp, mvp, sizeof(mvp));
         sg_apply_uniforms(0, &SG_RANGE(vs_params));
         
+        // Debug first entity's matrix in first few frames
+        if (frame_count < 3 && entity->id == 1) {
+            printf("🎯 Entity %d MVP matrix:\n", entity->id);
+            printf("   [%.2f %.2f %.2f %.2f]\n", mvp[0], mvp[1], mvp[2], mvp[3]);
+            printf("   [%.2f %.2f %.2f %.2f]\n", mvp[4], mvp[5], mvp[6], mvp[7]);
+            printf("   [%.2f %.2f %.2f %.2f]\n", mvp[8], mvp[9], mvp[10], mvp[11]);
+            printf("   [%.2f %.2f %.2f %.2f]\n", mvp[12], mvp[13], mvp[14], mvp[15]);
+        }
+        
         // Draw
         sg_draw(0, renderable->index_count, 1);
         rendered_count++;
@@ -470,8 +520,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         printf("🎨 Rendered %d/%d entities (frame %d)\n", rendered_count, renderable_count, frame_count);
     }
     
-    // Fallback: draw test triangle if no entities were rendered
-    if (rendered_count == 0 && renderable_count > 0) {
+    // Fallback: draw test triangle if no entities were rendered (or for debugging)
+    if (rendered_count >= 0) {  // Always draw triangle for debugging
         // Apply test triangle bindings
         sg_apply_bindings(&(sg_bindings){
             .vertex_buffers[0] = render_state.vertex_buffer,
@@ -508,6 +558,10 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             printf("🔴 Fallback triangle drawn - no valid mesh entities\n");
         }
     }
+    
+    // End the render pass
+    sg_end_pass();
+    sg_commit();
 }
 
 void render_debug_info(struct World* world, RenderConfig* config) {
