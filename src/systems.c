@@ -466,6 +466,12 @@ void camera_system_update(struct World* world, float delta_time) {
             if (entity->component_mask & COMPONENT_CAMERA) {
                 struct Camera* camera = entity->camera;
                 if (camera) {
+                    // Initialize cameras with default values
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->component_mask & COMPONENT_CAMERA) {
+                struct Camera* camera = entity->camera;
+                if (camera) {
                     // Set default camera properties if not already set
                     if (camera->fov == 0.0f) camera->fov = 60.0f;  // Wider FOV for better view
                     if (camera->near_plane == 0.0f) camera->near_plane = 0.1f;
@@ -507,6 +513,12 @@ void camera_system_update(struct World* world, float delta_time) {
                     
                     // Mark matrices as dirty for initial calculation
                     camera->matrices_dirty = true;
+                    
+                    printf("🎥 Initialized camera Entity %d: pos:(%.1f,%.1f,%.1f) behavior:%d\n",
+                           entity->id, camera->position.x, camera->position.y, camera->position.z, camera->behavior);
+                }
+            }
+        }
                 }
             }
         }
@@ -517,6 +529,7 @@ void camera_system_update(struct World* world, float delta_time) {
                 struct Entity* entity = &world->entities[i];
                 if (entity->component_mask & COMPONENT_CAMERA) {
                     world_set_active_camera(world, entity->id);
+                    printf("🎯 Set initial active camera: Entity %d\n", entity->id);
                     break;
                 }
             }
