@@ -69,7 +69,12 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path) {
     if (!registry || !templates_path) return false;
     
     char full_path[1024];
+#ifdef __EMSCRIPTEN__
+    // WASM uses preloaded virtual filesystem
+    snprintf(full_path, sizeof(full_path), "/assets/%s", templates_path);
+#else
     snprintf(full_path, sizeof(full_path), "%s/%s", registry->data_root, templates_path);
+#endif
     
     FILE* file = fopen(full_path, "r");
     if (!file) {

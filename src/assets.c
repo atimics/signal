@@ -30,7 +30,12 @@ bool assets_init(AssetRegistry* registry, const char* asset_root) {
     
     // Clear the registry
     memset(registry, 0, sizeof(AssetRegistry));
+#ifdef __EMSCRIPTEN__
+    // WASM uses preloaded virtual filesystem
+    strncpy(registry->asset_root, "/assets", sizeof(registry->asset_root) - 1);
+#else
     strncpy(registry->asset_root, asset_root, sizeof(registry->asset_root) - 1);
+#endif
     
     printf("🎨 Asset system initialized\n");
     printf("   Asset root: %s\n", registry->asset_root);

@@ -63,7 +63,11 @@
         },
         canvas: (function() {
           var canvas = document.getElementById('canvas');
-          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+          canvas.addEventListener("webglcontextlost", function(e) { 
+            console.error('WebGL context lost. You will need to reload the page.'); 
+            Module.setStatus('WebGL context lost - reload page');
+            e.preventDefault(); 
+          }, false);
           return canvas;
         })(),
         setStatus: function(text) {
@@ -90,8 +94,10 @@
         }
       };
       Module.setStatus('Downloading...');
-      window.onerror = function() {
+      window.onerror = function(message, source, lineno, colno, error) {
         Module.setStatus('Exception thrown, see JavaScript console');
+        console.error('Error: ' + message + ' at ' + source + ':' + lineno + ':' + colno);
+        if (error) console.error('Stack:', error.stack);
         Module.setStatus = function(text) {
           if (text) Module.printErr('[post-exception status] ' + text);
         };

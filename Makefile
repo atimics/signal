@@ -111,11 +111,10 @@ release: CFLAGS += -DNDEBUG -O3
 release: clean $(TARGET)
 
 # WebAssembly build (requires Emscripten)
-wasm: | $(BUILD_DIR)
+wasm: assets-wasm | $(BUILD_DIR)
 	@echo "🌐 Building for WebAssembly..."
 	@echo "📋 Note: This requires Emscripten SDK to be installed and activated"
 	@echo "📋 Install with: https://emscripten.org/docs/getting_started/downloads.html"
-	@echo "📋 Skipping asset compilation for WASM build"
 	emcc -std=c99 -O2 -Isrc \
 		-DSOKOL_GLES3 \
 		-DSOKOL_IMPL \
@@ -126,9 +125,16 @@ wasm: | $(BUILD_DIR)
 		-s USE_WEBGL2=1 -s FULL_ES3=1 \
 		-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 		-s EXPORTED_FUNCTIONS='["_main"]' \
+		-s FORCE_FILESYSTEM=1 \
+		--preload-file $(BUILD_ASSETS_DIR)@/assets \
 		--shell-file src/shell.html \
 		src/core.c src/systems.c src/render_3d.c src/render_camera.c \
 		src/render_lighting.c src/render_mesh.c src/ui.c src/data.c src/main.c \
 		-o $(BUILD_DIR)/cgame.html
 
-.PHONY: all with-assets clean clean-assets assets assets-force run profile debug release wasm
+# Compile assets for WASM (simplified)
+assets-wasm: $(BUILD_ASSETS_DIR)
+	@echo "🔨 Preparing assets for WASM build..."
+	@echo "📋 Using existing compiled assets from build/assets/"
+
+.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm
