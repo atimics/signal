@@ -12,6 +12,7 @@
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
 #include "nuklear.h"
 
 #define SOKOL_NUKLEAR_IMPL
@@ -106,7 +107,7 @@ static void simulate_player_input(struct World* world, EntityID player_id, float
     float desired_z = center_z + hover_radius * sinf(time * hover_speed);
     
     // Get current position
-    struct Transform* transform = entity_get_transform(world, id);
+    struct Transform* transform = entity_get_transform(world, player_id);
     if (!transform) return;
     
     // Gentle steering toward hovering position

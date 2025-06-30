@@ -3,6 +3,11 @@
 #include "sokol_glue.h"
 #include "sokol_log.h"
 
+// Include standard headers before Nuklear
+#include <math.h>
+#include <stdio.h>
+#include <stdarg.h>
+
 // Nuklear configuration - declarations only (no implementation)
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -16,8 +21,6 @@
 
 #include "ui.h"
 #include "core.h"
-#include <math.h>
-#include <stdio.h>
 
 static UIState ui_state = {0};
 
