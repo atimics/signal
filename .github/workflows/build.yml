@@ -14,10 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Create Virtual Environment
+        run: python3 -m venv .venv
+
+      - name: Install Python Dependencies
         run: |
-          # No specific dependencies needed for macOS Metal build yet
-          echo "Setup complete for macOS"
+          source .venv/bin/activate
+          pip install -r requirements.txt
 
       - name: Build Project
         run: make
@@ -26,6 +34,40 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cgame-macos
+          path: build/cgame
+
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Create Virtual Environment
+        run: python3 -m venv .venv
+
+      - name: Install Python Dependencies
+        run: |
+          source .venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Build Project
+        run: make
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgame-linux
           path: build/cgame
 
   build-wasm:
