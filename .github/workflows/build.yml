@@ -61,12 +61,9 @@ jobs:
         run: python3 -m venv .venv
 
       - name: Install Python Dependencies
-        env:
-          CAIRO_INCLUDE_PATH: $(brew --prefix cairo)/include/cairo
-          CAIRO_LIB_PATH: $(brew --prefix cairo)/lib
         run: |
-          pip cache purge
           source .venv/bin/activate
+          pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Build Project
