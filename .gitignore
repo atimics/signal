@@ -92,5 +92,3 @@ assets/**/*.temp
 # Keep important asset metadata
 !assets/meshes/metadata.json
 !assets/textures/metadata.json
-
-*.png

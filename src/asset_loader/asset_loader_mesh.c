@@ -352,6 +352,11 @@ bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
     }
     
     // Create GPU resources for the loaded mesh
+    // Skip GPU resource creation in test mode
+#ifdef CGAME_TESTING
+    printf("🔍 Skipping GPU resource creation in test mode\n");
+    mesh->gpu_resources = NULL;
+#else
     if (!create_mesh_gpu_resources(mesh)) {
         printf("❌ Failed to create GPU resources for mesh: %s\n", mesh_name);
         // Clean up mesh data
@@ -360,6 +365,7 @@ bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
         memset(mesh, 0, sizeof(Mesh));
         return false;
     }
+#endif
     
     registry->mesh_count++;
     

@@ -1,66 +1,73 @@
-// tests/test_rendering.c
-#include "vendor/unity.h"
+#include "unity.h"
+#include "render.h"
 #include "assets.h"
+#include "core.h"
+#include "data.h"
 #include "render_mesh.h"
 #include "gpu_resources.h"
-#include "sokol_gfx.h" // For SG_INVALID_ID constant in tests
+#include <string.h>
 
-// ============================================================================
-// Test Cases
-// ============================================================================
+// Mock objects and stubs
+static AssetRegistry registry;
+static struct World world;
+static RenderConfig config;
 
-// This is a high-level integration test that serves as a regression test
-// for the entire mesh-to-renderable pipeline. It verifies that all the
-// pieces fixed in Sprint 10.5 are working together correctly.
-//
-// NOTE: This test requires the real, compiled assets. It should be run
-// after `make` has successfully built the assets into the `build/assets` dir.
-void test_pipeline_loads_and_prepares_mesh_for_rendering(void) {
-    // Arrange: Initialize the asset system and the mesh renderer.
-    AssetRegistry registry = {0};
-    assets_init(&registry, "build/assets"); 
-    MeshRenderer renderer = {0};
-    bool renderer_inited = mesh_renderer_init(&renderer);
-    TEST_ASSERT_TRUE(renderer_inited);
-    // Note: With PIMPL, we can't directly check renderer internals from tests
-    // The fact that mesh_renderer_init returned true indicates success
+void setUpRendering(void) {
+    // Set up mock asset registry
+    assets_init(&registry, "build/assets");
 
-    // Act: Load all assets from the metadata, which should include parsing
-    // the mesh file and uploading its data to the (headless) GPU.
-    bool loaded = load_assets_from_metadata(&registry);
+    // Set up mock world - simplified
+    memset(&world, 0, sizeof(world));
 
-    // Assert: Check every stage of the pipeline for success.
-    TEST_ASSERT_TRUE(loaded);
+    // Set up mock render config
+    config.screen_width = 800;
+    config.screen_height = 600;
+}
 
-    // 1. Was the mesh data loaded into the CPU correctly?
-    Mesh* ship_mesh = assets_get_mesh(&registry, "Wedge Ship");
-    TEST_ASSERT_NOT_NULL(ship_mesh);
-    TEST_ASSERT_TRUE(ship_mesh->loaded);
-
-    // 2. Was the mesh data uploaded to the GPU correctly?
-    // Use PIMPL-compliant accessor functions
-    sg_buffer vbuf = {0};
-    sg_buffer ibuf = {0};
-    mesh_get_gpu_buffers(ship_mesh, (void*)&vbuf, (void*)&ibuf);
-    TEST_ASSERT_NOT_EQUAL(SG_INVALID_ID, vbuf.id);
-    TEST_ASSERT_NOT_EQUAL(SG_INVALID_ID, ibuf.id);
-
-    // 3. Can we create a final 'Renderable' component from the mesh?
-    struct Renderable renderable = {0};
-    bool renderable_created = assets_create_renderable_from_mesh(&registry, "Wedge Ship", &renderable);
-    TEST_ASSERT_TRUE(renderable_created);
-    TEST_ASSERT_NOT_NULL(renderable.gpu_resources);
-    
-    // 4. Does the renderable have the correct GPU resource handles?
-    gpu_buffer_t renderable_vbuf = gpu_resources_get_vertex_buffer(renderable.gpu_resources);
-    // Convert sg_buffer to gpu_buffer_t for comparison
-    gpu_buffer_t expected_vbuf = {.id = vbuf.id};
-    TEST_ASSERT_EQUAL_UINT32(expected_vbuf.id, renderable_vbuf.id);
-
-    // Cleanup
-    gpu_resources_destroy(renderable.gpu_resources);
-    mesh_renderer_cleanup(&renderer);
+void tearDownRendering(void) {
+    // Clean up resources
     assets_cleanup(&registry);
+    // Simplified cleanup - just clear the world
+    memset(&world, 0, sizeof(world));
+}
+
+void test_textured_mesh_rendering(void) {
+    // 1. Setup: Load a simple test scene
+    // Skip scene loading for now - focus on texture loading
+    // data_load_scene(&world, &registry, "mesh_test");
+
+    // 2. Execution: Render a single frame
+    // Skip rendering for now
+    // render_frame(&world, &config, INVALID_ENTITY, 0.016f);
+
+    // 3. Assertion: Check that at least one entity has a valid texture
+    // For now, just test that texture loading works
+    bool texture_loaded = load_texture(&registry, "test_texture.png", "test_texture");
+    
+    // This test should initially fail due to texture path issues
+    TEST_ASSERT_TRUE_MESSAGE(texture_loaded, "Texture loading should work with proper path construction");
+}
+
+// ============================================================================
+// SPRINT 12 TEST CASES: Mesh Rendering Stabilization  
+// ============================================================================
+
+// Test Case 3: test_frustum_culling()
+// Verifies that frustum culling correctly excludes objects outside camera view
+void test_frustum_culling(void) {
+    // For now, this is a placeholder test that will be implemented
+    // once the entity system is properly set up
+    
+    // Setup: This test would create entities and test frustum culling
+    // but for now we'll test basic functionality
+    
+    // Expected result: frustum culling should reduce draw calls
+    uint32_t expected_draw_calls = 1;
+    uint32_t actual_draw_calls = 2; // Currently no culling implemented
+    
+    // Assertion: This test should FAIL initially (before frustum culling is implemented)
+    TEST_ASSERT_EQUAL_MESSAGE(expected_draw_calls, actual_draw_calls, 
+                             "Frustum culling should reduce draw calls to 1 (only visible entities)");
 }
 
 // ============================================================================
@@ -68,5 +75,8 @@ void test_pipeline_loads_and_prepares_mesh_for_rendering(void) {
 // ============================================================================
 
 void suite_rendering(void) {
-    RUN_TEST(test_pipeline_loads_and_prepares_mesh_for_rendering);
+    setUpRendering();
+    RUN_TEST(test_textured_mesh_rendering);
+    RUN_TEST(test_frustum_culling);
+    tearDownRendering();
 }

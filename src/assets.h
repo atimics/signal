@@ -29,6 +29,8 @@ typedef struct {
     int vertex_count;
     int* indices;
     int index_count;
+    Vector3 aabb_min;   // Axis-aligned bounding box minimum
+    Vector3 aabb_max;   // Axis-aligned bounding box maximum
     bool loaded;
     struct MeshGpuResources* gpu_resources; // Opaque pointer
 } Mesh;
@@ -114,6 +116,24 @@ bool load_material(AssetRegistry* registry, const char* material);
  * @return true if texture loaded successfully, false otherwise
  */
 bool load_texture(AssetRegistry* registry, const char* texture, const char* texture_name);
+
+/**
+ * @brief Load a mesh from an absolute file path
+ * @param registry The asset registry to load into
+ * @param absolute_filepath Full path to the mesh file
+ * @param mesh_name Name to assign to the loaded mesh
+ * @return true if mesh loaded successfully, false otherwise
+ */
+bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
+
+/**
+ * @brief Load a mesh from a binary .cobj file format
+ * @param registry The asset registry to load into
+ * @param absolute_filepath Full path to the .cobj file
+ * @param mesh_name Name to assign to the loaded mesh
+ * @return true if mesh loaded successfully, false otherwise
+ */
+bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
 
 /**
  * @brief Get a mesh by name from the asset registry
@@ -226,5 +246,29 @@ bool assets_initialize_gpu_resources(AssetRegistry* registry);
 // Tests should cast to sg_buffer* as needed
 void texture_get_gpu_image(const Texture* texture, sg_image* out_image);
 #endif
+
+// ============================================================================
+// BINARY ASSET FORMAT (Sprint 12 - Task 2)
+// ============================================================================
+
+// Binary .cobj file header for high-performance asset loading
+typedef struct {
+    char magic[4];           // "COBJ" magic number
+    uint32_t version;        // Format version (1)
+    uint32_t vertex_count;   // Number of vertices
+    uint32_t index_count;    // Number of indices
+    Vector3 aabb_min;        // Bounding box minimum
+    Vector3 aabb_max;        // Bounding box maximum
+    uint32_t reserved[4];    // Reserved for future use
+} COBJHeader;
+
+// Enhanced vertex structure with tangent data for advanced lighting
+typedef struct {
+    Vector3 position;        // Vertex position
+    Vector3 normal;          // Surface normal
+    Vector2 tex_coord;       // Texture coordinates
+    Vector3 tangent;         // Tangent for normal mapping
+    float padding;           // Padding to 48 bytes total
+} VertexEnhanced;
 
 #endif // ASSETS_H

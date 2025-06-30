@@ -409,17 +409,6 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             continue;
         }
         
-        // If we get here, this entity should be rendered
-        if (first_frame) {
-            printf("✅ Entity %d: Ready to render - pos:(%.1f,%.1f,%.1f) scale:(%.1f,%.1f,%.1f) indices:%d\n",
-                   entity->id, transform->position.x, transform->position.y, transform->position.z,
-                   transform->scale.x, transform->scale.y, transform->scale.z, renderable->index_count);
-            printf("   VB ID:%d, IB ID:%d, TEX ID:%d\n", 
-                   gpu_resources_get_vertex_buffer(renderable->gpu_resources).id,
-                   gpu_resources_get_index_buffer(renderable->gpu_resources).id,
-                   gpu_resources_get_texture(renderable->gpu_resources).id);
-        }
-        
         // Apply bindings (VBO, IBO, textures)
         sg_bindings binds = {
             .vertex_buffers[0] = gpu_buffer_to_sg(gpu_resources_get_vertex_buffer(renderable->gpu_resources)),

@@ -110,9 +110,24 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
     if (!registry || !texture_path || !texture_name) return false;
     if (registry->texture_count >= 32) return false;
     
-    // Construct full path to texture
+    // Construct full path to texture with improved path handling
     char full_path[512];
-    snprintf(full_path, sizeof(full_path), "%s/textures/%s", registry->asset_root, texture_path);
+    
+    // Check if texture_path is already an absolute path
+    if (texture_path[0] == '/' || (strlen(texture_path) > 1 && texture_path[1] == ':')) {
+        // Absolute path - use as is
+        strncpy(full_path, texture_path, sizeof(full_path) - 1);
+        full_path[sizeof(full_path) - 1] = '\0';
+    } else {
+        // Relative path - check if it already includes textures directory
+        if (strstr(texture_path, "textures/") == texture_path || strstr(texture_path, "textures\\") == texture_path) {
+            // Path already includes textures directory
+            snprintf(full_path, sizeof(full_path), "%s/%s", registry->asset_root, texture_path);
+        } else {
+            // Traditional relative path - add textures directory
+            snprintf(full_path, sizeof(full_path), "%s/textures/%s", registry->asset_root, texture_path);
+        }
+    }
     
     // Load image data
     int width, height, channels;
