@@ -332,6 +332,15 @@ void render_shutdown(RenderConfig* config) {
     (void)config; // Unused for now
     
     if (render_state.initialized) {
+        sg_destroy_buffer(render_state.vertex_buffer);
+        sg_destroy_buffer(render_state.index_buffer);
+        sg_destroy_buffer(render_state.uniform_buffer);  // Clean up uniform buffer
+        sg_destroy_image(render_state.default_texture);
+        sg_destroy_pipeline(render_state.pipeline);
+        sg_destroy_shader(render_state.shader);
+        sg_destroy_sampler(render_state.sampler);
+        
+        // Free loaded shader sources
         if (render_state.vertex_shader_source) {
             free_shader_source(render_state.vertex_shader_source);
             render_state.vertex_shader_source = NULL;
