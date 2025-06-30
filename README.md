@@ -33,11 +33,6 @@ make clean && make && make run
 
 # Run the automated test suite
 make test
-
-# Run specific legacy tests (from previous sprints)
-make test_sprint_10_5_task_1
-make test_sprint_10_5_task_2
-make test_sprint_10_5_task_3
 ```
 
 ## 🧪 Testing
@@ -57,16 +52,19 @@ make test
 # The test executable is built to: build/cgame_tests
 ```
 
-### Test Structure
-
-- `tests/test_main.c` - Test runner and orchestration
-- `tests/test_core_math.c` - Vector math and utility function tests
-- `tests/vendor/unity.*` - Unity testing framework source code
-
 ## 📚 Documentation
 
 For detailed information about the engine's architecture, development workflow, and project status, please see the **[Documentation Hub](./docs/README.md)**.
 
 ## 📈 Project Status
 
-This project is under active development. The current focus is on implementing a full Physically-Based Rendering (PBR) workflow, which includes a new UV unwrapping system in the asset pipeline, advanced lighting and shadow mapping, and a refactored rendering pipeline. See the [Sprint Backlog](./docs/sprints/backlog/README.md) for more details.
+This project is under active development.
+
+**Recent Accomplishments**:
+*   **Sprint 10.5**: Repaired and stabilized the core mesh rendering pipeline.
+*   **Sprint 15**: Successfully integrated the Unity testing framework and established a CI workflow.
+
+**Current Focus**:
+*   **Sprint 11.5**: A short, focused sprint to refactor the graphics API according to the PIMPL idiom, creating a fully decoupled and stable foundation for future rendering work.
+
+See the [Sprint Backlog](./docs/sprints/backlog/README.md) for more details.
