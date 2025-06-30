@@ -226,13 +226,13 @@ bool parse_mtl_file(const char* filepath, AssetRegistry* registry) {
 // ASSET LOADING
 // ============================================================================
 
-bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name) {
-    if (!registry || !filename || !mesh_name) return false;
+bool load_compiled_mesh(AssetRegistry* registry, const char* geometry, const char* mesh_name) {
+    if (!registry || !geometry || !mesh_name) return false;
     if (registry->mesh_count >= 32) return false;
     
     // Build full path
     char filepath[512];
-    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, filename);
+    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, geometry);
     
     // Find or create mesh slot
     Mesh* mesh = &registry->meshes[registry->mesh_count];
@@ -267,16 +267,16 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
     return false;
 }
 
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name) {
-    if (!registry || !filename || !texture_name) return false;
+bool load_texture(AssetRegistry* registry, const char* texture_path, const char* texture_name) {
+    if (!registry || !texture_path || !texture_name) return false;
     if (registry->texture_count >= 32) return false;
 
     Texture* texture = &registry->textures[registry->texture_count];
     strncpy(texture->name, texture_name, sizeof(texture->name) - 1);
-    strncpy(texture->filepath, filename, sizeof(texture->filepath) - 1);
+    strncpy(texture->filepath, texture_path, sizeof(texture->filepath) - 1);
 
     int width, height, channels;
-    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4);
+    unsigned char* data = stbi_load(texture_path, &width, &height, &channels, 4);
 
     if (data) {
         texture->width = width;
@@ -396,9 +396,9 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
     // Parse metadata.json for mesh information
     char line[512];
     char mesh_name[128] = "";
-    char mesh_filename[128] = "";
+    char geometry_filename[128] = "";
     char texture_filename[128] = "";
-    char mtl_filename[128] = "";
+    char material_filename[128] = "";
     
     while (fgets(line, sizeof(line), file)) {
         // Remove whitespace and newlines
@@ -429,8 +429,8 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
             }
         }
         
-        // Parse filename field
-        if (strstr(trimmed, "\"filename\":")) {
+        // Parse geometry field
+        if (strstr(trimmed, "\"geometry\":")) {
             char* value_start = strstr(trimmed, ":");
             if (value_start) {
                 value_start++;
@@ -440,9 +440,9 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
                     char* value_end = strchr(value_start, '"');
                     if (value_end) {
                         int len = value_end - value_start;
-                        if (len > 0 && (size_t)len < sizeof(mesh_filename)) {
-                            strncpy(mesh_filename, value_start, len);
-                            mesh_filename[len] = 0;
+                        if (len > 0 && (size_t)len < sizeof(geometry_filename)) {
+                            strncpy(geometry_filename, value_start, len);
+                            geometry_filename[len] = 0;
                         }
                     }
                 }
@@ -469,8 +469,8 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
             }
         }
         
-        // Parse mtl field
-        if (strstr(trimmed, "\"mtl\":")) {
+        // Parse material field
+        if (strstr(trimmed, "\"material\":")) {
             char* value_start = strstr(trimmed, ":");
             if (value_start) {
                 value_start++;
@@ -480,9 +480,9 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
                     char* value_end = strchr(value_start, '"');
                     if (value_end) {
                         int len = value_end - value_start;
-                        if (len > 0 && (size_t)len < sizeof(mtl_filename)) {
-                            strncpy(mtl_filename, value_start, len);
-                            mtl_filename[len] = 0;
+                        if (len > 0 && (size_t)len < sizeof(material_filename)) {
+                            strncpy(material_filename, value_start, len);
+                            material_filename[len] = 0;
                         }
                     }
                 }
@@ -492,14 +492,14 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
     fclose(file);
     
     // Validate required fields
-    if (strlen(mesh_name) == 0 || strlen(mesh_filename) == 0) {
-        printf("❌ Invalid metadata: missing name or filename\n");
+    if (strlen(mesh_name) == 0 || strlen(geometry_filename) == 0) {
+        printf("❌ Invalid metadata: missing name or geometry\n");
         return false;
     }
     
     // Load the mesh file
     char mesh_path[512];
-    snprintf(mesh_path, sizeof(mesh_path), "%s/%s", mesh_dir, mesh_filename);
+    snprintf(mesh_path, sizeof(mesh_path), "%s/%s", mesh_dir, geometry_filename);
     
     // Convert absolute path to relative path from meshes directory
     char relative_mesh_path[512];
@@ -523,9 +523,9 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
     }
     
     // Load associated MTL file if specified in metadata
-    if (strlen(mtl_filename) > 0) {
+    if (strlen(material_filename) > 0) {
         char mtl_path[512];
-        snprintf(mtl_path, sizeof(mtl_path), "%s/%s", mesh_dir, mtl_filename);
+        snprintf(mtl_path, sizeof(mtl_path), "%s/%s", mesh_dir, material_filename);
         parse_mtl_file(mtl_path, registry);
     }
     

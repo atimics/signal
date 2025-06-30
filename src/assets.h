@@ -91,9 +91,9 @@ bool assets_init(AssetRegistry* registry, const char* asset_root);
 void assets_cleanup(AssetRegistry* registry);
 
 // Load individual assets
-bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const char* mesh_name);
-bool load_material(AssetRegistry* registry, const char* filename);
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name);
+bool load_compiled_mesh(AssetRegistry* registry, const char* geometry, const char* mesh_name);
+bool load_material(AssetRegistry* registry, const char* material);
+bool load_texture(AssetRegistry* registry, const char* texture, const char* texture_name);
 
 // Asset lookup
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name);
