@@ -26,37 +26,38 @@ This design allows for extreme flexibility and avoids the rigid hierarchies of t
 
 To manage the execution of game logic, the engine uses a simple, frequency-based scheduler located in `src/systems.c`.
 
--   **Frequency-based Execution:** Each system (e.g., Physics, AI, Rendering) is assigned an update frequency in Hz.
--   **Performance Optimization:** This allows us to run expensive systems, like AI, less frequently than critical systems like Physics and Rendering, ensuring optimal performance. For example:
+-   **Frequency-based Execution:** Each system (e.g., Physics, AI, Camera) is assigned an update frequency in Hz.
+-   **Performance Optimization:** This allows us to run expensive systems, like AI, less frequently than critical systems like Physics and Camera, ensuring optimal performance. For example:
     -   Physics: 60Hz
-    -   Rendering: 60Hz
+    -   Camera: 60Hz
     -   AI: 10Hz (or dynamically adjusted based on LOD)
 
-## 4. Asset & Rendering Pipeline
+## 4. Asset Pipeline
 
 The asset pipeline is designed to separate slow, offline compilation from fast, runtime loading.
-
-### 4.1. Offline Asset Compilation
 
 -   **Source Assets:** Raw art assets (e.g., `.obj`, `.png`, `.svg`) are stored in the `/assets` directory.
 -   **Metadata:** Each asset is described by a `metadata.json` file, which includes tags for the semantic material system.
 -   **Compiler:** The Python script at `tools/asset_compiler.py` reads the source assets and metadata.
 -   **Output:** The compiler processes this data and outputs optimized, game-ready binary files into the `/build/assets` directory. This is the data the engine actually loads.
 
-### 4.2. Semantic Material System
+## 5. Rendering Pipeline
 
-The engine uses a powerful, tag-based system to automate material creation, ensuring a consistent and professional art style.
+The rendering pipeline is designed for high performance and flexibility, using the `sokol_gfx` API for cross-platform graphics.
 
--   **Tagging:** Artists assign tags (e.g., `military`, `spacecraft`, `star`) to assets in their `metadata.json` file.
--   **Definitions:** A central file, `assets/material_definitions.json`, defines PBR-style material properties (color palettes, roughness, metallic, emission) for each tag.
--   **Automatic Generation:** During asset compilation, the system reads an asset's tags and generates the appropriate material files (`.mtl`) and texture templates based on the definitions. This allows for global art direction changes by modifying a single file.
+### 5.1. Rendering Backend (`src/render_3d.c`)
 
-### 4.3. Runtime Loading & Rendering
+This file is responsible for the low-level details of rendering. It initializes the Sokol graphics context, creates the rendering pipeline, and provides functions for drawing entities. The `render_frame` function is the heart of the renderer, iterating through all renderable entities and drawing them to the screen.
 
--   **Loading:** At runtime, the engine only loads the optimized binary assets from the `/build/assets` directory.
--   **Sokol GFX:** The rendering system uses the `sokol_gfx` API. The asset pipeline is responsible for creating the necessary `sg_buffer` (for meshes) and `sg_image` (for textures) resources that the GPU needs for rendering.
+### 5.2. Camera System (`src/systems.c`)
 
-## 5. AI Integration
+The camera system is responsible for controlling the viewpoint in the 3D world. It's implemented as a standard ECS system that runs every frame.
+
+-   **Camera Component**: A `Camera` component can be attached to any entity to turn it into a camera. This component stores the camera's properties, such as its field of view (FOV), near and far clipping planes, and behavior (e.g., static, chase, third-person).
+-   **Active Camera**: The `World` struct keeps track of the active camera. The rendering system uses this camera's view and projection matrices to render the scene.
+-   **Camera Behaviors**: The `camera_system_update` function implements various camera behaviors. For example, a "chase" camera will smoothly follow a target entity.
+
+## 6. AI Integration
 
 The AI system is designed for scalability, aiming to support thousands of intelligent agents in a persistent universe.
 

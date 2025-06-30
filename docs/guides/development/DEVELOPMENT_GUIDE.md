@@ -169,7 +169,7 @@ Systems run at different frequencies based on their computational cost and requi
 - **Physics**: 60 FPS (every frame) - cheap, affects visual output
 - **Collision**: 20 FPS (every 3 frames) - expensive spatial queries
 - **AI**: 2-10 FPS (LOD-based) - very expensive decision making
-- **Render**: 60 FPS (every frame) - output system
+- **Camera**: 60 FPS (every frame) - updates the camera position and matrices
 
 ## Entity Factory Patterns
 
