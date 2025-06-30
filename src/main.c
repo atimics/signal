@@ -52,82 +52,8 @@ static struct {
 } app_state = {0};
 
 // ============================================================================
-// ENTITY FACTORY FUNCTIONS (from test.c)
+// SCENE MANAGEMENT
 // ============================================================================
-
-static EntityID create_player(struct World* world, Vector3 position) __attribute__((unused));
-static EntityID create_player(struct World* world, Vector3 position) {
-    EntityID id = entity_create(world);
-    if (id == INVALID_ENTITY) return id;
-    
-    // Add components
-    entity_add_component(world, id, COMPONENT_TRANSFORM);
-    entity_add_component(world, id, COMPONENT_PHYSICS);
-    entity_add_component(world, id, COMPONENT_COLLISION);
-    entity_add_component(world, id, COMPONENT_PLAYER);
-    entity_add_component(world, id, COMPONENT_RENDERABLE);
-    
-    // Configure components
-    struct Transform* transform = entity_get_transform(world, id);
-    transform->position = position;
-    transform->scale = (Vector3){5.0f, 5.0f, 5.0f};  // Make entities much larger
-    transform->rotation = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
-    transform->dirty = true;
-    
-    struct Physics* physics = entity_get_physics(world, id);
-    physics->mass = 80.0f;
-    physics->drag = 0.98f;
-    
-    struct Collision* collision = entity_get_collision(world, id);
-    collision->radius = 4.0f;
-    collision->layer_mask = 0xFFFFFFFF;
-    
-    // Configure renderable component - try to load wedge_ship mesh
-    struct Renderable* renderable = entity_get_renderable(world, id);
-    if (renderable && !assets_create_renderable_from_mesh(get_asset_registry(), "wedge_ship", renderable)) {
-        // If wedge_ship not available, try wedge_ship_mk2
-        if (!assets_create_renderable_from_mesh(get_asset_registry(), "wedge_ship_mk2", renderable)) {
-            printf("⚠️  No suitable mesh found for player, using default resources\n");
-            // Create empty GPU resources - will skip rendering
-            renderable->gpu_resources = gpu_resources_create();
-            renderable->index_count = 0;
-            renderable->visible = false;
-        }
-    }
-    
-    printf("🚀 Created player ship at (%.1f, %.1f, %.1f)\n", 
-           position.x, position.y, position.z);
-    
-    return id;
-}
-
-static void simulate_player_input(struct World* world, EntityID player_id, float time) {
-    struct Physics* physics = entity_get_physics(world, player_id);
-    if (!physics) return;
-    
-    // Gentle hovering movement for demonstration
-    float hover_radius = 5.0f;
-    float hover_speed = 0.5f;
-    
-    // Calculate gentle hovering position around starting point
-    float center_x = 30.0f;
-    float center_z = 0.0f;
-    
-    float desired_x = center_x + hover_radius * cosf(time * hover_speed);
-    float desired_z = center_z + hover_radius * sinf(time * hover_speed);
-    
-    // Get current position
-    struct Transform* transform = entity_get_transform(world, player_id);
-    if (!transform) return;
-    
-    // Gentle steering toward hovering position
-    float dx = desired_x - transform->position.x;
-    float dz = desired_z - transform->position.z;
-    
-    physics->acceleration.x = dx * 0.1f;
-    physics->acceleration.z = dz * 0.1f;
-    physics->acceleration.y = sinf(time * 1.0f) * 0.5f;
-}
 
 static void load_scene_by_name(struct World* world, const char* scene_name, EntityID* player_id) {
     printf("🏗️  Loading scene '%s' from data...\n", scene_name);
