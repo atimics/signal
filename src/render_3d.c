@@ -208,8 +208,8 @@ static bool render_sokol_init(void) {
             // Don't specify pixel_format - let it default to match swapchain
         },
         // Don't specify sample_count - let it default to match swapchain
-        .cull_mode = SG_CULLMODE_NONE,  // Disable culling for debugging
-        .face_winding = SG_FACEWINDING_CCW,  // Specify winding order
+        .cull_mode = SG_CULLMODE_BACK,  // Enable back-face culling for performance
+        .face_winding = SG_FACEWINDING_CW,  // Match asset winding order
         .label = "basic_3d_pipeline"
     });
     
