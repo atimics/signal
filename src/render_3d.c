@@ -19,6 +19,21 @@
 #endif
 
 // ============================================================================
+// PERFORMANCE MONITORING
+// ============================================================================
+
+// Performance monitoring structure (Sprint 08 Review Action Item)
+static struct {
+    uint32_t entities_processed;    // Total entities examined this frame
+    uint32_t entities_rendered;     // Successfully rendered entities
+    uint32_t entities_culled;       // Entities skipped due to visibility/validation
+    uint32_t draw_calls;            // Number of sg_draw() calls made
+    uint32_t validation_failures;   // Entities that failed validation
+    float frame_time_ms;            // Time taken for this frame
+    uint32_t frame_count;           // Total frames processed
+} render_performance = {0};
+
+// ============================================================================
 // SOKOL RENDERING DEFINITIONS
 // ============================================================================
 
@@ -619,17 +634,6 @@ bool render_take_screenshot_from_position(struct World* world, RenderConfig* con
 // ============================================================================
 // SPRINT 08 REVIEW: ENHANCED ERROR HANDLING AND PERFORMANCE MONITORING
 // ============================================================================
-
-// Performance monitoring structure (Sprint 08 Review Action Item)
-static struct {
-    uint32_t entities_processed;    // Total entities examined this frame
-    uint32_t entities_rendered;     // Successfully rendered entities
-    uint32_t entities_culled;       // Entities skipped due to visibility/validation
-    uint32_t draw_calls;            // Number of sg_draw() calls made
-    uint32_t validation_failures;   // Entities that failed validation
-    float frame_time_ms;            // Time taken for this frame
-    uint32_t frame_count;           // Total frames processed
-} render_performance = {0};
 
 // Enhanced entity validation function (Sprint 08 Review Action Item)
 // Provides comprehensive error reporting and graceful degradation
