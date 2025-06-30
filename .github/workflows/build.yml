@@ -35,13 +35,21 @@ jobs:
         run: python3 -m venv .venv
 
       - name: Install Python Dependencies
+        env:
+          DYLD_LIBRARY_PATH: /opt/homebrew/lib:$DYLD_LIBRARY_PATH
+          PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH
         run: |
           source .venv/bin/activate
           pip install --upgrade pip
+          # Set Cairo library paths for cairocffi
+          export CAIRO_INCLUDE_PATH=/opt/homebrew/include/cairo
+          export CAIRO_LIB_PATH=/opt/homebrew/lib
           # Use lighter CI requirements for faster builds
           pip install --timeout 300 -r requirements-ci.txt
 
       - name: Build Project
+        env:
+          DYLD_LIBRARY_PATH: /opt/homebrew/lib:$DYLD_LIBRARY_PATH
         run: make
 
       - name: Upload Artifact
@@ -97,18 +105,22 @@ jobs:
 
   # Temporarily disabled due to compilation issues
   # TODO: Fix WebAssembly build compatibility
-  # build-wasm:
-  #   name: Build (WebAssembly)
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 30
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  build-wasm:
+    name: Build (WebAssembly)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  #     - name: Setup Emscripten
-  #       uses: mymindstorm/setup-emsdk@v12
-  #       with:
-  #         version: 3.1.49
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v12
+        with:
+          version: 3.1.49
 
   #     - name: Build Project for WASM
   #       run: make wasm
