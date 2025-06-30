@@ -65,5 +65,7 @@ void test_asset_path_resolution_from_index(void) {
 
 // This function is called by the main test runner to execute all tests in this file.
 void suite_assets(void) {
+    setUpAssets();
     RUN_TEST(test_asset_path_resolution_from_index);
+    tearDownAssets();
 }
