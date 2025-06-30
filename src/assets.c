@@ -108,7 +108,7 @@ void assets_cleanup(AssetRegistry* registry) {
 
 bool load_texture(AssetRegistry* registry, const char* texture_path, const char* texture_name) {
     if (!registry || !texture_path || !texture_name) return false;
-    if (registry->texture_count >= 32) return false;
+    if (registry->texture_count >= MAX_TEXTURES) return false;
     
     // Construct full path to texture with improved path handling
     char full_path[512];
@@ -119,13 +119,22 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
         strncpy(full_path, texture_path, sizeof(full_path) - 1);
         full_path[sizeof(full_path) - 1] = '\0';
     } else {
-        // Relative path - check if it already includes textures directory
-        if (strstr(texture_path, "textures/") == texture_path || strstr(texture_path, "textures\\") == texture_path) {
-            // Path already includes textures directory
-            snprintf(full_path, sizeof(full_path), "%s/%s", registry->asset_root, texture_path);
+        // Relative path - first try as-is from asset root
+        snprintf(full_path, sizeof(full_path), "%s/%s", registry->asset_root, texture_path);
+        
+        // Check if file exists at this path
+        FILE* test_file = fopen(full_path, "rb");
+        if (!test_file) {
+            // If not found, try with textures subdirectory
+            if (strstr(texture_path, "textures/") == texture_path || strstr(texture_path, "textures\\") == texture_path) {
+                // Path already includes textures directory
+                snprintf(full_path, sizeof(full_path), "%s/%s", registry->asset_root, texture_path);
+            } else {
+                // Traditional relative path - add textures directory
+                snprintf(full_path, sizeof(full_path), "%s/textures/%s", registry->asset_root, texture_path);
+            }
         } else {
-            // Traditional relative path - add textures directory
-            snprintf(full_path, sizeof(full_path), "%s/textures/%s", registry->asset_root, texture_path);
+            fclose(test_file);
         }
     }
     
