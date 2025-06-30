@@ -15,6 +15,9 @@
 #define NK_IMPLEMENTATION
 #include "nuklear.h"
 
+// Define nk_bool as int for sokol_nuklear compatibility
+typedef int nk_bool;
+
 #define SOKOL_NUKLEAR_IMPL
 #include "sokol_nuklear.h"
 
