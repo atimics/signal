@@ -532,7 +532,6 @@ bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_f
     Mesh* mesh = &registry->meshes[registry->mesh_count];
     strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
     mesh->name[sizeof(mesh->name) - 1] = '\0';  // Ensure null termination
-    printf("🔍 DEBUG: Set mesh name to '%s' at index %d\n", mesh->name, registry->mesh_count);
     
     if (parse_obj_file(absolute_filepath, mesh)) {
         printf("✅ DEBUG: parse_obj_file succeeded - vertices=%d, indices=%d\n", 

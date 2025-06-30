@@ -38,9 +38,7 @@ void test_pipeline_loads_and_prepares_mesh_for_rendering(void) {
     TEST_ASSERT_TRUE(loaded);
 
     // 1. Was the mesh data loaded into the CPU correctly?
-    printf("🔍 TEST DEBUG: Looking for mesh 'Wedge Ship'\n");
     Mesh* ship_mesh = assets_get_mesh(&registry, "Wedge Ship");
-    printf("🔍 TEST DEBUG: Found mesh: %p\n", (void*)ship_mesh);
     TEST_ASSERT_NOT_NULL(ship_mesh);
     TEST_ASSERT_TRUE(ship_mesh->loaded);
 
