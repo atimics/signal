@@ -173,8 +173,8 @@ static void create_loading_cube_mesh(AssetRegistry* assets) {
     strncpy(cube->name, "loading_cube", sizeof(cube->name) - 1);
     strncpy(cube->material_name, "game_logo", sizeof(cube->material_name) - 1);
     
-    // Cube vertices (simplified - just 8 vertices, 12 triangles = 36 indices)
-    cube->vertex_count = 8;
+    // Cube vertices (24 vertices, 4 per face for proper normals)
+    cube->vertex_count = 24;
     cube->vertices = malloc(cube->vertex_count * sizeof(Vertex));
     
     // Cube indices (12 triangles * 3 vertices = 36 indices)
@@ -186,34 +186,59 @@ static void create_loading_cube_mesh(AssetRegistry* assets) {
         return;
     }
     
-    // Define 8 cube vertices
-    Vertex cube_vertices[8] = {
-        // Bottom face
-        {{-1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}}, // 0
-        {{ 1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}}, // 1
-        {{ 1.0f, -1.0f,  1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}}, // 2
-        {{-1.0f, -1.0f,  1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}}, // 3
-        // Top face
-        {{-1.0f,  1.0f, -1.0f}, {0.0f,  1.0f, 0.0f}, {0.0f, 0.0f}}, // 4
-        {{ 1.0f,  1.0f, -1.0f}, {0.0f,  1.0f, 0.0f}, {1.0f, 0.0f}}, // 5
-        {{ 1.0f,  1.0f,  1.0f}, {0.0f,  1.0f, 0.0f}, {1.0f, 1.0f}}, // 6
-        {{-1.0f,  1.0f,  1.0f}, {0.0f,  1.0f, 0.0f}, {0.0f, 1.0f}}  // 7
+    // Define 24 cube vertices (4 per face) with correct normals and UV coordinates
+    Vertex cube_vertices[24] = {
+        // Front face (Z+)
+        {{-1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}}, // 0
+        {{ 1.0f, -1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}}, // 1
+        {{ 1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}}, // 2
+        {{-1.0f,  1.0f,  1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}}, // 3
+        
+        // Back face (Z-)
+        {{ 1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}}, // 4
+        {{-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}}, // 5
+        {{-1.0f,  1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f}}, // 6
+        {{ 1.0f,  1.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f}}, // 7
+        
+        // Left face (X-)
+        {{-1.0f, -1.0f, -1.0f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // 8
+        {{-1.0f, -1.0f,  1.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}, // 9
+        {{-1.0f,  1.0f,  1.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}, // 10
+        {{-1.0f,  1.0f, -1.0f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}}, // 11
+        
+        // Right face (X+)
+        {{ 1.0f, -1.0f,  1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}}, // 12
+        {{ 1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}}, // 13
+        {{ 1.0f,  1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}}, // 14
+        {{ 1.0f,  1.0f,  1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}}, // 15
+        
+        // Top face (Y+)
+        {{-1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}}, // 16
+        {{ 1.0f,  1.0f,  1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}}, // 17
+        {{ 1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}}, // 18
+        {{-1.0f,  1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}, // 19
+        
+        // Bottom face (Y-)
+        {{-1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}}, // 20
+        {{ 1.0f, -1.0f, -1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}}, // 21
+        {{ 1.0f, -1.0f,  1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}}, // 22
+        {{-1.0f, -1.0f,  1.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}}  // 23
     };
     
-    // Define cube indices (2 triangles per face, 6 faces = 12 triangles)
+    // Define cube indices with correct winding (counter-clockwise when viewed from outside)
     int cube_indices[36] = {
-        // Bottom face
-        0, 1, 2,  0, 2, 3,
-        // Top face
-        4, 7, 6,  4, 6, 5,
         // Front face
-        3, 2, 6,  3, 6, 7,
-        // Back face
-        0, 5, 1,  0, 4, 5,
+        0, 1, 2,   0, 2, 3,
+        // Back face  
+        4, 5, 6,   4, 6, 7,
         // Left face
-        0, 3, 7,  0, 7, 4,
+        8, 9, 10,  8, 10, 11,
         // Right face
-        1, 6, 2,  1, 5, 6
+        12, 13, 14, 12, 14, 15,
+        // Top face
+        16, 17, 18, 16, 18, 19,
+        // Bottom face
+        20, 21, 22, 20, 22, 23
     };
     
     // Copy data
@@ -379,12 +404,12 @@ static void init(void) {
     
     loading_screen_set_progress(&app_state.loading_screen, 0.5f, "Creating loading cube...");
     
-    // Create loading cube mesh
-    if (logo_loaded) {
-        create_loading_cube_mesh(asset_registry);
-        loading_screen_create_cube(&app_state.loading_screen, &app_state.world);
-    } else {
-        printf("⚠️  Skipping loading cube creation due to missing logo texture\n");
+    // Create loading cube mesh (works with or without logo texture)
+    create_loading_cube_mesh(asset_registry);
+    loading_screen_create_cube(&app_state.loading_screen, &app_state.world);
+    
+    if (!logo_loaded) {
+        printf("⚠️  Loading cube created without logo texture (will use default)\n");
     }
     
     loading_screen_set_progress(&app_state.loading_screen, 0.6f, "Configuring renderer...");
