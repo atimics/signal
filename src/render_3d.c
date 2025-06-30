@@ -557,9 +557,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         }
     }
     
-    // End the render pass
-    sg_end_pass();
-    sg_commit();
+    // Render pass is ended in main.c
 }
 
 void render_debug_info(struct World* world, RenderConfig* config) {
