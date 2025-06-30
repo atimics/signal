@@ -319,6 +319,185 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     return true;
 }
 
+/**
+ * @brief Load a binary .cobj mesh file according to R15 specification
+ * @param registry The asset registry to load into
+ * @param absolute_filepath The path to the binary .cobj file
+ * @param mesh_name The name to assign to the loaded mesh
+ * @return true if the binary mesh was loaded successfully, false otherwise
+ */
+bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name) {
+    if (!registry || !absolute_filepath || !mesh_name) {
+        printf("❌ Invalid parameters for binary mesh loading\n");
+        return false;
+    }
+    
+    // Find next available slot
+    int slot = -1;
+    for (int i = 0; i < 32; i++) {
+        if (!registry->meshes[i].loaded) {
+            slot = i;
+            break;
+        }
+    }
+    
+    if (slot == -1) {
+        printf("❌ No available mesh slots for binary mesh\n");
+        return false;
+    }
+    
+    // Clear the mesh and set name
+    Mesh* mesh = &registry->meshes[slot];
+    memset(mesh, 0, sizeof(Mesh));
+    strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
+    mesh->name[sizeof(mesh->name) - 1] = '\0';
+    
+    FILE* file = fopen(absolute_filepath, "rb");
+    if (!file) {
+        printf("❌ Could not open binary mesh file: %s\n", absolute_filepath);
+        return false;
+    }
+    
+    // Read and validate the header
+    COBJHeader header;
+    if (fread(&header, sizeof(COBJHeader), 1, file) != 1) {
+        printf("❌ Failed to read header from binary mesh file: %s\n", absolute_filepath);
+        fclose(file);
+        return false;
+    }
+    
+    // Validate the magic number
+    if (strncmp(header.magic, "CGMF", 4) != 0) {
+        printf("❌ Invalid magic number in binary mesh file: %s\n", absolute_filepath);
+        fclose(file);
+        return false;
+    }
+    
+    // Check version compatibility
+    if (header.version != 1) {
+        printf("❌ Unsupported binary mesh version %u in file: %s\n", header.version, absolute_filepath);
+        fclose(file);
+        return false;
+    }
+    
+    printf("🔍 Loading binary mesh: %u vertices, %u indices\n", 
+           header.vertex_count, header.index_count);
+    
+    // Allocate memory for vertices (using VertexEnhanced for binary format)
+    mesh->vertex_count = header.vertex_count;
+    mesh->vertices = calloc(header.vertex_count, sizeof(Vertex));
+    if (!mesh->vertices) {
+        printf("❌ Failed to allocate memory for %u vertices\n", header.vertex_count);
+        fclose(file);
+        return false;
+    }
+    
+    // Allocate memory for indices
+    mesh->index_count = header.index_count;
+    mesh->indices = calloc(header.index_count, sizeof(int));
+    if (!mesh->indices) {
+        printf("❌ Failed to allocate memory for %u indices\n", header.index_count);
+        free(mesh->vertices);
+        mesh->vertices = NULL;
+        fclose(file);
+        return false;
+    }
+    
+    // Read vertex data directly into memory
+    // Note: For now we read into VertexEnhanced and convert to Vertex
+    // This will be optimized when we fully transition to the enhanced format
+    VertexEnhanced* enhanced_vertices = calloc(header.vertex_count, sizeof(VertexEnhanced));
+    if (!enhanced_vertices) {
+        printf("❌ Failed to allocate temporary enhanced vertex buffer\n");
+        free(mesh->vertices);
+        free(mesh->indices);
+        mesh->vertices = NULL;
+        mesh->indices = NULL;
+        fclose(file);
+        return false;
+    }
+    
+    if (fread(enhanced_vertices, sizeof(VertexEnhanced), header.vertex_count, file) != header.vertex_count) {
+        printf("❌ Failed to read vertex data from binary mesh file: %s\n", absolute_filepath);
+        free(enhanced_vertices);
+        free(mesh->vertices);
+        free(mesh->indices);
+        mesh->vertices = NULL;
+        mesh->indices = NULL;
+        fclose(file);
+        return false;
+    }
+    
+    // Convert VertexEnhanced to Vertex (until we fully transition)
+    for (uint32_t i = 0; i < header.vertex_count; i++) {
+        mesh->vertices[i].position = enhanced_vertices[i].position;
+        mesh->vertices[i].normal = enhanced_vertices[i].normal;
+        mesh->vertices[i].tex_coord = enhanced_vertices[i].tex_coord;
+        // Note: tangent data is available but not used in current Vertex struct
+    }
+    
+    free(enhanced_vertices);
+    
+    // Read index data directly into memory
+    uint32_t* temp_indices = calloc(header.index_count, sizeof(uint32_t));
+    if (!temp_indices) {
+        printf("❌ Failed to allocate temporary index buffer\n");
+        free(mesh->vertices);
+        free(mesh->indices);
+        mesh->vertices = NULL;
+        mesh->indices = NULL;
+        fclose(file);
+        return false;
+    }
+    
+    if (fread(temp_indices, sizeof(uint32_t), header.index_count, file) != header.index_count) {
+        printf("❌ Failed to read index data from binary mesh file: %s\n", absolute_filepath);
+        free(temp_indices);
+        free(mesh->vertices);
+        free(mesh->indices);
+        mesh->vertices = NULL;
+        mesh->indices = NULL;
+        fclose(file);
+        return false;
+    }
+    
+    // Convert uint32_t indices to int (current mesh format)
+    for (uint32_t i = 0; i < header.index_count; i++) {
+        mesh->indices[i] = (int)temp_indices[i];
+    }
+    
+    free(temp_indices);
+    fclose(file);
+    
+    // Store AABB data from header
+    mesh->aabb_min = header.aabb_min;
+    mesh->aabb_max = header.aabb_max;
+    
+    // Create GPU resources for the loaded mesh
+    // Skip GPU resource creation in test mode
+#ifdef CGAME_TESTING
+    printf("🔍 Skipping GPU resource creation in test mode\n");
+    mesh->gpu_resources = NULL;
+#else
+    if (!create_mesh_gpu_resources(mesh)) {
+        printf("❌ Failed to create GPU resources for binary mesh: %s\n", mesh_name);
+        // Clean up mesh data
+        if (mesh->vertices) free(mesh->vertices);
+        if (mesh->indices) free(mesh->indices);
+        memset(mesh, 0, sizeof(Mesh));
+        return false;
+    }
+#endif
+    
+    mesh->loaded = true;
+    registry->mesh_count++;
+    
+    printf("✅ Loaded binary mesh: %s (%d vertices, %d indices) with AABB\n", 
+           mesh->name, mesh->vertex_count, mesh->index_count);
+    
+    return true;
+}
+
 bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name) {
     if (!registry || !absolute_filepath || !mesh_name) return false;
     
@@ -344,8 +523,31 @@ bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
     strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
     mesh->name[sizeof(mesh->name) - 1] = '\0';
     
-    // Parse the mesh file
-    if (!parse_obj_file(absolute_filepath, mesh)) {
+    // Detect file format and parse accordingly
+    // Binary .cobj files start with "CGMF" magic number
+    // Text .cobj files (legacy) start with comments or vertex definitions
+    FILE* format_check_file = fopen(absolute_filepath, "rb");
+    bool is_binary = false;
+    
+    if (format_check_file) {
+        char magic[4];
+        if (fread(magic, 1, 4, format_check_file) == 4) {
+            is_binary = (strncmp(magic, "CGMF", 4) == 0);
+        }
+        fclose(format_check_file);
+    }
+    
+    bool parse_success = false;
+    if (is_binary) {
+        printf("🔍 Detected binary .cobj format for %s\n", absolute_filepath);
+        parse_success = load_cobj_binary(registry, absolute_filepath, mesh_name);
+        return parse_success;  // Binary loader handles everything including registry management
+    } else {
+        printf("🔍 Detected text .cobj format for %s (legacy)\n", absolute_filepath);
+        parse_success = parse_obj_file(absolute_filepath, mesh);
+    }
+    
+    if (!parse_success) {
         printf("❌ Failed to parse mesh file: %s\n", absolute_filepath);
         memset(mesh, 0, sizeof(Mesh));  // Clear on failure
         return false;
