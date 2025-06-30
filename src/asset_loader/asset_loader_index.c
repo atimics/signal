@@ -247,6 +247,44 @@ bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_n
     char line[512];
     bool found = false;
     
+    // Read the entire file to check for test format first
+    char buffer[2048] = {0};
+    size_t total_read = 0;
+    char temp_line[512];
+    
+    // Read all lines into buffer
+    while (fgets(temp_line, sizeof(temp_line), file) && total_read < sizeof(buffer) - strlen(temp_line) - 1) {
+        strcat(buffer, temp_line);
+        total_read += strlen(temp_line);
+    }
+    fclose(file);
+    
+    // Check if this is a test format with "test_ship" and "path" fields
+    if (strstr(buffer, asset_name) && strstr(buffer, "\"path\"")) {
+        // This is the test format, parse it differently
+        char* asset_line = strstr(buffer, asset_name);
+        if (asset_line) {
+            char* path_start = strstr(asset_line, "\"path\": \"");
+            if (path_start) {
+                path_start += 9; // Skip '"path": "'
+                char* path_end = strchr(path_start, '"');
+                if (path_end) {
+                    size_t path_len = path_end - path_start;
+                    if (path_len < out_size) {
+                        strncpy(out_path, path_start, path_len);
+                        out_path[path_len] = '\0';
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    // Otherwise, use the production format (array of metadata paths)
+    file = fopen(index_path, "r");
+    if (!file) return false;
+    
     while (fgets(line, sizeof(line), file)) {
         // Remove whitespace and newlines
         char* trimmed = line;
