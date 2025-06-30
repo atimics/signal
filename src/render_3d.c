@@ -70,24 +70,12 @@ static struct {
     sg_pipeline pipeline;
     sg_shader shader;
     sg_sampler sampler;
-    sg_buffer vertex_buffer;
-    sg_buffer index_buffer;
-    sg_buffer uniform_buffer;  // Add uniform buffer
+    sg_buffer uniform_buffer;  // Uniform buffer for dynamic updates
     sg_image default_texture;
     bool initialized;
     char* vertex_shader_source;
     char* fragment_shader_source;
 } render_state = {0};
-
-// Test triangle vertices (position, normal, texcoord) - Larger triangle in world space
-static float test_vertices[] = {
-    // Position        Normal          TexCoord
-     0.0f,  5.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.5f, 0.0f,  // Top
-    -5.0f, -5.0f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f,  // Bottom-left  
-     5.0f, -5.0f, 0.0f,  0.0f, 0.0f, 1.0f,  1.0f, 1.0f   // Bottom-right
-};
-
-static uint16_t test_indices[] = { 0, 1, 2 };
 
 // ============================================================================
 // SOKOL INITIALIZATION
@@ -227,30 +215,7 @@ static bool render_sokol_init(void) {
     }
     
     printf("🔍 Pipeline created with default formats\n");
-    
-    // Create test geometry buffers
-    render_state.vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
-        .data = SG_RANGE(test_vertices),
-        .usage = { .vertex_buffer = true },
-        .label = "test_vertices"
-    });
-    
-    render_state.index_buffer = sg_make_buffer(&(sg_buffer_desc){
-        .data = SG_RANGE(test_indices),
-        .usage = { .index_buffer = true },  // Explicitly set as index buffer
-        .label = "test_indices"
-    });
-    
-    // Check buffer creation
-    sg_resource_state vb_state = sg_query_buffer_state(render_state.vertex_buffer);
-    sg_resource_state ib_state = sg_query_buffer_state(render_state.index_buffer);
-    printf("🔍 Vertex buffer state: %d, Index buffer state: %d\n", vb_state, ib_state);
-    
-    if (vb_state != SG_RESOURCESTATE_VALID || ib_state != SG_RESOURCESTATE_VALID) {
-        printf("❌ Buffer creation failed - VB:%d IB:%d\n", vb_state, ib_state);
-        return false;
-    }
-    
+
     // Create uniform buffer (dynamic to allow updates)
     render_state.uniform_buffer = sg_make_buffer(&(sg_buffer_desc){
         .size = sizeof(vs_uniforms_t),
@@ -340,8 +305,6 @@ void render_shutdown(RenderConfig* config) {
     (void)config; // Unused for now
     
     if (render_state.initialized) {
-        sg_destroy_buffer(render_state.vertex_buffer);
-        sg_destroy_buffer(render_state.index_buffer);
         sg_destroy_buffer(render_state.uniform_buffer);  // Clean up uniform buffer
         sg_destroy_image(render_state.default_texture);
         sg_destroy_pipeline(render_state.pipeline);
@@ -575,71 +538,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     if (frame_count % 300 == 0 && rendered_count > 0) { // Print every 5 seconds
         printf("🎨 Rendered %d/%d entities (frame %d)\n", rendered_count, renderable_count, frame_count);
     }
-    
-    // Fallback: draw test triangle if no entities were rendered (or for debugging)
-    if (rendered_count == 0) {  // Only draw triangle if no entities rendered
-        // Apply test triangle bindings
-        sg_apply_bindings(&(sg_bindings){
-            .vertex_buffers[0] = render_state.vertex_buffer,
-            .index_buffer = render_state.index_buffer,
-            .images[0] = render_state.default_texture,
-            .samplers[0] = render_state.sampler
-        });
-        
-        // Get active camera for fallback triangle
-        EntityID active_camera_id = world_get_active_camera(world);
-        struct Camera* active_camera = NULL;
-        
-        if (active_camera_id != INVALID_ENTITY) {
-            active_camera = entity_get_camera(world, active_camera_id);
-        }
-        
-        // Create MVP matrix for triangle with proper positioning
-        vs_uniforms_t uniforms;
-        float triangle_model[16], triangle_mvp[16];
-        
-        // Position triangle in front of camera at origin
-        Vector3 triangle_pos = {0.0f, 0.0f, 0.0f};  // At world origin
-        Vector3 triangle_scale = {1.0f, 1.0f, 1.0f};
-        Quaternion triangle_rot = {0.0f, 0.0f, 0.0f, 1.0f};  // No rotation
-        mat4_compose_transform(triangle_model, triangle_pos, triangle_rot, triangle_scale);
-        
-        if (active_camera && !active_camera->matrices_dirty) {
-            // Use camera's view-projection matrix with model transform
-            mat4_multiply(triangle_mvp, active_camera->view_projection_matrix, triangle_model);
-            memcpy(uniforms.mvp, triangle_mvp, sizeof(uniforms.mvp));
-        } else {
-            // Fallback: create a simple perspective view looking at origin
-            float view[16], proj[16], temp[16];
-            Vector3 cam_pos = {0.0f, 5.0f, 15.0f};  // Position camera back and up
-            Vector3 cam_target = {0.0f, 0.0f, 0.0f};  // Look at origin
-            Vector3 cam_up = {0.0f, 1.0f, 0.0f};
-            
-            mat4_lookat(view, cam_pos, cam_target, cam_up);
-            mat4_perspective(proj, 60.0f, 16.0f/9.0f, 0.1f, 1000.0f);
-            
-            // MVP = Projection * View * Model
-            mat4_multiply(temp, view, triangle_model);
-            mat4_multiply(triangle_mvp, proj, temp);
-            memcpy(uniforms.mvp, triangle_mvp, sizeof(uniforms.mvp));
-        }
-        
-        // Apply uniforms
-        sg_apply_uniforms(0, &SG_RANGE(uniforms));
-        
-        // Draw the triangle
-        sg_draw(0, 3, 1);
-        
-        if (frame_count % 300 == 0) {
-            printf("🔴 Debug triangle drawn at origin with proper MVP transform\n");
-            if (active_camera) {
-                printf("🔴 Camera: pos(%.1f,%.1f,%.1f) target(%.1f,%.1f,%.1f)\n",
-                       active_camera->position.x, active_camera->position.y, active_camera->position.z,
-                       active_camera->target.x, active_camera->target.y, active_camera->target.z);
-            }
-        }
-    }
-    
+
     // Performance reporting (Sprint 08 Review Action Item)
     report_render_performance();
     
@@ -787,12 +686,6 @@ void render_cleanup(RenderConfig* config) {
     }
     if (render_state.shader.id != SG_INVALID_ID) {
         sg_destroy_shader(render_state.shader);
-    }
-    if (render_state.vertex_buffer.id != SG_INVALID_ID) {
-        sg_destroy_buffer(render_state.vertex_buffer);
-    }
-    if (render_state.index_buffer.id != SG_INVALID_ID) {
-        sg_destroy_buffer(render_state.index_buffer);
     }
     if (render_state.default_texture.id != SG_INVALID_ID) {
         sg_destroy_image(render_state.default_texture);
