@@ -17,7 +17,7 @@ else
     CFLAGS += -Wno-error=unused-but-set-variable
     CFLAGS += -Wno-error=null-pointer-subtraction
     CFLAGS += -Wno-error=implicit-int
-    LIBS += -lGL -lX11 -lm
+    LIBS += -lGL -lX11 -lXi -lXcursor -lXrandr -lm
 endif
 
 # Directories
