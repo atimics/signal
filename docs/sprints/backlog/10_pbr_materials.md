@@ -2,7 +2,22 @@
 
 **Duration**: 2 weeks
 **Priority**: High
-**Dependencies**: Sprint 09 (Texture System)
+**Dependencies**: Sprint 10.5 (Mesh System Repair), Sprint 11 (Rendering Standardization)
+**Status**: BLOCKED - Waiting for Sprint 10.5 and 11 completion
+
+## ⚠️ IMPORTANT NOTICE
+
+**This sprint is currently BLOCKED due to critical mesh system issues discovered during Sprint 11 investigation.**
+
+A fundamental architectural disconnect exists between the asset pipeline and rendering system:
+- Asset compiler successfully generates `.cobj` mesh files
+- Engine fails to load them correctly (path resolution issues)
+- Results in Sokol GFX validation errors and rendering failures
+- Current system falls back to hardcoded test triangles instead of proper mesh rendering
+
+**Required Before Starting This Sprint**:
+1. ✅ Complete [Sprint 10.5: Critical Mesh System Architecture Repair](./10.5_mesh_system_repair.md)
+2. ✅ Complete [Sprint 11: PBR and Rendering Standardization](../backlog/research/11_pbr_and_rendering_standardization.md) 
 
 ## Sprint Goal
 Implement Physically Based Rendering (PBR) materials with proper lighting calculations, enabling realistic material appearance with metallic, roughness, and normal mapping support.

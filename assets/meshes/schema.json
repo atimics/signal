@@ -8,8 +8,12 @@
             "description": "The display name of the mesh.",
             "type": "string"
         },
-        "filename": {
-            "description": "The filename of the .mesh file.",
+        "geometry": {
+            "description": "The filename of the compiled geometry file (e.g., .cobj).",
+            "type": "string"
+        },
+        "mesh": {
+            "description": "The filename of the source mesh file (e.g., .obj).",
             "type": "string"
         },
         "tags": {
@@ -23,7 +27,7 @@
             "description": "A brief description of the mesh.",
             "type": "string"
         },
-        "mtl": {
+        "material": {
             "description": "The filename of the .mtl file.",
             "type": "string"
         },
@@ -34,10 +38,11 @@
     },
     "required": [
         "name",
-        "filename",
+        "geometry",
+        "mesh",
         "tags",
         "description",
-        "mtl",
+        "material",
         "texture"
     ]
 }

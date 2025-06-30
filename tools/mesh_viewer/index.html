@@ -447,8 +447,9 @@
             infoHtml += `
                 <div class="info-section">
                     <h4>Files</h4>
-                    <p><strong>Geometry:</strong> ${meta.filename}</p>
-                    <p><strong>Material:</strong> ${meta.mtl || 'N/A'}</p>
+                    <p><strong>Geometry:</strong> ${meta.geometry}</p>
+                    <p><strong>Mesh:</strong> ${meta.mesh}</p>
+                    <p><strong>Material:</strong> ${meta.material || 'N/A'}</p>
                     <p><strong>Texture:</strong> ${meta.texture || 'N/A'}</p>
                 </div>
             `;
@@ -514,11 +515,10 @@
             const { meta, basePath } = meshData;
             
             try {
-                console.log(`Loading mesh: ${meta.name} from ${basePath}${meta.filename}`);
-                
                 const isCompiled = currentMode === 'compiled';
-                const fileExtension = isCompiled ? '.cobj' : '';
-                const meshFile = isCompiled ? meta.filename.replace(/\.(mesh|obj)$/, '.cobj') : meta.filename;
+                const meshFile = isCompiled ? meta.geometry : meta.mesh;
+                console.log(`Loading mesh: ${meta.name} from ${basePath}${meshFile}`);
+                
                 const meshURL = `${basePath}${meshFile}`;
                 
                 const meshText = await (await fetch(meshURL)).text();
@@ -527,7 +527,7 @@
 
                 try {
                     // Try loading with materials first
-                    const mtlURL = `${basePath}${meta.mtl}`;
+                    const mtlURL = `${basePath}${meta.material}`;
                     const mtlText = await (await fetch(mtlURL)).text();
                     const mtlLoader = new MTLLoader();
                     
