@@ -1,46 +1,45 @@
-# Sprint 14: Mesh Generator Pipeline Integration
+# Sprint 14: Implementation Guide - Pipeline & Polish
 
 **ID**: `sprint_14.0`
 **Status**: **ACTIVE & CRITICAL**
 **Author**: Gemini, Chief Science Officer
 
-## 1. Sprint Goal
+## 1. Progress Update & Revised Goals
 
-To fully integrate the procedural mesh generator (`tools/mesh_generator`) with the modern, binary-first asset pipeline. This involves refactoring the generator to produce standard, textured `.obj` files and updating the main build pipeline to seamlessly compile these generated assets into the final `.cobj` format.
+Excellent progress has been made by the development team. The core headers (`assets.h`, `core.h`) have been fully documented, and a new mesh validation tool has been created.
 
-## 2. Problem Statement
+This sprint's focus will now shift to the final integration of these components and the completion of the project-wide code style enforcement.
 
-The `mesh_generator` is a legacy system that operates outside of our new asset pipeline. It produces outdated, untextured text files and contains redundant, direct-call compilation logic. This creates a separate, unmanaged workflow for procedural assets, leading to the current situation where they are not rendered correctly. This sprint will unify the two systems.
+**Revised Sprint Goal**: To finalize the mesh generation pipeline, integrate the new validation tool, and enforce a universal code style, resulting in a fully polished, robust, and maintainable codebase.
 
-## 3. Implementation Plan
+## 2. Core Tasks & Implementation Plan
 
-### Task 1: Refactor the Mesh Generator
+### Task 1: Finalize and Verify the Asset Pipeline (In Progress)
 
-*   **Objective**: Modify the `mesh_generator` to be a pure "source asset" creator. It should not be responsible for compilation.
-*   **Guidance**:
-    1.  **Update `generate_...` functions**: Modify `generate_wedge_ship_mk2`, `generate_control_tower`, etc., to return `vertices`, `faces`, and `uvs`. The `generate_control_tower` function already does this, but the others need to be updated.
-    2.  **Rewrite `write_obj_file`**: This is the most critical step. The function must be rewritten to correctly write all vertex attributes, including texture coordinates (`vt`) and normals (`vn`), into the `.obj` file. It must also write the face indices in the `v/vt/vn` format.
-    3.  **Remove `compile_mesh_asset` call**: Delete the direct call to the old compiler from within `generate_mesh_with_textures`. The generator's only job is to produce the source `.obj`, `.mtl`, and `metadata.json` files in the `assets/meshes/props` directory.
+*   **Objective**: To ensure the entire asset pipeline, from procedural generation to binary compilation, is robust and correct.
+*   **Sub-Task 1.1 (COMPLETED)**: The `mesh_generator` has been refactored to produce textured `.obj` source files.
+*   **Sub-Task 1.2 (COMPLETED)**: The `build_pipeline.py` now correctly compiles source assets into the binary `.cobj` format and generates the necessary metadata and index files.
+*   **Sub-Task 1.3 (TO DO)**: **Integrate `validate_mesh.py`**. The main `build_pipeline.py` should be updated to call the new `validate_mesh.py` script as a final step. The build should fail if the validation step reports any errors. This provides a critical quality gate for our assets.
 
-### Task 2: Update the Main Build Pipeline
+### Task 2: Enforce Universal Code Style
 
-*   **Objective**: Ensure the main `build_pipeline.py` can discover and compile the newly generated source assets.
-*   **Guidance**:
-    1.  **No Changes Needed (Verification)**: Our current `build_pipeline.py` is already designed to find all `metadata.json` files and compile the associated `geometry.obj`. By refactoring the mesh generator to produce these source files in the correct location, the main pipeline should work without modification.
-    2.  **Create a `generate` command**: Add a new command-line argument to `build_pipeline.py`, such as `python3 tools/build_pipeline.py --generate-all`, which will first run the mesh generator script to ensure all source assets exist, and then proceed with the normal compilation process.
+*   **Objective**: To apply a universal code format across the entire C codebase, eliminating style inconsistencies and improving readability.
+*   **Sub-Task 2.1 (TO DO)**: **Create and Apply `.clang-format`**.
+    *   Create a `.clang-format` file in the project root (e.g., based on the "Google" style).
+    *   Run `clang-format -i src/**/*.c src/**/*.h tests/**/*.c tests/**/*.h` to format the entire C codebase. This is a one-time action that will standardize the project's style.
+*   **Sub-Task 2.2 (COMPLETED)**: The public headers `assets.h` and `core.h` have been fully documented with Doxygen-style comments.
+*   **Sub-Task 2.3 (TO DO)**: **Final Documentation Pass**. Perform a final review of all remaining public headers in `src/` to ensure they meet the same high standard of documentation.
 
-### Task 3: Create a Standalone Generator Script
+### Task 3: Review Untracked Files
 
-*   **Objective**: To make the mesh generator easier to use for developers and designers.
-*   **Guidance**:
-    1.  Create a new top-level script, `tools/generate_assets.py`.
-    2.  This script will be simple: it will import and call the `main` function from `tools/mesh_generator/__init__.py`.
-    3.  Update the `Makefile` with a new target: `make generate-assets`. This will provide a clear, one-step command for regenerating all procedural assets.
+*   **Objective**: To ensure all relevant work is captured in the repository.
+*   **Guidance**: Review the untracked file `docs/sprints/active/LOADING_SCREEN_ACHIEVEMENT.md`. If it contains valuable information, it should be integrated into a relevant sprint review or guide. If it is a temporary note, it should be removed.
 
-## 4. Definition of Done
+## 3. Definition of Done (Revised)
 
-1.  The `mesh_generator` script no longer performs any compilation.
-2.  The `write_obj_file` function correctly writes vertices, UVs, and normals to the `.obj` file.
-3.  Running `make generate-assets` successfully creates/overwrites the source `.obj` files in the `assets/meshes/props` directory.
-4.  Running `make assets` (or `python3 tools/build_pipeline.py`) subsequently compiles these generated `.obj` files into textured, binary `.cobj` files.
-5.  When the engine is run, the procedurally generated meshes (like the control tower) are rendered correctly, with textures.
+1.  The `build_pipeline.py` now includes a mandatory, final validation step using `validate_mesh.py`.
+2.  A `.clang-format` file exists, and all C code has been formatted.
+3.  All public headers in `src/` are fully and consistently documented.
+4.  The `make generate-assets` and `make assets` commands complete successfully, producing valid, textured, binary assets.
+5.  The main application (`make run`) correctly renders all procedural and static assets.
+6.  The `git status` is clean, with no untracked or unstaged documentation files.

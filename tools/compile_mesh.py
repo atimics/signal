@@ -179,7 +179,10 @@ def compile_mesh(source_path, output_path):
         )
         vertex_data.extend(vertex_pack)
 
-    index_data = indices.tobytes()
+    # Index format: 4 bytes per index (uint32_t)
+    index_data = bytearray()
+    for index in indices:
+        index_data.extend(struct.pack('<I', index))
 
     # --- 6. Write to output file ---
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
