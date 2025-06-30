@@ -39,7 +39,9 @@ jobs:
           source .venv/bin/activate
           pip install --upgrade pip
           # Use lighter CI requirements for faster builds
-          pip install --timeout 300 -r requirements-ci.txt
+          echo "Installing Python dependencies..."
+          pip install --timeout 300 --progress-bar off -r requirements-ci.txt
+          echo "Python dependencies installed successfully"
 
       - name: Build Project
         run: make
@@ -84,7 +86,9 @@ jobs:
           source .venv/bin/activate
           pip install --upgrade pip
           # Use lighter CI requirements for faster builds
-          pip install --timeout 300 -r requirements-ci.txt
+          echo "Installing Python dependencies..."
+          pip install --timeout 300 --progress-bar off -r requirements-ci.txt
+          echo "Python dependencies installed successfully"
 
       - name: Build Project
         run: make
