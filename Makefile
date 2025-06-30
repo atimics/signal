@@ -144,8 +144,8 @@ assets-wasm: $(BUILD_ASSETS_DIR)
 # ============================================================================
 
 # Sprint 15: Unity Testing Framework Integration
-TEST_SRC = tests/test_main.c tests/test_core_math.c tests/vendor/unity.c
-ENGINE_SRC_FOR_TEST = src/core.c
+TEST_SRC = tests/test_main.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/core_math.c tests/vendor/unity.c
+ENGINE_SRC_FOR_TEST = src/assets.c src/render_mesh.c src/render_gpu.c src/gpu_resources.c src/graphics_api.c src/data.c
 TEST_TARGET = $(BUILD_DIR)/cgame_tests
 
 # Main test target - compile and run all Unity tests
@@ -155,9 +155,9 @@ test: $(TEST_TARGET)
 	@echo "✅ All tests completed"
 
 # Build the test executable
-$(TEST_TARGET): $(TEST_SRC) $(ENGINE_SRC_FOR_TEST) | $(BUILD_DIR)
+$(TEST_TARGET): $(TEST_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building Unity test suite..."
-	$(CC) -Wall -Wextra -Werror -std=c99 -O2 -g -Isrc -Itests/vendor -DUNITY_TESTING -o $@ $(TEST_SRC) $(ENGINE_SRC_FOR_TEST) -lm
+	$(CC) -Wall -Wextra -Werror -std=c99 -O2 -g -Itests -Itests/vendor -DUNITY_TESTING -o $@ $(TEST_SRC) -lm
 
 # Sprint 10.5 Task 1: Test index.json path resolution
 test_sprint_10_5_task_1: | $(BUILD_DIR)
