@@ -76,6 +76,10 @@ This section defines the creative vision and player experience for "The Ghost Si
 *   **[04: The Lore Fragments](./gameplay_and_narrative/04_Lore_Fragments.md)**
     *   **Synopsis**: A living repository of all the in-game text fragments, audio logs, and corrupted data that players can discover. This is the primary vehicle for delivering our emergent, non-linear narrative. This is the "Content" of our game.
 
+*   **[05: The First Hour](./gameplay_and_narrative/05_The_First_Hour.md)**
+    *   **Synopsis**: A detailed, moment-to-moment breakdown of the player's introductory experience, designed to organically teach core mechanics and establish the central narrative hook.
+    *   **Strategic Importance**: **High**. This document serves as the blueprint for the game's tutorial and opening missions.
+
 ## 6. Artificial Intelligence
 
 This section details our ambitious plans for a generative, swarm-based AI system.

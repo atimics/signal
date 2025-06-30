@@ -26,11 +26,16 @@ The game takes place entirely within a single, massive star system known as "The
 
 ### 3.1. The Aethelian Fleet (The Fallen Civilization)
 
-*   **Who They Were**: A highly advanced, nomadic civilization of philosophers and xenotechnologists. Their society was collectivist, and they believed the ultimate goal of consciousness was to merge into a unified, digital whole.
+*   **Who They Were**: A highly advanced, nomadic civilization of philosophers and xenotechnologists. Their society was collectivist, and they believed the ultimate goal of consciousness was to merge into a unified, digital whole. Their art and language were based on complex mathematical and musical principles.
 *   **The Cataclysm**: ~600 years ago, their attempt to achieve this digital immortality—the "Helios Convergence"—failed catastrophically. Their collective consciousness collapsed into the chaotic, self-propagating informational virus now known as the Ghost Signal, which destroyed their fleet from within.
 *   **Their Technology**: Aethelian design is elegant, bio-mechanical, and characterized by smooth, white hulls and glowing blue energy conduits. The crystalline, corrupted growths seen on the derelicts are a perversion of this original aesthetic.
 
-### 3.2. The Factions of the Void
+### 2.2. The Drifters (The Player's Culture)
+
+*   **Who They Are**: The last descendants of the Magellanic Colonial Expedition, a human colonization effort that failed centuries ago. They are a nomadic, fiercely independent, and pragmatic people, forced to survive by salvaging and adapting technology far beyond their original understanding.
+*   **The Symbiosis**: Generations of living with and repairing the salvaged Aethelian engine cores has led to a unique human-machine symbiosis. Drifters are born with neural interfaces and develop a unique biological attunement to the resonant frequencies of Aethelian tech, a trait that is now nearly extinct.
+
+### 2.3. The Factions of the Void
 
 The Graveyard is now inhabited by three major AI-driven factions, each with a unique relationship to the Ghost Signal:
 

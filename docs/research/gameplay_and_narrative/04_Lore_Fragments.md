@@ -82,3 +82,19 @@ This document contains a collection of fragmented transmissions, corrupted data 
 **Fragment ID**: ENG-091-E
 **Source**: Maintenance Crewman Jax
 **Data**: `(Sound of heavy, rhythmic clanging) Log, supplemental. The... growths... they're not just on the walls. They're in the nutrient paste dispensers. In the water recyclers. We ran a spectral analysis. It's silicon, but it's... it's rearranging itself into a protein-like structure. It's mimicking us.`
+
+---
+
+### Category: Warden Directives (Intercepted)
+
+**Fragment ID**: WDN-001-A
+**Source**: Warden Central Command
+**Data**: `Directive updated. Quarantine Protocol 7. Target signature class: Resonant. Priority: Absolute. Suppress all unauthorized signal amplification. Neutralize source entity. No exceptions.`
+
+**Fragment ID**: WDN-003-C
+**Source**: Hunter-Killer Unit 734
+**Data**: `Target acquired. Signature matches Drifter-class symbiote. High-energy resonance detected. Engaging Damping Field. Moving to neutralize.`
+
+**Fragment ID**: WDN-019-B
+**Source**: Warden Central Command
+**Data**: `ANALYSIS: Scribe-class vessels continue to congregate near signal nexus. They do not amplify. They observe. Classification: Non-hostile. Do not engage unless they interfere with quarantine protocol.`

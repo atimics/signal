@@ -55,3 +55,20 @@ The world is now filled with **Resonance Locks**—dormant, crystalline nodes th
 *   **Progression is earned**: The player doesn't just find upgrades; they earn them by actively engaging with and solving the central mystery of the world.
 
 This system creates a powerful, self-reinforcing loop where the story is the key to the gameplay, and the gameplay is the key to the story.
+
+## 5. The Resonance Signature System (Risk vs. Reward)
+
+To add a layer of strategic choice and risk management, the player's ship has a **Resonance Signature** level. This represents how "loudly" the player is broadcasting their presence to the universe.
+
+*   **How it Works**:
+    *   Every Echo the player slots into their Attenuator increases their Resonance Signature.
+    *   More powerful Echoes (e.g., `AI Core` or `Security` types) increase the signature more than common ones (e.g., `Civilian`).
+    *   The player's current Resonance Signature is visible on the HUD.
+*   **Gameplay Effects**:
+    *   **High Signature (Loud & Powerful)**:
+        *   **Pro**: The player can see and interact with more powerful and rare Resonance Locks.
+        *   **Con**: The Wardens can detect the player from a much greater distance and will dispatch more powerful Hunter-Killer units. The Chrome-Barons will also be more likely to see the player as a high-value target.
+    *   **Low Signature (Quiet & Stealthy)**:
+        *   **Pro**: The player can move through the world largely undetected, avoiding most combat encounters.
+        *   **Con**: The player can only interact with common, low-level Resonance Locks, limiting their access to the best schematics and rarest lore.
+*   **Strategic Choice**: This system forces the player to make a meaningful choice before each expedition. "Do I go in loud, hoping to crack that `Security` lock for a new weapon schematic, knowing I'll have to fight my way out? Or do I go in quiet, focusing on scavenging basic materials and avoiding the attention of the Wardens?" This makes the player's loadout a direct reflection of their current goals.
