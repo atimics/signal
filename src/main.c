@@ -79,6 +79,9 @@ static EntityID create_player(struct World* world, Vector3 position) {
     // Configure components
     struct Transform* transform = entity_get_transform(world, id);
     transform->position = position;
+    transform->scale = (Vector3){1.0f, 1.0f, 1.0f};
+    transform->rotation = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
+    transform->dirty = true;
     
     struct Physics* physics = entity_get_physics(world, id);
     physics->mass = 80.0f;
@@ -87,6 +90,21 @@ static EntityID create_player(struct World* world, Vector3 position) {
     struct Collision* collision = entity_get_collision(world, id);
     collision->radius = 4.0f;
     collision->layer_mask = 0xFFFFFFFF;
+    
+    // Configure renderable component - try to load wedge_ship mesh
+    struct Renderable* renderable = entity_get_renderable(world, id);
+    if (renderable && !assets_create_renderable_from_mesh(&app_state.assets, "wedge_ship", renderable)) {
+        // If wedge_ship not available, try wedge_ship_mk2
+        if (!assets_create_renderable_from_mesh(&app_state.assets, "wedge_ship_mk2", renderable)) {
+            printf("⚠️  No suitable mesh found for player, using default resources\n");
+            // Set up with invalid handles - will skip rendering
+            renderable->vbuf.id = SG_INVALID_ID;
+            renderable->ibuf.id = SG_INVALID_ID;
+            renderable->tex.id = SG_INVALID_ID;
+            renderable->index_count = 0;
+            renderable->visible = false;
+        }
+    }
     
     printf("🚀 Created player ship at (%.1f, %.1f, %.1f)\n", 
            position.x, position.y, position.z);
