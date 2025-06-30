@@ -1,3 +1,4 @@
+#include "sokol_gfx.h"
 #include "systems.h"
 #include "render.h"
 #include "assets.h"
@@ -7,16 +8,19 @@
 #include <time.h>
 #include <stdlib.h>
 
-// Global render configuration and asset registry
-static RenderConfig g_render_config;
-AssetRegistry g_asset_registry;  // Make this globally accessible
+// Forward declarations for camera system helpers
+static void camera_update_behavior(struct World* world, RenderConfig* render_config, EntityID camera_id, float delta_time);
+static void update_legacy_render_config(RenderConfig* render_config, struct Camera* camera);
+
+// Global asset and data registries
+static AssetRegistry g_asset_registry;
 static DataRegistry g_data_registry;
 
 // ============================================================================
 // SYSTEM SCHEDULER IMPLEMENTATION
 // ============================================================================
 
-bool scheduler_init(struct SystemScheduler* scheduler) {
+bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config) {
     if (!scheduler) return false;
     
     memset(scheduler, 0, sizeof(struct SystemScheduler));
@@ -40,17 +44,27 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
     load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
     
     // Initialize render system with asset registry FIRST
-    if (!render_init(&g_render_config, &g_asset_registry, 1200.0f, 800.0f)) {
+    if (!render_init(render_config, &g_asset_registry, 1200.0f, 800.0f)) {
         printf("❌ Failed to initialize render system\n");
         return false;
     }
     
+    // Set global render config for UI system
+    set_render_config(render_config);
+    
     // Set camera for zoomed-out solar system view
-    camera_set_position(&g_render_config.camera, (Vector3){0, 100, 300});  // Position camera above and back
+    camera_set_position(&render_config->camera, (Vector3){0, 100, 300});  // Position camera above and back
+
     
     // Load assets from files (now that we have a renderer for textures)
     printf("🔍 Loading assets...\n");
-    assets_load_all_in_directory(&g_asset_registry, g_render_config.renderer);
+    assets_load_all_in_directory(&g_asset_registry);
+    
+    // Initialize GPU resources for all loaded assets
+    if (!assets_initialize_gpu_resources(&g_asset_registry)) {
+        printf("❌ Failed to initialize GPU resources\n");
+        return false;
+    }
     
     // Print loaded assets and templates
     assets_list_loaded(&g_asset_registry);
@@ -86,34 +100,28 @@ bool scheduler_init(struct SystemScheduler* scheduler) {
         .update_func = camera_system_update
     };
     
-    scheduler->systems[SYSTEM_RENDER] = (SystemInfo){
-        .name = "Render",
-        .frequency = 60.0f,      // Every frame
-        .enabled = true,
-        .update_func = render_system_update
-    };
-    
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
     printf("   Collision: %.1f Hz\n", scheduler->systems[SYSTEM_COLLISION].frequency);
     printf("   AI: %.1f Hz (base)\n", scheduler->systems[SYSTEM_AI].frequency);
     printf("   Camera: %.1f Hz\n", scheduler->systems[SYSTEM_CAMERA].frequency);
-    printf("   Render: %.1f Hz\n", scheduler->systems[SYSTEM_RENDER].frequency);
     
     return true;
 }
 
-void scheduler_destroy(struct SystemScheduler* scheduler) {
+void scheduler_destroy(struct SystemScheduler* scheduler, RenderConfig* config) {
     if (!scheduler) return;
     
-    render_cleanup(&g_render_config);
+    if (config) {
+        render_cleanup(config);
+    }
     assets_cleanup(&g_asset_registry);
     data_registry_cleanup(&g_data_registry);
     printf("🎯 System scheduler destroyed after %d frames\n", scheduler->frame_count);
     scheduler_print_stats(scheduler);
 }
 
-void scheduler_update(struct SystemScheduler* scheduler, struct World* world, float delta_time) {
+void scheduler_update(struct SystemScheduler* scheduler, struct World* world, RenderConfig* render_config, float delta_time) {
     if (!scheduler || !world) return;
     
     scheduler->total_time += delta_time;
@@ -131,7 +139,7 @@ void scheduler_update(struct SystemScheduler* scheduler, struct World* world, fl
         if (time_since_update >= update_interval) {
             clock_t start = clock();
             
-            system->update_func(world, delta_time);
+            system->update_func(world, render_config, delta_time);
             
             clock_t end = clock();
             float execution_time = ((float)(end - start)) / CLOCKS_PER_SEC;
@@ -197,7 +205,8 @@ void scheduler_set_frequency(struct SystemScheduler* scheduler, SystemType type,
 // PHYSICS SYSTEM
 // ============================================================================
 
-void physics_system_update(struct World* world, float delta_time) {
+void physics_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
+    (void)render_config; // Unused
     if (!world) return;
     
     uint32_t updates = 0;
@@ -242,7 +251,8 @@ void physics_system_update(struct World* world, float delta_time) {
 // COLLISION SYSTEM
 // ============================================================================
 
-void collision_system_update(struct World* world, float delta_time) {
+void collision_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
+    (void)render_config; // Unused
     if (!world) return;
     
     // Suppress unused parameter warning
@@ -348,7 +358,8 @@ void collision_system_update(struct World* world, float delta_time) {
 // AI SYSTEM
 // ============================================================================
 
-void ai_system_update(struct World* world, float delta_time) {
+void ai_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
+    (void)render_config; // Unused
     if (!world) return;
     
     // Suppress unused parameter warning
@@ -438,11 +449,8 @@ void ai_system_update(struct World* world, float delta_time) {
 // CAMERA SYSTEM
 // ============================================================================
 
-void camera_system_update(struct World* world, float delta_time) {
+void camera_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
     if (!world) return;
-    
-    // Suppress unused parameter warning
-    (void)delta_time;
     
     // Set up camera follow targets if not already set
     static bool cameras_initialized = false;
@@ -458,18 +466,64 @@ void camera_system_update(struct World* world, float delta_time) {
             }
         }
         
-        // Set up camera follow targets
+        // Initialize cameras with default values
         for (uint32_t i = 0; i < world->entity_count; i++) {
             struct Entity* entity = &world->entities[i];
             if (entity->component_mask & COMPONENT_CAMERA) {
                 struct Camera* camera = entity->camera;
-                if (camera && camera->follow_target == INVALID_ENTITY) {
-                    // If this is a player's camera or chase camera, follow the player
-                    if ((entity->component_mask & COMPONENT_PLAYER) || 
-                        (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
-                         camera->behavior == CAMERA_BEHAVIOR_CHASE)) {
-                        camera->follow_target = player_id;
+                if (camera) {
+                    // Initialize cameras with default values
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->component_mask & COMPONENT_CAMERA) {
+                struct Camera* camera = entity->camera;
+                if (camera) {
+                    // Set default camera properties if not already set
+                    if (camera->fov == 0.0f) camera->fov = 60.0f;  // Wider FOV for better view
+                    if (camera->near_plane == 0.0f) camera->near_plane = 0.1f;
+                    if (camera->far_plane == 0.0f) camera->far_plane = 1000.0f;
+                    if (camera->aspect_ratio == 0.0f) camera->aspect_ratio = 16.0f / 9.0f;
+                    
+                    // Initialize position and target if not set - better default positions
+                    if (camera->position.x == 0.0f && camera->position.y == 0.0f && camera->position.z == 0.0f) {
+                        // Different positions for different camera types
+                        switch (camera->behavior) {
+                            case CAMERA_BEHAVIOR_THIRD_PERSON:
+                            case CAMERA_BEHAVIOR_CHASE:
+                                camera->position = (Vector3){10.0f, 20.0f, 30.0f};  // Behind and above
+                                camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                                break;
+                            case CAMERA_BEHAVIOR_STATIC:
+                                camera->position = (Vector3){-30.0f, 25.0f, -30.0f};  // Corner view
+                                camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                                break;
+                            default:
+                                camera->position = (Vector3){0.0f, 15.0f, 25.0f};  // General overhead
+                                camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                                break;
+                        }
                     }
+                    camera->up = (Vector3){0.0f, 1.0f, 0.0f};
+                    
+                    // Set follow target for chase cameras with better default offsets
+                    if (camera->follow_target == INVALID_ENTITY) {
+                        if (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
+                            camera->behavior == CAMERA_BEHAVIOR_CHASE) {
+                            camera->follow_target = player_id;
+                            // Better chase camera positioning
+                            camera->follow_offset = (Vector3){8.0f, 20.0f, 30.0f};  // Further back and higher
+                            camera->follow_smoothing = 0.05f;  // Slightly more responsive
+                        }
+                    }
+                    
+                    // Mark matrices as dirty for initial calculation
+                    camera->matrices_dirty = true;
+                    
+                    printf("🎥 Initialized camera Entity %d: pos:(%.1f,%.1f,%.1f) behavior:%d\n",
+                           entity->id, camera->position.x, camera->position.y, camera->position.z, camera->behavior);
+                }
+            }
+        }
                 }
             }
         }
@@ -480,6 +534,7 @@ void camera_system_update(struct World* world, float delta_time) {
                 struct Entity* entity = &world->entities[i];
                 if (entity->component_mask & COMPONENT_CAMERA) {
                     world_set_active_camera(world, entity->id);
+                    printf("🎯 Set initial active camera: Entity %d\n", entity->id);
                     break;
                 }
             }
@@ -488,9 +543,8 @@ void camera_system_update(struct World* world, float delta_time) {
         cameras_initialized = true;
     }
     
-    // Find the active camera entity
+    // Find active camera entity
     EntityID active_camera_id = world_get_active_camera(world);
-    
     if (active_camera_id == INVALID_ENTITY) {
         // No active camera, try to find any camera
         for (uint32_t i = 0; i < world->entity_count; i++) {
@@ -508,11 +562,26 @@ void camera_system_update(struct World* world, float delta_time) {
     }
     
     struct Camera* camera = entity_get_camera(world, active_camera_id);
-    struct Transform* camera_transform = entity_get_transform(world, active_camera_id);
+    if (!camera) return;
     
-    if (!camera || !camera_transform) {
-        return;
+    // Update camera position and target based on behavior
+    camera_update_behavior(world, render_config, active_camera_id, delta_time);
+    
+    // Update matrices if camera changed
+    if (camera->matrices_dirty) {
+        camera_update_matrices(camera);
     }
+    
+    // Update legacy render config for backward compatibility
+    update_legacy_render_config(render_config, camera);
+}
+
+static void camera_update_behavior(struct World* world, RenderConfig* render_config, EntityID camera_id, float delta_time) {
+    (void)render_config; // Unused parameter
+    struct Camera* camera = entity_get_camera(world, camera_id);
+    if (!camera) return;
+    
+    bool position_changed = false;
     
     // Update camera based on its behavior
     switch (camera->behavior) {
@@ -529,13 +598,26 @@ void camera_system_update(struct World* world, float delta_time) {
                         target_pos.z + camera->follow_offset.z
                     };
                     
-                    // Smooth camera movement
-                    float lerp = camera->follow_smoothing;
-                    camera_transform->position.x += (desired_pos.x - camera_transform->position.x) * lerp;
-                    camera_transform->position.y += (desired_pos.y - camera_transform->position.y) * lerp;
-                    camera_transform->position.z += (desired_pos.z - camera_transform->position.z) * lerp;
+                    // Smooth camera movement - more responsive
+                    float lerp = camera->follow_smoothing * delta_time * 60.0f; // Frame rate independent
+                    if (lerp > 1.0f) lerp = 1.0f; // Clamp to prevent overshooting
                     
-                    camera_transform->dirty = true;
+                    // Apply smoothing factor for stability but make it more responsive
+                    lerp *= 3.0f;  // Make camera more responsive
+                    if (lerp > 0.3f) lerp = 0.3f;  // But not too fast
+                    
+                    Vector3 old_pos = camera->position;
+                    camera->position.x += (desired_pos.x - camera->position.x) * lerp;
+                    camera->position.y += (desired_pos.y - camera->position.y) * lerp;
+                    camera->position.z += (desired_pos.z - camera->position.z) * lerp;
+                    
+                    // Always look at the target entity for proper framing
+                    camera->target = target_pos;
+                    
+                    // Check if position changed
+                    if (vector3_distance(old_pos, camera->position) > 0.001f) {
+                        position_changed = true;
+                    }
                 }
             }
             break;
@@ -549,9 +631,16 @@ void camera_system_update(struct World* world, float delta_time) {
                 struct Transform* target_transform = entity_get_transform(world, camera->follow_target);
                 if (target_transform) {
                     // First person camera follows exactly
-                    camera_transform->position = target_transform->position;
-                    camera_transform->rotation = target_transform->rotation;
-                    camera_transform->dirty = true;
+                    Vector3 old_pos = camera->position;
+                    camera->position = target_transform->position;
+                    
+                    // Calculate forward direction from rotation (simplified)
+                    Vector3 forward = {0.0f, 0.0f, -1.0f}; // Default forward
+                    camera->target = vector3_add(camera->position, forward);
+                    
+                    if (vector3_distance(old_pos, camera->position) > 0.001f) {
+                        position_changed = true;
+                    }
                 }
             }
             break;
@@ -561,51 +650,25 @@ void camera_system_update(struct World* world, float delta_time) {
             break;
     }
     
-    // Update render system camera settings
-    RenderConfig* render_config = get_render_config();
-    if (render_config) {
-        // Update camera position
-        render_config->camera.position = camera_transform->position;
-        
-        // Update camera properties
+    if (position_changed) {
+        camera->matrices_dirty = true;
+    }
+}
+
+static void update_legacy_render_config(RenderConfig* render_config, struct Camera* camera) {
+    // Update legacy render config for backward compatibility
+    if (render_config && camera) {
+        render_config->camera.position = camera->position;
+        render_config->camera.target = camera->target;
+        render_config->camera.up = camera->up;
         render_config->camera.fov = camera->fov;
         render_config->camera.near_plane = camera->near_plane;
         render_config->camera.far_plane = camera->far_plane;
         render_config->camera.aspect_ratio = camera->aspect_ratio;
-        
-        // Set camera target based on follow target or look direction
-        if (camera->follow_target != INVALID_ENTITY) {
-            struct Transform* target_transform = entity_get_transform(world, camera->follow_target);
-            if (target_transform) {
-                render_config->camera.target = target_transform->position;
-            }
-        }
-        
-        // Update camera up vector (for now, always up)
-        render_config->camera.up = (Vector3){0.0f, 1.0f, 0.0f};
     }
 }
 
-// ============================================================================
-// RENDER SYSTEM
-// ============================================================================
 
-void render_system_update(struct World* world, float delta_time) {
-    if (!world) return;
-    
-    // Find player entity
-    EntityID player_id = INVALID_ENTITY;
-    for (uint32_t i = 0; i < world->entity_count; i++) {
-        struct Entity* entity = &world->entities[i];
-        if (entity->component_mask & COMPONENT_PLAYER) {
-            player_id = i + 1;  // Entity IDs are 1-based
-            break;
-        }
-    }
-    
-    // Render the frame - camera system has already updated camera position
-    render_frame(world, &g_render_config, player_id, delta_time);
-}
 
 // ============================================================================
 // DATA ACCESS
@@ -619,6 +682,8 @@ DataRegistry* get_data_registry(void) {
 // GLOBAL SYSTEM ACCESSORS
 // ============================================================================
 
-RenderConfig* get_render_config(void) {
-    return &g_render_config;
+
+
+AssetRegistry* get_asset_registry(void) {
+    return &g_asset_registry;
 }

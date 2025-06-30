@@ -4,6 +4,10 @@
 #include <math.h>
 #include <stdio.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // ============================================================================
 // WORLD MANAGEMENT
 // ============================================================================
@@ -303,8 +307,20 @@ Vector3 vector3_add(Vector3 a, Vector3 b) {
     return (Vector3){a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
+Vector3 vector3_subtract(Vector3 a, Vector3 b) {
+    return (Vector3){a.x - b.x, a.y - b.y, a.z - b.z};
+}
+
 Vector3 vector3_multiply(Vector3 v, float scalar) {
     return (Vector3){v.x * scalar, v.y * scalar, v.z * scalar};
+}
+
+Vector3 vector3_normalize(Vector3 v) {
+    float len = vector3_length(v);
+    if (len > 0.0f) {
+        return (Vector3){v.x / len, v.y / len, v.z / len};
+    }
+    return (Vector3){0.0f, 0.0f, 0.0f};
 }
 
 float vector3_length(Vector3 v) {
@@ -314,4 +330,172 @@ float vector3_length(Vector3 v) {
 float vector3_distance(Vector3 a, Vector3 b) {
     Vector3 diff = {a.x - b.x, a.y - b.y, a.z - b.z};
     return vector3_length(diff);
+}
+
+// ============================================================================
+// MATRIX UTILITY FUNCTIONS
+// ============================================================================
+
+void mat4_identity(float* m) {
+    memset(m, 0, 16 * sizeof(float));
+    m[0] = m[5] = m[10] = m[15] = 1.0f;
+}
+
+void mat4_perspective(float* m, float fov, float aspect, float near, float far) {
+    float f = 1.0f / tanf(fov * 0.5f * M_PI / 180.0f);
+    memset(m, 0, 16 * sizeof(float));
+    
+    m[0] = f / aspect;
+    m[5] = f;
+    m[10] = (far + near) / (near - far);
+    m[11] = -1.0f;
+    m[14] = (2.0f * far * near) / (near - far);
+    m[15] = 0.0f;
+}
+
+void mat4_lookat(float* m, Vector3 eye, Vector3 target, Vector3 up) {
+    // Calculate camera basis vectors
+    Vector3 f = vector3_normalize(vector3_subtract(target, eye));
+    Vector3 s = vector3_normalize((Vector3){
+        f.y * up.z - f.z * up.y,
+        f.z * up.x - f.x * up.z,
+        f.x * up.y - f.y * up.x
+    });
+    Vector3 u = (Vector3){
+        s.y * f.z - s.z * f.y,
+        s.z * f.x - s.x * f.z,
+        s.x * f.y - s.y * f.x
+    };
+    
+    // Build view matrix
+    mat4_identity(m);
+    m[0] = s.x;  m[4] = s.y;  m[8] = s.z;   m[12] = -(s.x*eye.x + s.y*eye.y + s.z*eye.z);
+    m[1] = u.x;  m[5] = u.y;  m[9] = u.z;   m[13] = -(u.x*eye.x + u.y*eye.y + u.z*eye.z);
+    m[2] = -f.x; m[6] = -f.y; m[10] = -f.z; m[14] = (f.x*eye.x + f.y*eye.y + f.z*eye.z);
+}
+
+void mat4_multiply(float* result, const float* a, const float* b) {
+    float temp[16];
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            temp[i*4 + j] = 0;
+            for (int k = 0; k < 4; k++) {
+                temp[i*4 + j] += a[k*4 + j] * b[i*4 + k];
+            }
+        }
+    }
+    memcpy(result, temp, sizeof(temp));
+}
+
+void mat4_translate(float* m, Vector3 t) {
+    mat4_identity(m);
+    m[12] = t.x;
+    m[13] = t.y;
+    m[14] = t.z;
+}
+
+void mat4_rotation_x(float* m, float angle_radians) {
+    mat4_identity(m);
+    float c = cosf(angle_radians);
+    float s = sinf(angle_radians);
+    m[5] = c;  m[6] = -s;
+    m[9] = s;  m[10] = c;
+}
+
+void mat4_rotation_y(float* m, float angle_radians) {
+    mat4_identity(m);
+    float c = cosf(angle_radians);
+    float s = sinf(angle_radians);
+    m[0] = c;   m[2] = s;
+    m[8] = -s;  m[10] = c;
+}
+
+void mat4_rotation_z(float* m, float angle_radians) {
+    mat4_identity(m);
+    float c = cosf(angle_radians);
+    float s = sinf(angle_radians);
+    m[0] = c;  m[1] = -s;
+    m[4] = s;  m[5] = c;
+}
+
+void mat4_scale(float* m, Vector3 scale) {
+    mat4_identity(m);
+    m[0] = scale.x;
+    m[5] = scale.y;
+    m[10] = scale.z;
+}
+
+void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale) {
+    // For now, use Euler angles from quaternion (simplified)
+    // TODO: Implement proper quaternion to matrix conversion
+    float translation[16], rot_y[16], scaling[16];
+    float temp[16];
+    
+    // Create individual matrices
+    mat4_translate(translation, position);
+    mat4_rotation_y(rot_y, rotation.y); // Use Y rotation for now
+    mat4_scale(scaling, scale);
+    
+    // Combine: T * R * S
+    mat4_multiply(temp, rot_y, scaling);
+    mat4_multiply(result, translation, temp);
+}
+
+// ============================================================================
+// CAMERA UTILITY FUNCTIONS
+// ============================================================================
+
+void camera_update_matrices(struct Camera* camera) {
+    if (!camera) return;
+    
+    // Calculate view matrix
+    mat4_lookat(camera->view_matrix, camera->position, camera->target, camera->up);
+    
+    // Calculate projection matrix
+    mat4_perspective(camera->projection_matrix, camera->fov, camera->aspect_ratio, 
+                     camera->near_plane, camera->far_plane);
+    
+    // Combine view and projection
+    mat4_multiply(camera->view_projection_matrix, camera->projection_matrix, camera->view_matrix);
+    
+    // Mark matrices as clean
+    camera->matrices_dirty = false;
+}
+
+bool switch_to_camera(struct World* world, int camera_index) {
+    if (!world || camera_index < 0 || camera_index >= 9) return false;
+    
+    // Find camera by index
+    int current_index = 0;
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        if (entity->component_mask & COMPONENT_CAMERA) {
+            if (current_index == camera_index) {
+                // Found the camera, switch to it
+                world_set_active_camera(world, entity->id);
+                
+                struct Camera* camera = entity_get_camera(world, entity->id);
+                if (camera) {
+                    camera->matrices_dirty = true;
+                }
+                return true;
+            }
+            current_index++;
+        }
+    }
+    
+    return false;
+}
+
+void update_camera_aspect_ratio(struct World* world, float aspect_ratio) {
+    if (!world) return;
+    
+    EntityID active_camera = world_get_active_camera(world);
+    if (active_camera != INVALID_ENTITY) {
+        struct Camera* camera = entity_get_camera(world, active_camera);
+        if (camera) {
+            camera->aspect_ratio = aspect_ratio;
+            camera->matrices_dirty = true;
+        }
+    }
 }

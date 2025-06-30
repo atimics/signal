@@ -1,10 +1,13 @@
+#include "sokol_gfx.h"
 #include "assets.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <SDL.h>
-#include <SDL_image.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -43,14 +46,6 @@ void assets_cleanup(AssetRegistry* registry) {
         Mesh* mesh = &registry->meshes[i];
         if (mesh->vertices) free(mesh->vertices);
         if (mesh->indices) free(mesh->indices);
-    }
-    
-    // Free all loaded textures
-    for (uint32_t i = 0; i < registry->texture_count; i++) {
-        Texture* texture = &registry->textures[i];
-        if (texture->sdl_texture) {
-            SDL_DestroyTexture(texture->sdl_texture);
-        }
     }
     
     printf("🎨 Asset system cleaned up\n");
@@ -230,35 +225,36 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
     if (!registry || !filename || !mesh_name) return false;
     if (registry->mesh_count >= 32) return false;
     
-    // Build full path - handle both .mesh and .cobj extensions
+    // Build full path
     char filepath[512];
-    char actual_filename[256];
-    
-    // Convert .mesh extension to .cobj for compiled files
-    if (strstr(filename, ".mesh")) {
-        strncpy(actual_filename, filename, sizeof(actual_filename) - 1);
-        char* dot = strrchr(actual_filename, '.');
-        if (dot) {
-            strcpy(dot, ".cobj");  // Replace .mesh with .cobj
-        }
-    } else if (!strstr(filename, ".cobj")) {
-        // If no extension, assume it's a .cobj file
-        snprintf(actual_filename, sizeof(actual_filename), "%s", filename);
-        if (!strstr(actual_filename, ".cobj")) {
-            strncat(actual_filename, ".cobj", sizeof(actual_filename) - strlen(actual_filename) - 1);
-        }
-    } else {
-        // Already has .cobj extension
-        strncpy(actual_filename, filename, sizeof(actual_filename) - 1);
-    }
-    
-    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, actual_filename);
+    snprintf(filepath, sizeof(filepath), "%s/meshes/%s", registry->asset_root, filename);
     
     // Find or create mesh slot
     Mesh* mesh = &registry->meshes[registry->mesh_count];
     strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
     
     if (parse_obj_file(filepath, mesh)) {
+        // Create vertex buffer
+        mesh->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = {
+                .ptr = mesh->vertices,
+                .size = mesh->vertex_count * sizeof(Vertex)
+            },
+            .usage = { .vertex_buffer = true },
+            .label = mesh->name
+        });
+
+        // Create index buffer
+        mesh->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = {
+                .ptr = mesh->indices,
+                .size = mesh->index_count * sizeof(int)
+            },
+            .usage = { .index_buffer = true },
+            .label = mesh->name
+        });
+
+        mesh->loaded = true;  // Mark as successfully loaded
         registry->mesh_count++;
         return true;
     }
@@ -266,38 +262,34 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
     return false;
 }
 
-bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name, SDL_Renderer* renderer) {
-    if (!registry || !filename || !texture_name || !renderer) return false;
+bool load_texture(AssetRegistry* registry, const char* filename, const char* texture_name) {
+    if (!registry || !filename || !texture_name) return false;
     if (registry->texture_count >= 32) return false;
-    
+
     Texture* texture = &registry->textures[registry->texture_count];
     strncpy(texture->name, texture_name, sizeof(texture->name) - 1);
     strncpy(texture->filepath, filename, sizeof(texture->filepath) - 1);
-    
-    // Load the actual texture using SDL_image
-    SDL_Surface* surface = IMG_Load(texture->filepath);
-    if (!surface) {
-        printf("❌ Failed to load texture surface: %s (%s)\n", texture->filepath, IMG_GetError());
-        return false;
+
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 4);
+
+    if (data) {
+        texture->width = width;
+        texture->height = height;
+        texture->sg_image = sg_make_image(&(sg_image_desc){
+            .width = width,
+            .height = height,
+            .pixel_format = SG_PIXELFORMAT_RGBA8,
+            .data.subimage[0][0] = { .ptr = data, .size = (size_t)(width * height * 4) },
+            .label = texture->name
+        });
+        stbi_image_free(data);
+        texture->loaded = true;
+        registry->texture_count++;
+        return true;
     }
-    
-    // Create SDL texture from surface
-    texture->sdl_texture = SDL_CreateTextureFromSurface(renderer, surface);
-    texture->width = surface->w;
-    texture->height = surface->h;
-    
-    // Free the surface
-    SDL_FreeSurface(surface);
-    
-    if (!texture->sdl_texture) {
-        printf("❌ Failed to create texture from surface: %s (%s)\n", texture->filepath, SDL_GetError());
-        return false;
-    }
-    
-    texture->loaded = true;
-    registry->texture_count++;
-    
-    return true;
+
+    return false;
 }
 
 // ============================================================================
@@ -366,20 +358,20 @@ void assets_list_loaded(AssetRegistry* registry) {
     }
 }
 
-bool assets_load_all_in_directory(AssetRegistry* registry, SDL_Renderer* renderer) {
-    if (!registry || !renderer) return false;
+bool assets_load_all_in_directory(AssetRegistry* registry) {
+    if (!registry) return false;
     
     printf("🔍 Auto-loading assets from %s/meshes/\n", registry->asset_root);
     
     // Load assets based on metadata.json
-    return load_assets_from_metadata(registry, renderer);
+    return load_assets_from_metadata(registry);
 }
 
 // ============================================================================
 // METADATA-DRIVEN ASSET LOADING
 // ============================================================================
 
-bool load_single_mesh_metadata(AssetRegistry* registry, SDL_Renderer* renderer, const char* metadata_path) {
+bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_path) {
     FILE* file = fopen(metadata_path, "r");
     if (!file) {
         printf("⚠️  Could not open mesh metadata: %s\n", metadata_path);
@@ -539,7 +531,7 @@ bool load_single_mesh_metadata(AssetRegistry* registry, SDL_Renderer* renderer, 
         snprintf(texture_path, sizeof(texture_path), "%s/%s", mesh_dir, texture_filename);
         snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
         
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             // Texture loaded successfully (no verbose logging)
         }
     }
@@ -549,8 +541,8 @@ bool load_single_mesh_metadata(AssetRegistry* registry, SDL_Renderer* renderer, 
     return true;
 }
 
-bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
-    if (!registry || !renderer) return false;
+bool load_assets_from_metadata(AssetRegistry* registry) {
+    if (!registry) return false;
     
     // Load from index.json to get list of metadata files
     char index_path[512];
@@ -560,7 +552,7 @@ bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) 
     if (!file) {
         printf("⚠️  Could not open index.json: %s\n", index_path);
         printf("⚠️  Falling back to legacy metadata.json format\n");
-        return load_legacy_metadata(registry, renderer);
+        return load_legacy_metadata(registry);
     }
     
     printf("📋 Loading asset index: %s\n", index_path);
@@ -600,7 +592,7 @@ bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) 
                              registry->asset_root, metadata_relative);
                     
                     // Load this mesh
-                    if (load_single_mesh_metadata(registry, renderer, metadata_full_path)) {
+                    if (load_single_mesh_metadata(registry, metadata_full_path)) {
                         loaded_count++;
                     } else {
                         success = false;
@@ -617,7 +609,7 @@ bool load_assets_from_metadata(AssetRegistry* registry, SDL_Renderer* renderer) 
 }
 
 // Legacy metadata loading for backward compatibility
-bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
+bool load_legacy_metadata(AssetRegistry* registry) {
     char metadata_path[1024];
     snprintf(metadata_path, sizeof(metadata_path), "%s/meshes/metadata.json", registry->asset_root);
     
@@ -710,7 +702,7 @@ bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
                             snprintf(texture_path, sizeof(texture_path), "%s/%s.png", current_folder, mesh_name);
                             snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
                             
-                            if (load_texture(registry, texture_path, texture_name, renderer)) {
+                            if (load_texture(registry, texture_path, texture_name)) {
                                 printf("   ✅ Loaded texture: %s\n", texture_name);
                             }
                         }
@@ -733,8 +725,8 @@ bool load_legacy_metadata(AssetRegistry* registry, SDL_Renderer* renderer) {
 // MATERIAL REPOSITORY IMPLEMENTATION
 // ============================================================================
 
-bool materials_load_library(AssetRegistry* registry, const char* materials_dir, SDL_Renderer* renderer) {
-    if (!registry || !materials_dir || !renderer) return false;
+bool materials_load_library(AssetRegistry* registry, const char* materials_dir) {
+    if (!registry || !materials_dir) return false;
     
     // TODO: Implement loading of shared material library
     // This would scan materials_dir for .mtl files and load them
@@ -814,8 +806,8 @@ void materials_list_loaded(AssetRegistry* registry) {
 }
 
 bool materials_load_texture_set(AssetRegistry* registry, Material* material, 
-                               const char* texture_dir, SDL_Renderer* renderer) {
-    if (!registry || !material || !texture_dir || !renderer) return false;
+                               const char* texture_dir) {
+    if (!registry || !material || !texture_dir) return false;
     
     char texture_path[512];
     bool any_loaded = false;
@@ -825,7 +817,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->diffuse_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_diffuse", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -835,7 +827,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->normal_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_normal", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -845,7 +837,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->specular_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_specular", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -855,7 +847,7 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
         snprintf(texture_path, sizeof(texture_path), "%s/%s", texture_dir, material->emission_texture);
         char texture_name[128];
         snprintf(texture_name, sizeof(texture_name), "%s_emission", material->name);
-        if (load_texture(registry, texture_path, texture_name, renderer)) {
+        if (load_texture(registry, texture_path, texture_name)) {
             any_loaded = true;
         }
     }
@@ -863,12 +855,246 @@ bool materials_load_texture_set(AssetRegistry* registry, Material* material,
     return any_loaded;
 }
 
-bool materials_bind_textures(Material* material, SDL_Renderer* renderer) {
-    if (!material || !renderer) return false;
+bool materials_bind_textures(Material* material) {
+    if (!material) return false;
     
     // This function would bind multiple textures for multi-texture rendering
     // For now, it's a placeholder for future multi-texture support
     // In a real implementation, this would set up texture units for shaders
     
     return true;
+}
+
+// ============================================================================
+// SHADER LOADING FUNCTIONS
+// ============================================================================
+
+char* load_shader_source(const char* shader_path) {
+    if (!shader_path) {
+        printf("❌ Shader path is null\n");
+        return NULL;
+    }
+    
+    FILE* file = fopen(shader_path, "r");
+    if (!file) {
+        printf("❌ Failed to open shader file: %s\n", shader_path);
+        return NULL;
+    }
+    
+    // Get file size
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    if (size <= 0) {
+        printf("❌ Shader file is empty or invalid: %s\n", shader_path);
+        fclose(file);
+        return NULL;
+    }
+    
+    // Allocate buffer and read file
+    char* source = malloc(size + 1);
+    if (!source) {
+        printf("❌ Failed to allocate memory for shader source\n");
+        fclose(file);
+        return NULL;
+    }
+    
+    size_t bytes_read = fread(source, 1, size, file);
+    source[bytes_read] = '\0';
+    fclose(file);
+    
+    printf("✅ Loaded shader: %s (%ld bytes)\n", shader_path, bytes_read);
+    return source;
+}
+
+void free_shader_source(char* source) {
+    if (source) {
+        free(source);
+    }
+}
+
+const char* get_shader_path(const char* base_name, const char* stage) {
+    static char path_buffers[2][512];  // Two buffers to handle consecutive calls
+    static int buffer_index = 0;
+    
+    char* path = path_buffers[buffer_index];
+    buffer_index = (buffer_index + 1) % 2;  // Alternate between buffers
+    
+#ifdef SOKOL_METAL
+    const char* extension = "metal";
+#else
+    const char* extension = "glsl";
+#endif
+    
+    snprintf(path, 512, "assets/shaders/%s.%s.%s", base_name, stage, extension);
+    return path;
+}
+
+// ============================================================================
+// GPU RESOURCE CREATION FUNCTIONS
+// ============================================================================
+
+bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable) {
+    if (!registry || !mesh_name || !renderable) return false;
+    
+    // Find the mesh
+    Mesh* mesh = assets_get_mesh(registry, mesh_name);
+    if (!mesh || !mesh->loaded) {
+        printf("❌ Mesh '%s' not found or not loaded\n", mesh_name);
+        return false;
+    }
+    
+    // Check if GPU resources were already created during mesh loading
+    if (sg_query_buffer_state(mesh->sg_vertex_buffer) == SG_RESOURCESTATE_VALID &&
+        sg_query_buffer_state(mesh->sg_index_buffer) == SG_RESOURCESTATE_VALID) {
+        
+        // Use existing GPU resources
+        renderable->vbuf = mesh->sg_vertex_buffer;
+        renderable->ibuf = mesh->sg_index_buffer;
+        renderable->index_count = mesh->index_count;
+        renderable->visible = true;
+        renderable->lod_distance = 100.0f;  // Default LOD distance
+        renderable->lod_level = 0;
+        
+        // Try to find associated texture
+        char texture_name[128];
+        snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
+        Texture* texture = assets_get_texture(registry, texture_name);
+        if (texture && texture->loaded) {
+            renderable->tex = texture->sg_image;
+        } else {
+            // Use invalid texture handle - shader should handle this
+            renderable->tex.id = SG_INVALID_ID;
+        }
+        
+        printf("✅ Created Renderable from mesh '%s' (%d indices)\n", mesh_name, mesh->index_count);
+        return true;
+    }
+    
+    printf("❌ GPU resources not available for mesh '%s'\n", mesh_name);
+    return false;
+}
+
+sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name) {
+    if (!registry || !texture_name) {
+        return (sg_image){.id = SG_INVALID_ID};
+    }
+    
+    Texture* texture = assets_get_texture(registry, texture_name);
+    if (!texture || !texture->loaded) {
+        printf("❌ Texture '%s' not found or not loaded\n", texture_name);
+        return (sg_image){.id = SG_INVALID_ID};
+    }
+    
+    return texture->sg_image;
+}
+
+// Helper function to create a default white texture for entities without textures
+sg_image assets_create_default_texture(void) {
+    // Create a 1x1 white pixel texture
+    uint32_t white_pixel = 0xFFFFFFFF;  // RGBA white
+    
+    sg_image default_tex = sg_make_image(&(sg_image_desc){
+        .width = 1,
+        .height = 1,
+        .pixel_format = SG_PIXELFORMAT_RGBA8,
+        .data.subimage[0][0] = {
+            .ptr = &white_pixel,
+            .size = 4
+        },
+        .label = "default_white_texture"
+    });
+    
+    return default_tex;
+}
+
+// ============================================================================
+// GPU RESOURCE INITIALIZATION FUNCTIONS
+// ============================================================================
+
+// Batch load all textures to GPU
+bool assets_load_all_textures_to_gpu(AssetRegistry* registry) {
+    if (!registry) {
+        printf("❌ Invalid registry for GPU texture loading\n");
+        return false;
+    }
+    
+    int success_count = 0;
+    int total_count = registry->texture_count;
+    
+    printf("🎨 Loading %d textures to GPU...\n", total_count);
+    
+    for (uint32_t i = 0; i < registry->texture_count; i++) {
+        Texture* texture = &registry->textures[i];
+        
+        // Skip if already loaded to GPU
+        if (texture->sg_image.id != SG_INVALID_ID) {
+            success_count++;
+            printf("✅ Texture '%s' already loaded to GPU\n", texture->name);
+            continue;
+        }
+        
+        // Skip if texture data not loaded
+        if (!texture->loaded) {
+            printf("⚠️  Texture '%s' data not loaded from file, skipping GPU upload\n", texture->name);
+            continue;
+        }
+        
+        // Load texture data to GPU directly (without reloading from file)
+        int width, height, channels;
+        unsigned char* data = stbi_load(texture->filepath, &width, &height, &channels, 4);
+        
+        if (data) {
+            texture->sg_image = sg_make_image(&(sg_image_desc){
+                .width = width,
+                .height = height,
+                .pixel_format = SG_PIXELFORMAT_RGBA8,
+                .data.subimage[0][0] = { .ptr = data, .size = (size_t)(width * height * 4) },
+                .label = texture->name
+            });
+            stbi_image_free(data);
+            success_count++;
+            printf("✅ Texture '%s' loaded to GPU\n", texture->name);
+        } else {
+            printf("❌ Failed to reload texture '%s' from file for GPU upload\n", texture->name);
+        }
+    }
+    
+    printf("🎨 GPU texture loading complete: %d/%d successful\n", success_count, total_count);
+    return success_count == total_count;
+}
+
+// Initialize all GPU resources from loaded asset data
+bool assets_initialize_gpu_resources(AssetRegistry* registry) {
+    if (!registry) {
+        printf("❌ Invalid registry for GPU resource initialization\n");
+        return false;
+    }
+    
+    printf("🎨 Initializing GPU resources...\n");
+    
+    // Load all textures to GPU
+    bool textures_ok = assets_load_all_textures_to_gpu(registry);
+    
+    // Note: Meshes are already loaded to GPU during mesh loading
+    // as they use sg_make_buffer calls in the mesh loading process
+    
+    bool meshes_ok = true; // Assume meshes are already loaded
+    for (uint32_t i = 0; i < registry->mesh_count; i++) {
+        Mesh* mesh = &registry->meshes[i];
+        if (mesh->loaded && (mesh->sg_vertex_buffer.id == SG_INVALID_ID || mesh->sg_index_buffer.id == SG_INVALID_ID)) {
+            printf("⚠️  Mesh '%s' missing GPU buffers\n", mesh->name);
+            meshes_ok = false;
+        }
+    }
+    
+    if (textures_ok && meshes_ok) {
+        printf("✅ All GPU resources initialized successfully\n");
+        return true;
+    } else {
+        printf("❌ Some GPU resources failed to initialize (textures: %s, meshes: %s)\n", 
+               textures_ok ? "OK" : "FAILED", meshes_ok ? "OK" : "FAILED");
+        return false;
+    }
 }

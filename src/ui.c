@@ -1,432 +1,332 @@
-#include "ui.h"
-#include <stdio.h>
-#include <string.h>
+#include "sokol_app.h"
+#include "sokol_gfx.h"
+#include "sokol_glue.h"
+#include "sokol_log.h"
+
+// Include standard headers before Nuklear
 #include <math.h>
+#include <stdio.h>
+#include <stdarg.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+// Nuklear configuration - declarations only (no implementation)
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#include "nuklear.h"
+#include "sokol_nuklear.h"
 
-// ============================================================================
-// INITIALIZATION AND CLEANUP
-// ============================================================================
+#include "ui.h"
+#include "core.h"
 
-bool cockpit_ui_init(CockpitUI* ui, SDL_Renderer* renderer, int screen_width, int screen_height) {
-    if (!ui || !renderer) return false;
+static UIState ui_state = {0};
+
+void ui_init(void) {
+    snk_setup(&(snk_desc_t){0});
     
-    memset(ui, 0, sizeof(CockpitUI));
-    ui->renderer = renderer;
+    // Initialize UI state
+    ui_state.show_debug_panel = true;
+    ui_state.show_hud = true;
+    ui_state.show_wireframe = false;
+    ui_state.camera_speed = 10.0f;
+    ui_state.time_scale = 1.0f;
+    ui_state.fps = 0.0f;
+    ui_state.frame_count = 0;
+    ui_state.fps_timer = 0.0f;
     
-    // Define cockpit layout - taking up border areas, leaving center for 3D view
-    int border = 80;
-    int radar_size = 200;
-    int comm_width = 300;
-    int hud_height = 60;
-    
-    // Main 3D view (center, reduced by UI borders)
-    ui->main_view = (UIRect){
-        border, border,
-        screen_width - 2 * border,
-        screen_height - 2 * border - hud_height
-    };
-    
-    // Radar (top-left corner)
-    ui->radar_area = (UIRect){
-        10, 10,
-        radar_size, radar_size
-    };
-    
-    // Communications panel (top-right)
-    ui->comm_area = (UIRect){
-        screen_width - comm_width - 10, 10,
-        comm_width, 250
-    };
-    
-    // HUD (bottom strip)
-    ui->hud_area = (UIRect){
-        0, screen_height - hud_height,
-        screen_width, hud_height
-    };
-    
-    // Cockpit frame (entire screen border)
-    ui->cockpit_frame = (UIRect){0, 0, screen_width, screen_height};
-    
-    // Initialize radar
-    ui->radar.radar_range = 100.0f;
-    ui->radar.scale = (float)radar_size / (ui->radar.radar_range * 2.0f);
-    
-    // Add initial comm messages
-    comm_add_message(&ui->comm, "TOWER", "Welcome to Nexus Spaceport", false);
-    comm_add_message(&ui->comm, "CONTROL", "Landing Pad Alpha cleared", false);
-    comm_add_message(&ui->comm, "SYSTEM", "Cockpit systems online", false);
-    comm_add_message(&ui->comm, "NAV", "GPS locked - surface coords", false);
-    comm_add_message(&ui->comm, "COMM", "Planetary comm net active", false);
-    comm_add_message(&ui->comm, "TRAFFIC", "Multiple ships on approach", false);
-    
-    ui->initialized = true;
-    printf("🎛️ Cockpit UI initialized (%dx%d)\n", screen_width, screen_height);
-    return true;
+    printf("✅ Nuklear UI initialized\n");
 }
 
-void cockpit_ui_cleanup(CockpitUI* ui) {
-    if (!ui) return;
-    ui->initialized = false;
-    printf("🎛️ Cockpit UI cleaned up\n");
+void ui_shutdown(void) {
+    snk_shutdown();
+    printf("✅ Nuklear UI shutdown\n");
 }
 
-// ============================================================================
-// MAIN UPDATE AND RENDER
-// ============================================================================
-
-void cockpit_ui_update(CockpitUI* ui, struct World* world, EntityID player_id, float delta_time) {
-    if (!ui || !ui->initialized || !world) return;
+static void draw_hud(struct nk_context* ctx, struct World* world) {
+    if (!ui_state.show_hud) return;
     
-    // Suppress unused parameter warning
-    (void)delta_time;
-    
-    // Update radar
-    radar_update(&ui->radar, world, player_id);
-    
-    // Update HUD data
-    hud_update(&ui->hud, world, player_id);
-}
-
-void cockpit_ui_render(CockpitUI* ui) {
-    if (!ui || !ui->initialized || !ui->renderer) return;
-    
-    // Draw cockpit frame (decorative border)
-    SDL_SetRenderDrawColor(ui->renderer, 40, 60, 80, 255);
-    
-    // Top border
-    SDL_Rect top_border = {0, 0, ui->cockpit_frame.w, 80};
-    SDL_RenderFillRect(ui->renderer, &top_border);
-    
-    // Bottom border  
-    SDL_Rect bottom_border = {0, ui->cockpit_frame.h - 80, ui->cockpit_frame.w, 80};
-    SDL_RenderFillRect(ui->renderer, &bottom_border);
-    
-    // Left border
-    SDL_Rect left_border = {0, 80, 80, ui->cockpit_frame.h - 160};
-    SDL_RenderFillRect(ui->renderer, &left_border);
-    
-    // Right border
-    SDL_Rect right_border = {ui->cockpit_frame.w - 80, 80, 80, ui->cockpit_frame.h - 160};
-    SDL_RenderFillRect(ui->renderer, &right_border);
-    
-    // Render individual components
-    radar_render(&ui->radar, ui->renderer, &ui->radar_area);
-    comm_render(&ui->comm, ui->renderer, &ui->comm_area);
-    hud_render(&ui->hud, ui->renderer, &ui->hud_area);
-}
-
-// ============================================================================
-// RADAR SYSTEM
-// ============================================================================
-
-void radar_update(RadarDisplay* radar, struct World* world, EntityID player_id) {
-    if (!radar || !world) return;
-    
-    radar->blip_count = 0;
-    
-    // Get player position for radar center
-    struct Transform* player_transform = entity_get_transform(world, player_id);
-    if (player_transform) {
-        radar->center_position = player_transform->position;
-    }
-    
-    // Scan all entities and add radar blips
-    for (uint32_t i = 0; i < world->entity_count && radar->blip_count < 64; i++) {
-        struct Entity* entity = &world->entities[i];
-        EntityID entity_id = i + 1;
+    // Create a HUD window in the top-left corner
+    if (nk_begin(ctx, "HUD", nk_rect(10, 10, 300, 200),
+        NK_WINDOW_NO_INPUT | NK_WINDOW_BACKGROUND | NK_WINDOW_TITLE))
+    {
+        nk_layout_row_dynamic(ctx, 20, 1);
         
-        if (entity_id == player_id) continue;  // Don't show player on radar
+        // Display FPS
+        nk_labelf(ctx, NK_TEXT_LEFT, "FPS: %.1f", ui_state.fps);
         
-        if (entity->component_mask & COMPONENT_TRANSFORM) {
-            struct Transform* transform = entity_get_transform(world, entity_id);
-            if (!transform) continue;
+        // Display entity count
+        nk_labelf(ctx, NK_TEXT_LEFT, "Entities: %d", world->entity_count);
+        
+        // Find and display camera information
+        EntityID camera_id = INVALID_ENTITY;
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->component_mask & COMPONENT_CAMERA) {
+                camera_id = entity->id;
+                break;
+            }
+        }
+        
+        if (camera_id != INVALID_ENTITY) {
+            struct Transform* cam_transform = entity_get_transform(world, camera_id);
+            struct Camera* camera = entity_get_camera(world, camera_id);
             
-            // Calculate distance from player
-            float dx = transform->position.x - radar->center_position.x;
-            float dz = transform->position.z - radar->center_position.z;
-            float distance = sqrtf(dx * dx + dz * dz);
+            if (cam_transform) {
+                nk_labelf(ctx, NK_TEXT_LEFT, "Camera Pos: (%.1f, %.1f, %.1f)", 
+                         cam_transform->position.x, 
+                         cam_transform->position.y, 
+                         cam_transform->position.z);
+            }
             
-            // Only show objects within radar range
-            if (distance <= radar->radar_range) {
-                RadarBlip* blip = &radar->blips[radar->blip_count++];
+            if (camera) {
+                nk_labelf(ctx, NK_TEXT_LEFT, "FOV: %.1f°", camera->fov);
+                nk_labelf(ctx, NK_TEXT_LEFT, "Type: Camera");
+            }
+        }
+        
+        // Find and display player information
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->component_mask & COMPONENT_PLAYER) {
+                struct Transform* transform = entity_get_transform(world, entity->id);
+                struct Physics* physics = entity_get_physics(world, entity->id);
                 
-                // Convert world position to radar screen position
-                blip->x = dx * radar->scale;
-                blip->y = dz * radar->scale;
-                blip->size = 2.0f;
-                blip->is_target = false;
-                
-                // Determine blip type and label
-                if (entity->component_mask & COMPONENT_AI) {
-                    strcpy(blip->label, "AI");
-                } else if (entity->component_mask & COMPONENT_COLLISION) {
-                    struct Collision* collision = entity_get_collision(world, entity_id);
-                    if (collision && collision->radius > 15.0f) {
-                        strcpy(blip->label, "SUN");
-                        blip->size = 8.0f;
-                    } else if (collision && collision->radius > 5.0f) {
-                        strcpy(blip->label, "PLT");
-                        blip->size = 4.0f;
-                    } else {
-                        strcpy(blip->label, "AST");
-                        blip->size = 2.0f;
-                    }
+                if (transform) {
+                    nk_labelf(ctx, NK_TEXT_LEFT, "Player: (%.1f, %.1f, %.1f)", 
+                             transform->position.x, 
+                             transform->position.y, 
+                             transform->position.z);
                 }
+                
+                if (physics) {
+                    float velocity = sqrtf(physics->velocity.x * physics->velocity.x + 
+                                         physics->velocity.y * physics->velocity.y + 
+                                         physics->velocity.z * physics->velocity.z);
+                    nk_labelf(ctx, NK_TEXT_LEFT, "Velocity: %.1f", velocity);
+                }
+                break;
             }
         }
     }
+    nk_end(ctx);
 }
 
-void radar_render(const RadarDisplay* radar, SDL_Renderer* renderer, const UIRect* area) {
-    if (!radar || !renderer || !area) return;
+static void draw_debug_panel(struct nk_context* ctx, struct World* world, SystemScheduler* scheduler) {
+    if (!ui_state.show_debug_panel) return;
     
-    // Draw radar background
-    draw_filled_rect(renderer, area, 0, 20, 0, 180);
-    draw_outline_rect(renderer, area, 0, 255, 0);
+    if (nk_begin(ctx, "Debug Panel", nk_rect(50, 250, 400, 500),
+        NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+        NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+    {
+        // System Performance Section
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Performance", NK_MAXIMIZED)) {
+            nk_layout_row_dynamic(ctx, 20, 2);
+            nk_label(ctx, "FPS:", NK_TEXT_LEFT);
+            nk_labelf(ctx, NK_TEXT_LEFT, "%.1f", ui_state.fps);
+            
+            nk_label(ctx, "Frame Count:", NK_TEXT_LEFT);
+            nk_labelf(ctx, NK_TEXT_LEFT, "%d", scheduler->frame_count);
+            
+            nk_label(ctx, "Total Time:", NK_TEXT_LEFT);
+            nk_labelf(ctx, NK_TEXT_LEFT, "%.1fs", scheduler->total_time);
+            
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_label(ctx, "System Times:", NK_TEXT_LEFT);
+            
+            for (int i = 0; i < SYSTEM_COUNT; i++) {
+                if (scheduler->system_calls[i] > 0) {
+                    float avg_time = scheduler->system_times[i] / scheduler->system_calls[i];
+                    nk_layout_row_dynamic(ctx, 15, 1);
+                    nk_labelf(ctx, NK_TEXT_LEFT, "  %s: %.3fms", 
+                             scheduler->systems[i].name, avg_time * 1000);
+                }
+            }
+            
+            nk_tree_pop(ctx);
+        }
+        
+        // Render Settings Section
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Render Settings", NK_MAXIMIZED)) {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            
+            // Wireframe toggle - using int for nuklear compatibility
+            int wireframe_int = ui_state.show_wireframe ? 1 : 0;
+            if (nk_checkbox_label(ctx, "Wireframe Mode", &wireframe_int)) {
+                ui_state.show_wireframe = wireframe_int ? true : false;
+                RenderConfig* render_config = get_render_config();
+                if (render_config) {
+                    render_config->mode = ui_state.show_wireframe ? 
+                                        RENDER_MODE_WIREFRAME : RENDER_MODE_SOLID;
+                }
+            }
+            
+            // Debug visualization toggles
+            RenderConfig* render_config = get_render_config();
+            if (render_config) {
+                int debug_info = render_config->show_debug_info ? 1 : 0;
+                int show_velocities = render_config->show_velocities ? 1 : 0;
+                int show_collision = render_config->show_collision_bounds ? 1 : 0;
+                int show_orbits = render_config->show_orbits ? 1 : 0;
+                
+                if (nk_checkbox_label(ctx, "Show Debug Info", &debug_info)) {
+                    render_config->show_debug_info = debug_info ? true : false;
+                }
+                if (nk_checkbox_label(ctx, "Show Velocities", &show_velocities)) {
+                    render_config->show_velocities = show_velocities ? true : false;
+                }
+                if (nk_checkbox_label(ctx, "Show Collision Bounds", &show_collision)) {
+                    render_config->show_collision_bounds = show_collision ? true : false;
+                }
+                if (nk_checkbox_label(ctx, "Show Orbits", &show_orbits)) {
+                    render_config->show_orbits = show_orbits ? true : false;
+                }
+            }
+            
+            nk_tree_pop(ctx);
+        }
+        
+        // Camera Controls Section
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Camera Controls", NK_MAXIMIZED)) {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            
+            nk_property_float(ctx, "Camera Speed", 0.1f, &ui_state.camera_speed, 50.0f, 0.1f, 0.1f);
+            nk_property_float(ctx, "Time Scale", 0.0f, &ui_state.time_scale, 5.0f, 0.1f, 0.1f);
+            
+            nk_tree_pop(ctx);
+        }
+        
+        // Entity Browser Section
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED)) {
+            nk_layout_row_dynamic(ctx, 20, 1);
+            nk_labelf(ctx, NK_TEXT_LEFT, "Total Entities: %d", world->entity_count);
+            
+            for (uint32_t i = 0; i < world->entity_count; i++) {
+                struct Entity* entity = &world->entities[i];
+                
+                // Create a collapsible tree for each entity
+                char entity_name[64];
+                snprintf(entity_name, sizeof(entity_name), "Entity %d", entity->id);
+                
+                if (nk_tree_push_id(ctx, NK_TREE_NODE, entity_name, NK_MINIMIZED, entity->id)) {
+                    nk_layout_row_dynamic(ctx, 15, 1);
+                    
+                    // Show component mask
+                    nk_labelf(ctx, NK_TEXT_LEFT, "  Mask: 0x%08X", entity->component_mask);
+                    
+                    // Show individual components
+                    if (entity->component_mask & COMPONENT_TRANSFORM) {
+                        struct Transform* t = entity_get_transform(world, entity->id);
+                        if (t) {
+                            nk_labelf(ctx, NK_TEXT_LEFT, "  Pos: (%.1f, %.1f, %.1f)", 
+                                     t->position.x, t->position.y, t->position.z);
+                        }
+                    }
+                    
+                    if (entity->component_mask & COMPONENT_PHYSICS) {
+                        struct Physics* p = entity_get_physics(world, entity->id);
+                        if (p) {
+                            nk_labelf(ctx, NK_TEXT_LEFT, "  Mass: %.1f", p->mass);
+                        }
+                    }
+                    
+                    if (entity->component_mask & COMPONENT_CAMERA) {
+                        nk_labelf(ctx, NK_TEXT_LEFT, "  Type: Camera");
+                    }
+                    
+                    if (entity->component_mask & COMPONENT_PLAYER) {
+                        nk_labelf(ctx, NK_TEXT_LEFT, "  Type: Player");
+                    }
+                    
+                    nk_tree_pop(ctx);
+                }
+            }
+            nk_tree_pop(ctx);
+        }
+        
+        // System Controls Section
+        if (nk_tree_push(ctx, NK_TREE_TAB, "System Controls", NK_MINIMIZED)) {
+            nk_layout_row_dynamic(ctx, 30, 1);
+            
+            for (int i = 0; i < SYSTEM_COUNT; i++) {
+                SystemInfo* system = &scheduler->systems[i];
+                
+                nk_layout_row_dynamic(ctx, 25, 2);
+                int enabled = system->enabled ? 1 : 0;
+                if (nk_checkbox_label(ctx, system->name, &enabled)) {
+                    system->enabled = enabled ? true : false;
+                }
+                nk_labelf(ctx, NK_TEXT_LEFT, "%.1f Hz", system->frequency);
+            }
+            
+            nk_tree_pop(ctx);
+        }
+    }
+    nk_end(ctx);
+}
+
+void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time) {
+    // Get new frame context from sokol_nuklear
+    struct nk_context* ctx = snk_new_frame();
     
-    // Draw radar grid
-    int center_x = area->x + area->w / 2;
-    int center_y = area->y + area->h / 2;
+    // Update FPS calculation
+    ui_state.frame_count++;
+    ui_state.fps_timer += delta_time;
     
-    SDL_SetRenderDrawColor(renderer, 0, 100, 0, 255);
+    if (ui_state.fps_timer >= 1.0f) {
+        ui_state.fps = ui_state.frame_count / ui_state.fps_timer;
+        ui_state.frame_count = 0;
+        ui_state.fps_timer = 0.0f;
+    }
     
-    // Crosshairs
-    SDL_RenderDrawLine(renderer, center_x - 20, center_y, center_x + 20, center_y);
-    SDL_RenderDrawLine(renderer, center_x, center_y - 20, center_x, center_y + 20);
+    // Draw UI components
+    draw_hud(ctx, world);
+    draw_debug_panel(ctx, world, scheduler);
     
-    // Range circles
-    for (int i = 1; i <= 3; i++) {
-        int radius = i * area->w / 6;
-        for (int angle = 0; angle < 360; angle += 5) {
-            float rad = angle * M_PI / 180.0f;
-            int x1 = center_x + (int)(radius * cosf(rad));
-            int y1 = center_y + (int)(radius * sinf(rad));
-            int x2 = center_x + (int)((radius + 1) * cosf(rad));
-            int y2 = center_y + (int)((radius + 1) * sinf(rad));
-            SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+    // Render the UI
+    snk_render(sapp_width(), sapp_height());
+}
+
+bool ui_handle_event(const void* ev) {
+    const sapp_event* event = (const sapp_event*)ev;
+    
+    // Handle UI-specific hotkeys before passing to Nuklear
+    if (event->type == SAPP_EVENTTYPE_KEY_DOWN) {
+        switch (event->key_code) {
+            case SAPP_KEYCODE_F1:
+                ui_toggle_debug_panel();
+                return true;  // UI captured this event
+                
+            case SAPP_KEYCODE_F2:
+                ui_toggle_hud();
+                return true;  // UI captured this event
+                
+            case SAPP_KEYCODE_F3:
+                ui_state.show_wireframe = !ui_state.show_wireframe;
+                RenderConfig* render_config = get_render_config();
+                if (render_config) {
+                    render_config->mode = ui_state.show_wireframe ? 
+                                        RENDER_MODE_WIREFRAME : RENDER_MODE_SOLID;
+                }
+                return true;  // UI captured this event
+                
+            default:
+                break;
         }
     }
     
-    // Draw blips
-    for (int i = 0; i < radar->blip_count; i++) {
-        const RadarBlip* blip = &radar->blips[i];
-        
-        int blip_x = center_x + (int)blip->x;
-        int blip_y = center_y + (int)blip->y;
-        
-        // Clamp to radar area
-        if (blip_x < area->x || blip_x >= area->x + area->w ||
-            blip_y < area->y || blip_y >= area->y + area->h) {
-            continue;
-        }
-        
-        // Choose color based on blip type
-        if (strcmp(blip->label, "SUN") == 0) {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  // Yellow for sun
-        } else if (strcmp(blip->label, "PLT") == 0) {
-            SDL_SetRenderDrawColor(renderer, 0, 100, 255, 255);  // Blue for planets
-        } else if (strcmp(blip->label, "AI") == 0) {
-            SDL_SetRenderDrawColor(renderer, 255, 100, 100, 255);  // Red for AI ships
-        } else {
-            SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);  // Gray for asteroids
-        }
-        
-        // Draw blip as a small filled rectangle
-        SDL_Rect blip_rect = {
-            blip_x - (int)blip->size/2, 
-            blip_y - (int)blip->size/2,
-            (int)blip->size, 
-            (int)blip->size
-        };
-        SDL_RenderFillRect(renderer, &blip_rect);
-    }
-    
-    // Draw radar label
-    draw_text(renderer, "RADAR", area->x + 5, area->y + area->h - 15, 0, 255, 0);
+    // Pass event to Nuklear and return whether it was captured
+    return snk_handle_event(event);
 }
 
-// ============================================================================
-// COMMUNICATIONS PANEL
-// ============================================================================
-
-void comm_add_message(CommPanel* comm, const char* sender, const char* message, bool is_player) {
-    if (!comm || !sender || !message) return;
-    
-    // Shift messages up if at limit
-    if (comm->message_count >= 16) {
-        for (int i = 0; i < 15; i++) {
-            comm->messages[i] = comm->messages[i + 1];
-        }
-        comm->message_count = 15;
-    }
-    
-    // Add new message
-    CommMessage* msg = &comm->messages[comm->message_count++];
-    strncpy(msg->sender, sender, sizeof(msg->sender) - 1);
-    msg->sender[sizeof(msg->sender) - 1] = '\0';
-    strncpy(msg->message, message, sizeof(msg->message) - 1);
-    msg->message[sizeof(msg->message) - 1] = '\0';
-    msg->is_player = is_player;
-    msg->timestamp = 0;  // Would use actual time in real implementation
+void ui_toggle_debug_panel(void) {
+    ui_state.show_debug_panel = !ui_state.show_debug_panel;
+    printf("🔧 Debug panel %s\n", ui_state.show_debug_panel ? "enabled" : "disabled");
 }
 
-void comm_render(const CommPanel* comm, SDL_Renderer* renderer, const UIRect* area) {
-    if (!comm || !renderer || !area) return;
-    
-    // Draw comm background
-    draw_filled_rect(renderer, area, 0, 0, 20, 180);
-    draw_outline_rect(renderer, area, 0, 200, 255);
-    
-    // Draw title
-    draw_text(renderer, "COMMUNICATIONS", area->x + 5, area->y + 5, 0, 200, 255);
-    
-    // Draw messages
-    int y_offset = 25;
-    for (int i = 0; i < comm->message_count && y_offset < area->h - 20; i++) {
-        const CommMessage* msg = &comm->messages[i];
-        
-        // Color based on sender type
-        uint8_t r = msg->is_player ? 100 : 200;
-        uint8_t g = msg->is_player ? 255 : 200;
-        uint8_t b = msg->is_player ? 100 : 200;
-        
-        // Draw sender
-        char line[200];
-        snprintf(line, sizeof(line), "%s: %s", msg->sender, msg->message);
-        draw_text(renderer, line, area->x + 5, area->y + y_offset, r, g, b);
-        
-        y_offset += 12;
-    }
-}
-
-// ============================================================================
-// HUD SYSTEM
-// ============================================================================
-
-void hud_update(HUDData* hud, struct World* world, EntityID player_id) {
-    if (!hud || !world) return;
-    
-    // Get player data
-    struct Transform* transform = entity_get_transform(world, player_id);
-    struct Physics* physics = entity_get_physics(world, player_id);
-    
-    if (physics) {
-        hud->speed = sqrtf(physics->velocity.x * physics->velocity.x + 
-                          physics->velocity.y * physics->velocity.y + 
-                          physics->velocity.z * physics->velocity.z);
-    }
-    
-    if (transform) {
-        hud->heading = atan2f(transform->rotation.y, transform->rotation.x) * 180.0f / M_PI;
-    }
-    
-    // Set placeholder values (would come from actual game systems)
-    hud->health = 100.0f;
-    hud->shields = 85.0f;
-    hud->fuel = 67.0f;
-    strcpy(hud->target_name, "None");
-    hud->target_distance = 0.0f;
-    hud->target_hostile = false;
-}
-
-void hud_render(const HUDData* hud, SDL_Renderer* renderer, const UIRect* area) {
-    if (!hud || !renderer || !area) return;
-    
-    // Draw HUD background
-    draw_filled_rect(renderer, area, 20, 20, 40, 200);
-    draw_outline_rect(renderer, area, 100, 150, 200);
-    
-    // Draw HUD elements
-    char text[100];
-    int x_offset = 20;
-    
-    // Speed
-    snprintf(text, sizeof(text), "SPD: %.1f", hud->speed);
-    draw_text(renderer, text, area->x + x_offset, area->y + 10, 255, 255, 255);
-    x_offset += 100;
-    
-    // Heading
-    snprintf(text, sizeof(text), "HDG: %.0f°", hud->heading);
-    draw_text(renderer, text, area->x + x_offset, area->y + 10, 255, 255, 255);
-    x_offset += 100;
-    
-    // Health
-    snprintf(text, sizeof(text), "HP: %.0f%%", hud->health);
-    uint8_t health_color = hud->health > 50 ? 255 : 200;
-    draw_text(renderer, text, area->x + x_offset, area->y + 10, 
-              255, health_color, health_color > 200 ? 0 : 0);
-    x_offset += 100;
-    
-    // Shields
-    snprintf(text, sizeof(text), "SLD: %.0f%%", hud->shields);
-    draw_text(renderer, text, area->x + x_offset, area->y + 10, 0, 150, 255);
-    x_offset += 100;
-    
-    // Fuel
-    snprintf(text, sizeof(text), "FUEL: %.0f%%", hud->fuel);
-    uint8_t fuel_color = hud->fuel > 25 ? 255 : 200;
-    draw_text(renderer, text, area->x + x_offset, area->y + 10, 
-              255, fuel_color, 0);
-    x_offset += 100;
-    
-    // Target info
-    if (strlen(hud->target_name) > 0 && strcmp(hud->target_name, "None") != 0) {
-        snprintf(text, sizeof(text), "TGT: %s (%.1f)", hud->target_name, hud->target_distance);
-        uint8_t tgt_r = hud->target_hostile ? 255 : 100;
-        uint8_t tgt_g = hud->target_hostile ? 100 : 255;
-        draw_text(renderer, text, area->x + x_offset, area->y + 10, tgt_r, tgt_g, 100);
-    }
-    
-    // Status line
-    draw_text(renderer, "STATUS: OPERATIONAL", area->x + 20, area->y + 30, 100, 255, 100);
-}
-
-// ============================================================================
-// PUBLIC MESSAGE API
-// ============================================================================
-
-void cockpit_ui_add_message(CockpitUI* ui, const char* sender, const char* message, bool is_player) {
-    if (!ui || !ui->initialized) return;
-    comm_add_message(&ui->comm, sender, message, is_player);
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-void draw_text(SDL_Renderer* renderer, const char* text, int x, int y, uint8_t r, uint8_t g, uint8_t b) {
-    if (!renderer || !text) return;
-    
-    // Simple bitmap text rendering - just draw pixels for now
-    // In a real implementation, you'd use SDL_ttf or a bitmap font
-    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
-    
-    int char_width = 6;
-    int char_height = 8;
-    
-    for (int i = 0; text[i] && i < 50; i++) {
-        // Draw a simple rectangle for each character
-        SDL_Rect char_rect = {x + i * char_width, y, char_width - 1, char_height};
-        SDL_RenderDrawRect(renderer, &char_rect);
-    }
-}
-
-void draw_filled_rect(SDL_Renderer* renderer, const UIRect* rect, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    if (!renderer || !rect) return;
-    
-    SDL_SetRenderDrawColor(renderer, r, g, b, a);
-    SDL_Rect sdl_rect = {rect->x, rect->y, rect->w, rect->h};
-    SDL_RenderFillRect(renderer, &sdl_rect);
-}
-
-void draw_outline_rect(SDL_Renderer* renderer, const UIRect* rect, uint8_t r, uint8_t g, uint8_t b) {
-    if (!renderer || !rect) return;
-    
-    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
-    SDL_Rect sdl_rect = {rect->x, rect->y, rect->w, rect->h};
-    SDL_RenderDrawRect(renderer, &sdl_rect);
+void ui_toggle_hud(void) {
+    ui_state.show_hud = !ui_state.show_hud;
+    printf("📊 HUD %s\n", ui_state.show_hud ? "enabled" : "disabled");
 }

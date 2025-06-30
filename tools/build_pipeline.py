@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 # Import our tools
-from mesh_generator import main as mesh_generator_main, generate_and_compile_mesh
+from mesh_generator import main as mesh_generator_main, generate_mesh_with_textures
 from mesh_generator import generate_wedge_ship_mk2, generate_control_tower, generate_sun_sphere
 import asset_compiler
 from asset_compiler import validate_metadata
@@ -77,7 +77,7 @@ def generate_missing_meshes(source_dir, build_dir, schema_path):
         
         if not mesh_file.exists():
             print(f"   🔧 Generating missing mesh: {mesh_name}")
-            if generate_and_compile_mesh(mesh_name, generator, source_dir, build_dir, schema_path):
+            if generate_mesh_with_textures(mesh_name, generator, source_dir, build_dir, schema_path):
                 generated_count += 1
         else:
             print(f"   ✓ {mesh_name} already exists")

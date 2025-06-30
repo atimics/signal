@@ -8,8 +8,7 @@
 // CAMERA SYSTEM API
 // ============================================================================
 
-// 3D projection
-Point2D project_3d_to_2d(Vector3 world_pos, const Camera3D* camera, int screen_width, int screen_height);
+
 
 // Camera controls
 void camera_set_position(Camera3D* camera, Vector3 position);

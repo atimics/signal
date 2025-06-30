@@ -4,7 +4,10 @@
 #include "core.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include "sokol_gfx.h"
+
+
+
+
 
 // ============================================================================
 // ASSET DEFINITIONS
@@ -123,5 +126,37 @@ void materials_list_loaded(AssetRegistry* registry);
 bool materials_load_texture_set(AssetRegistry* registry, Material* material, 
                                const char* texture_dir);
 bool materials_bind_textures(Material* material);
+
+// ============================================================================
+// SHADER LOADING FUNCTIONS
+// ============================================================================
+
+// Load shader source from file
+char* load_shader_source(const char* shader_path);
+
+// Free shader source
+void free_shader_source(char* source);
+
+// Get platform-specific shader path
+const char* get_shader_path(const char* base_name, const char* stage); // stage: "vert" or "frag"
+
+// ============================================================================
+// GPU RESOURCE CREATION FUNCTIONS
+// ============================================================================
+
+// Create GPU resources from loaded mesh data and populate Renderable component
+bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable);
+
+// Create GPU texture from loaded texture data  
+sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name);
+
+// Helper function to create a default white texture
+sg_image assets_create_default_texture(void);
+
+// Load all loaded textures to GPU (batch operation)
+bool assets_load_all_textures_to_gpu(AssetRegistry* registry);
+
+// Initialize all GPU resources from loaded asset data
+bool assets_initialize_gpu_resources(AssetRegistry* registry);
 
 #endif // ASSETS_H

@@ -1,3 +1,4 @@
+#include "sokol_gfx.h"
 #include "data.h"
 #include "assets.h"
 #include <stdio.h>
@@ -5,6 +6,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -32,64 +37,6 @@ static Quaternion euler_to_quaternion(Vector3 euler) {
     q.z = cr * cp * sy - sr * sp * cy;
     
     return q;
-}
-
-// Helper function to find mesh ID by name in the asset registry
-uint32_t find_mesh_id_by_name(const char* mesh_name) {
-    extern AssetRegistry g_asset_registry;  // Access global asset registry
-    
-    if (!mesh_name || strlen(mesh_name) == 0) return 0;
-    
-    // Debug: Check what meshes are actually available
-    static bool debug_printed = false;
-    if (!debug_printed) {
-        printf("🔍 Mesh lookup debug - Available meshes (%d):\n", g_asset_registry.mesh_count);
-        for (uint32_t i = 0; i < g_asset_registry.mesh_count; i++) {
-            printf("   [%d] '%s'\n", i, g_asset_registry.meshes[i].name);
-        }
-        debug_printed = true;
-    }
-    
-    // First try exact match
-    for (uint32_t i = 0; i < g_asset_registry.mesh_count; i++) {
-        if (strcmp(g_asset_registry.meshes[i].name, mesh_name) == 0) {
-            return i;
-        }
-    }
-    
-    // Try case-insensitive match
-    for (uint32_t i = 0; i < g_asset_registry.mesh_count; i++) {
-        if (strcasecmp(g_asset_registry.meshes[i].name, mesh_name) == 0) {
-            return i;
-        }
-    }
-    
-    printf("❌ Mesh not found: '%s'\n", mesh_name);
-    return UINT32_MAX;  // Return invalid ID instead of fallback
-}
-
-// Helper function to find material ID by name in the asset registry
-uint32_t find_material_id_by_name(const char* material_name) {
-    extern AssetRegistry g_asset_registry;  // Access global asset registry
-    
-    if (!material_name || strlen(material_name) == 0) return 0;
-    
-    // First try exact match
-    for (uint32_t i = 0; i < g_asset_registry.material_count; i++) {
-        if (strcmp(g_asset_registry.materials[i].name, material_name) == 0) {
-            return i;
-        }
-    }
-    
-    // Try case-insensitive match
-    for (uint32_t i = 0; i < g_asset_registry.material_count; i++) {
-        if (strcasecmp(g_asset_registry.materials[i].name, material_name) == 0) {
-            return i;
-        }
-    }
-    
-    printf("❌ Material not found: '%s'\n", material_name);
-    return UINT32_MAX;  // Return invalid ID instead of fallback
 }
 
 // ============================================================================
@@ -158,7 +105,7 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path) {
             strncpy(current_template->name, name_start, sizeof(current_template->name) - 1);
             
             // Set defaults
-            current_template->scale = (Vector3){1.0f, 1.0f, 1.0f};
+            current_template->scale = (Vector3){5.0f, 5.0f, 5.0f};  // Make entities larger by default
             current_template->mass = 1.0f;
             current_template->drag = 0.99f;
             current_template->collision_radius = 1.0f;
@@ -326,7 +273,7 @@ bool load_scene_templates(DataRegistry* registry, const char* scenes_path) {
             memset(spawn, 0, sizeof(EntitySpawn));
             
             // Default scale
-            spawn->scale = (Vector3){1.0f, 1.0f, 1.0f};
+            spawn->scale = (Vector3){5.0f, 5.0f, 5.0f};  // Make spawned entities larger
             
             // Parse spawn line: "spawn: entity_type x y z"
             char* tokens = trimmed_line + strlen(spawn_keyword);
@@ -354,7 +301,7 @@ bool load_scene_templates(DataRegistry* registry, const char* scenes_path) {
 // ============================================================================
 
 EntityID create_entity_from_template(struct World* world, DataRegistry* registry, 
-                                    const char* template_name, Vector3 position) {
+                                    AssetRegistry* assets, const char* template_name, Vector3 position) {
     if (!world || !registry || !template_name) return INVALID_ENTITY;
     
     EntityTemplate* template = find_entity_template(registry, template_name);
@@ -400,16 +347,29 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
         struct Renderable* renderable = entity_get_renderable(world, id);
         renderable->visible = template->visible;
         
-        // Resolve mesh name to ID
-        renderable->mesh_id = find_mesh_id_by_name(template->mesh_name);
-        
-        // Material is now looked up from mesh metadata - no need to store material_id
-        renderable->material_id = 0;  // Will be resolved at render time
-        
-        // If mesh not found, disable rendering for this entity
-        if (renderable->mesh_id == UINT32_MAX) {
+        // Try to create renderable from mesh name
+        if (strlen(template->mesh_name) > 0) {
+            if (assets_create_renderable_from_mesh(assets, template->mesh_name, renderable)) {
+                printf("✅ Entity %d assigned mesh: %s (%d indices)\n", 
+                       id, template->mesh_name, renderable->index_count);
+            } else {
+                printf("⚠️  Entity %d failed to load mesh: %s - using fallback\n", 
+                       id, template->mesh_name);
+                // Set up invalid handles - will be skipped during rendering
+                renderable->vbuf.id = SG_INVALID_ID;
+                renderable->ibuf.id = SG_INVALID_ID;
+                renderable->tex.id = SG_INVALID_ID;
+                renderable->index_count = 0;
+                renderable->visible = false;
+            }
+        } else {
+            // No mesh specified - disable rendering
+            renderable->vbuf.id = SG_INVALID_ID;
+            renderable->ibuf.id = SG_INVALID_ID;
+            renderable->tex.id = SG_INVALID_ID;
+            renderable->index_count = 0;
             renderable->visible = false;
-            printf("⚠️  Entity %d disabled due to missing mesh: %s\n", id, template->mesh_name);
+            printf("⚠️  Entity %d has no mesh specified\n", id);
         }
     }
     
@@ -449,7 +409,7 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
 // SCENE LOADING
 // ============================================================================
 
-bool load_scene(struct World* world, DataRegistry* registry, const char* scene_name) {
+bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* assets, const char* scene_name) {
     if (!world || !registry || !scene_name) return false;
     
     SceneTemplate* scene = find_scene_template(registry, scene_name);
@@ -463,7 +423,7 @@ bool load_scene(struct World* world, DataRegistry* registry, const char* scene_n
     for (uint32_t i = 0; i < scene->spawn_count; i++) {
         EntitySpawn* spawn = &scene->spawns[i];
         
-        EntityID id = create_entity_from_template(world, registry, 
+        EntityID id = create_entity_from_template(world, registry, assets,
                                                  spawn->entity_type, 
                                                  spawn->position);
         
