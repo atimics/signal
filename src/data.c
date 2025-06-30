@@ -1,7 +1,7 @@
 #include "graphics_api.h"
 #include "data.h"
 #include "assets.h"
-#include "render_gpu.h"
+#include "gpu_resources.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

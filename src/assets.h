@@ -1,14 +1,14 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
-#include "sokol_wrapper.h"
 #include "core.h"
+#include "gpu_resources.h"
 #include <stdint.h>
 #include <stdbool.h>
 
-
-
-
+// Forward-declare the opaque structs. The header knows nothing about them.
+struct MeshGpuResources;
+struct TextureGpuResources;
 
 // ============================================================================
 // ASSET DEFINITIONS
@@ -30,8 +30,7 @@ typedef struct {
     int* indices;
     int index_count;
     bool loaded;
-    sg_buffer sg_vertex_buffer;
-    sg_buffer sg_index_buffer;
+    struct MeshGpuResources* gpu_resources; // Opaque pointer
 } Mesh;
 
 // Texture data with Sokol support
@@ -39,8 +38,8 @@ typedef struct {
     char name[64];
     char filepath[256];
     uint32_t width, height;
-    sg_image sg_image;
     bool loaded;
+    struct TextureGpuResources* gpu_resources; // Opaque pointer
 } Texture;
 
 // Material data with multi-texture support
@@ -159,10 +158,10 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
 bool assets_upload_mesh_to_gpu(Mesh* mesh);
 
 // Create GPU texture from loaded texture data  
-sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name);
+gpu_image_t assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name);
 
 // Helper function to create a default white texture
-sg_image assets_create_default_texture(void);
+gpu_image_t assets_create_default_texture(void);
 
 // Load all loaded textures to GPU (batch operation)
 bool assets_load_all_textures_to_gpu(AssetRegistry* registry);

@@ -5,11 +5,19 @@
 #include "render.h"
 #include "assets.h"
 #include "graphics_api.h"
+#include "sokol_gfx.h" // ONLY in the .c file
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <math.h>
 #include <string.h>
+
+// Define the implementation struct
+struct MeshRendererGpuResources {
+    sg_pipeline pipeline;
+    sg_shader shader;
+    sg_sampler sampler;
+};
 
 // Global mesh renderer instance (will be used when fully implemented)
 // static MeshRenderer g_mesh_renderer = {0};
@@ -21,6 +29,13 @@ bool mesh_renderer_init(MeshRenderer* renderer) {
     
     // Initialize renderer state
     memset(renderer, 0, sizeof(MeshRenderer));
+    
+    // Allocate memory for our opaque struct
+    renderer->gpu_resources = calloc(1, sizeof(struct MeshRendererGpuResources));
+    if (!renderer->gpu_resources) {
+        printf("❌ Failed to allocate GPU resources for mesh renderer\n");
+        return false;
+    }
     
     // Create a basic shader for mesh rendering
     // For now, we'll create a simple shader that can render basic meshes
@@ -99,11 +114,11 @@ bool mesh_renderer_init(MeshRenderer* renderer) {
         .label = "mesh_renderer_shader"
     };
     
-    renderer->shader = sg_make_shader(&shader_desc);
+    renderer->gpu_resources->shader = sg_make_shader(&shader_desc);
     
     // Create pipeline state object
     sg_pipeline_desc pipeline_desc = {
-        .shader = renderer->shader,
+        .shader = renderer->gpu_resources->shader,
         .layout = {
             .attrs = {
                 [0] = { .format = SG_VERTEXFORMAT_FLOAT3 }, // position
@@ -120,15 +135,15 @@ bool mesh_renderer_init(MeshRenderer* renderer) {
         .label = "mesh_renderer_pipeline"
     };
     
-    renderer->pipeline = sg_make_pipeline(&pipeline_desc);
+    renderer->gpu_resources->pipeline = sg_make_pipeline(&pipeline_desc);
     
     // Verify that resources were created successfully
-    if (renderer->shader.id == SG_INVALID_ID || renderer->pipeline.id == SG_INVALID_ID) {
+    if (renderer->gpu_resources->shader.id == SG_INVALID_ID || renderer->gpu_resources->pipeline.id == SG_INVALID_ID) {
         printf("❌ Failed to create mesh renderer resources\n");
         return false;
     }
     
-    printf("✅ Mesh renderer initialized with pipeline ID %d\n", renderer->pipeline.id);
+    printf("✅ Mesh renderer initialized with pipeline ID %d\n", renderer->gpu_resources->pipeline.id);
     return true;
 }
 
@@ -155,15 +170,19 @@ void mesh_renderer_cleanup(MeshRenderer* renderer) {
     
     printf("🔧 Cleaning up mesh renderer...\n");
     
-    // Destroy Sokol resources
-    if (renderer->pipeline.id != SG_INVALID_ID) {
-        sg_destroy_pipeline(renderer->pipeline);
-        renderer->pipeline.id = SG_INVALID_ID;
-    }
-    
-    if (renderer->shader.id != SG_INVALID_ID) {
-        sg_destroy_shader(renderer->shader);
-        renderer->shader.id = SG_INVALID_ID;
+    if (renderer->gpu_resources) {
+        // Destroy Sokol resources
+        if (renderer->gpu_resources->pipeline.id != SG_INVALID_ID) {
+            sg_destroy_pipeline(renderer->gpu_resources->pipeline);
+        }
+        
+        if (renderer->gpu_resources->shader.id != SG_INVALID_ID) {
+            sg_destroy_shader(renderer->gpu_resources->shader);
+        }
+        
+        // Free the PIMPL struct
+        free(renderer->gpu_resources);
+        renderer->gpu_resources = NULL;
     }
     
     printf("✅ Mesh renderer cleaned up\n");
