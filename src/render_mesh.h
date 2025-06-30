@@ -2,10 +2,8 @@
 #ifndef RENDER_MESH_H
 #define RENDER_MESH_H
 
-#include "render.h"
+#include "sokol_wrapper.h"
 #include "core.h"
-
-#include "graphics_api.h"
 
 // Mesh renderer structure
 typedef struct {

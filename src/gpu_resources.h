@@ -4,6 +4,7 @@
 #ifndef GPU_RESOURCES_H
 #define GPU_RESOURCES_H
 
+#include "sokol_wrapper.h"
 #include "core.h"
 
 // Forward declarations (R06 pattern)
