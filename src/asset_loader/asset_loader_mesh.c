@@ -449,6 +449,10 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath, co
     mesh->aabb_min = header.aabb_min;
     mesh->aabb_max = header.aabb_max;
     
+    // Store AABB data from header
+    mesh->aabb_min = header.aabb_min;
+    mesh->aabb_max = header.aabb_max;
+    
     // Create GPU resources for the loaded mesh
     if (!create_mesh_gpu_resources(mesh)) {
         printf("❌ Failed to create GPU resources for binary mesh: %s\n", mesh_name);

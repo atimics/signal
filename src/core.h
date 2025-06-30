@@ -248,6 +248,7 @@ EntityID world_get_active_camera(struct World* world);
 void camera_update_matrices(struct Camera* camera);
 bool switch_to_camera(struct World* world, int camera_index);
 void update_camera_aspect_ratio(struct World* world, float aspect_ratio);
+void camera_extract_frustum_planes(const struct Camera* camera, float frustum_planes[6][4]);
 
 // Utility functions
 Vector3 vector3_add(Vector3 a, Vector3 b);

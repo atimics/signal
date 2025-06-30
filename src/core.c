@@ -545,3 +545,56 @@ void update_camera_aspect_ratio(struct World* world, float aspect_ratio) {
         }
     }
 }
+
+void camera_extract_frustum_planes(const struct Camera* camera, float frustum_planes[6][4]) {
+    if (!camera) return;
+
+    const float* vp = camera->view_projection_matrix;
+
+    // Left plane
+    frustum_planes[0][0] = vp[3] + vp[0];
+    frustum_planes[0][1] = vp[7] + vp[4];
+    frustum_planes[0][2] = vp[11] + vp[8];
+    frustum_planes[0][3] = vp[15] + vp[12];
+
+    // Right plane
+    frustum_planes[1][0] = vp[3] - vp[0];
+    frustum_planes[1][1] = vp[7] - vp[4];
+    frustum_planes[1][2] = vp[11] - vp[8];
+    frustum_planes[1][3] = vp[15] - vp[12];
+
+    // Bottom plane
+    frustum_planes[2][0] = vp[3] + vp[1];
+    frustum_planes[2][1] = vp[7] + vp[5];
+    frustum_planes[2][2] = vp[11] + vp[9];
+    frustum_planes[2][3] = vp[15] + vp[13];
+
+    // Top plane
+    frustum_planes[3][0] = vp[3] - vp[1];
+    frustum_planes[3][1] = vp[7] - vp[5];
+    frustum_planes[3][2] = vp[11] - vp[9];
+    frustum_planes[3][3] = vp[15] - vp[13];
+
+    // Near plane
+    frustum_planes[4][0] = vp[3] + vp[2];
+    frustum_planes[4][1] = vp[7] + vp[6];
+    frustum_planes[4][2] = vp[11] + vp[10];
+    frustum_planes[4][3] = vp[15] + vp[14];
+
+    // Far plane
+    frustum_planes[5][0] = vp[3] - vp[2];
+    frustum_planes[5][1] = vp[7] - vp[6];
+    frustum_planes[5][2] = vp[11] - vp[10];
+    frustum_planes[5][3] = vp[15] - vp[14];
+
+    // Normalize the planes
+    for (int i = 0; i < 6; i++) {
+        float mag = sqrtf(frustum_planes[i][0] * frustum_planes[i][0] + frustum_planes[i][1] * frustum_planes[i][1] + frustum_planes[i][2] * frustum_planes[i][2]);
+        if (mag > 0.0f) {
+            frustum_planes[i][0] /= mag;
+            frustum_planes[i][1] /= mag;
+            frustum_planes[i][2] /= mag;
+            frustum_planes[i][3] /= mag;
+        }
+    }
+}
