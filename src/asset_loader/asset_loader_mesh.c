@@ -12,6 +12,9 @@ struct MeshGpuResources {
     sg_buffer sg_index_buffer;
 };
 
+// Forward declarations
+static void cleanup_mesh_on_error(Mesh* mesh);
+
 /**
  * @brief Creates GPU resources for a loaded mesh
  * @param mesh The mesh to create GPU resources for
