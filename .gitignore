@@ -59,6 +59,7 @@ __pycache__/
 *.pyo
 *.pyd
 
+
 # Backup files
 *.bak
 *.backup
