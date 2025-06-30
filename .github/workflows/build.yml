@@ -23,6 +23,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Create Virtual Environment
         run: python3 -m venv .venv
 
@@ -30,11 +38,8 @@ jobs:
         run: |
           source .venv/bin/activate
           pip install --upgrade pip
-          # Install packages individually to avoid timeout
-          pip install --timeout 300 attrs cairocffi CairoSVG cffi cssselect2 defusedxml
-          pip install --timeout 300 jsonschema jsonschema-specifications pycparser referencing
-          pip install --timeout 300 rpds-py tinycss2 webencodings pillow
-          pip install --timeout 300 numpy scipy trimesh
+          # Use lighter CI requirements for faster builds
+          pip install --timeout 300 -r requirements-ci.txt
 
       - name: Build Project
         run: make
@@ -63,6 +68,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-ci.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Create Virtual Environment
         run: python3 -m venv .venv
 
@@ -70,11 +83,8 @@ jobs:
         run: |
           source .venv/bin/activate
           pip install --upgrade pip
-          # Install packages individually to avoid timeout
-          pip install --timeout 300 attrs cairocffi CairoSVG cffi cssselect2 defusedxml
-          pip install --timeout 300 jsonschema jsonschema-specifications pycparser referencing
-          pip install --timeout 300 rpds-py tinycss2 webencodings pillow
-          pip install --timeout 300 numpy scipy trimesh
+          # Use lighter CI requirements for faster builds
+          pip install --timeout 300 -r requirements-ci.txt
 
       - name: Build Project
         run: make
