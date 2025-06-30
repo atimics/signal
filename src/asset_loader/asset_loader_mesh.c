@@ -501,7 +501,7 @@ bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath,
     
     // Find next available slot
     int slot = -1;
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < MAX_MESHES; i++) {
         if (!registry->meshes[i].loaded) {
             slot = i;
             break;
