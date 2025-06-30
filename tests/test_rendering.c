@@ -41,7 +41,7 @@ void test_pipeline_loads_and_prepares_mesh_for_rendering(void) {
     // Use PIMPL-compliant accessor functions
     sg_buffer vbuf = {0};
     sg_buffer ibuf = {0};
-    mesh_get_gpu_buffers(ship_mesh, &vbuf, &ibuf);
+    mesh_get_gpu_buffers(ship_mesh, (void*)&vbuf, (void*)&ibuf);
     TEST_ASSERT_NOT_EQUAL(SG_INVALID_ID, vbuf.id);
     TEST_ASSERT_NOT_EQUAL(SG_INVALID_ID, ibuf.id);
 

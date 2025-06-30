@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Forward declarations
+bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_path);
+
 bool load_assets_from_metadata(AssetRegistry* registry) {
     if (!registry) return false;
     
