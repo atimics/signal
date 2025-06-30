@@ -185,6 +185,7 @@ static bool render_sokol_init(void) {
         },
         // Don't specify sample_count - let it default to match swapchain
         .cull_mode = SG_CULLMODE_NONE,  // Disable culling for debugging
+        .face_winding = SG_FACEWINDING_CCW,  // Specify winding order
         .label = "basic_3d_pipeline"
     });
     
@@ -423,6 +424,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             printf("✅ Entity %d: Ready to render - pos:(%.1f,%.1f,%.1f) scale:(%.1f,%.1f,%.1f) indices:%d\n",
                    entity->id, transform->position.x, transform->position.y, transform->position.z,
                    transform->scale.x, transform->scale.y, transform->scale.z, renderable->index_count);
+            printf("   VB ID:%d, IB ID:%d, TEX ID:%d\n", 
+                   renderable->vbuf.id, renderable->ibuf.id, renderable->tex.id);
         }
         
         // Apply bindings (VBO, IBO, textures)
@@ -473,13 +476,13 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
                        active_camera->view_projection_matrix[2], active_camera->view_projection_matrix[3]);
             }
         } else {
-            // Fallback: create matrices on the fly
+            // Fallback: create matrices on the fly with better positioning
             float view[16], proj[16], temp[16];
             
-            Vector3 camera_pos = {0.0f, 5.0f, 10.0f};
+            Vector3 camera_pos = {0.0f, 15.0f, 50.0f};  // Further back for better overview
             Vector3 camera_target = {0.0f, 0.0f, 0.0f};
             Vector3 camera_up = {0.0f, 1.0f, 0.0f};
-            float fov = 45.0f;
+            float fov = 60.0f;  // Match camera system FOV
             float aspect = 16.0f/9.0f;
             float near_plane = 0.1f;
             float far_plane = 1000.0f;
