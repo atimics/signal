@@ -1,74 +1,56 @@
-# Core Gameplay Mechanics: The Resonance Cascade
+# Core Gameplay Mechanics
 
 **ID**: `R22_Resonance_and_Narrative`
+**Status**: **Canonical**
 **Author**: Gemini, Chief Science Officer
-**Status**: **Active Design**
-**Related Vision**: `R17_Gameplay_Vision`
 
-## 1. The Problem: Narrative as a Reward vs. Narrative as a Tool
+## 1. Overview
 
-Our current design treats narrative as a reward. The player completes a gameplay challenge and receives a piece of lore as a prize. This is a one-way interaction.
+This document details the core, moment-to-moment gameplay systems of "The Ghost Signal." It translates the high-level vision into a concrete set of interconnected mechanics that are designed to be deep, rewarding, and intuitive. The guiding principle is that **narrative is a tool for gameplay, and gameplay is the engine of narrative discovery.**
 
-To create a truly compelling loop, the narrative must become a tool. The information contained within a piece of lore must directly and mechanically alter how the player interacts with the world, unlocking new gameplay possibilities. The story must become a key that opens new doors, both literally and figuratively.
+---
 
-## 2. The Solution: The Resonance Cascade System
+## 2. The Resonance Cascade: The Core Loop
 
-The **Resonance Cascade** is a new, unified system that directly links narrative discovery to gameplay action. It is composed of three interconnected parts: The Resonance Attenuator, Echoes as Keys, and Resonance Locks.
+The **Resonance Cascade** is the unified system that links exploration, narrative, and progression. It is composed of three parts:
 
-### 2.1. The Resonance Attenuator (The "How")
+### 2.1. Resonance Cracking (The Action)
 
-The player's ship is equipped with a **Resonance Attenuator**. This is the evolution of the "emitter" or "loom." It's a piece of hardware with a limited number of **"Attunement Slots."**
+This is the player's primary interaction with the world beyond basic flight.
 
-*   **Function**: The player can "slot" a recovered Echo (a piece of lore) into the Attenuator.
-*   **Gameplay**: Attuning to an Echo calibrates the ship's sensors and the Attenuator's energy beam to that specific memory's frequency. **This is the core choice the player makes.** The Echo you have attuned determines what you can see and interact with in the world.
+*   **The Mechanic**: The player uses their ship's **Resonance Attenuator** to "crack" **Resonance Locks** found on derelicts. This initiates a skill-based minigame where the player must modulate their beam's frequency to match a target waveform.
+*   **The Purpose**: Successfully cracking a lock is the only way to acquire **Echoes** (lore and schematics).
 
-### 2.2. Echoes as Keys (The "What")
+### 2.2. Echoes as Keys (The Strategy)
 
-Every piece of lore—every audio log, data fragment, and AI personality—is now a physical **Echo** in the player's inventory. Crucially, each Echo has **gameplay properties**:
+Every piece of lore is a tool.
 
-*   **Resonance Type**: The category of the memory. Examples: `Engineering`, `Medical`, `Security`, `AI Core`, `Civilian`.
-*   **Data Yield**: A rating of how much "Harmony" (our progression metric) it will provide when fully resolved.
-*   **Stability Cost**: How much energy it costs to keep this memory attuned in the Attenuator. More powerful or traumatic memories are more costly to handle.
+*   **The Mechanic**: The player can slot a limited number of recovered Echoes into their ship's **Attunement Matrix**. Each Echo has a **Resonance Type** (e.g., `Engineering`, `Security`, `Medical`).
+*   **The Purpose**: The types of Echoes the player has attuned determine which types of Resonance Locks are visible and interactable in the world. Slotting an `Engineering` Echo reveals all nearby `Engineering` locks. This makes exploration a strategic choice, not a random search.
 
-### 2.3. Resonance Locks (The "Challenge")
+### 2.3. The Resonance Signature (The Risk)
 
-The world is now filled with **Resonance Locks**—dormant, crystalline nodes that are keyed to specific Resonance Types.
+This system adds a layer of risk vs. reward to the player's choices.
 
-*   **How it Works**: A Resonance Lock of the `Security` type will remain invisible and intangible *unless* the player has a `Security` Echo attuned in their Attenuator.
-*   **The "Cascade"**: When the player attunes to a specific Echo (e.g., Chief Kaelen's security log), their scanner pings, and previously hidden `Security` Resonance Locks now appear on their HUD. This is the "cascade"—the act of finding one story beat reveals the path to the next.
-*   **"Resonance Cracking" Minigame**: Activating a Resonance Lock is no longer just holding a beam. It initiates a skill-based minigame. The player is presented with a fluctuating waveform on their UI (the "lock"). They must use their controls to modulate their Attenuator's beam to match the frequency and amplitude of the lock's waveform. Successfully matching it "cracks" the lock and releases the next Echo.
+*   **The Mechanic**: The player's ship has a **Resonance Signature** level, visible on the HUD. This level increases based on the number and power of the Echoes currently slotted in the Attunement Matrix.
+*   **The Purpose**: A higher signature makes the player "louder" in the void.
+    *   **High Signature**: Allows the player to detect and crack rare, high-level Resonance Locks, but also attracts the attention of powerful Wardens and Chrome-Baron crews.
+    *   **Low Signature**: Allows the player to move stealthily and avoid combat, but limits them to common, low-reward Resonance Locks.
 
-## 3. A Concrete Gameplay Example
+---
 
-1.  **The Discovery**: The player finds **Fragment ID: PAL-088-F**, the audio log from Chief Engineer Lena Petrova about the ship's hull "resonating" and "growing."
-2.  **The Tool**: The player now possesses an Echo with the `Engineering` Resonance Type.
-3.  **The Choice**: The player returns to their ship and slots the "Petrova's Log" Echo into their Resonance Attenuator. Their HUD flickers, and the scanner is now calibrated to `Engineering` frequencies.
-4.  **The Cascade**: As they fly back into the derelict, their scanner now highlights several previously invisible Resonance Locks on the ship's hull and near damaged power conduits.
-5.  **The Challenge**: The player approaches one of these new `Engineering` locks. They initiate the **Resonance Cracking** minigame. Because they are using Petrova's Log, the target waveform is erratic, reflecting her panic. The player must skillfully match the volatile wave.
-6.  **The Reward**: Upon successfully cracking the lock, it releases a new Echo: a **Schematic Fragment** for an "Ablative Hull Stabilizer" and another audio log from a different engineer that builds on Petrova's story.
-7.  **The Loop Completes**: The player has used a piece of narrative as a key to unlock new gameplay, which in turn has rewarded them with both a new piece of narrative *and* a tangible gameplay upgrade.
+## 3. Schematic Fragmentation (The Progression)
 
-## 4. Impact on Other Systems
+Upgrades are not found; they are reconstructed.
 
-*   **Exploration becomes purposeful**: Players are no longer just looking for "loot." They are looking for specific *types* of Echoes to unlock specific types of Resonance Locks.
-*   **Factions become more dynamic**: The Chrome-Barons might use crude "Signal Breakers" to crudely activate locks, causing dangerous side effects. The Echo-Scribes might trade a rare `AI Core` Echo if the player can bring them three specific `Civilian` memory fragments.
-*   **Progression is earned**: The player doesn't just find upgrades; they earn them by actively engaging with and solving the central mystery of the world.
+*   **The Mechanic**: The player collects **Schematic Fragments** from specific Echoes. At a **Workbench** in their safehouse, they can slot these fragments into schematics for new ship modules.
+*   **The Purpose**: This creates a powerful, non-linear progression system. A player who desperately needs a better engine will be highly motivated to seek out `Engineering` Echoes. This directly ties narrative discovery to tangible, gameplay-altering rewards.
 
-This system creates a powerful, self-reinforcing loop where the story is the key to the gameplay, and the gameplay is the key to the story.
+---
 
-## 5. The Resonance Signature System (Risk vs. Reward)
+## 4. Whispering Echoes (The Atmosphere)
 
-To add a layer of strategic choice and risk management, the player's ship has a **Resonance Signature** level. This represents how "loudly" the player is broadcasting their presence to the universe.
+The world is haunted by its past.
 
-*   **How it Works**:
-    *   Every Echo the player slots into their Attenuator increases their Resonance Signature.
-    *   More powerful Echoes (e.g., `AI Core` or `Security` types) increase the signature more than common ones (e.g., `Civilian`).
-    *   The player's current Resonance Signature is visible on the HUD.
-*   **Gameplay Effects**:
-    *   **High Signature (Loud & Powerful)**:
-        *   **Pro**: The player can see and interact with more powerful and rare Resonance Locks.
-        *   **Con**: The Wardens can detect the player from a much greater distance and will dispatch more powerful Hunter-Killer units. The Chrome-Barons will also be more likely to see the player as a high-value target.
-    *   **Low Signature (Quiet & Stealthy)**:
-        *   **Pro**: The player can move through the world largely undetected, avoiding most combat encounters.
-        *   **Con**: The player can only interact with common, low-level Resonance Locks, limiting their access to the best schematics and rarest lore.
-*   **Strategic Choice**: This system forces the player to make a meaningful choice before each expedition. "Do I go in loud, hoping to crack that `Security` lock for a new weapon schematic, knowing I'll have to fight my way out? Or do I go in quiet, focusing on scavenging basic materials and avoiding the attention of the Wardens?" This makes the player's loadout a direct reflection of their current goals.
+*   **The Mechanic**: As the player explores, they will trigger brief, non-collectible, audio-visual ghostly events.
+*   **The Purpose**: These **Whispering Echoes** serve to deepen the atmosphere, provide subtle environmental storytelling, and can occasionally offer cryptic clues or warnings about the immediate surroundings, making the world feel alive and reactive.

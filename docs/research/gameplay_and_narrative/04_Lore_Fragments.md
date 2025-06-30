@@ -1,11 +1,11 @@
-# The Ghost Signal: A Lore Book
+# Lore & Text Fragments
 
 **ID**: `LORE_01`
-**Status**: **Living Document**
+**Status**: **Canonical & Living**
 
 ## Overview
 
-This document contains a collection of fragmented transmissions, corrupted data logs, and personal notes that can be found by the player in the world of "The Ghost Signal." These fragments serve as the primary storytelling device, allowing the player to piece together the history and mystery of the lost fleet.
+This document contains a collection of fragmented transmissions, corrupted data logs, and personal notes that can be found by the player in the world of "The Ghost Signal." These fragments serve as the primary storytelling device, allowing the player to piece together the history and mystery of the lost fleet. Each fragment is a potential "key" for the Resonance Cascade system.
 
 ---
 
