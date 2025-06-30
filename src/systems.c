@@ -442,9 +442,6 @@ void ai_system_update(struct World* world, float delta_time) {
 void camera_system_update(struct World* world, float delta_time) {
     if (!world) return;
     
-    // Suppress unused parameter warning
-    (void)delta_time;
-    
     // Set up camera follow targets if not already set
     static bool cameras_initialized = false;
     if (!cameras_initialized) {
@@ -459,18 +456,40 @@ void camera_system_update(struct World* world, float delta_time) {
             }
         }
         
-        // Set up camera follow targets
+        // Initialize cameras with default values
         for (uint32_t i = 0; i < world->entity_count; i++) {
             struct Entity* entity = &world->entities[i];
             if (entity->component_mask & COMPONENT_CAMERA) {
                 struct Camera* camera = entity->camera;
-                if (camera && camera->follow_target == INVALID_ENTITY) {
-                    // If this is a player's camera or chase camera, follow the player
-                    if ((entity->component_mask & COMPONENT_PLAYER) || 
-                        (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
-                         camera->behavior == CAMERA_BEHAVIOR_CHASE)) {
-                        camera->follow_target = player_id;
+                if (camera) {
+                    // Set default camera properties if not already set
+                    if (camera->fov == 0.0f) camera->fov = 45.0f;
+                    if (camera->near_plane == 0.0f) camera->near_plane = 0.1f;
+                    if (camera->far_plane == 0.0f) camera->far_plane = 1000.0f;
+                    if (camera->aspect_ratio == 0.0f) camera->aspect_ratio = 16.0f / 9.0f;
+                    
+                    // Initialize position and target if not set
+                    if (camera->position.x == 0.0f && camera->position.y == 0.0f && camera->position.z == 0.0f) {
+                        camera->position = (Vector3){0.0f, 5.0f, 10.0f};
                     }
+                    if (camera->target.x == 0.0f && camera->target.y == 0.0f && camera->target.z == 0.0f) {
+                        camera->target = (Vector3){0.0f, 0.0f, 0.0f};
+                    }
+                    camera->up = (Vector3){0.0f, 1.0f, 0.0f};
+                    
+                    // Set follow target for chase cameras
+                    if (camera->follow_target == INVALID_ENTITY) {
+                        if ((entity->component_mask & COMPONENT_PLAYER) || 
+                            (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
+                             camera->behavior == CAMERA_BEHAVIOR_CHASE)) {
+                            camera->follow_target = player_id;
+                            camera->follow_offset = (Vector3){5.0f, 15.0f, 25.0f};
+                            camera->follow_smoothing = 0.02f;
+                        }
+                    }
+                    
+                    // Mark matrices as dirty for initial calculation
+                    camera->matrices_dirty = true;
                 }
             }
         }
@@ -489,9 +508,8 @@ void camera_system_update(struct World* world, float delta_time) {
         cameras_initialized = true;
     }
     
-    // Find the active camera entity
+    // Find active camera entity
     EntityID active_camera_id = world_get_active_camera(world);
-    
     if (active_camera_id == INVALID_ENTITY) {
         // No active camera, try to find any camera
         for (uint32_t i = 0; i < world->entity_count; i++) {
@@ -509,11 +527,25 @@ void camera_system_update(struct World* world, float delta_time) {
     }
     
     struct Camera* camera = entity_get_camera(world, active_camera_id);
-    struct Transform* camera_transform = entity_get_transform(world, active_camera_id);
+    if (!camera) return;
     
-    if (!camera || !camera_transform) {
-        return;
+    // Update camera position and target based on behavior
+    camera_update_behavior(world, active_camera_id, delta_time);
+    
+    // Update matrices if camera changed
+    if (camera->matrices_dirty) {
+        camera_update_matrices(camera);
     }
+    
+    // Update legacy render config for backward compatibility
+    update_legacy_render_config(camera);
+}
+
+static void camera_update_behavior(struct World* world, EntityID camera_id, float delta_time) {
+    struct Camera* camera = entity_get_camera(world, camera_id);
+    if (!camera) return;
+    
+    bool position_changed = false;
     
     // Update camera based on its behavior
     switch (camera->behavior) {
@@ -531,12 +563,21 @@ void camera_system_update(struct World* world, float delta_time) {
                     };
                     
                     // Smooth camera movement
-                    float lerp = camera->follow_smoothing;
-                    camera_transform->position.x += (desired_pos.x - camera_transform->position.x) * lerp;
-                    camera_transform->position.y += (desired_pos.y - camera_transform->position.y) * lerp;
-                    camera_transform->position.z += (desired_pos.z - camera_transform->position.z) * lerp;
+                    float lerp = camera->follow_smoothing * delta_time * 60.0f; // Frame rate independent
+                    lerp = fminf(lerp, 1.0f); // Clamp to prevent overshooting
                     
-                    camera_transform->dirty = true;
+                    Vector3 old_pos = camera->position;
+                    camera->position.x += (desired_pos.x - camera->position.x) * lerp;
+                    camera->position.y += (desired_pos.y - camera->position.y) * lerp;
+                    camera->position.z += (desired_pos.z - camera->position.z) * lerp;
+                    
+                    // Always look at the target
+                    camera->target = target_pos;
+                    
+                    // Check if position changed
+                    if (vector3_distance(old_pos, camera->position) > 0.001f) {
+                        position_changed = true;
+                    }
                 }
             }
             break;
@@ -550,9 +591,16 @@ void camera_system_update(struct World* world, float delta_time) {
                 struct Transform* target_transform = entity_get_transform(world, camera->follow_target);
                 if (target_transform) {
                     // First person camera follows exactly
-                    camera_transform->position = target_transform->position;
-                    camera_transform->rotation = target_transform->rotation;
-                    camera_transform->dirty = true;
+                    Vector3 old_pos = camera->position;
+                    camera->position = target_transform->position;
+                    
+                    // Calculate forward direction from rotation (simplified)
+                    Vector3 forward = {0.0f, 0.0f, -1.0f}; // Default forward
+                    camera->target = vector3_add(camera->position, forward);
+                    
+                    if (vector3_distance(old_pos, camera->position) > 0.001f) {
+                        position_changed = true;
+                    }
                 }
             }
             break;
@@ -562,28 +610,22 @@ void camera_system_update(struct World* world, float delta_time) {
             break;
     }
     
-    // Update render system camera settings
+    if (position_changed) {
+        camera->matrices_dirty = true;
+    }
+}
+
+static void update_legacy_render_config(struct Camera* camera) {
+    // Update legacy render config for backward compatibility
     RenderConfig* render_config = get_render_config();
-    if (render_config) {
-        // Update camera position
-        render_config->camera.position = camera_transform->position;
-        
-        // Update camera properties
+    if (render_config && camera) {
+        render_config->camera.position = camera->position;
+        render_config->camera.target = camera->target;
+        render_config->camera.up = camera->up;
         render_config->camera.fov = camera->fov;
         render_config->camera.near_plane = camera->near_plane;
         render_config->camera.far_plane = camera->far_plane;
         render_config->camera.aspect_ratio = camera->aspect_ratio;
-        
-        // Set camera target based on follow target or look direction
-        if (camera->follow_target != INVALID_ENTITY) {
-            struct Transform* target_transform = entity_get_transform(world, camera->follow_target);
-            if (target_transform) {
-                render_config->camera.target = target_transform->position;
-            }
-        }
-        
-        // Update camera up vector (for now, always up)
-        render_config->camera.up = (Vector3){0.0f, 1.0f, 0.0f};
     }
 }
 
