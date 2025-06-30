@@ -26,12 +26,20 @@ This document outlines the prioritized development sprints for the CGame engine,
 ## Phase 3: Performance & Feature Advancement (IN PROGRESS)
 
 ### Sprint 13: Performance Optimization & Code Style
-*   **Status**: **ACTIVE & CRITICAL**
-*   **Goal**: To implement foundational performance optimizations and pay down the remaining technical debt, creating a truly robust platform for PBR development.
-*   **Implementation Guide**: `../../active/sprint_13_optimization_and_style.md`
+*   **Status**: **✅ COMPLETED**
+*   **Outcome**: Foundational performance optimizations and code style standards have been implemented.
 
-### Sprint 14: PBR Rendering Pipeline Implementation
-*   **Status**: **BLOCKED** (by Sprint 13)
+---
+
+## Phase 3: Performance & Feature Advancement (IN PROGRESS)
+
+### Sprint 14: Mesh Generator Pipeline Integration
+*   **Status**: **ACTIVE & CRITICAL**
+*   **Goal**: To fully integrate the procedural mesh generator with the modern, binary-first asset pipeline.
+*   **Implementation Guide**: `../../active/sprint_14_mesh_generator_pipeline.md`
+
+### Sprint 15: PBR Rendering Pipeline Implementation
+*   **Status**: **BLOCKED** (by Sprint 14)
 *   **Goal**: To architect and implement a modern, end-to-end Physically Based Rendering (PBR) pipeline.
 *   **Justification**: With a stable and performant core, we can now confidently proceed with major feature development. PBR is the highest priority feature for the engine.
 *   **Relevant Research**: `R03`, `R14`
@@ -40,7 +48,7 @@ This document outlines the prioritized development sprints for the CGame engine,
 
 ## Phase 4: AI & World Simulation
 
-### Sprint 15: AI Foundation (Proof of Concept)
+### Sprint 16: AI Foundation (Proof of Concept)
 *   **Status**: **BACKLOG**
 *   **Goal**: To create a "single agent" proof-of-concept by integrating the core technologies needed for the generative swarm AI system.
 *   **Justification**: This R&D sprint will de-risk the immense technical challenges of the AI vision by solving the core integration problems on a small scale before building the full swarm infrastructure.

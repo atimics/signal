@@ -1,8 +1,11 @@
 {
-    "name": "Control Tower",
-    "filename": "geometry.mesh",
-    "tags": ["building", "structure", "spaceport"],
-    "description": "A control tower structure for spaceport environments",
-    "mtl": "material.mtl",
-    "texture": "texture.png"
+  "name": "Control Tower",
+  "geometry": "geometry.obj",
+  "tags": [
+    "building",
+    "structure"
+  ],
+  "description": "A control tower for spaceport environments.",
+  "material": "material.mtl",
+  "texture": "texture.png"
 }

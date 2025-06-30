@@ -1,13 +1,12 @@
 {
-    "name": "Wedge Ship Mk2",
-    "filename": "geometry.mesh",
-    "tags": [
-        "ship",
-        "vehicle",
-        "spacecraft",
-        "improved"
-    ],
-    "description": "An improved version of the wedge-shaped spacecraft with enhanced proportions",
-    "mtl": "material.mtl",
-    "texture": "texture.png"
+  "name": "Wedge Ship Mk2",
+  "geometry": "geometry.obj",
+  "tags": [
+    "ship",
+    "vehicle",
+    "player"
+  ],
+  "description": "An improved wedge-shaped spacecraft.",
+  "material": "material.mtl",
+  "texture": "texture.png"
 }

@@ -63,6 +63,12 @@ assets-force:
 	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py --force
 	@echo "✅ Asset compilation complete."
 
+# Generate all procedural source assets
+generate-assets:
+	@echo "🌱 Generating procedural source assets..."
+	$(PYTHON) $(TOOLS_DIR)/generate_assets.py --all
+	@echo "✅ Source asset generation complete."
+
 # Link executable
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 	$(CC) $(OBJECTS) -o $@ $(LIBS)
