@@ -20,7 +20,7 @@ static DataRegistry g_data_registry;
 // SYSTEM SCHEDULER IMPLEMENTATION
 // ============================================================================
 
-bool scheduler_init(struct SystemScheduler* scheduler, RenderConfig* render_config) {
+bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config) {
     if (!scheduler) return false;
     
     memset(scheduler, 0, sizeof(struct SystemScheduler));
@@ -48,6 +48,9 @@ bool scheduler_init(struct SystemScheduler* scheduler, RenderConfig* render_conf
         printf("❌ Failed to initialize render system\n");
         return false;
     }
+    
+    // Set global render config for UI system
+    set_render_config(render_config);
     
     // Set camera for zoomed-out solar system view
     camera_set_position(&render_config->camera, (Vector3){0, 100, 300});  // Position camera above and back
@@ -100,10 +103,12 @@ bool scheduler_init(struct SystemScheduler* scheduler, RenderConfig* render_conf
     return true;
 }
 
-void scheduler_destroy(struct SystemScheduler* scheduler) {
+void scheduler_destroy(struct SystemScheduler* scheduler, RenderConfig* config) {
     if (!scheduler) return;
     
-    render_cleanup(&g_render_config);
+    if (config) {
+        render_cleanup(config);
+    }
     assets_cleanup(&g_asset_registry);
     data_registry_cleanup(&g_data_registry);
     printf("🎯 System scheduler destroyed after %d frames\n", scheduler->frame_count);
@@ -496,9 +501,8 @@ void camera_system_update(struct World* world, RenderConfig* render_config, floa
                     
                     // Set follow target for chase cameras with better default offsets
                     if (camera->follow_target == INVALID_ENTITY) {
-                        if ((entity->component_mask & COMPONENT_PLAYER) || 
-                            (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
-                             camera->behavior == CAMERA_BEHAVIOR_CHASE)) {
+                        if (camera->behavior == CAMERA_BEHAVIOR_THIRD_PERSON || 
+                            camera->behavior == CAMERA_BEHAVIOR_CHASE) {
                             camera->follow_target = player_id;
                             // Better chase camera positioning
                             camera->follow_offset = (Vector3){8.0f, 20.0f, 30.0f};  // Further back and higher
@@ -567,6 +571,7 @@ void camera_system_update(struct World* world, RenderConfig* render_config, floa
 }
 
 static void camera_update_behavior(struct World* world, RenderConfig* render_config, EntityID camera_id, float delta_time) {
+    (void)render_config; // Unused parameter
     struct Camera* camera = entity_get_camera(world, camera_id);
     if (!camera) return;
     
