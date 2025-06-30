@@ -98,9 +98,9 @@ struct AI {
 };
 
 struct Renderable {
-    sg_buffer vbuf;        // Vertex buffer handle
-    sg_buffer ibuf;        // Index buffer handle 
-    sg_image tex;          // Texture handle
+    struct sg_buffer vbuf;        // Vertex buffer handle
+    struct sg_buffer ibuf;        // Index buffer handle 
+    struct sg_image tex;          // Texture handle
     uint32_t index_count;  // Number of indices to draw
     bool visible;
     float lod_distance;
