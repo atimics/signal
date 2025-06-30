@@ -92,6 +92,7 @@ typedef struct {
     bool show_velocities;
     bool show_collision_bounds;
     bool show_orbits;
+    bool wireframe_mode;  // Wireframe debug visualization
     
     // Timing
     float update_interval;

@@ -265,7 +265,8 @@ static void init(void) {
             .far_plane = 100.0f,
             .aspect_ratio = (float)sapp_width() / (float)sapp_height()
         },
-        .show_debug_info = true
+        .show_debug_info = true,
+        .wireframe_mode = false  // Start with solid rendering
     };
     
     // Initialize renderer
@@ -381,6 +382,11 @@ static void event(const sapp_event* ev) {
                 } else {
                     printf("📹 Camera %d not found\n", camera_index + 1);
                 }
+            }
+            // Toggle wireframe mode with W key
+            else if (ev->key_code == SAPP_KEYCODE_W) {
+                app_state.render_config.wireframe_mode = !app_state.render_config.wireframe_mode;
+                printf("🔧 Wireframe mode: %s\n", app_state.render_config.wireframe_mode ? "ON" : "OFF");
             }
             break;
         default:
