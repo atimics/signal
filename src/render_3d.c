@@ -546,8 +546,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         float model[16], view[16], proj[16], mvp[16], temp[16];
         
         // Create model matrix from transform
-        mat4_identity(model);
-        // TODO: Apply transform->position, rotation, scale to model matrix
+        mat4_translate(model, transform->position);
+        // TODO: Apply rotation and scale - for now just use translation
         // For now, use identity matrix
         
         // Create view matrix (simple camera for now)

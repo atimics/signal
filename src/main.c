@@ -146,7 +146,7 @@ static void load_scene_by_name(struct World* world, const char* scene_name, Enti
     DataRegistry* data_registry = get_data_registry();
     
     // Load the scene from template
-    if (!load_scene(world, data_registry, &app_state.assets, scene_name)) {
+    if (!load_scene(world, data_registry, (struct AssetRegistry*)&app_state.assets, scene_name)) {
         printf("❌ Failed to load scene: %s\n", scene_name);
         return;
     }
