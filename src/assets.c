@@ -894,9 +894,8 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
     
     FILE* file = fopen(index_path, "r");
     if (!file) {
-        printf("⚠️  Could not open index.json: %s\n", index_path);
-        printf("⚠️  Falling back to legacy metadata.json format\n");
-        return load_legacy_metadata(registry);
+        printf("❌ Could not open index.json: %s\n", index_path);
+        return false;
     }
     
     printf("📋 Loading asset index: %s\n", index_path);
@@ -949,119 +948,6 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
     fclose(file);
     
     printf("📋 Loaded %d meshes from asset index\n", loaded_count);
-    return success;
-}
-
-// Legacy metadata loading for backward compatibility
-bool load_legacy_metadata(AssetRegistry* registry) {
-    char metadata_path[1024];
-    snprintf(metadata_path, sizeof(metadata_path), "%s/meshes/metadata.json", registry->asset_root);
-    
-    FILE* file = fopen(metadata_path, "r");
-    if (!file) {
-        printf("⚠️  Could not open legacy metadata.json: %s\n", metadata_path);
-        return false;
-    }
-    
-    printf("📋 Loading assets from legacy metadata: %s\n", metadata_path);
-    
-    // Simple JSON parser for legacy metadata format
-    char line[512];
-    char current_folder[128] = "";
-    bool in_meshes_section = false;
-    bool success = true;
-    
-    while (fgets(line, sizeof(line), file)) {
-        // Remove whitespace and newlines
-        char* trimmed = line;
-        while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
-        trimmed[strcspn(trimmed, "\n\r")] = 0;
-        
-        // Skip empty lines and comments
-        if (strlen(trimmed) == 0 || trimmed[0] == '/' || trimmed[0] == '#') continue;
-        
-        // Parse folder name
-        if (strstr(trimmed, "\"folder\":")) {
-            // Find the value after "folder":
-            char* folder_start = strstr(trimmed, "\"folder\":");
-            if (folder_start) {
-                folder_start += 9;  // Skip "folder":
-                // Skip whitespace and find opening quote
-                while (*folder_start == ' ' || *folder_start == '\t') folder_start++;
-                if (*folder_start == '"') {
-                    folder_start++;  // Skip opening quote
-                    char* folder_end = strchr(folder_start, '"');
-                    if (folder_end) {
-                        int len = folder_end - folder_start;
-                        if (len > 0 && (size_t)len < sizeof(current_folder)) {
-                            strncpy(current_folder, folder_start, len);
-                            current_folder[len] = 0;
-                        }
-                    }
-                }
-            }
-            continue;
-        }
-        
-        // Detect meshes section
-        if (strstr(trimmed, "\"meshes\":")) {
-            in_meshes_section = true;
-            continue;
-        }
-        
-        // Parse compiled mesh file names in meshes section
-        if (in_meshes_section && strstr(trimmed, ".cobj\":")) {
-            char obj_name[128];
-            char* start = strchr(trimmed, '"');
-            if (start) {
-                start++;
-                char* end = strchr(start, '"');
-                if (end) {
-                    int len = end - start;
-                    if (len > 0 && (size_t)len < sizeof(obj_name)) {
-                        strncpy(obj_name, start, len);
-                        obj_name[len] = 0;
-                        
-                        // Construct full path and load mesh
-                        char mesh_path[256];
-                        snprintf(mesh_path, sizeof(mesh_path), "%s/%s", current_folder, obj_name);
-                        
-                        // Extract base name for registration (remove .cobj extension)
-                        char mesh_name[128];
-                        strncpy(mesh_name, obj_name, sizeof(mesh_name) - 1);
-                        char* dot = strrchr(mesh_name, '.');
-                        if (dot) *dot = 0;
-                        
-                        printf("   Loading mesh: %s -> %s\n", mesh_path, mesh_name);
-                        
-                        if (!load_compiled_mesh(registry, mesh_path, mesh_name)) {
-                            printf("   ❌ Failed to load %s\n", mesh_path);
-                            success = false;
-                        } else {
-                            printf("   ✅ Loaded %s\n", mesh_name);
-                            
-                            // Try to load associated texture
-                            char texture_path[256];
-                            char texture_name[128];
-                            snprintf(texture_path, sizeof(texture_path), "%s/%s.png", current_folder, mesh_name);
-                            snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
-                            
-                            if (load_texture(registry, texture_path, texture_name)) {
-                                printf("   ✅ Loaded texture: %s\n", texture_name);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // End of meshes section
-        if (in_meshes_section && trimmed[0] == '}') {
-            in_meshes_section = false;
-        }
-    }
-    
-    fclose(file);
     return success;
 }
 
