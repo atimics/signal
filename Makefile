@@ -143,6 +143,22 @@ assets-wasm: $(BUILD_ASSETS_DIR)
 # TEST TARGETS
 # ============================================================================
 
+# Sprint 15: Unity Testing Framework Integration
+TEST_SRC = tests/test_main.c tests/test_core_math.c tests/vendor/unity.c
+ENGINE_SRC_FOR_TEST = src/core.c
+TEST_TARGET = $(BUILD_DIR)/cgame_tests
+
+# Main test target - compile and run all Unity tests
+test: $(TEST_TARGET)
+	@echo "🧪 Running Unity test suite..."
+	./$(TEST_TARGET)
+	@echo "✅ All tests completed"
+
+# Build the test executable
+$(TEST_TARGET): $(TEST_SRC) $(ENGINE_SRC_FOR_TEST) | $(BUILD_DIR)
+	@echo "🔨 Building Unity test suite..."
+	$(CC) $(CFLAGS) -Itests/vendor -o $@ $(TEST_SRC) $(ENGINE_SRC_FOR_TEST) $(LIBS)
+
 # Sprint 10.5 Task 1: Test index.json path resolution
 test_sprint_10_5_task_1: | $(BUILD_DIR)
 	@echo "🧪 Building and running Sprint 10.5 Task 1 test (standalone)..."
@@ -157,7 +173,7 @@ test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
 	./$(BUILD_DIR)/test_task_1_integration
 	@echo "✅ Sprint 10.5 Task 1 integration test complete"
 
-.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration
+.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration
 
 # Sprint 10.5 Task 2: Test dynamic memory allocation in mesh parser
 test_sprint_10_5_task_2: | $(BUILD_DIR)
