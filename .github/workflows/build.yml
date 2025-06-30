@@ -10,7 +10,7 @@ jobs:
   build-macos:
     name: Build (macOS)
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,7 +30,11 @@ jobs:
         run: |
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install -r requirements.txt
+          # Install packages individually to avoid timeout
+          pip install --timeout 300 attrs cairocffi CairoSVG cffi cssselect2 defusedxml
+          pip install --timeout 300 jsonschema jsonschema-specifications pycparser referencing
+          pip install --timeout 300 rpds-py tinycss2 webencodings pillow
+          pip install --timeout 300 numpy scipy trimesh
 
       - name: Build Project
         run: make
@@ -44,7 +48,7 @@ jobs:
   build-linux:
     name: Build (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -66,7 +70,11 @@ jobs:
         run: |
           source .venv/bin/activate
           pip install --upgrade pip
-          pip install -r requirements.txt
+          # Install packages individually to avoid timeout
+          pip install --timeout 300 attrs cairocffi CairoSVG cffi cssselect2 defusedxml
+          pip install --timeout 300 jsonschema jsonschema-specifications pycparser referencing
+          pip install --timeout 300 rpds-py tinycss2 webencodings pillow
+          pip install --timeout 300 numpy scipy trimesh
 
       - name: Build Project
         run: make
@@ -80,7 +88,7 @@ jobs:
   build-wasm:
     name: Build (WebAssembly)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
