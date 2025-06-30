@@ -13,16 +13,16 @@
 // This is a simple way to build a test suite without a complex build system.
 #include "test_task_1.c"
 #include "test_task_2.c"
-#include "test_task_3.c"
+// Task 3 is tested separately due to its mocking requirements.
 
 int main() {
-    printf("===== Running Sprint 10.5 Test Suite =====\n");
+    printf("===== Running Sprint 10.5 Test Suite (Tasks 1 & 2) =====\n");
     
     // Call tests from each task
     run_task_1_tests();
     run_task_2_tests();
-    run_task_3_tests();
 
-    printf("===== All Sprint 10.5 tests passed! =====\n");
+    printf("===== All Sprint 10.5 integration tests passed! =====\n");
+    printf("NOTE: Task 3 is tested in a separate, mocked executable.\n");
     return 0;
 }

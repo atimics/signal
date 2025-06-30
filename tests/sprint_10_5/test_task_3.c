@@ -5,12 +5,15 @@
 #include <stdlib.h>
 
 #include "assets.h"
+#include "sokol_gfx.h"
 
 // --- Mocking Sokol Functions ---
 // To test the validation logic without a real GPU, we'll mock sg_make_buffer.
 // We'll use a global variable to track if it was called.
 
+#ifdef MOCK_SOKOL
 int sg_make_buffer_call_count = 0;
+int sg_make_image_call_count = 0;
 
 // This is our mock implementation.
 sg_buffer sg_make_buffer(const sg_buffer_desc* desc) {
@@ -18,6 +21,17 @@ sg_buffer sg_make_buffer(const sg_buffer_desc* desc) {
     // Return a dummy buffer. The ID just needs to be non-zero.
     return (sg_buffer){ .id = sg_make_buffer_call_count };
 }
+
+sg_image sg_make_image(const sg_image_desc* desc) {
+    sg_make_image_call_count++;
+    return (sg_image){ .id = sg_make_image_call_count };
+}
+
+sg_resource_state sg_query_buffer_state(sg_buffer buf) {
+    return SG_RESOURCESTATE_VALID;
+}
+
+#endif // MOCK_SOKOL
 // --- End Mocking ---
 
 

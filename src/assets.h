@@ -1,7 +1,7 @@
 #ifndef ASSETS_H
 #define ASSETS_H
 
-#include "graphics_api.h"
+#include "sokol_gfx.h"
 #include "core.h"
 #include <stdint.h>
 #include <stdbool.h>
