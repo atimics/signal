@@ -158,3 +158,12 @@ test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
 	@echo "✅ Sprint 10.5 Task 1 integration test complete"
 
 .PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration
+
+# Sprint 10.5 Task 2: Test dynamic memory allocation in mesh parser
+test_sprint_10_5_task_2: | $(BUILD_DIR)
+	@echo "🧪 Building and running Sprint 10.5 Task 2 test..."
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_2 tests/sprint_10_5/test_task_2.c src/assets.c
+	./$(BUILD_DIR)/test_task_2
+	@echo "✅ Sprint 10.5 Task 2 test complete"
+
+.PHONY: test_sprint_10_5_task_2
