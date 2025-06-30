@@ -132,6 +132,16 @@ bool load_texture(AssetRegistry* registry, const char* texture, const char* text
 bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
 
 /**
+ * @brief Get mesh asset path from index file
+ * @param index_path Path to the index.json file
+ * @param asset_name Name of the asset to find
+ * @param out_path Buffer to store the resolved path
+ * @param out_size Size of the output buffer
+ * @return true if asset was found and path resolved, false otherwise
+ */
+bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_name, char* out_path, size_t out_size);
+
+/**
  * @brief Load a mesh from a binary .cobj file format
  * @param registry The asset registry to load into
  * @param absolute_filepath Full path to the .cobj file
