@@ -232,3 +232,83 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
     
     return true;
 }
+
+bool assets_get_mesh_path_from_index(const char* index_path, const char* asset_name, char* out_path, size_t out_size) {
+    if (!index_path || !asset_name || !out_path || out_size == 0) {
+        return false;
+    }
+    
+    FILE* file = fopen(index_path, "r");
+    if (!file) {
+        printf("❌ Could not open index file: %s\n", index_path);
+        return false;
+    }
+    
+    char line[512];
+    bool found = false;
+    
+    while (fgets(line, sizeof(line), file)) {
+        // Remove whitespace and newlines
+        char* trimmed = line;
+        while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
+        trimmed[strcspn(trimmed, "\n\r")] = 0;
+        
+        // Skip empty lines, comments, and JSON syntax
+        if (strlen(trimmed) == 0 || trimmed[0] == '/' || trimmed[0] == '#' ||
+            trimmed[0] == '[' || trimmed[0] == ']' || strcmp(trimmed, "{") == 0 || strcmp(trimmed, "}") == 0) {
+            continue;
+        }
+        
+        // Extract metadata path from JSON array entry
+        char* start = strchr(trimmed, '"');
+        if (start) {
+            start++;
+            char* end = strchr(start, '"');
+            if (end) {
+                // Extract the metadata path
+                char metadata_relative[256];
+                int len = end - start;
+                if (len > 0 && (size_t)len < sizeof(metadata_relative)) {
+                    strncpy(metadata_relative, start, len);
+                    metadata_relative[len] = 0;
+                    
+                    // Build full metadata path
+                    char metadata_path[512];
+                    snprintf(metadata_path, sizeof(metadata_path), "%s/%s", 
+                             index_path, metadata_relative);
+                    
+                    // Remove the filename part to get directory of index
+                    char* last_slash = strrchr(metadata_path, '/');
+                    if (last_slash) {
+                        *last_slash = '/';
+                        *(last_slash + 1) = '\0';
+                        strcat(metadata_path, metadata_relative);
+                    }
+                    
+                    // Check if this metadata file contains the asset we're looking for
+                    FILE* meta_file = fopen(metadata_path, "r");
+                    if (meta_file) {
+                        char meta_line[256];
+                        while (fgets(meta_line, sizeof(meta_line), meta_file)) {
+                            if (strstr(meta_line, asset_name)) {
+                                // Found the asset, build the path
+                                char* dir_end = strrchr(metadata_path, '/');
+                                if (dir_end) {
+                                    *dir_end = '\0';
+                                    snprintf(out_path, out_size, "%s/geometry.cobj", metadata_path);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        fclose(meta_file);
+                        if (found) break;
+                    }
+                }
+            }
+        }
+    }
+    
+    fclose(file);
+    return found;
+}

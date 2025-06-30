@@ -1,8 +1,86 @@
 #include "../assets.h"
+#include "../gpu_resources.h"
+#include "../sokol_gfx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+
+// Define the actual implementation of our opaque structs
+struct MeshGpuResources {
+    sg_buffer sg_vertex_buffer;
+    sg_buffer sg_index_buffer;
+};
+
+/**
+ * @brief Creates GPU resources for a loaded mesh
+ * @param mesh The mesh to create GPU resources for
+ * @return true if GPU resources were created successfully, false otherwise
+ */
+static bool create_mesh_gpu_resources(Mesh* mesh) {
+    if (!mesh || !mesh->vertices || !mesh->indices) {
+        printf("❌ Invalid mesh data for GPU resource creation\n");
+        return false;
+    }
+    
+    // Validate buffer sizes
+    size_t vertex_buffer_size = mesh->vertex_count * sizeof(Vertex);
+    size_t index_buffer_size = mesh->index_count * sizeof(int);
+    
+    if (vertex_buffer_size == 0 || index_buffer_size == 0) {
+        printf("❌ Mesh %s would create zero-sized buffers: VB=%zu IB=%zu\n",
+               mesh->name, vertex_buffer_size, index_buffer_size);
+        return false;
+    }
+    
+    printf("🔍 DEBUG: Creating GPU buffers for %s - VB=%zu bytes, IB=%zu bytes\n", 
+           mesh->name, vertex_buffer_size, index_buffer_size);
+    
+    // Allocate memory for our opaque struct
+    mesh->gpu_resources = calloc(1, sizeof(struct MeshGpuResources));
+    if (!mesh->gpu_resources) {
+        printf("❌ Failed to allocate GPU resources for mesh %s\n", mesh->name);
+        return false;
+    }
+    
+    // Create vertex buffer
+    mesh->gpu_resources->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .data = {
+            .ptr = mesh->vertices,
+            .size = vertex_buffer_size
+        },
+        .usage = { .vertex_buffer = true },
+        .label = mesh->name
+    });
+
+    // Create index buffer
+    mesh->gpu_resources->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+        .data = {
+            .ptr = mesh->indices,
+            .size = index_buffer_size
+        },
+        .usage = { .index_buffer = true },
+        .label = mesh->name
+    });
+    
+    // Validate that buffers were created
+    if (mesh->gpu_resources->sg_vertex_buffer.id == SG_INVALID_ID ||
+        mesh->gpu_resources->sg_index_buffer.id == SG_INVALID_ID) {
+        printf("❌ Failed to create GPU buffers for mesh %s\n", mesh->name);
+        if (mesh->gpu_resources->sg_vertex_buffer.id != SG_INVALID_ID) {
+            sg_destroy_buffer(mesh->gpu_resources->sg_vertex_buffer);
+        }
+        if (mesh->gpu_resources->sg_index_buffer.id != SG_INVALID_ID) {
+            sg_destroy_buffer(mesh->gpu_resources->sg_index_buffer);
+        }
+        free(mesh->gpu_resources);
+        mesh->gpu_resources = NULL;
+        return false;
+    }
+    
+    printf("✅ GPU resources created successfully for mesh %s\n", mesh->name);
+    return true;
+}
 
 bool parse_obj_file(const char* filepath, Mesh* mesh) {
     if (!filepath || !mesh) return false;
@@ -241,10 +319,10 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
     return true;
 }
 
-bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name) {
+bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name) {
     if (!registry || !absolute_filepath || !mesh_name) return false;
     
-    printf("🔍 DEBUG load_compiled_mesh_absolute: filepath='%s', mesh_name='%s'\n", absolute_filepath, mesh_name);
+    printf("🔍 DEBUG load_mesh_from_file: filepath='%s', mesh_name='%s'\n", absolute_filepath, mesh_name);
     
     // Find next available slot
     int slot = -1;
@@ -273,9 +351,19 @@ bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_f
         return false;
     }
     
+    // Create GPU resources for the loaded mesh
+    if (!create_mesh_gpu_resources(mesh)) {
+        printf("❌ Failed to create GPU resources for mesh: %s\n", mesh_name);
+        // Clean up mesh data
+        if (mesh->vertices) free(mesh->vertices);
+        if (mesh->indices) free(mesh->indices);
+        memset(mesh, 0, sizeof(Mesh));
+        return false;
+    }
+    
     registry->mesh_count++;
     
-    printf("✅ Loaded mesh: %s (%d vertices, %d indices)\n", 
+    printf("✅ Loaded mesh: %s (%d vertices, %d indices) with GPU resources\n", 
            mesh_name, mesh->vertex_count, mesh->index_count);
     
     return true;

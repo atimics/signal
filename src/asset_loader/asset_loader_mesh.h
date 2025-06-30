@@ -30,6 +30,6 @@ bool parse_obj_file(const char* filepath, Mesh* mesh);
  * @param mesh_name Name to register the mesh under
  * @return true if mesh loaded successfully, false otherwise
  */
-bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
+bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name);
 
 #endif // ASSET_LOADER_MESH_H

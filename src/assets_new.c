@@ -61,7 +61,7 @@ void assets_cleanup(AssetRegistry* registry) {
     if (!registry) return;
     
     // Clean up meshes
-    for (uint32_t i = 0; i < registry->mesh_count; i++) {
+    for (int i = 0; i < registry->mesh_count; i++) {
         Mesh* mesh = &registry->meshes[i];
         if (mesh->vertices) {
             free(mesh->vertices);
@@ -86,7 +86,7 @@ void assets_cleanup(AssetRegistry* registry) {
     }
     
     // Clean up textures
-    for (uint32_t i = 0; i < registry->texture_count; i++) {
+    for (int i = 0; i < registry->texture_count; i++) {
         Texture* texture = &registry->textures[i];
         if (texture->gpu_resources) {
             // Destroy Sokol image
@@ -105,6 +105,95 @@ void assets_cleanup(AssetRegistry* registry) {
 // ============================================================================
 // ASSET LOADING
 // ============================================================================
+
+// Load mesh from absolute file path
+bool load_mesh_from_file(AssetRegistry* registry, const char* absolute_filepath, const char* mesh_name) {
+    if (!registry || !absolute_filepath || !mesh_name) return false;
+    if (registry->mesh_count >= 32) return false;
+    
+    printf("🔍 DEBUG load_mesh_from_file: filepath='%s', mesh_name='%s'\n", absolute_filepath, mesh_name);
+    
+    // Check if file exists
+    FILE* test_file = fopen(absolute_filepath, "r");
+    if (!test_file) {
+        printf("❌ DEBUG: Cannot open file '%s'\n", absolute_filepath);
+        return false;
+    }
+    fclose(test_file);
+    printf("✅ DEBUG: File exists and is readable\n");
+    
+    // Find or create mesh slot
+    Mesh* mesh = &registry->meshes[registry->mesh_count];
+    strncpy(mesh->name, mesh_name, sizeof(mesh->name) - 1);
+    mesh->name[sizeof(mesh->name) - 1] = '\0';  // Ensure null termination
+    
+    if (parse_obj_file(absolute_filepath, mesh)) {
+        printf("✅ DEBUG: parse_obj_file succeeded - vertices=%d, indices=%d\n", 
+               mesh->vertex_count, mesh->index_count);
+        
+        // Comprehensive validation
+        if (mesh->vertex_count == 0 || mesh->index_count == 0) {
+            printf("❌ Mesh %s has zero vertices (%d) or indices (%d)\n", 
+                   mesh_name, mesh->vertex_count, mesh->index_count);
+            return false;
+        }
+        
+        if (!mesh->vertices || !mesh->indices) {
+            printf("❌ Mesh %s has NULL vertex (%p) or index (%p) data\n",
+                   mesh_name, (void*)mesh->vertices, (void*)mesh->indices);
+            return false;
+        }
+        
+        // Validate buffer creation before calling sg_make_buffer
+        size_t vertex_buffer_size = mesh->vertex_count * sizeof(Vertex);
+        size_t index_buffer_size = mesh->index_count * sizeof(int);
+        
+        if (vertex_buffer_size == 0 || index_buffer_size == 0) {
+            printf("❌ Mesh %s would create zero-sized buffers: VB=%zu IB=%zu\n",
+                   mesh_name, vertex_buffer_size, index_buffer_size);
+            return false;
+        }
+        
+        printf("🔍 DEBUG: Creating GPU buffers - VB=%zu bytes, IB=%zu bytes\n", 
+               vertex_buffer_size, index_buffer_size);
+        
+        // Allocate memory for our opaque struct
+        mesh->gpu_resources = calloc(1, sizeof(struct MeshGpuResources));
+        if (!mesh->gpu_resources) {
+            printf("❌ DEBUG: Failed to allocate GPU resources\n");
+            return false;
+        }
+        
+        // Create vertex buffer
+        mesh->gpu_resources->sg_vertex_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = {
+                .ptr = mesh->vertices,
+                .size = vertex_buffer_size
+            },
+            .usage = { .vertex_buffer = true },
+            .label = mesh->name
+        });
+
+        // Create index buffer
+        mesh->gpu_resources->sg_index_buffer = sg_make_buffer(&(sg_buffer_desc){
+            .data = {
+                .ptr = mesh->indices,
+                .size = index_buffer_size
+            },
+            .usage = { .index_buffer = true },
+            .label = mesh->name
+        });
+
+        mesh->loaded = true;  // Mark as successfully loaded
+        registry->mesh_count++;
+        printf("✅ Mesh '%s' loaded successfully with %d vertices, %d indices\n", 
+               mesh_name, mesh->vertex_count, mesh->index_count);
+        return true;
+    }
+    
+    printf("❌ parse_obj_file failed for %s\n", absolute_filepath);
+    return false;
+}
 
 bool load_texture(AssetRegistry* registry, const char* texture_path, const char* texture_name) {
     if (!registry || !texture_path || !texture_name) return false;
@@ -168,7 +257,7 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
 Mesh* assets_get_mesh(AssetRegistry* registry, const char* name) {
     if (!registry || !name) return NULL;
     
-    for (uint32_t i = 0; i < registry->mesh_count; i++) {
+    for (int i = 0; i < registry->mesh_count; i++) {
         if (strcmp(registry->meshes[i].name, name) == 0) {
             return &registry->meshes[i];
         }
@@ -179,7 +268,7 @@ Mesh* assets_get_mesh(AssetRegistry* registry, const char* name) {
 Texture* assets_get_texture(AssetRegistry* registry, const char* name) {
     if (!registry || !name) return NULL;
     
-    for (uint32_t i = 0; i < registry->texture_count; i++) {
+    for (int i = 0; i < registry->texture_count; i++) {
         if (strcmp(registry->textures[i].name, name) == 0) {
             return &registry->textures[i];
         }
@@ -190,7 +279,7 @@ Texture* assets_get_texture(AssetRegistry* registry, const char* name) {
 Material* assets_get_material(AssetRegistry* registry, const char* name) {
     if (!registry || !name) return NULL;
     
-    for (uint32_t i = 0; i < registry->material_count; i++) {
+    for (int i = 0; i < registry->material_count; i++) {
         if (strcmp(registry->materials[i].name, name) == 0) {
             return &registry->materials[i];
         }
@@ -203,7 +292,7 @@ void assets_list_loaded(AssetRegistry* registry) {
     
     printf("📋 Loaded Assets:\n");
     printf("   Meshes (%d):\n", registry->mesh_count);
-    for (uint32_t i = 0; i < registry->mesh_count; i++) {
+    for (int i = 0; i < registry->mesh_count; i++) {
         Mesh* mesh = &registry->meshes[i];
         printf("     %s: %d vertices, %d indices%s\n", 
                mesh->name, mesh->vertex_count, mesh->index_count,
@@ -211,7 +300,7 @@ void assets_list_loaded(AssetRegistry* registry) {
     }
     
     printf("   Textures (%d):\n", registry->texture_count);
-    for (uint32_t i = 0; i < registry->texture_count; i++) {
+    for (int i = 0; i < registry->texture_count; i++) {
         Texture* texture = &registry->textures[i];
         printf("     %s: %dx%d%s\n", 
                texture->name, texture->width, texture->height,
@@ -219,7 +308,7 @@ void assets_list_loaded(AssetRegistry* registry) {
     }
     
     printf("   Materials (%d):\n", registry->material_count);
-    for (uint32_t i = 0; i < registry->material_count; i++) {
+    for (int i = 0; i < registry->material_count; i++) {
         Material* material = &registry->materials[i];
         printf("     %s%s\n", material->name, material->loaded ? " ✅" : " ❌");
     }
@@ -269,16 +358,8 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
         sg_query_buffer_state(mesh->gpu_resources->sg_vertex_buffer) == SG_RESOURCESTATE_VALID &&
         sg_query_buffer_state(mesh->gpu_resources->sg_index_buffer) == SG_RESOURCESTATE_VALID) {
         
-        // Use PIMPL pattern: Create GPU resources struct for renderable
-        renderable->gpu_resources = gpu_resources_create();
-        if (!renderable->gpu_resources) {
-            printf("❌ Failed to allocate GPU resources for mesh '%s'\n", mesh_name);
-            return false;
-        }
-        
-        // Set buffers through PIMPL interface
-        gpu_resources_set_vertex_buffer(renderable->gpu_resources, (gpu_buffer_t){mesh->gpu_resources->sg_vertex_buffer.id});
-        gpu_resources_set_index_buffer(renderable->gpu_resources, (gpu_buffer_t){mesh->gpu_resources->sg_index_buffer.id});
+        // Transfer GPU resource ownership to the renderable
+        renderable->gpu_resources = mesh->gpu_resources;
         renderable->index_count = mesh->index_count;
         renderable->visible = true;
         
@@ -290,94 +371,4 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
         printf("❌ Mesh '%s' has invalid GPU resources\n", mesh_name);
         return false;
     }
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-const char* get_shader_path(const char* base_name, const char* stage) {
-    static char path_buffers[2][512];  // Two buffers to handle consecutive calls
-    static int buffer_index = 0;
-    
-    char* path = path_buffers[buffer_index];
-    buffer_index = (buffer_index + 1) % 2;  // Alternate between buffers
-    
-#ifdef SOKOL_METAL
-    const char* extension = "metal";
-#else
-    const char* extension = "glsl";
-#endif
-    
-    snprintf(path, 512, "assets/shaders/%s.%s.%s", base_name, stage, extension);
-    return path;
-}
-
-char* load_shader_source(const char* filepath) {
-    FILE* file = fopen(filepath, "r");
-    if (!file) {
-        printf("❌ Could not open shader file: %s\n", filepath);
-        return NULL;
-    }
-    
-    // Get file size
-    fseek(file, 0, SEEK_END);
-    long size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-    
-    if (size <= 0) {
-        printf("❌ Invalid shader file size: %ld\n", size);
-        fclose(file);
-        return NULL;
-    }
-    
-    // Allocate buffer and read
-    char* source = malloc(size + 1);
-    if (!source) {
-        printf("❌ Failed to allocate shader source buffer\n");
-        fclose(file);
-        return NULL;
-    }
-    
-    size_t read_bytes = fread(source, 1, size, file);
-    source[read_bytes] = '\0';
-    fclose(file);
-    
-    return source;
-}
-
-void free_shader_source(char* source) {
-    if (source) {
-        free(source);
-    }
-}
-
-bool assets_initialize_gpu_resources(AssetRegistry* registry) {
-    if (!registry) {
-        printf("❌ Invalid registry for GPU resource initialization\n");
-        return false;
-    }
-    
-    printf("🎨 Initializing GPU resources...\n");
-    
-    // Note: Meshes are already loaded to GPU during mesh loading
-    // Check that all loaded meshes have valid GPU resources
-    bool meshes_ok = true;
-    for (uint32_t i = 0; i < registry->mesh_count; i++) {
-        Mesh* mesh = &registry->meshes[i];
-        if (mesh->loaded && (!mesh->gpu_resources || 
-            sg_query_buffer_state(mesh->gpu_resources->sg_vertex_buffer) != SG_RESOURCESTATE_VALID ||
-            sg_query_buffer_state(mesh->gpu_resources->sg_index_buffer) != SG_RESOURCESTATE_VALID)) {
-            printf("❌ Mesh '%s' has invalid GPU resources\n", mesh->name);
-            meshes_ok = false;
-        }
-    }
-    
-    if (meshes_ok) {
-        printf("✅ All GPU resources initialized successfully\n");
-    } else {
-        printf("❌ Some GPU resources failed to initialize\n");
-    }
-    
-    return meshes_ok;
 }
