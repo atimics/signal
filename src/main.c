@@ -225,12 +225,7 @@ static void frame(void) {
     const float dt = (float)sapp_frame_duration();
     app_state.simulation_time += dt;
     app_state.frame_count++;
-    
-    // Simulate player input
-    if (app_state.player_id != INVALID_ENTITY) {
-        simulate_player_input(&app_state.world, app_state.player_id, app_state.simulation_time);
-    }
-    
+
     // Update world and systems
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
