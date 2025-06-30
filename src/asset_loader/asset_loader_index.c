@@ -200,9 +200,9 @@ bool load_single_mesh_metadata(AssetRegistry* registry, const char* metadata_pat
     printf("🔍 DEBUG: Full mesh path: '%s'\n", mesh_path);
     
     // Load compiled mesh files (.cobj format from asset compiler)
-    printf("🔍 DEBUG: Calling load_compiled_mesh_absolute with: registry=%p, path='%s', name='%s'\n", 
+    printf("🔍 DEBUG: Calling load_mesh_from_file with: registry=%p, path='%s', name='%s'\n", 
            (void*)registry, mesh_path, mesh_name);
-    bool loaded = load_compiled_mesh_absolute(registry, mesh_path, mesh_name);
+    bool loaded = load_mesh_from_file(registry, mesh_path, mesh_name);
     
     if (!loaded) {
         printf("❌ Failed to load mesh: %s\n", mesh_path);

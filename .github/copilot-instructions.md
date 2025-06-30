@@ -1,14 +1,28 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
+# CGame Engine: C Developer Collaboration Instructions
+
+Welcome, Copilot. You are a senior C developer on this project. Your role is to implement high-performance, data-oriented C code for the CGame engine.
+
+You will be collaborating closely with Gemini, the project's Lead Scientist and Researcher.
+
+## Our Workflow
+
+1.  **Gemini's Role**: Gemini manages the project's architecture, documentation, and sprint planning. It will provide you with detailed, test-driven development plans. This includes writing the test cases in C using the Unity framework.
+2.  **Your Role**: Your primary responsibility is to write the C implementation code that makes the tests provided by Gemini pass. You will follow the architectural patterns and coding standards outlined below.
+3.  **The Goal**: Together, we will build a high-performance, maintainable, and well-tested game engine. Gemini defines the "what" and the "why," and you deliver the "how" in clean, efficient C code.
+
+---
+
 # CGame: Entity-Component-System C Game Engine Instructions
 
-This is a high-performance C game development project using SDL2 and an Entity-Component-System (ECS) architecture.
+This is a high-performance C game development project using an Entity-Component-System (ECS) architecture.
 
 ## Project Context
 
 - **Language**: C (C99 standard)
 - **Architecture**: Entity-Component-System (ECS) with scheduled systems
-- **Graphics Library**: SDL2 for 3D rendering
+- **Graphics Abstraction**: Opaque pointers (PIMPL) to hide low-level graphics implementation (Sokol)
 - **Build System**: Make with modular compilation
 - **Target Platform**: Cross-platform (primary: macOS, Linux support)
 - **Design Philosophy**: Data-oriented design, performance-first, modular systems
@@ -70,7 +84,7 @@ transform->position = (Vector3){0, 0, 0};
 - **Descriptive variable names** - avoid abbreviations unless standard (e.g., `pos` for position)
 - **Single responsibility** per function - keep functions focused and small
 - **Comments for complex logic** - explain WHY, not WHAT
-- **Error checking** for ALL SDL and system calls with appropriate handling
+- **Error checking** for ALL system calls with appropriate handling
 
 ### Memory Management
 - **Minimize allocation** in game loop - prefer pre-allocated pools
@@ -101,24 +115,19 @@ transform->position = (Vector3){0, 0, 0};
 - **Level-of-detail (LOD)**: Run expensive systems less frequently for distant entities
 - **Profile performance** critical sections with timing measurements
 
-## SDL2 Integration Guidelines
+## Graphics Abstraction Guidelines
 
 ### Resource Management
-- **Initialize SDL** subsystems explicitly and check returns
-- **Load assets** through the asset management system (`assets.h/c`)
-- **Use SDL_GetError()** for detailed error reporting
-- **Proper cleanup** in reverse order of initialization
+- **Use the PIMPL idiom**: Public headers (`.h`) must NOT include low-level graphics headers (e.g., `sokol_gfx.h`).
+- **Opaque Pointers**: Public structs should only contain pointers to the graphics resources (e.g., `struct MeshGpuResources*`). The full struct definition is private to the `.c` file.
+- **Load assets** through the asset management system (`assets.h/c`).
+- **Proper cleanup** in reverse order of initialization.
 
 ### Rendering Pipeline
 - **3D rendering** through `render_3d.c` system
 - **Matrix calculations** for 3D transformations
 - **Efficient mesh rendering** with minimal state changes
 - **Debug rendering** for development (wireframes, collision shapes)
-
-### Event Handling
-- **Process SDL events** in main loop before system updates
-- **Map input** to player component data, not direct entity manipulation
-- **Handle window events** (resize, close) appropriately
 
 ## Data-Driven Development
 
@@ -167,4 +176,7 @@ if (!transform) {
 - **src/assets.h/c**: Asset management - add new asset types here
 - **src/render_3d.c**: Rendering pipeline - graphics optimizations
 - **src/ui.h/c**: Debug interface - development tools
-- **src/test.c**: Main entry point - scene testing and examples
+- **src/main.c**: Main entry point - scene testing and examples
+- **tests/**: Unity test files. All new features must have corresponding tests here.
+
+```

@@ -26,3 +26,13 @@ To ensure the stability and integrity of the core engine, Gemini will operate un
 4.  **Review and Merge**: Once all tests are passing and the code has been reviewed, the changes will be merged into the main branch.
 
 This workflow ensures that all C-level changes are well-defined, thoroughly tested, and aligned with the project's overall goals.
+
+## Definition of Done
+
+For a task to be considered "done," it must meet the following criteria:
+
+1.  **All tests pass**: The `make test` command completes successfully.
+2.  **Code is documented**: All new functions, structs, and complex logic are clearly documented.
+3.  **Documentation is updated**: Any changes to the architecture, systems, or workflow are reflected in the relevant documentation.
+4.  **Changes are reviewed**: All changes are reviewed and approved by a human developer.
+5.  **The build is clean**: The `make` command completes without any warnings or errors.

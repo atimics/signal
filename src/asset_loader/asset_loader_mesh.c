@@ -275,18 +275,6 @@ bool load_compiled_mesh_absolute(AssetRegistry* registry, const char* absolute_f
     
     registry->mesh_count++;
     
-    // Create GPU resources for the mesh
-    if (mesh->vertex_count > 0 && mesh->index_count > 0) {
-        mesh->gpu_resources = gpu_resources_create();
-        if (mesh->gpu_resources) {
-            if (!gpu_resources_upload_mesh(mesh->gpu_resources, mesh)) {
-                printf("⚠️  Failed to upload mesh to GPU: %s\n", mesh_name);
-                gpu_resources_destroy(mesh->gpu_resources);
-                mesh->gpu_resources = NULL;
-            }
-        }
-    }
-    
     printf("✅ Loaded mesh: %s (%d vertices, %d indices)\n", 
            mesh_name, mesh->vertex_count, mesh->index_count);
     
