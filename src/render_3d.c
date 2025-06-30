@@ -176,8 +176,8 @@ static bool render_sokol_init(void) {
         },
         .index_type = SG_INDEXTYPE_UINT16,
         .depth = {
-            .compare = SG_COMPAREFUNC_ALWAYS,  // Always pass depth test
-            .write_enabled = false              // Don't write to depth buffer
+            .compare = SG_COMPAREFUNC_LESS_EQUAL,  // Standard depth testing
+            .write_enabled = true                  // Write to depth buffer
             // Don't specify pixel_format - let it default to match swapchain
         },
         .colors[0] = {
@@ -379,8 +379,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
         
-        // Debug all entities in first few frames
-        if (frame_count < 5) {
+        // Debug first few frames
+        if (frame_count < 3) {
             printf("🔍 Processing Entity %d: components=0x%X (R:%d T:%d)\n", 
                    entity->id, entity->component_mask,
                    !!(entity->component_mask & COMPONENT_RENDERABLE),
@@ -419,7 +419,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         }
         
         // If we get here, this entity should be rendered
-        if (frame_count < 10) {
+        if (first_frame) {
             printf("✅ Entity %d: Ready to render - pos:(%.1f,%.1f,%.1f) scale:(%.1f,%.1f,%.1f) indices:%d\n",
                    entity->id, transform->position.x, transform->position.y, transform->position.z,
                    transform->scale.x, transform->scale.y, transform->scale.z, renderable->index_count);
@@ -438,11 +438,11 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         float model[16], mvp[16];
         
         // Create proper model matrix from transform (include scale and rotation)
-        // Scale up meshes to make them visible (they might be too small)
+        // Use normal scale values - the meshes should be properly sized
         Vector3 render_scale = {
-            transform->scale.x * 5.0f,  // Scale up 5x
-            transform->scale.y * 5.0f, 
-            transform->scale.z * 5.0f
+            transform->scale.x,  // Use original scale
+            transform->scale.y, 
+            transform->scale.z
         };
         mat4_compose_transform(model, transform->position, transform->rotation, render_scale);
         
@@ -466,6 +466,11 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
                        active_camera->position.x, active_camera->position.y, active_camera->position.z,
                        active_camera->target.x, active_camera->target.y, active_camera->target.z,
                        active_camera->fov);
+                
+                // Debug first few elements of view-projection matrix
+                printf("📷 VP matrix [0-3]: [%.2f %.2f %.2f %.2f]\n", 
+                       active_camera->view_projection_matrix[0], active_camera->view_projection_matrix[1], 
+                       active_camera->view_projection_matrix[2], active_camera->view_projection_matrix[3]);
             }
         } else {
             // Fallback: create matrices on the fly
@@ -495,6 +500,16 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         
         // Debug first entity's matrix in first few frames
         if (frame_count < 3 && entity->id == 1) {
+            printf("🎯 Entity %d transform: pos:(%.2f,%.2f,%.2f) scale:(%.2f,%.2f,%.2f)\n", 
+                   entity->id, transform->position.x, transform->position.y, transform->position.z,
+                   transform->scale.x, transform->scale.y, transform->scale.z);
+            
+            printf("🎯 Entity %d model matrix:\n", entity->id);
+            printf("   [%.2f %.2f %.2f %.2f]\n", model[0], model[1], model[2], model[3]);
+            printf("   [%.2f %.2f %.2f %.2f]\n", model[4], model[5], model[6], model[7]);
+            printf("   [%.2f %.2f %.2f %.2f]\n", model[8], model[9], model[10], model[11]);
+            printf("   [%.2f %.2f %.2f %.2f]\n", model[12], model[13], model[14], model[15]);
+            
             printf("🎯 Entity %d MVP matrix:\n", entity->id);
             printf("   [%.2f %.2f %.2f %.2f]\n", mvp[0], mvp[1], mvp[2], mvp[3]);
             printf("   [%.2f %.2f %.2f %.2f]\n", mvp[4], mvp[5], mvp[6], mvp[7]);
@@ -519,7 +534,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     }
     
     // Fallback: draw test triangle if no entities were rendered (or for debugging)
-    if (rendered_count >= 0) {  // Always draw triangle for debugging
+    if (rendered_count == 0) {  // Draw triangle if no entities rendered
         // Apply test triangle bindings
         sg_apply_bindings(&(sg_bindings){
             .vertex_buffers[0] = render_state.vertex_buffer,
