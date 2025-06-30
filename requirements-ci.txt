@@ -1,0 +1,21 @@
+# Minimal CI requirements for asset compilation
+# This is a lighter version of requirements.txt for faster CI builds
+
+# Core dependencies for asset processing
+trimesh==4.6.13
+numpy==2.3.1
+
+# JSON schema validation
+jsonschema==4.24.0
+jsonschema-specifications==2025.4.1
+
+# Cairo and SVG support (lighter alternatives)
+cairocffi==1.7.1
+pillow==11.2.1
+
+# Required by trimesh and cairocffi
+cffi==1.17.1
+pycparser==2.22
+referencing==0.36.2
+rpds-py==0.25.1
+attrs==25.3.0
