@@ -1,3 +1,12 @@
+/**
+ * @file core.h
+ * @brief Defines the core data structures and APIs for the engine's ECS.
+ *
+ * This file contains the foundational types, component definitions, and the
+ * main World struct that drives the engine's simulation. It is the central
+ * hub for all gameplay-related data.
+ */
+
 #ifndef CORE_H
 #define CORE_H
 
@@ -12,24 +21,26 @@ struct GpuResources;
 // CORE TYPES
 // ============================================================================
 
+/** @brief A 3D vector with float components. */
 typedef struct {
     float x, y, z;
 } Vector3;
 
+/** @brief A 2D vector with float components, typically for UV coordinates. */
 typedef struct {
     float u, v;
 } Vector2;
 
-// Quaternion for rotations
+/** @brief A quaternion for representing 3D rotations. */
 typedef struct {
     float x, y, z, w;
 } Quaternion;
 
-// Entity ID type
+/** @brief A unique identifier for an entity in the world. */
 typedef uint32_t EntityID;
-#define INVALID_ENTITY 0
+#define INVALID_ENTITY 0 /**< A reserved ID for an invalid or null entity. */
 
-// Component type flags (bitfield)
+/** @brief A bitmask representing the components attached to an entity. */
 typedef enum {
     COMPONENT_TRANSFORM  = 1 << 0,
     COMPONENT_PHYSICS    = 1 << 1, 
@@ -44,6 +55,7 @@ typedef enum {
 // COMPONENT DEFINITIONS (Pure Data)
 // ============================================================================
 
+/** @brief Defines an entity's position, rotation, and scale in the world. */
 struct Transform {
     Vector3 position;
     Quaternion rotation;
@@ -51,6 +63,7 @@ struct Transform {
     bool dirty;  // Needs matrix update
 };
 
+/** @brief Defines an entity's physical properties for simulation. */
 struct Physics {
     Vector3 velocity;
     Vector3 acceleration;
@@ -59,6 +72,7 @@ struct Physics {
     bool kinematic;  // Not affected by forces
 };
 
+/** @brief Defines an entity's collision shape and properties. */
 struct Collision {
     enum {
         COLLISION_SPHERE,
@@ -77,6 +91,7 @@ struct Collision {
     uint32_t last_check_frame;  // For temporal optimization
 };
 
+/** @brief Defines the state and behavior for an AI-controlled entity. */
 struct AI {
     enum {
         AI_STATE_IDLE,
@@ -96,20 +111,23 @@ struct AI {
     float last_update;
 };
 
+/** @brief Defines the data needed to render an entity. */
 struct Renderable {
-    struct GpuResources* gpu_resources;  // PIMPL: Opaque pointer to implementation
-    uint32_t index_count;                // Number of indices to draw
-    bool visible;
-    float lod_distance;
-    uint8_t lod_level;
+    struct GpuResources* gpu_resources;  /**< Opaque pointer to GPU-specific resources. */
+    uint32_t index_count;                /**< Number of indices to draw. */
+    bool visible;                        /**< Whether the entity should be rendered. */
+    float lod_distance;                  /**< Distance at which to switch LOD levels. */
+    uint8_t lod_level;                   /**< The current level of detail. */
 };
 
+/** @brief Defines data specific to a player-controlled entity. */
 struct Player {
     float throttle;
     float afterburner_energy;
     bool controls_enabled;
 };
 
+/** @brief Defines a camera for viewing the world. */
 struct Camera {
     // Position and orientation
     Vector3 position;
@@ -119,8 +137,8 @@ struct Camera {
     // Projection parameters
     float fov;           // Field of view in degrees
     float aspect_ratio;  // Width/height ratio
-    float near_plane;    // Near clipping plane (0.1f)
-    float far_plane;     // Far clipping plane (1000.0f)
+    float near_plane;    // Near clipping plane
+    float far_plane;     // Far clipping plane
     
     // Cached matrices (updated when camera changes)
     float view_matrix[16];
@@ -143,10 +161,6 @@ struct Camera {
     Vector3 follow_offset;
     float follow_smoothing;
     
-    // Movement properties
-    Vector3 velocity;
-    float speed;
-    float sensitivity;
     bool is_active;
 };
 
@@ -156,6 +170,7 @@ struct Camera {
 
 #define MAX_ENTITIES 4096
 
+/** @brief Represents an object in the game world. */
 struct Entity {
     EntityID id;
     uint32_t component_mask;
@@ -174,8 +189,8 @@ struct Entity {
 // COMPONENT POOLS
 // ============================================================================
 
+/** @brief Contains pre-allocated pools for all component types. */
 struct ComponentPools {
-    // Preallocated component arrays
     struct Transform transforms[MAX_ENTITIES];
     struct Physics physics[MAX_ENTITIES];
     struct Collision collisions[MAX_ENTITIES];
@@ -184,7 +199,6 @@ struct ComponentPools {
     struct Player players[MAX_ENTITIES];
     struct Camera cameras[MAX_ENTITIES];
     
-    // Free list management
     uint32_t transform_count;
     uint32_t physics_count;
     uint32_t collision_count;
@@ -198,6 +212,7 @@ struct ComponentPools {
 // WORLD STATE
 // ============================================================================
 
+/** @brief Represents the entire state of the game world. */
 struct World {
     struct Entity entities[MAX_ENTITIES];
     uint32_t entity_count;
@@ -205,10 +220,8 @@ struct World {
     
     struct ComponentPools components;
     
-    // Active camera tracking
     EntityID active_camera_entity;
     
-    // Frame timing
     uint32_t frame_number;
     float delta_time;
     float total_time;
@@ -248,6 +261,12 @@ EntityID world_get_active_camera(struct World* world);
 void camera_update_matrices(struct Camera* camera);
 bool switch_to_camera(struct World* world, int camera_index);
 void update_camera_aspect_ratio(struct World* world, float aspect_ratio);
+
+/**
+ * @brief Extracts the six planes of the camera's view frustum.
+ * @param camera The camera to extract the frustum from.
+ * @param frustum_planes A 2D array to store the six plane equations (Ax + By + Cz + D = 0).
+ */
 void camera_extract_frustum_planes(const struct Camera* camera, float frustum_planes[6][4]);
 
 // Utility functions
