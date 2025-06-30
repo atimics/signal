@@ -1,48 +1,10 @@
 #include "sokol_gfx.h"
 #include "assets.h"
+#include "render_gpu.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-
-// PIMPL Implementation: Define the opaque GpuResources struct here
-// This is only visible in this compilation unit
-struct GpuResources {
-    sg_buffer vbuf;    // Vertex buffer
-    sg_buffer ibuf;    // Index buffer  
-    sg_image tex;      // Texture
-};
-
-// PIMPL Helper Functions
-static struct GpuResources* gpu_resources_create(void);
-static void gpu_resources_destroy(struct GpuResources* resources) __attribute__((unused));
-
-static struct GpuResources* gpu_resources_create(void) {
-    struct GpuResources* resources = malloc(sizeof(struct GpuResources));
-    if (resources) {
-        // Initialize with invalid handles
-        resources->vbuf.id = SG_INVALID_ID;
-        resources->ibuf.id = SG_INVALID_ID;
-        resources->tex.id = SG_INVALID_ID;
-    }
-    return resources;
-}
-
-static void gpu_resources_destroy(struct GpuResources* resources) {
-    if (resources) {
-        // Destroy Sokol resources if they're valid
-        if (resources->vbuf.id != SG_INVALID_ID) {
-            sg_destroy_buffer(resources->vbuf);
-        }
-        if (resources->ibuf.id != SG_INVALID_ID) {
-            sg_destroy_buffer(resources->ibuf);
-        }
-        if (resources->tex.id != SG_INVALID_ID) {
-            sg_destroy_image(resources->tex);
-        }
-        free(resources);
-    }
-}
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -1170,9 +1132,9 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
             return false;
         }
         
-        // Use existing GPU resources - direct assignment since we're in the same file
-        renderable->gpu_resources->vbuf = mesh->sg_vertex_buffer;
-        renderable->gpu_resources->ibuf = mesh->sg_index_buffer;
+        // Use existing GPU resources through PIMPL interface
+        gpu_resources_set_vertex_buffer(renderable->gpu_resources, mesh->sg_vertex_buffer);
+        gpu_resources_set_index_buffer(renderable->gpu_resources, mesh->sg_index_buffer);
         renderable->index_count = mesh->index_count;
         renderable->visible = true;
         renderable->lod_distance = 100.0f;  // Default LOD distance
@@ -1183,10 +1145,11 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
         snprintf(texture_name, sizeof(texture_name), "%s_texture", mesh_name);
         Texture* texture = assets_get_texture(registry, texture_name);
         if (texture && texture->loaded) {
-            renderable->gpu_resources->tex = texture->sg_image;
+            gpu_resources_set_texture(renderable->gpu_resources, texture->sg_image);
         } else {
             // Use invalid texture handle - shader should handle this
-            renderable->gpu_resources->tex.id = SG_INVALID_ID;
+            sg_image invalid_tex = {SG_INVALID_ID};
+            gpu_resources_set_texture(renderable->gpu_resources, invalid_tex);
         }
         
         printf("✅ Created Renderable from mesh '%s' (%d indices)\n", mesh_name, mesh->index_count);

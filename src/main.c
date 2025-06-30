@@ -31,6 +31,7 @@ typedef int nk_bool;
 #include "core.h"
 #include "systems.h"
 #include "render.h"
+#include "render_gpu.h"
 #include "data.h"
 #include "assets.h"
 #include "ui.h"
