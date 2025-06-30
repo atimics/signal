@@ -155,6 +155,9 @@ const char* get_shader_path(const char* base_name, const char* stage); // stage:
 // Create GPU resources from loaded mesh data and populate Renderable component
 bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mesh_name, struct Renderable* renderable);
 
+// Upload mesh data to GPU and validate before buffer creation
+bool assets_upload_mesh_to_gpu(Mesh* mesh);
+
 // Create GPU texture from loaded texture data  
 sg_image assets_create_gpu_texture(AssetRegistry* registry, const char* texture_name);
 
