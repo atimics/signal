@@ -276,9 +276,4 @@ typedef struct {
     float padding;           // Padding to 48 bytes total
 } VertexEnhanced;
 
-// Asset registry constants
-#define MAX_MESHES 32
-#define MAX_TEXTURES 32
-#define MAX_MATERIALS 32
-
 #endif // ASSETS_H
