@@ -149,7 +149,7 @@ TEST_MATH_TARGET = $(BUILD_DIR)/cgame_tests_math
 
 # Phase 2 & 3: Full Integration Tests (With Sokol and engine dependencies)
 TEST_FULL_SRC = tests/test_runner.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/core_math.c tests/vendor/unity.c
-ENGINE_SRC_FOR_TEST = src/assets.c src/render_mesh.c src/render_gpu.c src/gpu_resources.c
+ENGINE_SRC_FOR_TEST = src/assets.c src/render_mesh.c src/gpu_resources.c
 TEST_FULL_TARGET = $(BUILD_DIR)/cgame_tests_full
 
 # Default test target - run Phase 1 (stable math tests)
