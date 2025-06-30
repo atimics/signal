@@ -5,9 +5,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// Forward declarations for sokol types - full definitions in sokol_gfx.h
-struct sg_buffer;
-struct sg_image;
+// Sokol types (matching the actual definitions) - only if not already defined
+#ifndef SOKOL_GFX_INCLUDED
+typedef struct { uint32_t id; } sg_buffer;
+typedef struct { uint32_t id; } sg_image;
+#endif
 
 // ============================================================================
 // CORE TYPES
@@ -98,9 +100,9 @@ struct AI {
 };
 
 struct Renderable {
-    struct sg_buffer vbuf;        // Vertex buffer handle
-    struct sg_buffer ibuf;        // Index buffer handle 
-    struct sg_image tex;          // Texture handle
+    sg_buffer vbuf;        // Vertex buffer handle
+    sg_buffer ibuf;        // Index buffer handle 
+    sg_image tex;          // Texture handle
     uint32_t index_count;  // Number of indices to draw
     bool visible;
     float lod_distance;

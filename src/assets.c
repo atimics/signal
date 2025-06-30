@@ -254,6 +254,7 @@ bool load_compiled_mesh(AssetRegistry* registry, const char* filename, const cha
             .label = mesh->name
         });
 
+        mesh->loaded = true;  // Mark as successfully loaded
         registry->mesh_count++;
         return true;
     }
