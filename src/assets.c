@@ -1345,6 +1345,30 @@ gpu_image_t assets_create_default_texture(void) {
 }
 
 // ============================================================================
+// ACCESSOR FUNCTIONS FOR TESTS (Task 4: PIMPL compliance)
+// ============================================================================
+
+#ifdef CGAME_TESTING
+void mesh_get_gpu_buffers(const Mesh* mesh, sg_buffer* out_vbuf, sg_buffer* out_ibuf) {
+    if (mesh && mesh->gpu_resources && out_vbuf && out_ibuf) {
+        *out_vbuf = mesh->gpu_resources->sg_vertex_buffer;
+        *out_ibuf = mesh->gpu_resources->sg_index_buffer;
+    } else {
+        if (out_vbuf) *out_vbuf = (sg_buffer){SG_INVALID_ID};
+        if (out_ibuf) *out_ibuf = (sg_buffer){SG_INVALID_ID};
+    }
+}
+
+void texture_get_gpu_image(const Texture* texture, sg_image* out_image) {
+    if (texture && texture->gpu_resources && out_image) {
+        *out_image = texture->gpu_resources->sg_image;
+    } else {
+        if (out_image) *out_image = (sg_image){SG_INVALID_ID};
+    }
+}
+#endif
+
+// ============================================================================
 // GPU RESOURCE INITIALIZATION FUNCTIONS
 // ============================================================================
 
