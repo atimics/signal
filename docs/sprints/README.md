@@ -1,35 +1,26 @@
-# Sprints
+# CGame Sprint Backlog
 
-This directory contains the documentation for all development sprints, both active and archived.
+This document outlines the planned and active development sprints for the CGame engine. It serves as a high-level roadmap for future work.
 
-## Active Sprints
+## Active Sprint
 
-### [Sprint 06: Cross-Platform Compilation](./06_cross_platform_compilation.md)
-- **Goal:** Establish a CI pipeline using GitHub Actions to automatically build the project for macOS, Linux, and Windows.
-- **Status:** Planned.
+### [Sprint 09: Texture System Implementation](./sprint_plans/09_texture_system.md)
+-   **Goal**: Implement a complete texture loading and GPU binding system, enabling meshes to display with proper textures instead of solid colors.
+-   **Status**: In Progress
 
-### [Sprint 05: UI Integration with Nuklear](./05_ui_integration.md)
-- **Goal:** Integrate Nuklear to create a flexible UI system, including a HUD and debug panels.
-- **Status:** Planned.
+## Feature Backlog
 
-## Archived Sprints
+### [Sprint 10: PBR Materials & Advanced Lighting](./sprint_plans/10_pbr_materials_research.md)
+-   **Goal**: Implement Physically Based Rendering (PBR) materials with proper lighting calculations, enabling realistic material appearance with metallic, roughness, and normal mapping support.
 
-### [Sprint 04: Sokol API Transition](./04_sokol_transition.md)
-- **Goal:** Complete the transition from the legacy SDL backend to the modern, cross-platform Sokol graphics API.
-- **Review:** [Updated Final Review](./04_sokol_transition_final_review_updated.md)
-- **Status:** Completed. The application now runs on the Sokol backend.
+### [Sprint 11: Advanced Lighting & Shadow Mapping](./sprint_plans/11_advanced_lighting_research.md)
+-   **Goal**: Implement advanced lighting techniques including shadow mapping, point lights, spot lights, and environmental lighting to create realistic and dynamic lighting scenarios.
 
-### [Sprint 03: Texturing System Overhaul](./archives/03_texturing_system.md)
-- **Goal:** Transform the procedural gradient texture system into a professional, artist-friendly texturing pipeline.
-- **Review:** [PBR Pipeline & Renderer Refactoring Review](./archives/03_pbr_pipeline_review.md)
-- **Status:** Completed. The rendering pipeline was modularized and a PBR-like material system was implemented.
+### [Sprint 12: Decal System](./sprint_plans/12_decal_system_research.md)
+-   **Goal**: Implement a decal system for dynamic surface details like bullet holes, scorch marks, and projected textures.
 
-### [Sprint 02: Modular Camera System](./archives/02_camera_system.md)
-- **Goal:** Refactor the rendering pipeline to support a flexible, component-based camera system.
-- **Review:** [Final Review](./archives/02_camera_system_review.md)
-- **Status:** Completed. The engine now supports multiple, switchable cameras.
+### [Sprint 13: UI Finalization & Engine Polish](./sprint_plans/13_ui_integration_research.md)
+-   **Goal**: Finalize the UI system by building out a comprehensive suite of debug and development tools using Nuklear.
 
-### [Sprint 01: First Contact](./archives/01_first_contact.md)
-- **Goal:** Establish the foundational elements of the game engine, focusing on core data structures, a basic ECS, and rudimentary 3D rendering with SDL.
-- **Review:** [Final Review](./archives/01_first_contact_review.md)
-- **Status:** Completed. The core engine architecture was established.
+### [Sprint 14: Asynchronous AI System](./sprint_plans/14_async_ai_research.md)
+-   **Goal**: Integrate the `gemma.cpp` inference engine using an asynchronous, multi-threaded job system to prevent blocking the main render loop.
