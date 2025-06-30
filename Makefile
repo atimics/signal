@@ -167,3 +167,12 @@ test_sprint_10_5_task_2: | $(BUILD_DIR)
 	@echo "✅ Sprint 10.5 Task 2 test complete"
 
 .PHONY: test_sprint_10_5_task_2
+
+# Sprint 10.5 Task 3: Test GPU resource validation
+test_sprint_10_5_task_3: | $(BUILD_DIR)
+	@echo "🧪 Building and running Sprint 10.5 Task 3 test (standalone)..."
+	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_3_standalone tests/sprint_10_5/test_task_3_standalone.c
+	./$(BUILD_DIR)/test_task_3_standalone
+	@echo "✅ Sprint 10.5 Task 3 test complete"
+
+.PHONY: test_sprint_10_5_task_3
