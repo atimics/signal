@@ -477,3 +477,11 @@ void performance_set_warning_thresholds(float frame_time_ms, size_t memory_mb) {
     printf("⚡ Performance thresholds updated: %.1fms frame time, %zuMB memory\n",
            frame_time_ms, memory_mb);
 }
+
+void performance_system_update(struct World* world, struct RenderConfig* render_config, float delta_time) {
+    (void)world;      // Unused
+    (void)delta_time; // Unused
+    
+    // Render performance overlay if enabled
+    performance_render_overlay(render_config);
+}

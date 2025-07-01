@@ -15,6 +15,7 @@
 #include "system/ai.h"
 #include "system/camera.h"
 #include "system/lod.h"
+#include "system/performance.h"
 
 // Global asset and data registries
 static AssetRegistry g_asset_registry;
