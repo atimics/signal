@@ -138,3 +138,9 @@ collision_radius=1.0
 kinematic=true
 mesh_name=logo_cube
 material_name=logo_glow
+
+template: scene_node
+description=Minimal scene entity for utility purposes
+has_transform=true
+mass=1.0
+kinematic=true

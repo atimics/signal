@@ -5,6 +5,7 @@
 #include "../core.h"
 #include "../render.h"
 #include "../system/material.h"
+#include "../sokol_app.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -79,6 +80,23 @@ void racing_scene_update(struct World* world, RenderConfig* render_config, float
     (void)render_config;
 }
 
+static bool racing_scene_input(struct World* world, SceneStateManager* state, const void* event) {
+    (void)world; // Unused parameter
+    const sapp_event* ev = (const sapp_event*)event;
+    
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN)
+    {
+        if (ev->key_code == SAPP_KEYCODE_ESCAPE)
+        {
+            printf("🏁 Racing scene: ESC pressed, returning to scene selector\n");
+            scene_state_request_transition(state, "scene_selector");
+            return true; // Event handled
+        }
+    }
+    
+    return false; // Event not handled
+}
+
 void racing_scene_cleanup(struct World* world, RenderConfig* render_config) {
     (void)world;
     (void)render_config;
@@ -90,3 +108,15 @@ void racing_scene_cleanup(struct World* world, RenderConfig* render_config) {
     
     printf("🏁 Racing scene cleanup complete\n");
 }
+
+// ============================================================================
+// RACING SCRIPT DEFINITION
+// ============================================================================
+
+const SceneScript racing_script = {
+    .scene_name = "racing",
+    .on_enter = NULL, // Will use data-driven initialization
+    .on_update = NULL, // Will use systems-based update
+    .on_exit = NULL, // Will use data-driven cleanup
+    .on_input = racing_scene_input
+};

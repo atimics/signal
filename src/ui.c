@@ -309,8 +309,9 @@ static void draw_logo_overlay(struct nk_context* ctx)
     if (nk_begin(ctx, "[Press ENTER to begin]", nk_rect(x, y, overlay_width, overlay_height),
                  NK_WINDOW_NO_INPUT | NK_WINDOW_BACKGROUND | NK_WINDOW_BORDER))
     {
-        nk_layout_row_dynamic(ctx, 30, 1);
-        nk_label(ctx, "[Press ENTER to begin]", NK_TEXT_CENTERED);
+        nk_layout_row_dynamic(ctx, 15, 1);
+        nk_label(ctx, "[Press ENTER for Scene Selector]", NK_TEXT_CENTERED);
+        nk_label(ctx, "[Press TAB from any scene]", NK_TEXT_CENTERED);
     }
     nk_end(ctx);
 }
@@ -342,16 +343,18 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
         const char* scenes[] = {
             "logo",
             "spaceport",
-            "racing_circuit", 
+            "racing", 
             "mesh_test",
-            "camera_test"
+            "camera_test",
+            "logo_test"
         };
         const char* scene_descriptions[] = {
             "Logo - System test and validation",
             "Spaceport - Classic space station demo",
             "Racing - High-speed ground-effect racing",
             "Mesh Test - 3D model validation",
-            "Camera Test - Multi-camera demonstration"
+            "Camera Test - Multi-camera demonstration",
+            "Logo Test - Additional logo testing"
         };
         int scene_count = sizeof(scenes) / sizeof(scenes[0]);
         
@@ -361,8 +364,8 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
             // Highlight current scene
             if (current_scene && strcmp(current_scene, scenes[i]) == 0)
             {
-                nk_style_push_color(ctx, &ctx->style.button.normal, nk_rgb(70, 120, 200));
-                nk_style_push_color(ctx, &ctx->style.button.hover, nk_rgb(80, 130, 210));
+                nk_style_push_color(ctx, &ctx->style.button.normal.data.color, nk_rgb(70, 120, 200));
+                nk_style_push_color(ctx, &ctx->style.button.hover.data.color, nk_rgb(80, 130, 210));
             }
             
             if (nk_button_label(ctx, scene_descriptions[i]))
@@ -473,21 +476,13 @@ bool ui_handle_event(const void* ev)
                 return true;  // UI captured this event
 
             case SAPP_KEYCODE_ESCAPE:
-                // Toggle scene selector on ESC key
-                if (ui_state.show_scene_selector)
-                {
-                    ui_hide_scene_selector();
-                }
-                else
-                {
-                    ui_show_scene_selector();
-                }
-                return true;  // UI captured this event
+                // ESC key handling is now scene-specific
+                return false;  // Don't capture, let scene handle it
 
             case SAPP_KEYCODE_TAB:
-                // Show scene selector on TAB key
-                ui_show_scene_selector();
-                return true;  // UI captured this event
+                // TAB key can still trigger scene selector from any scene
+                // Request transition to scene selector
+                return false;  // Let main game loop handle the transition
 
             default:
                 break;

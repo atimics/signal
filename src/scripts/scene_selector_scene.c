@@ -1,0 +1,108 @@
+/**
+ * @file scene_selector_scene.c
+ * @brief Scene selector scene script - UI-focused scene for navigation
+ */
+
+#include "../scene_script.h"
+#include "../sokol_app.h" 
+#include "../ui.h"
+#include <stdio.h>
+#include <string.h>
+
+// ============================================================================
+// SCENE SELECTOR LIFECYCLE
+// ============================================================================
+
+static void scene_selector_enter(struct World* world, SceneStateManager* state)
+{
+    (void)world; // Unused parameter
+    printf("🎬 Scene Selector: Entered scene selector\n");
+    
+    // Show the scene selector UI immediately
+    ui_show_scene_selector();
+    
+    // Set scene state to menu
+    scene_state_set(state, SCENE_STATE_MENU);
+    
+    // Enable UI visibility
+    ui_set_visible(true);
+}
+
+static void scene_selector_exit(struct World* world, SceneStateManager* state)
+{
+    (void)world; // Unused parameter
+    (void)state; // Unused parameter
+    printf("🎬 Scene Selector: Exiting scene selector\n");
+    
+    // Hide the scene selector UI
+    ui_hide_scene_selector();
+}
+
+static void scene_selector_update(struct World* world, SceneStateManager* state, float dt)
+{
+    (void)world; // Unused parameter
+    (void)dt; // Unused parameter
+    // Keep the scene selector UI open
+    if (!ui_is_scene_selector_visible())
+    {
+        ui_show_scene_selector();
+    }
+    
+    // Handle scene change requests from UI
+    if (ui_has_scene_change_request())
+    {
+        const char* requested_scene = ui_get_requested_scene();
+        
+        // Don't transition to ourselves
+        if (strcmp(requested_scene, "scene_selector") != 0)
+        {
+            printf("🎬 Scene Selector: Transitioning to %s\n", requested_scene);
+            scene_state_request_transition(state, requested_scene);
+            ui_clear_scene_change_request();
+        }
+        else
+        {
+            ui_clear_scene_change_request();
+        }
+    }
+}
+
+static bool scene_selector_handle_event(struct World* world, SceneStateManager* state, const void* event)
+{
+    (void)world; // Unused parameter
+    const sapp_event* ev = (const sapp_event*)event;
+    
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN)
+    {
+        switch (ev->key_code)
+        {
+            case SAPP_KEYCODE_ESCAPE:
+                // ESC from scene selector doesn't handle the event, allowing main to exit the app
+                return false;
+                
+            case SAPP_KEYCODE_ENTER:
+            case SAPP_KEYCODE_KP_ENTER:
+                // ENTER can also be used to close if no selection
+                printf("🎬 Scene Selector: ENTER pressed, returning to logo\n");
+                scene_state_request_transition(state, "logo");
+                return true;
+                
+            default:
+                break;
+        }
+    }
+    
+    return false; // Event not handled, pass to UI
+}
+
+// ============================================================================
+// SCENE SELECTOR SCRIPT DEFINITION
+// ============================================================================
+
+const SceneScript scene_selector_script = {
+    .scene_name = "scene_selector",
+    .on_enter = scene_selector_enter,
+    .on_exit = scene_selector_exit,
+    .on_update = scene_selector_update,
+    .on_input = scene_selector_handle_event
+};

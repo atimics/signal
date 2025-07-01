@@ -392,8 +392,22 @@ static void event(const sapp_event* ev)
         case SAPP_EVENTTYPE_KEY_DOWN:
             if (ev->key_code == SAPP_KEYCODE_ESCAPE)
             {
-                printf("⎋ Escape key pressed - exiting\n");
-                sapp_request_quit();
+                // Only exit the application if we're in the scene selector and ESC wasn't handled
+                if (strcmp(app_state.scene_state.current_scene_name, "scene_selector") == 0)
+                {
+                    printf("⎋ Escape key pressed in scene selector - exiting\n");
+                    sapp_request_quit();
+                }
+                // For other scenes, ESC is handled by scene scripts (return to scene selector)
+            }
+            // TAB key opens scene selector from any scene
+            else if (ev->key_code == SAPP_KEYCODE_TAB)
+            {
+                if (strcmp(app_state.scene_state.current_scene_name, "scene_selector") != 0)
+                {
+                    printf("🎬 TAB pressed - opening scene selector\n");
+                    scene_state_request_transition(&app_state.scene_state, "scene_selector");
+                }
             }
             // Toggle debug UI with tilde (~) key
             else if (ev->key_code == SAPP_KEYCODE_GRAVE_ACCENT)

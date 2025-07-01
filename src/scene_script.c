@@ -4,11 +4,14 @@
  */
 
 #include "scene_script.h"
+#include "sokol_app.h"
 #include <stdio.h>
 #include <string.h>
 
 // Forward declarations for scene scripts
 extern const SceneScript logo_script;
+extern const SceneScript scene_selector_script;
+extern const SceneScript racing_script;
 
 // ============================================================================
 // SCENE SCRIPT REGISTRY
@@ -16,6 +19,8 @@ extern const SceneScript logo_script;
 
 static const SceneScript* scene_scripts[] = {
     &logo_script,
+    &scene_selector_script,
+    &racing_script,
     // Add more scene scripts here as they are created
 };
 
@@ -76,6 +81,20 @@ bool scene_script_execute_input(const char* scene_name, struct World* world, Sce
     {
         return script->on_input(world, state, event);
     }
+    
+    // Default behavior for scenes without specific scripts: ESC returns to scene selector
+    const sapp_event* ev = (const sapp_event*)event;
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_ESCAPE)
+    {
+        // Don't handle ESC if we're already in the scene selector
+        if (strcmp(scene_name, "scene_selector") != 0)
+        {
+            printf("🎬 Default handler: ESC pressed in %s, returning to scene selector\n", scene_name);
+            scene_state_request_transition(state, "scene_selector");
+            return true; // Event handled
+        }
+    }
+    
     return false; // Event not handled
 }
 

@@ -5,6 +5,7 @@
 
 #include "../scene_script.h"
 #include "../sokol_app.h"
+#include "../ui.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -108,14 +109,21 @@ static void logo_on_exit(struct World* world, SceneStateManager* state)
 
 static bool logo_on_input(struct World* world, SceneStateManager* state, const void* event)
 {
+    (void)world; // Unused parameter
     const sapp_event* ev = (const sapp_event*)event;
     
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN)
     {
         if (ev->key_code == SAPP_KEYCODE_ENTER || ev->key_code == SAPP_KEYCODE_KP_ENTER)
         {
-            printf("🎬 Logo scene: ENTER pressed, transitioning to spaceport\n");
-            scene_transition_to("spaceport_alpha", world, state);
+            printf("🎬 Logo scene: ENTER pressed, transitioning to scene selector\n");
+            scene_state_request_transition(state, "scene_selector");
+            return true; // Event handled
+        }
+        else if (ev->key_code == SAPP_KEYCODE_ESCAPE)
+        {
+            printf("🎬 Logo scene: ESC pressed, transitioning to scene selector\n");
+            scene_state_request_transition(state, "scene_selector");
             return true; // Event handled
         }
     }
