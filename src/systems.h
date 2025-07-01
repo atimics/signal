@@ -17,6 +17,7 @@ struct DataRegistry;
 #include "system/lod.h"
 #include "system/performance.h"
 #include "system/memory.h"
+#include "system/material.h"
 
 // ============================================================================
 // ENUMS AND STRUCTS

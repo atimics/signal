@@ -17,6 +17,7 @@
 #include "system/lod.h"
 #include "system/performance.h"
 #include "system/memory.h"
+#include "system/material.h"
 
 // Global asset and data registries
 AssetRegistry g_asset_registry;
@@ -51,6 +52,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     load_scene_templates(&g_data_registry, "scenes/logo.txt");         // Gold standard baseline scene
     load_scene_templates(&g_data_registry, "scenes/mesh_test.txt");
     load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
+    load_scene_templates(&g_data_registry, "scenes/racing.txt");       // New racing circuit scene
     load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
 
     // Initialize memory management BEFORE loading assets
@@ -58,6 +60,9 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
         printf("❌ Failed to initialize memory system\n");
         return false;
     }
+
+    // Initialize material and lighting systems
+    material_system_init();
 
     // Initialize render system with asset registry FIRST
     if (!render_init(render_config, &g_asset_registry, 1200.0f, 800.0f))
@@ -138,6 +143,9 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
 void scheduler_destroy(struct SystemScheduler* scheduler, RenderConfig* config)
 {
     if (!scheduler) return;
+
+    // Shutdown our new systems
+    material_system_shutdown();
 
     if (config)
     {

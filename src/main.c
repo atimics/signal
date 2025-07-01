@@ -237,8 +237,8 @@ static void init(void)
 
     printf("🏗️ Loading scene...\n");
 
-    // Load logo scene directly - no loading screen needed
-    const char* scene_to_load = "logo";
+    // Load racing scene directly - high-speed ground-effect racing demo
+    const char* scene_to_load = "racing_circuit";
     strcpy(app_state.current_scene, scene_to_load);
     printf("ℹ️ Loading scene: %s\n", scene_to_load);
 
