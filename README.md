@@ -29,51 +29,6 @@ make clean && make && make run
 make test
 ```
 
-## 📚 Documentation Hub
+## 📚 Documentation
 
-For detailed information about the engine's architecture, development workflow, and creative vision, please see the main **[Documentation Hub](./docs/README.md)**. This is the primary entry point for all developers.
-
-### 🔄 Development Standards
-
-- **[Release & Branch Management](./docs/RELEASE_STANDARDS.md)** - Comprehensive standards for releases, branching, and quality gates
-- **[Contributing Guidelines](./CONTRIBUTING.md)** - How to contribute to the project
-- **[API Documentation](./docs/API_REFERENCE.md)** - Technical API reference (coming soon)
-
-## 🔧 Development Workflow
-
-This project follows strict development standards with automated CI/CD pipelines:
-
-### 🌳 Branch Strategy
-- `main` - Production-ready releases only
-- `develop` - Integration branch for features  
-- `feature/*` - Individual feature development
-
-### 🚀 Continuous Integration
-- **Build Pipeline**: Automated builds for macOS, Linux, and WebAssembly
-- **Test Suite**: Comprehensive unit and integration testing
-- **Release Pipeline**: Semantic versioning with automated GitHub releases
-- **Quality Gates**: Mandatory code review and manual verification
-
-### 📋 Pull Request Requirements
-All changes must go through pull requests with:
-- Automated testing on all platforms
-- Code review from maintainers
-- Manual verification checklist (for main branch)
-- Conventional commit format
-
-See [Repository Setup Guide](./.github/REPOSITORY_SETUP.md) for complete GitHub configuration.
-
-## 📈 Project Status
-
-This project is under active development.
-
-**Recent Accomplishments**:
-*   **Asset Pipeline Overhaul**: Migrated from a slow, text-based asset system to a high-performance, pre-compiled binary format.
-*   **Rendering Stabilization**: Resolved all critical rendering bugs, enabling the stable loading and display of textured 3D models.
-*   **UV Layout Pipeline**: Implemented a robust, data-driven asset pipeline that generates UV layout SVGs from mesh UVs, enabling artist-friendly texture workflow.
-*   **Vision Solidified**: Established a clear and compelling creative vision, "The Ghost Signal," to guide all future development.
-
-**Current Focus**:
-*   **Data-Driven Architecture**: Fully data-driven scene/entity/mesh/material/texture management with version control and artist-friendly workflows.
-
-See the [Active Sprint Guide](./docs/sprints/active/sprint_18_systems_refactor.md) for more details.
+For all technical documentation, development guides, and project management resources, please see the main **[Documentation Hub](./docs/README.md)**.

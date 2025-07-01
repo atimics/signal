@@ -1,70 +1,79 @@
 # CGame Engine Documentation
 
-**Last Updated**: June 30, 2025
+**Last Updated**: July 1, 2025
 
-Welcome to the CGame engine documentation. This directory contains comprehensive documentation for the engine's architecture, development process, and current status.
+Welcome to the CGame engine documentation. This is the central hub for all technical documentation, development guides, and project management resources.
 
-## 📋 Current Status
+## 🚀 Getting Started
 
-- **Current Sprint**: [Sprint 19: Performance Optimization & Polish](./sprints/active/sprint_19_performance_optimization.md)
-- **Project Status**: [CURRENT_STATUS.md](./CURRENT_STATUS.md)
-- **Asset Pipeline**: [ASSET_PIPELINE_VALIDATION.md](../ASSET_PIPELINE_VALIDATION.md) ✅ COMPLETE
+If you're new to the project, start here:
 
-## 🚀 Quick Start
+1.  **[Project Overview](../README.md)**: The main project `README.md` has instructions for building and running the engine.
+2.  **[Developer's Guide](./guides/GETTING_STARTED.md)**: A guide for setting up your development environment and contributing to the project.
+3.  **[Architecture Overview](./guides/Graphics_and_Asset_Architecture.md)**: A high-level overview of the engine's architecture.
 
-1. **For Developers**: See [CURRENT_STATUS.md](./CURRENT_STATUS.md) for the latest engine status
-2. **For Artists**: See [Asset Pipeline Guide](./guides/) for content creation workflow
-3. **For Contributors**: Check [active sprints](./sprints/active/) for current development focus
+## 📚 Project Index
 
-## 📚 Documentation Structure
+This section provides a curated index of the most relevant files and directories in the CGame project.
 
-### Core Documentation
-- **[CURRENT_STATUS.md](./CURRENT_STATUS.md)** - Real-time project status and current focus
-- **[STRATEGIC_PLAN.md](./STRATEGIC_PLAN.md)** - Long-term project roadmap and vision
-- **[ASSET_PIPELINE.md](./ASSET_PIPELINE.md)** - Complete asset pipeline documentation
+### Core Engine (`src/`)
 
-### Development
-- **[sprints/](./sprints/)** - Sprint planning and execution tracking
-  - [active/](./sprints/active/) - Currently running sprints
-  - [completed/](./sprints/completed/) - Completed sprint documentation
-  - [backlog/](./sprints/backlog/) - Planned future sprints
-- **[guides/](./guides/)** - Technical guides and tutorials
-- **[research/](./research/)** - Technical research and analysis
+-   **`main.c`**: The main entry point for the application.
+-   **`core.h` / `core.c`**: Core data structures (World, Entity, ECS).
+-   **`systems.h` / `systems.c`**: System scheduler and core gameplay systems.
+-   **`assets.h` / `assets.c`**: Asset loading and management.
+-   **`data.h` / `data.c`**: Game data loading (scenes, entities).
 
-### Archive
-- **[archive/](./archive/)** - Historical documentation and deprecated guides
+### Rendering (`src/`)
 
-## 🎯 Current Capabilities
+-   **`render.h`**: Top-level rendering header.
+-   **`render_camera.h` / `render_camera.c`**: 3D camera management.
+-   **`render_lighting.h` / `render_lighting.c`**: Lighting and shadow management.
+-   **`render_mesh.h` / `render_mesh.c`**: 3D mesh rendering.
 
-### ✅ Complete Systems
-- **Asset Pipeline**: UV-mapped mesh generation with SVG texture editing
-- **Engine Core**: ECS architecture with scene management
-- **Rendering**: 7 working meshes with proper UV textures
-- **Development Tools**: Web-based mesh viewer and asset validation
+### UI (`src/`)
 
-### 🔄 Active Development
-- **Performance Optimization**: LOD systems and memory optimization
-- **Developer Experience**: Hot-reload and profiling tools
-- **Production Polish**: Release configuration and documentation
+-   **`ui.h` / `ui.c`**: UI implementation using Nuklear.
 
-### 📋 Planned Features
-- **Gameplay Systems**: Physics, AI, player controls
-- **Audio System**: 3D spatial audio and music
-- **Advanced Rendering**: Shadows, lighting, post-processing
+### Sokol Headers (`src/`)
 
-## 📊 Key Metrics
+-   **`sokol_app.h`**: Window creation, input, and event loop.
+-   **`sokol_gfx.h`**: Core graphics API.
 
-- **Assets**: 7 meshes, all rendering with textures ✅
-- **Performance**: 60+ FPS stable in all test scenes ✅
-- **Memory**: Under 256MB usage target ✅
-- **Loading**: ~10x faster than OBJ parsing ✅
-- **File Size**: 40-50% reduction with binary format ✅
+### Documentation (`docs/`)
 
-## 🔗 Quick Links
+-   **`README.md`**: This file - the documentation hub.
+-   **`guides/`**: Detailed developer guides.
+-   **`sprints/`**: Sprint plans and history.
+-   **`research/`**: Technical research and analysis.
+-   **`archive/`**: Historical and deprecated documents.
 
-- **Build & Run**: See [README.md](../README.md) in project root
-- **Asset Creation**: [Asset Pipeline Validation](../ASSET_PIPELINE_VALIDATION.md)
-- **Mesh Viewer**: `make view-meshes` for web-based 3D preview
-- **Performance Testing**: `make test-performance`
+### Assets (`assets/`)
 
-For detailed technical information, see the [guides/](./guides/) directory.
+-   **`material_definitions.json`**: PBR material definitions.
+-   **`meshes/`**: Source 3D models (`.obj`) and metadata (`.json`).
+-   **`shaders/`**: GLSL and Metal shader source code.
+
+### Tools (`tools/`)
+
+-   **`build_pipeline.py`**: Main build script for asset compilation.
+-   **`compile_mesh.py`**: Mesh compiler (OBJ to COBJ).
+-   **`validate_metadata.py`**: Asset metadata validation script.
+
+### Root Directory
+
+-   **`Makefile`**: The main build script for the project.
+-   **`README.md`**: The main entry point for the project.
+-   **`CHANGELOG.md`**: A log of all notable changes.
+
+## 📈 Project Management
+
+- **[Current Status](./CURRENT_STATUS.md)** - Real-time project status and current focus.
+- **[Strategic Plan](./STRATEGIC_PLAN.md)** - Long-term project roadmap and vision.
+- **[Sprints](./sprints/)** - Sprint planning, history, and backlog.
+- **[Release Standards](./RELEASE_STANDARDS.md)** - Standards for releases, branching, and quality gates.
+
+## 🎨 Asset Pipeline
+
+- **[Asset Pipeline Overview](./ASSET_PIPELINE.md)** - Complete asset pipeline documentation.
+- **[Asset Pipeline Validation](../ASSET_PIPELINE_VALIDATION.md)** - Validation checklist for the asset pipeline.
