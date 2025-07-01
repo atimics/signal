@@ -89,8 +89,8 @@ static void logo_on_update(struct World* world, SceneStateManager* state, float 
     // Check if 8 seconds have passed for automatic transition (more time to see the effect)
     if (state->state_timer >= 8.0f)
     {
-        printf("🎬 Logo scene: 8 seconds elapsed, transitioning to spaceport\n");
-        scene_transition_to("spaceport_alpha", world, state);
+        printf("🎬 Logo scene: 8 seconds elapsed, transitioning to navigation menu\n");
+        scene_transition_to("navigation_menu", world, state);
     }
 }
 
@@ -116,14 +116,14 @@ static bool logo_on_input(struct World* world, SceneStateManager* state, const v
     {
         if (ev->key_code == SAPP_KEYCODE_ENTER || ev->key_code == SAPP_KEYCODE_KP_ENTER)
         {
-            printf("🎬 Logo scene: ENTER pressed, transitioning to scene selector\n");
-            scene_state_request_transition(state, "scene_selector");
+            printf("🎬 Logo scene: ENTER pressed, transitioning to navigation menu\n");
+            scene_state_request_transition(state, "navigation_menu");
             return true; // Event handled
         }
         else if (ev->key_code == SAPP_KEYCODE_ESCAPE)
         {
-            printf("🎬 Logo scene: ESC pressed, transitioning to scene selector\n");
-            scene_state_request_transition(state, "scene_selector");
+            printf("🎬 Logo scene: ESC pressed, transitioning to navigation menu\n");
+            scene_state_request_transition(state, "navigation_menu");
             return true; // Event handled
         }
     }

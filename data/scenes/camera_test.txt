@@ -1,8 +1,0 @@
-# Camera system test scene - improved positioning
-scene: camera_test
-    spawn: player_ship 0 0 0
-    spawn: chase_camera 10 25 35
-    spawn: security_camera -40 35 -40
-    spawn: control_tower -20 0 -20
-    spawn: sun 0 0 30
-    spawn: ai_ship 20 0 20

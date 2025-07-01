@@ -1,0 +1,36 @@
+# Derelict Beta - Aethelian Science Vessel
+# Deep exploration of a research ship with experimental technology
+
+scene: derelict_beta
+description=Exploration of an Aethelian science vessel with dangerous experimental systems
+
+# Science vessel structure (more modular than Alpha)
+spawn: control_tower 0 0 0           # Central research bay
+spawn: control_tower -40 20 0        # Upper lab module
+spawn: control_tower 40 -20 0        # Lower lab module
+spawn: control_tower 0 0 -60         # Forward sensor array
+spawn: control_tower 0 0 60          # Aft engine section
+
+# Experimental equipment platforms
+spawn: landing_pad -20 0 -30
+spawn: landing_pad 20 0 -30
+spawn: landing_pad -20 0 30
+spawn: landing_pad 20 0 30
+
+# Debris with exotic materials
+spawn: wedge_ship_mk2 -15 15 -15     # Advanced wreck with Echo data
+spawn: wedge_ship 25 -15 25          # Standard wreck
+
+# Player ship at research position
+spawn: wedge_ship_mk2 0 -5 -40
+
+# Research exploration cameras
+spawn: cockpit_camera 0 -3 -38       # Close investigation view
+spawn: chase_camera 30 25 -20        # Research documentation angle
+spawn: security_camera -100 60 0     # Science vessel overview
+
+# Echo-Scribe AI patrol (drawn to research data)
+spawn: ai_ship 80 30 -80
+
+# Unstable star lighting (research vessel in stellar anomaly)
+spawn: sun 300 200 400               # Unstable star

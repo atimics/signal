@@ -1,0 +1,35 @@
+# The Graveyard - System Overview Scene
+# Wide view of the massive derelict field for FTL navigation planning
+
+scene: system_overview
+description=The Graveyard star system showing major derelict nodes for FTL navigation
+
+# Central star of The Graveyard system
+spawn: sun 0 0 0
+
+# Major Aethelian Derelicts as FTL navigation nodes
+# These are the massive ark-ships scattered across the system
+spawn: control_tower -800 200 -600   # Derelict Alpha - Aethelian Command Ship
+spawn: control_tower 1200 -300 800   # Derelict Beta - Science Vessel  
+spawn: control_tower -400 500 1000   # Derelict Gamma - Colony Ship
+spawn: control_tower 2000 100 -200   # Derelict Delta - Industrial Platform
+spawn: control_tower -1500 -400 400  # Derelict Epsilon - Military Destroyer
+
+# Smaller wreckage and debris clusters (navigation hazards)
+spawn: landing_pad -200 50 -300
+spawn: landing_pad 600 -150 200
+spawn: landing_pad -900 100 600
+spawn: landing_pad 400 250 -800
+
+# Player's ship at current location
+spawn: wedge_ship_mk2 0 10 50
+
+# Navigation cameras for FTL planning
+spawn: security_camera 0 500 800     # System overview camera
+spawn: chase_camera 50 100 150       # Medium range camera
+spawn: cockpit_camera 0 12 52        # Cockpit view for navigation
+
+# Chrome-Baron patrol ships (potential threats)
+spawn: wedge_ship 300 80 -400
+spawn: wedge_ship -600 -120 200
+

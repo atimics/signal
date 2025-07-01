@@ -1,6 +1,0 @@
-# Test scene for inspecting meshes
-scene: mesh_test
-    spawn: control_tower -15 0 0
-    spawn: sun 0 0 0
-    spawn: wedge_ship 15 0 0
-    spawn: wedge_ship_mk2 30 0 0

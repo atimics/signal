@@ -592,7 +592,7 @@ static void load_available_scenes(void)
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
         if (strstr(entry->d_name, ".txt") && 
-            strcmp(entry->d_name, "scene_selector.txt") != 0) {  // Skip the selector itself
+            strcmp(entry->d_name, "navigation_menu.txt") != 0) {  // Skip the navigation menu itself
             ui_state.scene_count++;
         }
     }
@@ -611,7 +611,7 @@ static void load_available_scenes(void)
     int index = 0;
     while ((entry = readdir(dir)) != NULL && index < ui_state.scene_count) {
         if (strstr(entry->d_name, ".txt") && 
-            strcmp(entry->d_name, "scene_selector.txt") != 0) {
+            strcmp(entry->d_name, "navigation_menu.txt") != 0) {
             
             // Remove .txt extension for scene name
             char* scene_name = malloc(strlen(entry->d_name) + 1);
@@ -654,23 +654,23 @@ static void free_scene_list(void)
 
 static const char* get_scene_description(const char* scene_name)
 {
-    // Generate friendly descriptions for known scenes
+    // Generate lore-accurate descriptions for FTL navigation scenes
     if (strcmp(scene_name, "logo") == 0) {
-        return "Logo - System test and validation";
-    } else if (strcmp(scene_name, "spaceport") == 0) {
-        return "Spaceport - Classic space station demo";
-    } else if (strcmp(scene_name, "racing") == 0) {
-        return "Racing - High-speed ground-effect racing";
-    } else if (strcmp(scene_name, "mesh_test") == 0) {
-        return "Mesh Test - 3D model validation";
-    } else if (strcmp(scene_name, "camera_test") == 0) {
-        return "Camera Test - Multi-camera demonstration";
-    } else if (strcmp(scene_name, "logo_test") == 0) {
-        return "Logo Test - Additional logo testing";
+        return "System Boot - Core engine validation sequence";
+    } else if (strcmp(scene_name, "system_overview") == 0) {
+        return "System Overview - Sector-wide FTL navigation hub";
+    } else if (strcmp(scene_name, "slipstream_nav") == 0) {
+        return "Slipstream Navigation - FTL threadline planning testbed";
+    } else if (strcmp(scene_name, "derelict_alpha") == 0) {
+        return "Derelict Alpha - Ancient station excavation site";
+    } else if (strcmp(scene_name, "derelict_beta") == 0) {
+        return "Derelict Beta - Deep-space archaeological exploration";
+    } else if (strcmp(scene_name, "navigation_menu") == 0) {
+        return "Threadline Planner - Primary FTL navigation interface";
     } else {
         // Default description for unknown scenes
         static char default_desc[128];
-        snprintf(default_desc, sizeof(default_desc), "%s - Scene", scene_name);
+        snprintf(default_desc, sizeof(default_desc), "%s - Uncharted location", scene_name);
         return default_desc;
     }
 }

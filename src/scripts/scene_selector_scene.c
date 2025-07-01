@@ -1,6 +1,6 @@
 /**
  * @file scene_selector_scene.c
- * @brief Scene selector scene script - UI-focused scene for navigation
+ * @brief Navigation menu scene script - FTL route planning interface
  */
 
 #include "../scene_script.h"
@@ -10,15 +10,15 @@
 #include <string.h>
 
 // ============================================================================
-// SCENE SELECTOR LIFECYCLE
+// NAVIGATION MENU LIFECYCLE
 // ============================================================================
 
 static void scene_selector_enter(struct World* world, SceneStateManager* state)
 {
     (void)world; // Unused parameter
-    printf("🎬 Scene Selector: Entered scene selector\n");
+    printf("🧭 Navigation Menu: Entered FTL navigation interface\n");
     
-    // Show the scene selector UI immediately
+    // Show the navigation menu UI immediately
     ui_show_scene_selector();
     
     // Set scene state to menu
@@ -53,13 +53,13 @@ static void scene_selector_update(struct World* world, SceneStateManager* state,
     {
         const char* requested_scene = ui_get_requested_scene();
         
-        // Don't transition to ourselves
-        if (strcmp(requested_scene, "scene_selector") != 0)
-        {
-            printf("🎬 Scene Selector: Transitioning to %s\n", requested_scene);
-            scene_state_request_transition(state, requested_scene);
-            ui_clear_scene_change_request();
-        }
+    // Don't transition to ourselves
+    if (strcmp(requested_scene, "navigation_menu") != 0)
+    {
+        printf("🧭 Navigation Menu: Transitioning to %s\n", requested_scene);
+        scene_state_request_transition(state, requested_scene);
+        ui_clear_scene_change_request();
+    }
         else
         {
             ui_clear_scene_change_request();
@@ -100,7 +100,7 @@ static bool scene_selector_handle_event(struct World* world, SceneStateManager* 
 // ============================================================================
 
 const SceneScript scene_selector_script = {
-    .scene_name = "scene_selector",
+    .scene_name = "navigation_menu",
     .on_enter = scene_selector_enter,
     .on_exit = scene_selector_exit,
     .on_update = scene_selector_update,

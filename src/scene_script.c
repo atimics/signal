@@ -11,7 +11,7 @@
 // Forward declarations for scene scripts
 extern const SceneScript logo_script;
 extern const SceneScript scene_selector_script;
-extern const SceneScript racing_script;
+extern const SceneScript derelict_navigation_script;
 
 // ============================================================================
 // SCENE SCRIPT REGISTRY
@@ -20,7 +20,7 @@ extern const SceneScript racing_script;
 static const SceneScript* scene_scripts[] = {
     &logo_script,
     &scene_selector_script,
-    &racing_script,
+    &derelict_navigation_script,
     // Add more scene scripts here as they are created
 };
 
@@ -138,13 +138,20 @@ void scene_transition_to(const char* scene_name, struct World* world, SceneState
     scene_state_request_transition(state, scene_name);
     
     // Update scene state based on target scene
-    if (strcmp(scene_name, "spaceport_alpha") == 0 || strcmp(scene_name, "mesh_test") == 0)
+    if (strcmp(scene_name, "system_overview") == 0 || 
+        strcmp(scene_name, "slipstream_nav") == 0 ||
+        strcmp(scene_name, "derelict_alpha") == 0 ||
+        strcmp(scene_name, "derelict_beta") == 0)
     {
         scene_state_set(state, SCENE_STATE_GAME);
     }
     else if (strcmp(scene_name, "logo") == 0)
     {
         scene_state_set(state, SCENE_STATE_LOGO);
+    }
+    else if (strcmp(scene_name, "navigation_menu") == 0)
+    {
+        scene_state_set(state, SCENE_STATE_MENU);
     }
     else
     {
