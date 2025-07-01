@@ -112,9 +112,9 @@ EntityID entity_create(struct World* world)
     return id;
 }
 
-void entity_destroy(struct World* world, EntityID entity_id)
+bool entity_destroy(struct World* world, EntityID entity_id)
 {
-    if (!world || entity_id == INVALID_ENTITY) return;
+    if (!world || entity_id == INVALID_ENTITY) return false;
 
     // Find entity
     for (uint32_t i = 0; i < world->entity_count; i++)
@@ -159,9 +159,10 @@ void entity_destroy(struct World* world, EntityID entity_id)
                 world->entities[i] = world->entities[world->entity_count - 1];
             }
             world->entity_count--;
-            return;
+            return true;
         }
     }
+    return false;
 }
 
 struct Entity* entity_get(struct World* world, EntityID entity_id)
