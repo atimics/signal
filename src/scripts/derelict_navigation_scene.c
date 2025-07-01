@@ -451,8 +451,8 @@ void derelict_navigation_cleanup(struct World* world, SceneStateManager* state) 
     navigation_active = false;
     derelict_nav_initialized = false;
     
-    // Shutdown gamepad system
-    gamepad_shutdown();
+    // Shutdown input system
+    input_shutdown();
     
     printf("🧲 Derelict navigation cleanup complete\n");
 }
