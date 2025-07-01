@@ -286,14 +286,21 @@ static void frame(void)
         const char* next_scene = scene_state_get_next_scene(&app_state.scene_state);
         printf("🎬 Executing scene transition: %s -> %s\n", app_state.scene_state.current_scene_name, next_scene);
         
-        // TODO: Add proper scene loading/unloading here
-        // For now, just update the current scene name and clear transition
+        // Clear current scene
+        world_clear(&app_state.world);
+        
+        // Load new scene
+        load_scene_by_name(&app_state.world, next_scene, &app_state.player_id);
+        
+        // Update scene state
         strcpy(app_state.scene_state.current_scene_name, next_scene);
         strcpy(app_state.current_scene, next_scene);
         app_state.scene_state.transition_pending = false;
         
         // Execute enter script for new scene
         scene_script_execute_enter(next_scene, &app_state.world, &app_state.scene_state);
+        
+        printf("🎬 Scene transition completed: now in %s\n", next_scene);
     }
 
     // Update world and systems

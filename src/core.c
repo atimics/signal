@@ -32,6 +32,22 @@ void world_destroy(struct World* world)
            world->frame_number);
 }
 
+void world_clear(struct World* world)
+{
+    if (!world) return;
+    
+    printf("🌍 Clearing world - removing %d entities\n", world->entity_count);
+    
+    // Clear all entities
+    world->entity_count = 0;
+    world->next_entity_id = 1; // Reset ID counter
+    
+    // Clear entity array
+    memset(world->entities, 0, sizeof(world->entities));
+    
+    printf("🌍 World cleared\n");
+}
+
 void world_update(struct World* world, float delta_time)
 {
     if (!world) return;

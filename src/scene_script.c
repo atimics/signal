@@ -109,7 +109,7 @@ void scene_transition_to(const char* scene_name, struct World* world, SceneState
     scene_state_request_transition(state, scene_name);
     
     // Update scene state based on target scene
-    if (strcmp(scene_name, "spaceport") == 0 || strcmp(scene_name, "mesh_test") == 0)
+    if (strcmp(scene_name, "spaceport_alpha") == 0 || strcmp(scene_name, "mesh_test") == 0)
     {
         scene_state_set(state, SCENE_STATE_GAME);
     }

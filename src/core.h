@@ -279,6 +279,7 @@ struct World
 // World management
 bool world_init(struct World* world);
 void world_destroy(struct World* world);
+void world_clear(struct World* world);
 void world_update(struct World* world, float delta_time);
 
 // Entity management

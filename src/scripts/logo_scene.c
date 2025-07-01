@@ -62,7 +62,7 @@ static void logo_on_update(struct World* world, SceneStateManager* state, float 
     if (state->state_timer >= 3.0f)
     {
         printf("🎬 Logo scene: 3 seconds elapsed, transitioning to spaceport\n");
-        scene_transition_to("spaceport", world, state);
+        scene_transition_to("spaceport_alpha", world, state);
     }
 }
 
