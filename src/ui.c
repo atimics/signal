@@ -21,7 +21,7 @@
 
 static UIState ui_state = { 0 };
 static bool ui_visible = true;
-static bool debug_ui_visible = true;
+static bool debug_ui_visible = false;  // Start hidden
 
 void ui_init(void)
 {
