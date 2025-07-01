@@ -28,8 +28,8 @@ void ui_init(void)
     snk_setup(&(snk_desc_t){ 0 });
 
     // Initialize UI state
-    ui_state.show_debug_panel = true;
-    ui_state.show_hud = true;
+    ui_state.show_debug_panel = false;  // Start hidden
+    ui_state.show_hud = false;          // Start hidden
     ui_state.show_wireframe = false;
     ui_state.camera_speed = 10.0f;
     ui_state.time_scale = 1.0f;

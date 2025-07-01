@@ -373,7 +373,8 @@ static void event(const sapp_event* ev)
                 bool current_visible = scene_state_is_debug_ui_visible(&app_state.scene_state);
                 scene_state_set_debug_ui_visible(&app_state.scene_state, !current_visible);
                 ui_set_debug_visible(!current_visible);  // Synchronize with UI system
-                printf("🔧 Debug UI: %s\n", !current_visible ? "ON" : "OFF");
+                ui_toggle_hud();  // Also toggle the HUD
+                printf("🔧 Debug UI & HUD: %s\n", !current_visible ? "ON" : "OFF");
             }
             // Camera switching with number keys (legacy support)
             else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
