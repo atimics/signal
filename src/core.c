@@ -42,6 +42,15 @@ void world_destroy(struct World* world)
 
     printf("🌍 World destroyed - processed %d entities over %d frames\n", world->entity_count,
            world->frame_number);
+    
+    // Free entity array
+    if (world->entities) {
+        free(world->entities);
+        world->entities = NULL;
+    }
+    
+    world->entity_count = 0;
+    world->max_entities = 0;
 }
 
 void world_clear(struct World* world)
