@@ -155,7 +155,7 @@ wasm: assets-wasm | $(BUILD_DIR)
 	emcc -std=c99 -O2 -Isrc \
 		-DSOKOL_GLES3 \
 		-DSOKOL_IMPL \
-		-DNUKLEAR_IMPLEMENTATION \
+		
 		-DEMSCRIPTEN \
 		-Wno-unused-function \
 		-Wno-unused-variable \

@@ -1,3 +1,6 @@
+#define NK_IMPLEMENTATION
+#define SOKOL_NUKLEAR_IMPL
+
 #include "graphics_api.h"
 
 // Include standard headers before Nuklear
