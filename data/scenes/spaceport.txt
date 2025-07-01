@@ -4,10 +4,18 @@
 scene: spaceport_alpha
 description=Bustling spaceport on planet surface with shuttling ships
 
+# Planet surface as base
+spawn: planet_surface 0 -5 0
+
 # Central sun for lighting
 spawn: sun 200 150 300
 
 # Landing pads and control structures in organized layout
+spawn: landing_pad -12 0 -12
+spawn: landing_pad 12 0 -12
+spawn: landing_pad -12 0 12
+spawn: landing_pad 12 0 12
+
 spawn: control_tower -20 0 -20
 spawn: control_tower 20 0 -20
 spawn: control_tower -20 0 20

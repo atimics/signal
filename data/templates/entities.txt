@@ -109,7 +109,17 @@ has_renderable=true
 mass=1000.0
 collision_radius=8.0
 kinematic=true
-mesh_name=Control Tower
+mesh_name=Landing Pad
+
+template: planet_surface
+description=Large planetary surface
+has_transform=true
+has_collision=true
+has_renderable=true
+mass=10000.0
+collision_radius=50.0
+kinematic=true
+mesh_name=Planet Surface
 
 template: logo_cube
 description=Gold standard reference cube for testing and validation
