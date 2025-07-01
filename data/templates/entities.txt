@@ -9,7 +9,7 @@ has_renderable=true
 mass=1000.0
 collision_radius=3.0
 kinematic=true
-mesh_name=Control_Tower
+mesh_name=control_tower
 
 template: sun
 description=Central star
@@ -19,7 +19,7 @@ has_renderable=true
 mass=1000.0
 collision_radius=25.0
 kinematic=true
-mesh_name=Sun
+mesh_name=sun
 
 template: wedge_ship
 description=Standard wedge-shaped spacecraft
@@ -30,7 +30,7 @@ has_renderable=true
 mass=100.0
 collision_radius=5.0
 drag=0.99
-mesh_name=Wedge_Ship
+mesh_name=wedge_ship
 
 template: wedge_ship_mk2
 description=Advanced wedge-shaped spacecraft  
@@ -42,7 +42,7 @@ has_player=true
 mass=90.0
 collision_radius=4.5
 drag=0.98
-mesh_name=Wedge_Ship_Mk2
+mesh_name=wedge_ship_mk2
 
 template: player_ship
 description=Basic player-controlled spacecraft
@@ -54,7 +54,7 @@ has_player=true
 has_camera=true
 mass=80.0
 collision_radius=4.0
-mesh_name=Wedge_Ship_Mk2
+mesh_name=wedge_ship_mk2
 
 # Camera Templates
 
@@ -99,7 +99,7 @@ has_renderable=true
 has_ai=true
 mass=100.0
 collision_radius=5.0
-mesh_name=Wedge_Ship
+mesh_name=wedge_ship
 
 template: landing_pad
 description=Spaceport landing platform
@@ -109,7 +109,7 @@ has_renderable=true
 mass=1000.0
 collision_radius=8.0
 kinematic=true
-mesh_name=Landing_Pad
+mesh_name=landing_pad
 
 template: planet_surface
 description=Large planetary surface
@@ -119,7 +119,7 @@ has_renderable=true
 mass=10000.0
 collision_radius=50.0
 kinematic=true
-mesh_name=Planet_Surface
+mesh_name=planet_surface
 
 template: logo_cube
 description=Gold standard reference cube for testing and validation
@@ -128,4 +128,4 @@ has_renderable=true
 mass=1.0
 collision_radius=1.0
 kinematic=true
-mesh_name=Logo_Cube
+mesh_name=logo_cube
