@@ -3,27 +3,5 @@
 # Contains only the logo cube and minimal camera setup
 
 scene: logo
-description=Gold standard reference scene with logo cube
-author=CGame Engine
-version=1.0
-
-# Camera setup for logo cube viewing
-camera:
-position=0.0,0.0,5.0
-target=0.0,0.0,0.0
-up=0.0,1.0,0.0
-fov=45.0
-near=0.1
-far=100.0
-
-# The gold standard logo cube - centered at origin
-entity: logo_cube_main
-template=logo_cube
-position=0.0,0.0,0.0
-rotation=0.0,0.0,0.0
-scale=1.0,1.0,1.0
-
-# Optional: Add a subtle rotation to make it more visually interesting
-# The cube will slowly rotate around Y-axis for dynamic testing
-entity: logo_cube_main
-rotation_speed=0.0,30.0,0.0
+    spawn: logo_cube 0 0 0
+    spawn: chase_camera 0 0 5

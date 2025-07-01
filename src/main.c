@@ -588,6 +588,13 @@ static void init(void)
     load_scene_by_name(&app_state.world, scene_to_load, &app_state.player_id);
     list_available_cameras(&app_state.world);
 
+    // Activate the first camera immediately for the logo scene
+    if (world_get_active_camera(&app_state.world) == INVALID_ENTITY)
+    {
+        switch_to_camera(&app_state.world, 0);  // Switch to first camera
+        printf("📹 Activated first camera for logo scene\n");
+    }
+
     // Hide all scene entities during loading screen (only show loading cube)
     loading_screen_hide_scene_entities(&app_state.world, app_state.loading_screen.cube_entity);
 
