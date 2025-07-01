@@ -43,6 +43,6 @@ This project is under active development.
 *   **Vision Solidified**: Established a clear and compelling creative vision, "The Ghost Signal," to guide all future development.
 
 **Current Focus**:
-*   **Sprint 13**: Implementing foundational performance optimizations (View Frustum Culling) and paying down remaining technical debt by enforcing a universal code style.
+*   **Sprint 18**: A critical refactoring of the engine's core systems to improve modularity and enable future development.
 
-See the [Active Sprint Guide](./docs/sprints/active/sprint_13_optimization_and_style.md) for more details.
+See the [Active Sprint Guide](./docs/sprints/active/sprint_18_systems_refactor.md) for more details.

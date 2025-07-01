@@ -2,43 +2,70 @@
 
 **Author**: Gemini
 **Date**: June 30, 2025
-**Status**: Proposed
+**Status**: Active
 
-## 1. Goals
+## 1. Overview
 
-This sprint focuses on refactoring the `systems.c` file to improve modularity, reduce coupling, and enhance testability. The primary goals are:
+This sprint focuses on a critical refactoring of the engine's system architecture. The current implementation in `systems.c` is monolithic and tightly coupled, hindering future development and testing. This refactoring will improve modularity, reduce dependencies, and establish a clean, extensible foundation for all engine systems.
 
-*   Separate each system into its own file.
-*   Introduce dependency injection for registries.
-*   Decouple system initialization.
-*   Establish a clear system interface.
+**This is a pure refactoring sprint. No new features will be introduced.** The primary outcome is a more maintainable and robust codebase.
 
-## 2. Scope
+**Supporting Research**: For a detailed analysis of the problems and the justification for this refactoring, please review the full research document:
+[R17: Refactoring `systems.c`](../../archive/R17_SystemsC_Refactoring.md)
 
-This sprint will cover the following tasks:
+## 2. Goals
 
-1.  **Create new files for each system**:
-    *   `src/system_physics.c`, `src/system_physics.h`
-    *   `src/system_collision.c`, `src/system_collision.h`
-    *   `src/system_ai.c`, `src/system_ai.h`
-    *   `src/system_camera.c`, `src/system_camera.h`
-2.  **Move system implementations**: Relocate the code for each system from `systems.c` to its new respective file.
-3.  **Update `systems.h`**: Define a generic system interface and remove system-specific declarations.
-4.  **Update `systems.c`**: The existing `systems.c` will be repurposed to house the system scheduler, which will manage the system instances.
-5.  **Refactor `scheduler_init`**: The initialization logic will be broken down. The main application will be responsible for initializing dependencies and passing them to the scheduler.
-6.  **Update `main.c`**: The main application loop will be updated to reflect the new initialization and shutdown procedures.
-7.  **Update `Makefile`**: The new system files will be added to the build process.
+*   **Decouple Systems**: Isolate each core system (Physics, Collision, AI, Camera) into its own self-contained module.
+*   **Improve Code Organization**: Move system-related files into a dedicated `src/system/` directory.
+*   **Clarify Dependencies**: Eliminate global state for asset and data registries by using dependency injection.
+*   **Establish a Clear Interface**: Create a generic system interface to standardize how systems are managed and updated.
 
-## 3. Out of Scope
+## 3. Technical Plan
 
-*   No new features will be added.
-*   The functionality of the systems themselves will not be changed.
-*   No C-level tests will be written in this sprint, as the testing framework is not yet in place.
+The refactoring will be executed in the following sequence. **It is crucial to follow this order to minimize disruption and ensure a smooth transition.**
+
+### Phase 1: File Creation and Code Migration (No-Build Phase)
+
+*   **Action**: Create the new directory `src/system/`.
+*   **Action**: For each system (Physics, Collision, AI, Camera), create a new header (`.h`) and source (`.c`) file within the `src/system/` directory (e.g., `src/system/physics.h`, `src/system/physics.c`).
+    *   **Note**: As per our discussion, the `system_` prefix is redundant and should not be used in the filenames.
+*   **Action**: Copy the corresponding system implementation from `systems.c` into the newly created source files.
+*   **Action**: Copy the relevant function signatures and struct definitions from `systems.h` into the new header files.
+*   **DO NOT MODIFY `systems.c`, `systems.h`, or the `Makefile` in this phase.** The project will not compile, which is expected.
+
+### Phase 2: Refactoring and Integration
+
+1.  **Update `systems.h`**:
+    *   **Action**: Remove the individual system update function declarations.
+    *   **Action**: Define a generic `System` interface struct. This struct should contain function pointers for `init`, `shutdown`, and `update`, as well as state information like `enabled` and `frequency`.
+    *   **Action**: The `SystemScheduler` will now hold an array of these `System` structs.
+
+2.  **Refactor `systems.c`**:
+    *   **Action**: This file will now *only* contain the `SystemScheduler` logic.
+    *   **Action**: Remove the global `g_asset_registry` and `g_data_registry`.
+    *   **Action**: Modify `scheduler_init` to accept pointers to the `AssetRegistry` and `DataRegistry` as parameters.
+    *   **Action**: Update `scheduler_init` to iterate through the new `System` array and call each system's `init` function.
+    *   **Action**: Update `scheduler_update` to call the `update` function pointer from each enabled system.
+    *   **Action**: Update `scheduler_destroy` to call each system's `shutdown` function pointer.
+
+3.  **Update Individual System Files**:
+    *   **Action**: Include the new header files (e.g., `#include "system/physics.h"`).
+    *   **Action**: Create `init`, `shutdown`, and `update` functions for each system that match the new `System` interface.
+    *   **Action**: The `init` function for each system should take any necessary dependencies (like the `AssetRegistry`) as parameters.
+
+4.  **Update `main.c`**:
+    *   **Action**: Modify the main application setup to handle the new initialization order.
+    *   **Action**: `main.c` is now responsible for initializing the `AssetRegistry` and `DataRegistry`.
+    *   **Action**: Pass the initialized registries to `scheduler_init`.
+
+5.  **Update `Makefile`**:
+    *   **Action**: Add the new system source files (`src/system/*.c`) to the `SRC_FILES` list so they are included in the build.
+    *   **Action**: Ensure the include paths are updated if necessary.
 
 ## 4. Definition of Done
 
-*   All new source files are created and populated.
-*   `systems.c` and `systems.h` are refactored as described.
-*   The application compiles and runs successfully after the changes.
-*   The `Makefile` is updated to include the new files.
-*   The game's existing behavior remains unchanged.
+*   All tasks in the technical plan are completed.
+*   The project compiles and runs without errors.
+*   The application's behavior is identical to the pre-refactoring state.
+*   The `systems.c` and `systems.h` files are successfully refactored to manage a generic list of systems.
+*   The `Makefile` is updated, and the build is clean.

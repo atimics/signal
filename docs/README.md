@@ -6,6 +6,7 @@ Welcome to the central documentation hub for the **SIGNAL** project. This is the
 
 This is the creative and strategic heart of the project. All development work should be in service of this vision.
 
+*   **[Current Status](./CURRENT_STATUS.md)**: A real-time overview of the project's status, active sprint, and key priorities.
 *   **[The Research Library](./research/README.md)**: A curated collection of documents that define our world, mechanics, and technology. It is the "why" behind our work and the first point of reference for any new development task.
 
 ## 2. Developer Guides
@@ -19,7 +20,7 @@ These documents provide the practical, hands-on information needed for day-to-da
 
 This section contains our operational documents for planning and tracking progress.
 
-*   **[Active Sprint](./sprints/active/sprint_13_optimization_and_style.md)**: A detailed implementation plan for the current development sprint.
+*   **[Active Sprint](./sprints/active/sprint_18_systems_refactor.md)**: A detailed implementation plan for the current development sprint.
 *   **[Development Backlog](./sprints/backlog/README.md)**: The prioritized list of all upcoming development sprints.
 *   **[Completed Sprints](./sprints/completed/)**: An archive of all past sprint plans and their outcomes.
 

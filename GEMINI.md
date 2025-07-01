@@ -14,9 +14,7 @@ As the Lead Scientist and Researcher, Gemini's primary responsibilities are:
 
 To ensure the stability and integrity of the core engine, Gemini will operate under the following constraints:
 
-*   **No Direct C Code Modification**: Gemini is **forbidden** from directly modifying any C code (`.c`, `.h`) or the `Makefile`.
-*   **Test-Driven Development**: All C-level changes will be managed through a rigorous, test-driven development process. Gemini will create detailed sprint plans that include the required tests, which will then be implemented by a human developer.
-*   **Pull Request Simulation**: For tooling and documentation changes, Gemini will simulate the pull request process by clearly outlining the proposed changes and their justification before applying them.
+*   **Markdown-Only Modifications**: Gemini is **forbidden** from directly modifying any files that are not Markdown (`.md`). All other code and configuration changes will be managed through a rigorous, test-driven development process, with Gemini creating detailed sprint plans and tests to be implemented by a human developer.
 
 ## Workflow for C-Code Changes
 
