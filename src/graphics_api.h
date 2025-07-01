@@ -31,4 +31,12 @@
 
 #include "sokol_log.h"
 
+// Screen capture functionality
+/**
+ * @brief Captures the current frame buffer to a BMP file
+ * @param filename The output filename (should end in .bmp)
+ * @return true on success, false on failure
+ */
+bool graphics_capture_screenshot(const char* filename);
+
 #endif  // GRAPHICS_API_H

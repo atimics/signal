@@ -63,6 +63,10 @@ static struct
 
     // Loading screen
     LoadingScreen loading_screen;
+    
+    // Test modes
+    bool capture_golden_reference;
+    float golden_reference_timer;
 } app_state = { 0 };
 
 // ============================================================================
@@ -232,6 +236,14 @@ static void loading_screen_set_progress(LoadingScreen* loading, float progress, 
 
 static void loading_screen_finish(LoadingScreen* loading)
 {
+    // Check if we're in golden reference capture mode
+    if (app_state.capture_golden_reference)
+    {
+        printf("🏆 Entering golden reference capture mode - extending loading screen\n");
+        app_state.golden_reference_timer = 3.0f;  // Show for 3 seconds
+        return;  // Don't finish loading screen yet
+    }
+    
     loading->active = false;
 
     // Show scene entities and hide loading cube
@@ -605,8 +617,32 @@ static void frame(void)
     {
         loading_screen_update(&app_state.loading_screen, dt);
 
+        // Handle golden reference capture mode
+        if (app_state.capture_golden_reference && app_state.golden_reference_timer > 0.0f)
+        {
+            app_state.golden_reference_timer -= dt;
+            
+            // Capture screenshot at exactly 1.5 seconds
+            if (app_state.golden_reference_timer <= 1.5f && app_state.golden_reference_timer > 1.4f)
+            {
+                char filename[256];
+                snprintf(filename, sizeof(filename), "screenshots/golden_reference_cube_%ld.bmp", time(NULL));
+                if (render_take_screenshot(&app_state.render_config, filename))
+                {
+                    printf("🏆 Golden reference captured: %s\n", filename);
+                }
+            }
+            
+            // Finish when timer expires
+            if (app_state.golden_reference_timer <= 0.0f)
+            {
+                app_state.capture_golden_reference = false;
+                loading_screen_finish(&app_state.loading_screen);
+                app_state.initialized = true;
+            }
+        }
         // Auto-complete loading screen after showing for 8 seconds at 100%
-        if (app_state.loading_screen.progress >= 1.0f && app_state.simulation_time > 8.0f)
+        else if (app_state.loading_screen.progress >= 1.0f && app_state.simulation_time > 8.0f)
         {
             loading_screen_finish(&app_state.loading_screen);
             app_state.initialized = true;
@@ -745,8 +781,26 @@ static void event(const sapp_event* ev)
 
 sapp_desc sokol_main(int argc, char* argv[])
 {
-    (void)argc;
-    (void)argv;
+    // Parse command line arguments
+    for (int i = 1; i < argc; i++)
+    {
+        if (strcmp(argv[i], "--golden-reference") == 0 || strcmp(argv[i], "-g") == 0)
+        {
+            app_state.capture_golden_reference = true;
+            printf("🏆 Golden reference capture mode enabled\n");
+        }
+        else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
+        {
+            printf("CGame Engine Usage:\n");
+            printf("  --golden-reference, -g    Capture golden reference screenshot of loading cube\n");
+            printf("  --help, -h                Show this help message\n");
+            printf("\nGame Controls:\n");
+            printf("  ESC        Exit game\n");
+            printf("  1-9        Switch cameras\n");
+            printf("  W          Toggle wireframe mode\n");
+            printf("  S          Take screenshot\n");
+        }
+    }
 
     return (sapp_desc){
         .init_cb = init,

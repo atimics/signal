@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>  // For mkdir
 
 #include "assets.h"
 #include "gpu_resources.h"
@@ -577,10 +578,13 @@ void render_clear_screen(RenderConfig* config)
 
 bool render_take_screenshot(RenderConfig* config, const char* filename)
 {
-    (void)config;
-    (void)filename;
-    printf("📸 Screenshot requested: %s (not implemented yet)\n", filename);
-    return false;
+    (void)config;  // Config not needed for now
+    
+    // Ensure screenshots directory exists
+    mkdir("screenshots", 0755);
+    
+    // Use our graphics API screenshot function
+    return graphics_capture_screenshot(filename);
 }
 
 bool render_take_screenshot_from_position(struct World* world, RenderConfig* config,
