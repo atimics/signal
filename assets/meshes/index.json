@@ -1,6 +1,9 @@
 [
+    "props/logo_cube/metadata.json",
     "props/sun/metadata.json",
     "props/wedge_ship/metadata.json",
     "props/wedge_ship_mk2/metadata.json",
-    "props/control_tower/metadata.json"
+    "props/control_tower/metadata.json",
+    "props/landing_pad/metadata.json",
+    "props/planet_surface/metadata.json"
 ]
