@@ -307,6 +307,7 @@ void world_set_active_camera(struct World* world, EntityID camera_entity);
 EntityID world_get_active_camera(struct World* world);
 void camera_update_matrices(struct Camera* camera);
 bool switch_to_camera(struct World* world, int camera_index);
+bool cycle_to_next_camera(struct World* world);
 void update_camera_aspect_ratio(struct World* world, float aspect_ratio);
 
 /**

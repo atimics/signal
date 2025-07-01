@@ -775,6 +775,38 @@ bool switch_to_camera(struct World* world, int camera_index)
     return false;
 }
 
+bool cycle_to_next_camera(struct World* world)
+{
+    if (!world) return false;
+    
+    // Count total cameras
+    int camera_count = 0;
+    int current_camera_index = -1;
+    EntityID active_camera = world_get_active_camera(world);
+    
+    // First pass: count cameras and find current active camera index
+    for (uint32_t i = 0; i < world->entity_count; i++)
+    {
+        struct Entity* entity = &world->entities[i];
+        if (entity->component_mask & COMPONENT_CAMERA)
+        {
+            if (entity->id == active_camera)
+            {
+                current_camera_index = camera_count;
+            }
+            camera_count++;
+        }
+    }
+    
+    if (camera_count == 0) return false;
+    
+    // Calculate next camera index (wrap around)
+    int next_camera_index = (current_camera_index + 1) % camera_count;
+    
+    // Switch to next camera
+    return switch_to_camera(world, next_camera_index);
+}
+
 void update_camera_aspect_ratio(struct World* world, float aspect_ratio)
 {
     if (!world) return;
