@@ -1,26 +1,14 @@
-#define NK_IMPLEMENTATION
-#define SOKOL_NUKLEAR_IMPL
-
-#include "graphics_api.h"
-
-// Include standard headers before Nuklear
+// Include standard headers first
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-// Nuklear configuration - declarations only (no implementation)
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
 #include "core.h"
-#include "nuklear.h"
-#include "sokol_nuklear.h"
 #include "ui.h"
+
+// Include graphics API (contains Nuklear setup)
+#include "graphics_api.h"
 
 static UIState ui_state = { 0 };
 static bool ui_visible = true;
