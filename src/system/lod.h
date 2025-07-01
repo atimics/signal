@@ -4,8 +4,8 @@
 #ifndef SYSTEM_LOD_H
 #define SYSTEM_LOD_H
 
-#include "core.h"
-#include "render.h"
+#include "../core.h"
+#include "../render.h"
 
 // ============================================================================
 // LOD CONFIGURATION

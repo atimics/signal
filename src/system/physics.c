@@ -2,8 +2,6 @@
 
 #include <stdio.h>
 
-#include "core.h"
-
 void physics_system_update(struct World* world, RenderConfig* render_config, float delta_time)
 {
     (void)render_config;  // Unused

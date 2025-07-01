@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "core.h"
-
 void ai_system_update(struct World* world, RenderConfig* render_config, float delta_time)
 {
     (void)render_config;  // Unused

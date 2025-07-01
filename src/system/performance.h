@@ -4,8 +4,8 @@
 #ifndef SYSTEM_PERFORMANCE_H
 #define SYSTEM_PERFORMANCE_H
 
-#include "core.h"
-#include "render.h"
+#include "../core.h"
+#include "../render.h"
 #include <stdint.h>
 #include <stdbool.h>
 

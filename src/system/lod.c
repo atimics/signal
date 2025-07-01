@@ -2,7 +2,6 @@
 // Level of Detail (LOD) system implementation - Sprint 19 Task 1
 
 #include "lod.h"
-#include "render.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

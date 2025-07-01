@@ -2,7 +2,6 @@
 // Performance profiling and monitoring system implementation - Sprint 19 Task 2
 
 #include "performance.h"
-#include "render.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
