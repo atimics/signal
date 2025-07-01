@@ -1,5 +1,5 @@
 {
-  "name": "Wedge Ship Mk2",
+  "name": "wedge_ship_mk2",
   "geometry": "geometry.obj",
   "tags": [
     "ship",

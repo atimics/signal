@@ -1,5 +1,5 @@
 {
-  "name": "Control Tower",
+  "name": "control_tower",
   "geometry": "geometry.obj",
   "tags": [
     "building",

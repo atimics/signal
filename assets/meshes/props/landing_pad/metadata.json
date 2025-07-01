@@ -1,10 +1,11 @@
 {
-  "name": "Landing Pad",
+  "name": "landing_pad",
   "geometry": "geometry.obj",
   "tags": [
-    "procedural"
+    "platform",
+    "structure"
   ],
-  "description": "A procedurally generated mesh.",
+  "description": "A spaceport landing platform.",
   "material": "material.mtl",
   "texture": "texture.png"
 }

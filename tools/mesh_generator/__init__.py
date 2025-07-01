@@ -347,13 +347,21 @@ def generate_source_asset(mesh_name, generator_func, source_dir):
 
     # Write metadata.json
     if mesh_name == "wedge_ship_mk2":
-        metadata = create_mesh_metadata("Wedge Ship Mk2", "An improved wedge-shaped spacecraft.", ["ship", "vehicle", "player"])
+        metadata = create_mesh_metadata("wedge_ship_mk2", "An improved wedge-shaped spacecraft.", ["ship", "vehicle", "player"])
     elif mesh_name == "control_tower":
-        metadata = create_mesh_metadata("Control Tower", "A control tower for spaceport environments.", ["building", "structure"])
+        metadata = create_mesh_metadata("control_tower", "A control tower for spaceport environments.", ["building", "structure"])
     elif mesh_name == "sun":
-        metadata = create_mesh_metadata("Sun", "A low-poly sphere representing a star.", ["celestial", "star"])
+        metadata = create_mesh_metadata("sun", "A low-poly sphere representing a star.", ["celestial", "star"])
+    elif mesh_name == "wedge_ship":
+        metadata = create_mesh_metadata("wedge_ship", "A standard wedge-shaped spacecraft.", ["ship", "vehicle"])
+    elif mesh_name == "landing_pad":
+        metadata = create_mesh_metadata("landing_pad", "A spaceport landing platform.", ["platform", "structure"])
+    elif mesh_name == "planet_surface":
+        metadata = create_mesh_metadata("planet_surface", "A large planetary surface.", ["terrain", "surface"])
+    elif mesh_name == "logo_cube":
+        metadata = create_mesh_metadata("logo_cube", "Gold standard reference cube for testing.", ["reference", "test"])
     else:
-        metadata = create_mesh_metadata(mesh_name.replace('_', ' ').title(), "A procedurally generated mesh.", ["procedural"])
+        metadata = create_mesh_metadata(mesh_name, "A procedurally generated mesh.", ["procedural"])
     
     with open(mesh_source_dir / "metadata.json", 'w') as f:
         json.dump(metadata, f, indent=2)

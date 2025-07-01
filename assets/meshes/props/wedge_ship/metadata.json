@@ -1,10 +1,11 @@
 {
-  "name": "Wedge Ship",
+  "name": "wedge_ship",
   "geometry": "geometry.obj",
   "tags": [
-    "procedural"
+    "ship",
+    "vehicle"
   ],
-  "description": "A procedurally generated mesh.",
+  "description": "A standard wedge-shaped spacecraft.",
   "material": "material.mtl",
   "texture": "texture.png"
 }

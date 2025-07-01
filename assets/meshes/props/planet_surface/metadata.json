@@ -1,10 +1,11 @@
 {
-  "name": "Planet Surface",
+  "name": "planet_surface",
   "geometry": "geometry.obj",
   "tags": [
-    "procedural"
+    "terrain",
+    "surface"
   ],
-  "description": "A procedurally generated mesh.",
+  "description": "A large planetary surface.",
   "material": "material.mtl",
   "texture": "texture.png"
 }
