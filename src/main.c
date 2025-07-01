@@ -247,9 +247,11 @@ static void init(void)
     scene_state_init(&app_state.scene_state);
     strcpy(app_state.scene_state.current_scene_name, scene_to_load);
     
-    // Start with debug UI hidden (~ to toggle)
+    // Start with debug UI and HUD hidden (~ to toggle)
     scene_state_set_debug_ui_visible(&app_state.scene_state, false);
     ui_set_debug_visible(false);  // Synchronize with UI system
+    
+    ui_init();
     
     // Initialize camera system after scene is loaded
     camera_system_init(&app_state.world, &app_state.render_config);
@@ -263,8 +265,6 @@ static void init(void)
     app_state.frame_count = 0;
     app_state.simulation_time = 0.0f;
     app_state.initialized = true;  // Ready to render immediately
-
-    ui_init();
 
     printf("✅ Engine initialized successfully!\n");
     printf("\n🎮 Starting simulation...\n");
