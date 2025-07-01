@@ -63,7 +63,7 @@ void test_textured_mesh_rendering(void)
     {
         // In test mode, texture loading might fail due to GPU backend
         printf("⚠️ Texture loading failed (expected in test mode)\n");
-        TEST_ASSERT_TRUE_MESSAGE(true, "Texture loading completed without crashes");
+        TEST_IGNORE_MESSAGE("Texture loading failed as expected in headless mode");
     }
 
     // Cleanup
