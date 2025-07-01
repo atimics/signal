@@ -70,23 +70,11 @@ This area covers the offline tools and processes used to create and optimize gam
 
 ## 5. Gameplay & Narrative
 
-This section defines the creative vision and player experience for "The Ghost Signal." It is organized into four core documents that provide a complete overview of the game's design.
+This section defines the creative vision and player experience for "The Ghost Signal." All relevant information has been consolidated into a single, canonical document.
 
-*   **[01: The Vision](./gameplay_and_narrative/01_Vision_The_Ghost_Signal.md)**
-    *   **Synopsis**: The official, high-level design document for "The Ghost Signal." It outlines the core pillars of the game: desperate survival, exploration of derelict alien fleets, and the central mystery of the Ghost Signal. This is the "What" of our game.
-
-*   **[02: The World Bible](./gameplay_and_narrative/02_World_Bible.md)**
-    *   **Synopsis**: The single source of truth for the game's lore. It details the history of the Aethelian Fleet, the nature of the Cataclysm, the motivations of the AI factions, and the player's place in the universe. This is the "Where" of our game.
-
-*   **[03: The Core Mechanics](./gameplay_and_narrative/03_Core_Mechanics.md)**
-    *   **Synopsis**: A detailed design document that defines the core gameplay loop. It introduces the "Resonance Cascade" system, where narrative fragments (Echoes) act as keys to unlock new gameplay opportunities and challenges. This is the "How" of our game.
-
-*   **[04: The Lore Fragments](./gameplay_and_narrative/04_Lore_Fragments.md)**
-    *   **Synopsis**: A living repository of all the in-game text fragments, audio logs, and corrupted data that players can discover. This is the primary vehicle for delivering our emergent, non-linear narrative. This is the "Content" of our game.
-
-*   **[05: The First Hour](./gameplay_and_narrative/05_The_First_Hour.md)**
-    *   **Synopsis**: A detailed, moment-to-moment breakdown of the player's introductory experience, designed to organically teach core mechanics and establish the central narrative hook.
-    *   **Strategic Importance**: **High**. This document serves as the blueprint for the game's tutorial and opening missions.
+*   **[The Ghost Signal: World Bible](./gameplay_and_narrative/The_Ghost_Signal_World_Bible.md)**
+    *   **Synopsis**: The definitive, single source of truth for the game's vision, lore, mechanics, and narrative. This document covers the player fantasy, the history of the world, the core gameplay loops, faction design, and the player's first-hour experience.
+    *   **Strategic Importance**: **CRITICAL**. This is the foundational document for all creative and gameplay development.
 
 ## 6. Artificial Intelligence
 

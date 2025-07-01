@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Recently Completed - Sprint 14: Pipeline & Polish (June 30, 2025)
+- **✅ Asset Pipeline Validation**: Integrated `validate_mesh.py` into build pipeline with quality gates
+- **✅ Binary Format Standardization**: Fixed header size calculation (72 bytes) and index format consistency
+- **✅ Universal Code Formatting**: Applied `.clang-format` to entire C codebase for consistency
+- **✅ API Modernization**: Updated deprecated function calls and Material struct field references
+- **✅ Build System Stability**: Achieved clean compilation with zero errors or warnings
+- **✅ Sprint 13.1 Completion**: Mesh Pipeline Rehabilitation fully implemented and validated
+
 ### Recently Completed - Loading Screen Implementation (Sprint 12)
 - **✅ Robust Loading Screen**: Textured spinning cube with logo during initialization
 - **✅ Procedural Mesh Generation**: Perfect cube with 24 vertices, correct normals, UVs, and winding
