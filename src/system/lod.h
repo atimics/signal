@@ -5,9 +5,7 @@
 #define SYSTEM_LOD_H
 
 #include "core.h"
-
-// Forward declarations
-struct RenderConfig;
+#include "render.h"
 
 // ============================================================================
 // LOD CONFIGURATION
@@ -47,7 +45,7 @@ void lod_system_init(void);
  * @param render_config Render configuration (unused but required for consistency)
  * @param delta_time Time since last update (unused but maintained for consistency)
  */
-void lod_system_update(struct World* world, struct RenderConfig* render_config, float delta_time);
+void lod_system_update(struct World* world, RenderConfig* render_config, float delta_time);
 
 /**
  * @brief Cleanup LOD system resources

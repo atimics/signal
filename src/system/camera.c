@@ -102,6 +102,12 @@ void camera_system_cleanup(void)
     printf("🎥 Camera system cleaned up\n");
 }
 
+void camera_system_reset(void)
+{
+    g_cameras_initialized = false;
+    printf("🎥 Camera system reset for scene transition\n");
+}
+
 bool camera_switch_to_index(struct World* world, int camera_index)
 {
     if (!world) return false;

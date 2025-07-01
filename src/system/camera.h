@@ -8,6 +8,7 @@
 void camera_system_init(struct World* world, RenderConfig* render_config);
 void camera_system_update(struct World* world, RenderConfig* render_config, float delta_time);
 void camera_system_cleanup(void);
+void camera_system_reset(void);  // Reset for scene transitions
 
 // Camera control functions
 bool camera_switch_to_index(struct World* world, int camera_index);

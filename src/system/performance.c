@@ -436,7 +436,7 @@ bool performance_export_to_file(const char* filename) {
     return true;
 }
 
-void performance_render_overlay(struct RenderConfig* render_config) {
+void performance_render_overlay(RenderConfig* render_config) {
     if (!performance_state.initialized || !performance_state.overlay_visible || !render_config) {
         return;
     }
@@ -478,7 +478,7 @@ void performance_set_warning_thresholds(float frame_time_ms, size_t memory_mb) {
            frame_time_ms, memory_mb);
 }
 
-void performance_system_update(struct World* world, struct RenderConfig* render_config, float delta_time) {
+void performance_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
     (void)world;      // Unused
     (void)delta_time; // Unused
     

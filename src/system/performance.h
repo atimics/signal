@@ -5,11 +5,9 @@
 #define SYSTEM_PERFORMANCE_H
 
 #include "core.h"
+#include "render.h"
 #include <stdint.h>
 #include <stdbool.h>
-
-// Forward declarations
-struct RenderConfig;
 
 // ============================================================================
 // PERFORMANCE METRICS STRUCTURES
@@ -169,7 +167,7 @@ bool performance_export_to_file(const char* filename);
  * @brief Render performance overlay on screen
  * @param render_config Render configuration for drawing
  */
-void performance_render_overlay(struct RenderConfig* render_config);
+void performance_render_overlay(RenderConfig* render_config);
 
 /**
  * @brief Toggle performance overlay visibility
@@ -189,6 +187,6 @@ void performance_set_warning_thresholds(float frame_time_ms, size_t memory_mb);
  * @param render_config Render configuration
  * @param delta_time Delta time (unused)
  */
-void performance_system_update(struct World* world, struct RenderConfig* render_config, float delta_time);
+void performance_system_update(struct World* world, RenderConfig* render_config, float delta_time);
 
 #endif // SYSTEM_PERFORMANCE_H

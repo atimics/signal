@@ -61,7 +61,7 @@ void lod_system_init(void) {
            lod_state.config.cull_distance);
 }
 
-void lod_system_update(struct World* world, struct RenderConfig* render_config, float delta_time) {
+void lod_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
     (void)render_config; // Unused parameter
     (void)delta_time; // LOD updates are not time-dependent, only distance-dependent
     
