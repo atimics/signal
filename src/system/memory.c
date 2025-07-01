@@ -48,6 +48,41 @@ static TrackedAsset* find_tracked_asset(const char* asset_name) {
     return NULL;
 }
 
+static bool track_allocation(void* ptr, size_t size, uint32_t pool_id) {
+    if (memory_state.allocation_count >= MAX_ALLOCATION_TRACKING) {
+        return false; // No space to track more allocations
+    }
+    
+    AllocationMetadata* metadata = &memory_state.allocations[memory_state.allocation_count];
+    metadata->ptr = ptr;
+    metadata->size = size;
+    metadata->pool_id = pool_id;
+    memory_state.allocation_count++;
+    return true;
+}
+
+static AllocationMetadata* find_allocation(void* ptr) {
+    for (uint32_t i = 0; i < memory_state.allocation_count; i++) {
+        if (memory_state.allocations[i].ptr == ptr) {
+            return &memory_state.allocations[i];
+        }
+    }
+    return NULL;
+}
+
+static void remove_allocation_tracking(void* ptr) {
+    for (uint32_t i = 0; i < memory_state.allocation_count; i++) {
+        if (memory_state.allocations[i].ptr == ptr) {
+            // Move the last allocation to this slot to maintain compact array
+            if (i < memory_state.allocation_count - 1) {
+                memory_state.allocations[i] = memory_state.allocations[memory_state.allocation_count - 1];
+            }
+            memory_state.allocation_count--;
+            return;
+        }
+    }
+}
+
 static size_t calculate_mesh_memory(const Mesh* mesh) {
     if (!mesh || !mesh->loaded) return 0;
     
@@ -572,12 +607,24 @@ void* memory_pool_alloc(uint32_t pool_id, size_t size) {
         return NULL;
     }
     
-    // For testing, just use standard malloc
+    // Allocate memory
     void* ptr = malloc(size);
     if (ptr) {
-        pool->allocated_bytes += size;
-        pool->allocation_count++;
-        memory_state.total_allocated_bytes += size;
+        // Track the allocation metadata
+        if (track_allocation(ptr, size, pool_id)) {
+            pool->allocated_bytes += size;
+            pool->allocation_count++;
+            memory_state.total_allocated_bytes += size;
+            
+            // Update peak usage
+            if (pool->allocated_bytes > pool->peak_bytes) {
+                pool->peak_bytes = pool->allocated_bytes;
+            }
+        } else {
+            // Failed to track allocation - free the memory and return NULL
+            free(ptr);
+            return NULL;
+        }
     }
     
     return ptr;

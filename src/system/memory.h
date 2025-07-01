@@ -16,6 +16,7 @@
 
 #define MAX_MEMORY_POOLS 16
 #define MAX_TRACKED_ASSETS 512
+#define MAX_ALLOCATION_TRACKING 4096   // Maximum number of tracked allocations
 #define MEMORY_UNLOAD_DISTANCE 100.0f  // Distance threshold for asset unloading
 #define MEMORY_LOAD_DISTANCE 50.0f     // Distance threshold for asset loading
 #define MEMORY_CHECK_INTERVAL 2.0f     // Check memory usage every 2 seconds
@@ -23,6 +24,13 @@
 // ============================================================================
 // MEMORY TRACKING STRUCTURES
 // ============================================================================
+
+/** @brief Allocation metadata for tracking allocation sizes */
+typedef struct {
+    void* ptr;                  /**< Pointer to the allocated memory */
+    size_t size;               /**< Size of the allocation */
+    uint32_t pool_id;          /**< Pool that owns this allocation */
+} AllocationMetadata;
 
 /** @brief Memory pool for different asset types */
 typedef struct {
@@ -50,9 +58,11 @@ typedef struct {
 typedef struct {
     MemoryPool pools[MAX_MEMORY_POOLS];
     TrackedAsset tracked_assets[MAX_TRACKED_ASSETS];
+    AllocationMetadata allocations[MAX_ALLOCATION_TRACKING];
     
     uint32_t pool_count;
     uint32_t tracked_asset_count;
+    uint32_t allocation_count;
     
     size_t total_allocated_bytes;
     size_t memory_limit_bytes;
