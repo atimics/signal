@@ -22,6 +22,7 @@
 #include "nuklear.h"
 #include "render.h"
 #include "systems.h"
+#include "system/camera.h"
 #include "ui.h"
 
 #ifndef M_PI
@@ -582,6 +583,10 @@ static void init(void)
     printf("ℹ️ Loading default scene: %s\n", scene_to_load);
 
     load_scene_by_name(&app_state.world, scene_to_load, &app_state.player_id);
+    
+    // Initialize camera system after scene is loaded
+    camera_system_init(&app_state.world, &app_state.render_config);
+    
     list_available_cameras(&app_state.world);
 
     // Activate the first camera immediately for the logo scene
