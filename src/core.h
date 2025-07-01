@@ -142,6 +142,7 @@ struct Renderable
 {
     struct GpuResources* gpu_resources; /**< Opaque pointer to GPU-specific resources. */
     uint32_t index_count;               /**< Number of indices to draw. */
+    uint32_t material_id;               /**< Material ID for shading properties. */
     bool visible;                       /**< Whether the entity should be rendered. */
     float lod_distance;                 /**< Distance at which to switch LOD levels. */
     uint8_t lod_level;                  /**< The current level of detail. */

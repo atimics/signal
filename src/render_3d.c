@@ -12,6 +12,7 @@
 #include "render_lighting.h"
 #include "render_mesh.h"
 #include "scene_script.h"  // For find_entity_by_name function
+#include "system/material.h"  // For material properties
 #include "sokol_gfx.h"  // Direct inclusion for rendering implementation
 #include "ui.h"
 
@@ -514,12 +515,17 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         fs_params.light_dir[2] = 0.2f;
         fs_params.time = accumulated_time;
         
-        // Check if this is the logo cube and apply glow effect
-        EntityID logo_cube_id = find_entity_by_name(world, "logo_cube");
-        bool is_logo_cube = (logo_cube_id != INVALID_ENTITY && entity->id == logo_cube_id);
+        // Get material properties from the renderable component
+        float glow_intensity = 0.0f;
+        if (entity->renderable && entity->renderable->material_id < MAX_MATERIALS) {
+            MaterialProperties* material = material_get_by_id(entity->renderable->material_id);
+            if (material) {
+                glow_intensity = material->glow_intensity;
+            }
+        }
         
-        // Apply glow intensity (higher for logo cube)
-        fs_params.glow_intensity = is_logo_cube ? 1.0f : 0.0f;
+        // Apply glow intensity from material properties
+        fs_params.glow_intensity = glow_intensity;
         
         // Clear padding
         fs_params._pad[0] = fs_params._pad[1] = fs_params._pad[2] = 0.0f;
