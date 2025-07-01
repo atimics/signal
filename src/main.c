@@ -273,12 +273,18 @@ static void init(void)
 
 static void frame(void)
 {
+    // Begin performance frame timing
+    performance_frame_begin();
+    
     const float dt = (float)sapp_frame_duration();
     app_state.simulation_time += dt;
     app_state.frame_count++;
 
     // Skip rendering if not initialized
-    if (!app_state.initialized) return;
+    if (!app_state.initialized) {
+        performance_frame_end();
+        return;
+    }
 
     // Update scene state and scripts
     scene_state_update(&app_state.scene_state, dt);
@@ -322,11 +328,17 @@ static void frame(void)
     sg_end_pass();
     sg_commit();
 
+    // End performance frame timing
+    performance_frame_end();
+
     // Print status occasionally
     if (app_state.frame_count % 300 == 0 && app_state.frame_count > 0)
     {
         printf("⏱️  Time: %.1fs, Frame: %d, Entities: %d\n", app_state.simulation_time,
                app_state.frame_count, app_state.world.entity_count);
+        
+        // Log performance summary periodically
+        performance_log_summary();
     }
 }
 

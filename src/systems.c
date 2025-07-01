@@ -103,12 +103,21 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                    .enabled = true,
                                                    .update_func = lod_system_update };
 
+    scheduler->systems[SYSTEM_PERFORMANCE] = (SystemInfo){ .name = "Performance",
+                                                          .frequency = 5.0f,   // 5 times per second
+                                                          .enabled = true,
+                                                          .update_func = performance_system_update };
+
+    // Initialize performance monitoring
+    performance_init();
+
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
     printf("   Collision: %.1f Hz\n", scheduler->systems[SYSTEM_COLLISION].frequency);
     printf("   AI: %.1f Hz (base)\n", scheduler->systems[SYSTEM_AI].frequency);
     printf("   Camera: %.1f Hz\n", scheduler->systems[SYSTEM_CAMERA].frequency);
     printf("   LOD: %.1f Hz\n", scheduler->systems[SYSTEM_LOD].frequency);
+    printf("   Performance: %.1f Hz\n", scheduler->systems[SYSTEM_PERFORMANCE].frequency);
 
     return true;
 }
