@@ -595,8 +595,17 @@ static void init(void)
         printf("📹 Activated first camera for logo scene\n");
     }
 
-    // Hide all scene entities during loading screen (only show loading cube)
-    loading_screen_hide_scene_entities(&app_state.world, app_state.loading_screen.cube_entity);
+    // For the logo scene, show the cube immediately (skip loading screen hide)
+    if (strcmp(scene_to_load, "logo") == 0)
+    {
+        printf("📦 Logo scene loaded - showing cube immediately\n");
+        // Don't hide scene entities for logo scene - it IS the content we want to show
+    }
+    else
+    {
+        // Hide all scene entities during loading screen (only show loading cube)
+        loading_screen_hide_scene_entities(&app_state.world, app_state.loading_screen.cube_entity);
+    }
 
     loading_screen_set_progress(&app_state.loading_screen, 0.9f, "Finalizing...");
 
