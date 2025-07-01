@@ -102,29 +102,37 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
     camera_target_zoom = 1.0f;
     
     // Create our own dynamic camera entity to override scene cameras
-    EntityID dynamic_camera = entity_create(world);
-    entity_add_component(world, dynamic_camera, COMPONENT_TRANSFORM | COMPONENT_CAMERA);
+    printf("🔍 DEBUG: Looking for cockpit camera instead of creating new one...\n");
     
-    struct Transform* cam_transform = entity_get_transform(world, dynamic_camera);
-    struct Camera* cam_camera = entity_get_camera(world, dynamic_camera);
+    // Find the cockpit camera (Entity 26 based on logs) and override its position
+    EntityID cockpit_camera = INVALID_ENTITY;
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        if (entity->component_mask & COMPONENT_CAMERA) {
+            struct Camera* cam = entity_get_camera(world, entity->id);
+            if (cam && cam->fov >= 70.0f && cam->fov <= 80.0f) {  // Cockpit camera has fov 75
+                cockpit_camera = entity->id;
+                break;
+            }
+        }
+    }
     
-    if (cam_transform && cam_camera) {
-        // Position camera behind player ship initially
-        cam_transform->position = (Vector3){0, 5, -110};  // Behind player ship
+    if (cockpit_camera != INVALID_ENTITY) {
+        printf("🔍 DEBUG: Found cockpit camera Entity %d, setting as active\n", cockpit_camera);
+        world_set_active_camera(world, cockpit_camera);
         
-        // Configure camera settings
-        cam_camera->fov = 60.0f;
-        cam_camera->near_plane = 0.1f;
-        cam_camera->far_plane = 1000.0f;
-        cam_camera->aspect_ratio = 1280.0f / 720.0f;  // Default aspect ratio
-        cam_camera->target = (Vector3){0, -8, -120};    // Look at player ship
-        cam_camera->up = (Vector3){0, 1, 0};
-        cam_camera->behavior = CAMERA_BEHAVIOR_CHASE;
-        cam_camera->matrices_dirty = true;
+        // Adjust its position to be closer to the player ship
+        struct Transform* cam_transform = entity_get_transform(world, cockpit_camera);
+        struct Camera* cam_camera = entity_get_camera(world, cockpit_camera);
         
-        // Override the active camera with our dynamic one
-        world_set_active_camera(world, dynamic_camera);
-        printf("📷 Created dynamic camera Entity %d and set as active\n", dynamic_camera);
+        if (cam_transform && cam_camera) {
+            cam_transform->position = (Vector3){0, -6, -115};  // Closer to player
+            cam_camera->target = (Vector3){0, -8, -120};       // Look at player ship
+            cam_camera->matrices_dirty = true;
+            printf("📷 Repositioned cockpit camera to follow player ship\n");
+        }
+    } else {
+        printf("❌ Could not find suitable camera to override\n");
     }
     
     printf("🧲 Derelict navigation initialized - %d sections detected\n", DERELICT_SECTION_COUNT);
