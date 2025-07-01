@@ -291,6 +291,15 @@ static void frame(void)
     scene_state_update(&app_state.scene_state, dt);
     scene_script_execute_update(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, dt);
     
+    // Handle UI scene change requests
+    if (ui_has_scene_change_request())
+    {
+        const char* requested_scene = ui_get_requested_scene();
+        printf("🎬 UI scene change request: %s -> %s\n", app_state.scene_state.current_scene_name, requested_scene);
+        scene_state_request_transition(&app_state.scene_state, requested_scene);
+        ui_clear_scene_change_request();
+    }
+    
     // Handle scene transitions
     if (scene_state_has_pending_transition(&app_state.scene_state))
     {
