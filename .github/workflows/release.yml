@@ -1,5 +1,11 @@
 name: Release Pipeline
 
+permissions:
+  contents: write
+  pull-requests: read
+  issues: read
+  actions: read
+
 on:
   push:
     branches: [main]
