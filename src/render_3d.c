@@ -11,6 +11,7 @@
 #include "render_camera.h"
 #include "render_lighting.h"
 #include "render_mesh.h"
+#include "scene_script.h"  // For find_entity_by_name function
 #include "sokol_gfx.h"  // Direct inclusion for rendering implementation
 #include "ui.h"
 
@@ -67,8 +68,10 @@ typedef struct
 
 typedef struct
 {
-    float light_dir[3];  // Light direction
-    float _pad;          // Padding for alignment
+    float light_dir[3];     // Light direction
+    float glow_intensity;   // Glow effect intensity (0.0 = no glow, 1.0 = full glow)
+    float time;             // Current time for animation
+    float _pad[3];          // Padding for 16-byte alignment
 } fs_uniforms_t;
 
 // Global rendering state
@@ -334,7 +337,10 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
 {
     (void)config;      // Unused for now
     (void)player_id;   // Unused for now
-    (void)delta_time;  // Unused for now
+    
+    // Accumulate time for glow effects
+    static float accumulated_time = 0.0f;
+    accumulated_time += delta_time;
 
     // Performance monitoring (Sprint 08 Review Action Item)
     render_performance.frame_count++;
@@ -501,12 +507,23 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         memcpy(vs_params.mvp, mvp, sizeof(mvp));
         sg_apply_uniforms(0, &SG_RANGE(vs_params));
 
-        // Apply fragment shader uniforms (lighting)
+        // Apply fragment shader uniforms (lighting and glow effect)
         fs_uniforms_t fs_params;
         fs_params.light_dir[0] = 0.3f;
         fs_params.light_dir[1] = -0.7f;
         fs_params.light_dir[2] = 0.2f;
-        fs_params._pad = 0.0f;
+        fs_params.time = accumulated_time;
+        
+        // Check if this is the logo cube and apply glow effect
+        EntityID logo_cube_id = find_entity_by_name(world, "logo_cube");
+        bool is_logo_cube = (logo_cube_id != INVALID_ENTITY && entity->id == logo_cube_id);
+        
+        // Apply glow intensity (higher for logo cube)
+        fs_params.glow_intensity = is_logo_cube ? 0.8f : 0.0f;
+        
+        // Clear padding
+        fs_params._pad[0] = fs_params._pad[1] = fs_params._pad[2] = 0.0f;
+        
         sg_apply_uniforms(1, &SG_RANGE(fs_params));
 
         // Debug first entity's matrix in first few frames
