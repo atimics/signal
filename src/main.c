@@ -479,7 +479,7 @@ sapp_desc sokol_main(int argc, char* argv[])
             printf("\nGame Controls:\n");
             printf("  ESC        Exit game\n");
             printf("  ENTER      Skip logo screen (on logo scene)\n");
-            printf("  ~          Toggle debug UI\n");
+            printf("  ~          Toggle debug UI & HUD\n");
             printf("  1-9        Switch cameras\n");
             printf("  C          Cycle cameras\n");
             printf("  W          Toggle wireframe mode\n");
