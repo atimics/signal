@@ -101,6 +101,32 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
     camera_zoom_factor = 1.0f;
     camera_target_zoom = 1.0f;
     
+    // Create our own dynamic camera entity to override scene cameras
+    EntityID dynamic_camera = entity_create(world);
+    entity_add_component(world, dynamic_camera, COMPONENT_TRANSFORM | COMPONENT_CAMERA);
+    
+    struct Transform* cam_transform = entity_get_transform(world, dynamic_camera);
+    struct Camera* cam_camera = entity_get_camera(world, dynamic_camera);
+    
+    if (cam_transform && cam_camera) {
+        // Position camera behind player ship initially
+        cam_transform->position = (Vector3){0, 5, -110};  // Behind player ship
+        
+        // Configure camera settings
+        cam_camera->fov = 60.0f;
+        cam_camera->near_plane = 0.1f;
+        cam_camera->far_plane = 1000.0f;
+        cam_camera->aspect_ratio = 1280.0f / 720.0f;  // Default aspect ratio
+        cam_camera->target = (Vector3){0, -8, -120};    // Look at player ship
+        cam_camera->up = (Vector3){0, 1, 0};
+        cam_camera->behavior = CAMERA_BEHAVIOR_CHASE;
+        cam_camera->matrices_dirty = true;
+        
+        // Override the active camera with our dynamic one
+        world_set_active_camera(world, dynamic_camera);
+        printf("📷 Created dynamic camera Entity %d and set as active\n", dynamic_camera);
+    }
+    
     printf("🧲 Derelict navigation initialized - %d sections detected\n", DERELICT_SECTION_COUNT);
     printf("📡 Magnetic field mapping complete - Sticky ship physics active\n");
     printf("🎮 Player Controls:\n");
