@@ -153,6 +153,23 @@
             margin: 10px 0;
             font-size: 0.9em;
         }
+        
+        .texture-status {
+            font-size: 0.8em;
+            margin-top: 5px;
+            padding: 3px 6px;
+            border-radius: 3px;
+        }
+        
+        .texture-success {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff88;
+        }
+        
+        .texture-error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+        }
     </style>
 </head>
 <body>
@@ -183,6 +200,13 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Texture:</span> <span id="current-texture">-</span>
+                </div>
+                <div class="info-row" id="texture-preview-row" style="display: none;">
+                    <div style="margin-top: 10px;">
+                        <div class="info-label">Texture Preview:</div>
+                        <img id="texture-preview" style="max-width: 150px; max-height: 150px; border: 1px solid #444; border-radius: 3px; margin-top: 5px;" />
+                        <div id="texture-status" class="texture-status" style="display: none;"></div>
+                    </div>
                 </div>
             </div>
             
@@ -330,6 +354,7 @@
         async function loadMesh(meshInfo) {
             const loadingDiv = document.getElementById('loading');
             loadingDiv.style.display = 'block';
+            loadingDiv.innerHTML = '<div>Loading mesh...</div>'; // Reset loading content
             
             console.log('Loading mesh:', meshInfo);
             
@@ -340,26 +365,63 @@
                     currentMesh = null;
                 }
                 
+                // Set base path for MTL loader to find textures
+                const basePath = `/assets/meshes/props/${meshInfo.name}/`;
+                
                 // Load material first
                 const mtlLoader = new THREE.MTLLoader();
-                const materialPath = `/assets/meshes/props/${meshInfo.name}/${meshInfo.material}`;
+                mtlLoader.setPath(basePath); // Set path for texture loading
+                
+                // Also set resource path for better texture resolution
+                mtlLoader.setResourcePath(basePath);
+                
+                const materialPath = `${basePath}${meshInfo.material}`;
                 console.log('Loading material from:', materialPath);
+                console.log('MTL base path set to:', basePath);
                 
-                const materials = await new Promise((resolve, reject) => {
-                    mtlLoader.load(materialPath, resolve, undefined, (error) => {
-                        console.error('Material loading error:', error);
-                        reject(error);
+                let materials = null;
+                try {
+                    materials = await new Promise((resolve, reject) => {
+                        mtlLoader.load(meshInfo.material, 
+                            (loadedMaterials) => {
+                                console.log('MTL loaded successfully:', loadedMaterials);
+                                console.log('Material names:', Object.keys(loadedMaterials.materials));
+                                resolve(loadedMaterials);
+                            }, 
+                            (progress) => {
+                                console.log('MTL loading progress:', progress);
+                            },
+                            (error) => {
+                                console.error('Material loading error:', error);
+                                reject(error);
+                            }
+                        );
                     });
-                });
-                
-                materials.preload();
-                console.log('Materials loaded:', materials);
+                    materials.preload();
+                    console.log('Materials preloaded:', materials);
+                    
+                    // Debug: Check if textures were loaded
+                    Object.keys(materials.materials).forEach(matName => {
+                        const mat = materials.materials[matName];
+                        console.log(`Material ${matName}:`, {
+                            map: mat.map,
+                            mapUrl: mat.map ? mat.map.image?.src : 'no texture'
+                        });
+                    });
+                    
+                } catch (materialError) {
+                    console.warn('Failed to load materials, using default:', materialError);
+                    // Create a default material with texture
+                    materials = null;
+                }
                 
                 // Load OBJ with materials
                 const objLoader = new THREE.OBJLoader();
-                objLoader.setMaterials(materials);
+                if (materials) {
+                    objLoader.setMaterials(materials);
+                }
                 
-                const geometryPath = `/assets/meshes/props/${meshInfo.name}/${meshInfo.geometry}`;
+                const geometryPath = `${basePath}${meshInfo.geometry}`;
                 console.log('Loading geometry from:', geometryPath);
                 
                 const object = await new Promise((resolve, reject) => {
@@ -369,9 +431,105 @@
                     });
                 });
                 
+                // If materials failed to load, apply a default material with texture
+                if (!materials && meshInfo.texture) {
+                    console.log('Applying fallback material with texture');
+                    
+                    // Load texture manually
+                    const textureLoader = new THREE.TextureLoader();
+                    const texturePath = `${basePath}${meshInfo.texture}`;
+                    
+                    try {
+                        const texture = await new Promise((resolve, reject) => {
+                            textureLoader.load(texturePath, resolve, undefined, reject);
+                        });
+                        
+                        const defaultMaterial = new THREE.MeshLambertMaterial({ 
+                            map: texture
+                        });
+                        
+                        object.traverse((child) => {
+                            if (child.isMesh) {
+                                child.material = defaultMaterial;
+                                console.log('Applied textured fallback material to', child.name);
+                            }
+                        });
+                        
+                    } catch (textureError) {
+                        console.error('Failed to load fallback texture:', textureError);
+                        // Use untextured material as last resort
+                        const defaultMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xcccccc
+                        });
+                        
+                        object.traverse((child) => {
+                            if (child.isMesh) {
+                                child.material = defaultMaterial;
+                            }
+                        });
+                    }
+                } else if (!materials) {
+                    // No materials and no texture - use basic material
+                    const defaultMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0xcccccc,
+                        wireframe: false
+                    });
+                    
+                    object.traverse((child) => {
+                        if (child.isMesh) {
+                            child.material = defaultMaterial;
+                        }
+                    });
+                    console.log('Applied default untextured material to mesh');
+                }
+                
                 // Add to scene
                 currentMesh = object;
                 scene.add(currentMesh);
+                
+                // Debug: Check what materials are actually applied
+                object.traverse((child) => {
+                    if (child.isMesh) {
+                        console.log(`Mesh ${child.name || 'unnamed'}:`, {
+                            material: child.material,
+                            hasTexture: !!child.material.map,
+                            textureUrl: child.material.map ? child.material.map.image?.src : 'none'
+                        });
+                    }
+                });
+                
+                // Force texture application if materials loaded but texture didn't apply
+                if (materials && meshInfo.texture) {
+                    const textureLoader = new THREE.TextureLoader();
+                    const texturePath = `${basePath}${meshInfo.texture}`;
+                    
+                    try {
+                        const texture = await new Promise((resolve, reject) => {
+                            textureLoader.load(texturePath, resolve, undefined, reject);
+                        });
+                        
+                        // Apply texture to all mesh materials
+                        object.traverse((child) => {
+                            if (child.isMesh && (!child.material.map || !child.material.map.image)) {
+                                console.log(`Manually applying texture to ${child.name || 'unnamed mesh'}`);
+                                if (child.material.map) {
+                                    child.material.map = texture;
+                                } else {
+                                    // Create new material with texture
+                                    const newMaterial = child.material.clone();
+                                    newMaterial.map = texture;
+                                    child.material = newMaterial;
+                                }
+                                child.material.needsUpdate = true;
+                            }
+                        });
+                        
+                        console.log('Manually applied texture:', texturePath);
+                        
+                    } catch (textureError) {
+                        console.error('Failed to manually load texture:', textureError);
+                    }
+                }
                 
                 // Center the mesh
                 const box = new THREE.Box3().setFromObject(currentMesh);
@@ -391,6 +549,8 @@
                 // Update info panel
                 updateInfoPanel(meshInfo, object);
                 
+                console.log('Mesh loaded successfully:', meshInfo.name);
+                
             } catch (error) {
                 console.error('Error loading mesh:', error);
                 const errorMsg = `Failed to load mesh "${meshInfo.name}": ${error.message}`;
@@ -398,7 +558,7 @@
                 
                 // Show error in loading div instead of alert
                 loadingDiv.innerHTML = `
-                    <div style="color: #ff6b6b;">
+                    <div style="color: #ff6b6b; text-align: center;">
                         <strong>Error:</strong><br>
                         ${errorMsg}<br>
                         <button onclick="document.getElementById('loading').style.display='none'" 
@@ -407,13 +567,48 @@
                         </button>
                     </div>
                 `;
+                return; // Don't hide loading div on error
             }
+            
+            // Hide loading div on success
+            loadingDiv.style.display = 'none';
         }
         
         function updateInfoPanel(meshInfo, object) {
             document.getElementById('current-name').textContent = meshInfo.name;
             document.getElementById('current-material').textContent = meshInfo.material || 'N/A';
             document.getElementById('current-texture').textContent = meshInfo.texture || 'N/A';
+            
+            // Show texture preview if available
+            if (meshInfo.texture) {
+                const texturePreview = document.getElementById('texture-preview');
+                const texturePreviewRow = document.getElementById('texture-preview-row');
+                const textureStatus = document.getElementById('texture-status');
+                const texturePath = `/assets/meshes/props/${meshInfo.name}/${meshInfo.texture}`;
+                
+                console.log('Loading texture preview from:', texturePath);
+                
+                texturePreview.src = texturePath;
+                textureStatus.style.display = 'block';
+                textureStatus.textContent = 'Loading texture...';
+                textureStatus.className = 'texture-status';
+                
+                texturePreview.onerror = () => {
+                    console.error('Failed to load texture preview:', texturePath);
+                    textureStatus.textContent = 'Texture load failed';
+                    textureStatus.className = 'texture-status texture-error';
+                    texturePreviewRow.style.display = 'block'; // Still show the row with error
+                };
+                
+                texturePreview.onload = () => {
+                    console.log('Texture preview loaded successfully:', texturePath);
+                    textureStatus.textContent = `✅ ${texturePreview.naturalWidth}x${texturePreview.naturalHeight}`;
+                    textureStatus.className = 'texture-status texture-success';
+                    texturePreviewRow.style.display = 'block';
+                };
+            } else {
+                document.getElementById('texture-preview-row').style.display = 'none';
+            }
             
             // Count vertices and faces
             let totalVertices = 0;
