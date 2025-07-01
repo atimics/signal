@@ -580,8 +580,8 @@ static void init(void)
 
     loading_screen_set_progress(&app_state.loading_screen, 0.8f, "Loading scene...");
 
-    // Load default scene
-    const char* scene_to_load = "camera_test";
+    // Load default scene - Logo scene is our gold standard baseline
+    const char* scene_to_load = "logo";
     strcpy(app_state.current_scene, scene_to_load);
     printf("ℹ️ Loading default scene: %s\n", scene_to_load);
 

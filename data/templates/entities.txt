@@ -101,3 +101,12 @@ mass=1000.0
 collision_radius=8.0
 kinematic=true
 mesh_name=Control Tower
+
+template: logo_cube
+description=Gold standard reference cube for testing and validation
+has_transform=true
+has_renderable=true
+mass=1.0
+collision_radius=1.0
+kinematic=true
+mesh_name=Logo Cube
