@@ -180,7 +180,7 @@ static void loading_screen_create_cube(LoadingScreen* loading, struct World* wor
     if (renderable)
     {
         // Connect the mesh to the renderable component
-        if (assets_create_renderable_from_mesh(&asset_registry, "loading_cube", renderable))
+        if (assets_create_renderable_from_mesh(get_asset_registry(), "loading_cube", renderable))
         {
             printf("✅ Loading cube renderable created successfully\n");
         }
@@ -354,7 +354,7 @@ static void load_scene_by_name(struct World* world, const char* scene_name, Enti
 {
     printf("🏗️  Loading scene '%s' from data...\n", scene_name);
 
-    if (!load_scene(world, &data_registry, &asset_registry, scene_name))
+    if (!load_scene(world, get_data_registry(), get_asset_registry(), scene_name))
     {
         printf("❌ Failed to load scene: %s\n", scene_name);
         return;
@@ -483,33 +483,8 @@ static void init(void)
 
     loading_screen_set_progress(&app_state.loading_screen, 0.3f, "Starting systems...");
 
-    // Initialize asset and data registries
-    AssetRegistry asset_registry;
-    DataRegistry data_registry;
-
-    if (!assets_init(&asset_registry, "/Users/ratimics/develop/cgame/build/assets"))
-    {
-        printf("❌ Failed to initialize asset system\n");
-        sapp_quit();
-        return;
-    }
-
-    if (!data_registry_init(&data_registry, "/Users/ratimics/develop/cgame/data"))
-    {
-        printf("❌ Failed to initialize data system\n");
-        sapp_quit();
-        return;
-    }
-
-    // Load entity and scene templates
-    load_entity_templates(&data_registry, "templates/entities.txt");
-    load_scene_templates(&data_registry, "scenes/logo.txt");         // Gold standard baseline scene
-    load_scene_templates(&data_registry, "scenes/mesh_test.txt");
-    load_scene_templates(&data_registry, "scenes/spaceport.txt");
-    load_scene_templates(&data_registry, "scenes/camera_test.txt");
-
     // Initialize system scheduler
-    if (!scheduler_init(&app_state.scheduler, &asset_registry, &data_registry, &app_state.render_config))
+    if (!scheduler_init(&app_state.scheduler, &app_state.render_config))
     {
         printf("❌ Failed to initialize scheduler\n");
         sapp_quit();
@@ -518,8 +493,10 @@ static void init(void)
 
     loading_screen_set_progress(&app_state.loading_screen, 0.4f, "Loading logo texture...");
 
+    // Track logo loading state
+    bool logo_loaded = false;
     // Load logo texture early for loading screen
-    if (load_texture(&asset_registry, "logo.png", "game_logo"))
+    if (load_texture(get_asset_registry(), "logo.png", "game_logo"))
     {
         printf("✅ Logo texture loaded successfully!\n");
         logo_loaded = true;
@@ -528,7 +505,7 @@ static void init(void)
     {
         printf("⚠️  Logo texture loading failed (trying from textures/ directory)\n");
         // Try from textures directory as fallback
-        if (load_texture(&asset_registry, "textures/logo.png", "game_logo"))
+        if (load_texture(get_asset_registry(), "textures/logo.png", "game_logo"))
         {
             printf("✅ Logo texture loaded from textures/ directory!\n");
             logo_loaded = true;
@@ -536,9 +513,9 @@ static void init(void)
     }
 
     // Create a simple material for the logo
-    if (logo_loaded && asset_registry->material_count < MAX_MATERIALS)
+    if (logo_loaded && get_asset_registry()->material_count < MAX_MATERIALS)
     {
-        Material* logo_material = &asset_registry->materials[asset_registry->material_count];
+        Material* logo_material = &get_asset_registry()->materials[get_asset_registry()->material_count];
         strncpy(logo_material->name, "game_logo", sizeof(logo_material->name) - 1);
         strncpy(logo_material->diffuse_texture, "game_logo",
                 sizeof(logo_material->diffuse_texture) - 1);
@@ -550,7 +527,7 @@ static void init(void)
         logo_material->shininess = 32.0f;
         logo_material->loaded = true;
 
-        asset_registry->material_count++;
+        get_asset_registry()->material_count++;
         printf("✅ Created logo material with texture reference\n");
     }
 

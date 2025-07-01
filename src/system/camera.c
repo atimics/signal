@@ -1,4 +1,4 @@
-#include "system_camera.h"
+#include "camera.h"
 
 #include <stdio.h>
 #include <stdbool.h>
