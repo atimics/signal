@@ -34,17 +34,25 @@ This document outlines the prioritized development sprints for the CGame engine,
 ## Phase 3: Performance & Feature Advancement (IN PROGRESS)
 
 ### Sprint 14: Mesh Generator Pipeline Integration
-*   **Status**: **ACTIVE & CRITICAL**
-*   **Goal**: To fully integrate the procedural mesh generator with the modern, binary-first asset pipeline.
-*   **Implementation Guide**: `../../active/sprint_14_mesh_generator_pipeline.md`
+*   **Status**: **✅ COMPLETED**
+*   **Outcome**: The procedural mesh generator is now fully integrated with the modern, binary-first asset pipeline.
 
-### Sprint 15: PBR Rendering Pipeline Implementation
-*   **Status**: **BLOCKED** (by Sprint 14)
+---
+
+## Phase 3: Performance & Feature Advancement (IN PROGRESS)
+
+### Sprint 15: Scene Graph & Culling
+*   **Status**: **ACTIVE & CRITICAL**
+*   **Goal**: To evolve the engine from rendering a flat list of entities to a modern, hierarchical Scene Graph architecture, and to leverage this for view frustum culling.
+*   **Implementation Guide**: `../../active/sprint_15_scene_graph.md`
+
+### Sprint 16: PBR Rendering Pipeline Implementation
+*   **Status**: **BLOCKED** (by Sprint 15)
 *   **Goal**: To architect and implement a modern, end-to-end Physically Based Rendering (PBR) pipeline.
-*   **Justification**: With a stable and performant core, we can now confidently proceed with major feature development. PBR is the highest priority feature for the engine.
+*   **Justification**: A scene graph is a prerequisite for a robust PBR system, as it allows for complex scenes with multiple light sources and objects.
 *   **Relevant Research**: `R03`, `R14`
 
-### Sprint 16: Core Gameplay Systems - The Resonance Cascade
+### Sprint 17: Core Gameplay Systems - The Resonance Cascade
 *   **Status**: **BACKLOG**
 *   **Goal**: To implement the foundational C-side systems required for the Resonance Cascade gameplay loop.
 *   **Implementation Guide**: `sprint_15_core_gameplay_systems.md`
@@ -53,7 +61,7 @@ This document outlines the prioritized development sprints for the CGame engine,
 
 ## Phase 4: AI & World Simulation
 
-### Sprint 17: AI Foundation (Proof of Concept)
+### Sprint 18: AI Foundation (Proof of Concept)
 *   **Status**: **BACKLOG**
 *   **Goal**: To create a "single agent" proof-of-concept by integrating the core technologies needed for the generative swarm AI system.
 *   **Justification**: This R&D sprint will de-risk the immense technical challenges of the AI vision by solving the core integration problems on a small scale before building the full swarm infrastructure.
@@ -61,4 +69,4 @@ This document outlines the prioritized development sprints for the CGame engine,
     1. Integrate the **SQLite** library for database operations.
     2. Integrate the **`llama.cpp`** library for flexible, multi-model inference (Gemma, Llama, etc.).
     3. Create a test program that loads a character prompt from a `.db` file, passes it to `llama.cpp` using a Gemma-2B model, and prints the response.
-*   **Relevant Research**: `R07`, `R08`
+*   **Relevant Research**: `R07`, `R25`
