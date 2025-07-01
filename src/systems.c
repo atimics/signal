@@ -14,6 +14,7 @@
 #include "system/collision.h"
 #include "system/ai.h"
 #include "system/camera.h"
+#include "system/lod.h"
 
 // Global asset and data registries
 static AssetRegistry g_asset_registry;
@@ -96,11 +97,17 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                       .enabled = true,
                                                       .update_func = camera_system_update };
 
+    scheduler->systems[SYSTEM_LOD] = (SystemInfo){ .name = "LOD",
+                                                   .frequency = 30.0f,  // Twice per frame (optimization)
+                                                   .enabled = true,
+                                                   .update_func = lod_system_update };
+
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
     printf("   Collision: %.1f Hz\n", scheduler->systems[SYSTEM_COLLISION].frequency);
     printf("   AI: %.1f Hz (base)\n", scheduler->systems[SYSTEM_AI].frequency);
     printf("   Camera: %.1f Hz\n", scheduler->systems[SYSTEM_CAMERA].frequency);
+    printf("   LOD: %.1f Hz\n", scheduler->systems[SYSTEM_LOD].frequency);
 
     return true;
 }

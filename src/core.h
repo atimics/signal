@@ -56,6 +56,15 @@ typedef enum
     COMPONENT_SCENENODE = 1 << 7,
 } ComponentType;
 
+/** @brief Level of Detail enumeration for performance optimization. */
+typedef enum
+{
+    LOD_CULLED = 0,  /**< Entity is too far away to render */
+    LOD_LOW = 1,     /**< Low detail rendering */
+    LOD_MEDIUM = 2,  /**< Medium detail rendering */
+    LOD_HIGH = 3     /**< High detail rendering */
+} LODLevel;
+
 // ============================================================================
 // COMPONENT DEFINITIONS (Pure Data)
 // ============================================================================

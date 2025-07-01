@@ -33,7 +33,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c main.c
+SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -248,3 +248,15 @@ test_sprint_10_5_task_3: | $(BUILD_DIR)
 	@echo "✅ Sprint 10.5 Task 3 test complete"
 
 .PHONY: test_sprint_10_5_task_3
+
+# Sprint 19 Task 1: Test LOD system
+test_lod: | $(BUILD_DIR)
+	@echo "🧪 Building and running LOD system tests..."
+	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_lod \
+		tests/test_performance_lod_simple.c tests/vendor/unity.c \
+		src/system/lod.c src/core.c \
+		-lm
+	./$(BUILD_DIR)/test_lod
+	@echo "✅ LOD system tests complete"
+
+.PHONY: test_lod
