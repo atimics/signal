@@ -18,9 +18,21 @@ bool world_init(struct World* world)
     if (!world) return false;
 
     memset(world, 0, sizeof(struct World));
+    
+    // Set default max entities
+    world->max_entities = MAX_ENTITIES;
+    
+    // Allocate entity array
+    world->entities = malloc(sizeof(struct Entity) * world->max_entities);
+    if (!world->entities) {
+        printf("❌ Failed to allocate entities array\n");
+        return false;
+    }
+    
+    memset(world->entities, 0, sizeof(struct Entity) * world->max_entities);
     world->next_entity_id = 1;  // Start at 1, 0 = INVALID_ENTITY
 
-    printf("🌍 World initialized - ready for %d entities\n", MAX_ENTITIES);
+    printf("🌍 World initialized - ready for %d entities\n", world->max_entities);
     return true;
 }
 

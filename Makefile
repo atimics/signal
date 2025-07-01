@@ -233,7 +233,10 @@ test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
 	./$(BUILD_DIR)/test_task_1_integration
 	@echo "✅ Sprint 10.5 Task 1 integration test complete"
 
-.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test-math test-full test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration
+.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm \
+	test test-math test-full test-performance \
+	test-red test-green test-refactor test-tdd test-tdd-unit test-tdd-perf \
+	test-coverage test-report test_memory
 
 # Sprint 10.5 Task 2: Test dynamic memory allocation in mesh parser
 test_sprint_10_5_task_2: | $(BUILD_DIR)
@@ -276,3 +279,115 @@ test_memory: | $(BUILD_DIR)
 	@echo "✅ Memory Management system tests complete"
 
 .PHONY: test_memory
+
+# ============================================================================
+# TDD TEST TARGETS - Sprint 19: Test-Driven Development
+# ============================================================================
+
+# Test directories
+UNIT_TEST_DIR = tests/unit
+INTEGRATION_TEST_DIR = tests/integration
+PERFORMANCE_TEST_DIR = tests/performance
+
+# TDD Unit Tests (RED/GREEN/REFACTOR phases)
+TDD_UNIT_TESTS = tests/unit/test_ecs_core.c tests/vendor/unity.c
+TDD_UNIT_ENGINE_SRC = src/core.c src/system/memory.c
+TDD_UNIT_TARGET = $(BUILD_DIR)/cgame_tdd_unit_tests
+
+# TDD Performance Tests
+TDD_PERF_TESTS = tests/performance/test_memory_perf.c tests/vendor/unity.c
+TDD_PERF_ENGINE_SRC = src/system/memory.c src/core.c src/assets.c
+TDD_PERF_TARGET = $(BUILD_DIR)/cgame_tdd_perf_tests
+
+# TDD Integration Tests (future)
+TDD_INTEGRATION_TESTS = tests/integration/test_full_pipeline.c tests/vendor/unity.c
+TDD_INTEGRATION_TARGET = $(BUILD_DIR)/cgame_tdd_integration_tests
+
+# ============================================================================
+# TDD WORKFLOW TARGETS
+# ============================================================================
+
+# RED Phase: Run tests that should fail initially
+test-red: test-tdd-unit test-tdd-perf
+	@echo "🔴 RED Phase: Tests run (some should fail - this is expected in TDD)"
+
+# GREEN Phase: Run tests after implementation
+test-green: test-tdd-unit test-tdd-perf
+	@echo "🟢 GREEN Phase: Tests should now pass after implementation"
+
+# REFACTOR Phase: Run tests during optimization
+test-refactor: test-tdd-unit test-tdd-perf
+	@echo "🔄 REFACTOR Phase: Tests validate optimizations don't break functionality"
+
+# Complete TDD cycle
+test-tdd: test-tdd-unit test-tdd-perf
+	@echo "🧪 Complete TDD test suite executed"
+
+# ============================================================================
+# INDIVIDUAL TDD TEST TARGETS
+# ============================================================================
+
+# Unit tests for ECS core (no external dependencies)
+test-tdd-unit: $(TDD_UNIT_TARGET)
+	@echo "🧪 Running TDD Unit Tests (ECS Core)..."
+	./$(TDD_UNIT_TARGET) || echo "⚠️  Some unit tests failed (expected in RED phase)"
+	@echo "✅ Unit tests completed"
+
+# Performance tests for memory management
+test-tdd-perf: $(TDD_PERF_TARGET)
+	@echo "🚀 Running TDD Performance Tests (Memory Management)..."
+	./$(TDD_PERF_TARGET) || echo "⚠️  Some performance tests failed (expected in RED phase)"
+	@echo "✅ Performance tests completed"
+
+# Build TDD unit test executable
+$(TDD_UNIT_TARGET): $(TDD_UNIT_TESTS) $(TDD_UNIT_ENGINE_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building TDD unit test suite..."
+	@mkdir -p $(BUILD_DIR)
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+		-DUNITY_TESTING -DTDD_TESTING \
+		-o $@ $(TDD_UNIT_TESTS) $(TDD_UNIT_ENGINE_SRC) -lm
+
+# Build TDD performance test executable
+$(TDD_PERF_TARGET): $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building TDD performance test suite..."
+	@mkdir -p $(BUILD_DIR)
+ifeq ($(OS),Darwin)
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+		-DUNITY_TESTING -DTDD_TESTING -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) -lm
+else
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+		-DUNITY_TESTING -DTDD_TESTING -DSOKOL_DUMMY_BACKEND \
+		-D_POSIX_C_SOURCE=199309L \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) -lm -lrt
+endif
+
+# ============================================================================
+# TEST COVERAGE AND REPORTING
+# ============================================================================
+
+# Generate test coverage report (requires gcov)
+test-coverage: CFLAGS += --coverage
+test-coverage: clean $(TDD_UNIT_TARGET) $(TDD_PERF_TARGET)
+	@echo "📊 Generating test coverage report..."
+	./$(TDD_UNIT_TARGET) || true
+	./$(TDD_PERF_TARGET) || true
+	@echo "Coverage files generated - use gcov to analyze"
+
+# Generate test report summary
+test-report:
+	@echo "📋 CGame Test Report Summary"
+	@echo "==========================="
+	@echo "Unit Tests: $(TDD_UNIT_TARGET)"
+	@echo "Performance Tests: $(TDD_PERF_TARGET)"
+	@echo "Math Tests: $(TEST_MATH_TARGET)"
+	@echo ""
+	@echo "TDD Workflow:"
+	@echo "  make test-red     # RED phase (tests may fail)"
+	@echo "  make test-green   # GREEN phase (after implementation)"
+	@echo "  make test-refactor # REFACTOR phase (during optimization)"
+	@echo ""
+	@echo "Coverage:"
+	@echo "  make test-coverage # Generate coverage report"

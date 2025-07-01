@@ -42,6 +42,7 @@ typedef struct
 /** @brief A unique identifier for an entity in the world. */
 typedef uint32_t EntityID;
 #define INVALID_ENTITY 0 /**< A reserved ID for an invalid or null entity. */
+#define INVALID_ENTITY_ID 0 /**< Alternative name for consistency with tests. */
 
 /** @brief A bitmask representing the components attached to an entity. */
 typedef enum
@@ -268,8 +269,9 @@ struct ComponentPools
 /** @brief Represents the entire state of the game world. */
 struct World
 {
-    struct Entity entities[MAX_ENTITIES];
+    struct Entity* entities;        // Dynamic allocation for TDD flexibility
     uint32_t entity_count;
+    uint32_t max_entities;          // Maximum number of entities (for TDD)
     uint32_t next_entity_id;
 
     struct ComponentPools components;
@@ -293,7 +295,7 @@ void world_update(struct World* world, float delta_time);
 
 // Entity management
 EntityID entity_create(struct World* world);
-void entity_destroy(struct World* world, EntityID entity_id);
+bool entity_destroy(struct World* world, EntityID entity_id);
 struct Entity* entity_get(struct World* world, EntityID entity_id);
 
 // Component management
@@ -353,5 +355,9 @@ void mat4_rotation_z(float* m, float angle_radians);
 void mat4_scale(float* m, Vector3 scale);
 void mat4_from_quaternion(float* m, Quaternion q);
 void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale);
+
+// TDD-required functions for Sprint 19
+bool entity_add_components(struct World* world, EntityID entity_id, ComponentType components);
+bool entity_is_valid(struct World* world, EntityID entity_id);
 
 #endif  // CORE_H
