@@ -1,56 +1,55 @@
-# Core Gameplay Mechanics
+# Core Gameplay Mechanics (Revised)
 
-**ID**: `R22_Resonance_and_Narrative`
-**Status**: **Canonical**
-**Author**: Gemini, Chief Science Officer
+**ID**: `R22_Resonance_and_Narrative_v2`
+**Status**: **PROPOSED CANONICAL**
 
 ## 1. Overview
 
-This document details the core, moment-to-moment gameplay systems of "The Ghost Signal." It translates the high-level vision into a concrete set of interconnected mechanics that are designed to be deep, rewarding, and intuitive. The guiding principle is that **narrative is a tool for gameplay, and gameplay is the engine of narrative discovery.**
+This document details the core, moment-to-moment gameplay systems of "The Ghost Signal." It translates the high-level vision into a concrete set of interconnected mechanics. The guiding principle is that **narrative is a tool for gameplay, and gameplay is the engine of narrative discovery.** This version integrates the **Attraction Drive** for high-speed exploration and the **Resonance Map** for strategic planning.
+
+## 2. The Two States of Play: Strategy & Execution
+
+Gameplay is now divided into two distinct but interconnected states:
+
+*   **Strategy (The Resonance Map)**: In the quiet moments, the player uses a strategic overlay to analyze the Graveyard, predict enemy movements, and plan their next infiltration.
+*   **Execution (In-Ship Piloting)**: The player pilots their ship directly, using their skills to navigate, explore, and survive the dangers they planned for.
 
 ---
 
-## 2. The Resonance Cascade: The Core Loop
+## 3. Pillar I: High-Speed Exploration (The A-Drive)
 
-The **Resonance Cascade** is the unified system that links exploration, narrative, and progression. It is composed of three parts:
+This pillar defines the core moment-to-moment traversal within the vast derelicts.
 
-### 2.1. Resonance Cracking (The Action)
-
-This is the player's primary interaction with the world beyond basic flight.
-
-*   **The Mechanic**: The player uses their ship's **Resonance Attenuator** to "crack" **Resonance Locks** found on derelicts. This initiates a skill-based minigame where the player must modulate their beam's frequency to match a target waveform.
-*   **The Purpose**: Successfully cracking a lock is the only way to acquire **Echoes** (lore and schematics).
-
-### 2.2. Echoes as Keys (The Strategy)
-
-Every piece of lore is a tool.
-
-*   **The Mechanic**: The player can slot a limited number of recovered Echoes into their ship's **Attunement Matrix**. Each Echo has a **Resonance Type** (e.g., `Engineering`, `Security`, `Medical`).
-*   **The Purpose**: The types of Echoes the player has attuned determine which types of Resonance Locks are visible and interactable in the world. Slotting an `Engineering` Echo reveals all nearby `Engineering` locks. This makes exploration a strategic choice, not a random search.
-
-### 2.3. The Resonance Signature (The Risk)
-
-This system adds a layer of risk vs. reward to the player's choices.
-
-*   **The Mechanic**: The player's ship has a **Resonance Signature** level, visible on the HUD. This level increases based on the number and power of the Echoes currently slotted in the Attunement Matrix.
-*   **The Purpose**: A higher signature makes the player "louder" in the void.
-    *   **High Signature**: Allows the player to detect and crack rare, high-level Resonance Locks, but also attracts the attention of powerful Wardens and Chrome-Baron crews.
-    *   **Low Signature**: Allows the player to move stealthily and avoid combat, but limits them to common, low-reward Resonance Locks.
+*   **The Mechanic: The Attraction Drive ("A-Drive")**: The player's symbiotic ship is equipped with a salvaged Aethelian **Localized Attraction Drive**. When activated near a surface, it projects a micro-gravity field, allowing the ship to "stick" to and "surf" along the hulls and corridors of derelicts at high speed.
+    *   **Gameplay**: This is a high-skill, physics-based system. Players can perform long, graceful drifts around corners, chain together boosts, and navigate complex wreckage with thrilling speed and agility.
+    *   **Cost & Risk**: The A-Drive consumes significant energy, making it a resource to be managed. High-speed surfing also increases the risk of collision and makes the player's Resonance Signature more detectable to nearby hostiles.
+*   **Contrast: The Fusion Torch**: For travel in the open void *between* derelicts, the player relies on slower, more deliberate Newtonian thrusters (the Fusion Torch). This creates a clear distinction between the strategic, long-haul travel of open space and the high-octane, tactical "canyon running" inside the wrecks.
 
 ---
 
-## 3. Schematic Fragmentation (The Progression)
+## 4. Pillar II: Strategic Infiltration (The Resonance Map)
 
-Upgrades are not found; they are reconstructed.
+This pillar defines the player's strategic interaction with the world. It is the "abstract game layer."
 
-*   **The Mechanic**: The player collects **Schematic Fragments** from specific Echoes. At a **Workbench** in their safehouse, they can slot these fragments into schematics for new ship modules.
-*   **The Purpose**: This creates a powerful, non-linear progression system. A player who desperately needs a better engine will be highly motivated to seek out `Engineering` Echoes. This directly ties narrative discovery to tangible, gameplay-altering rewards.
+*   **The Mechanic: The Resonance Map**: This is not a command interface, but an **intelligence and prediction tool**. Accessed from a safe zone, it provides a top-down, schematic view of the current sector of the Graveyard.
+    *   **Information Display**: The map visualizes data intercepted from the Ghost Signal:
+        *   Known **Warden** patrol routes and escalation levels.
+        *   Predicted **Chrome-Baron** salvage operations and attack vectors.
+        *   Locations of **Echo-Scribe** data-shrines and their passive observation zones.
+        *   Areas of high resonance, potential Echo sources, and environmental hazards.
+    *   **Player Agency**: The player cannot command factions, but they can *influence* and *exploit* them.
+        *   **Planning**: Set waypoints and plot courses to avoid patrols or intercept targets of opportunity.
+        *   **Prediction**: See the likely outcome of faction clashes (e.g., "Chrome-Barons will be weakened after attacking that Warden outpost").
+        *   **Manipulation (Unlockable)**: Later upgrades, discovered via Echoes, might allow the player to trigger events, such as creating a "ghost" resonance signal to lure a Warden patrol away from their intended target.
 
 ---
 
-## 4. Whispering Echoes (The Atmosphere)
+## 5. Pillar III: The Core Loop (The Resonance Cascade - Integrated)
 
-The world is haunted by its past.
+The Resonance Cascade remains the central loop, but it now integrates with the new pillars.
 
-*   **The Mechanic**: As the player explores, they will trigger brief, non-collectible, audio-visual ghostly events.
-*   **The Purpose**: These **Whispering Echoes** serve to deepen the atmosphere, provide subtle environmental storytelling, and can occasionally offer cryptic clues or warnings about the immediate surroundings, making the world feel alive and reactive.
+1.  **Plan (Resonance Map)**: The player analyzes the map and identifies a target—a derelict with a promising `Engineering` Echo, currently unguarded.
+2.  **Travel (Fusion Torch)**: The player travels to the derelict's location using their slow, efficient thrusters.
+3.  **Infiltrate (A-Drive)**: Upon arrival, the player uses the A-Drive to skillfully "surf" through the derelict's interior, avoiding hazards and reaching the target location quickly.
+4.  **Exploit (Resonance Cracking)**: The player cracks the Resonance Lock to acquire the `Engineering` Echo.
+5.  **Upgrade (Schematic Fragmentation)**: The player returns to a safe zone. The new Echo provides a schematic fragment that, when combined with others, unlocks a new ship module—perhaps an upgrade that reveals more detailed information on the **Resonance Map**, creating a powerful, self-reinforcing loop.

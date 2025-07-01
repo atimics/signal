@@ -300,7 +300,7 @@ struct Entity* entity_get(struct World* world, EntityID entity_id);
 
 // Component management
 bool entity_add_component(struct World* world, EntityID entity_id, ComponentType type);
-void entity_remove_component(struct World* world, EntityID entity_id, ComponentType type);
+bool entity_remove_component(struct World* world, EntityID entity_id, ComponentType type);
 bool entity_has_component(struct World* world, EntityID entity_id, ComponentType type);
 
 // Component accessors

@@ -291,7 +291,7 @@ PERFORMANCE_TEST_DIR = tests/performance
 
 # TDD Unit Tests (RED/GREEN/REFACTOR phases)
 TDD_UNIT_TESTS = tests/unit/test_ecs_core.c tests/vendor/unity.c
-TDD_UNIT_ENGINE_SRC = src/core.c src/system/memory.c
+TDD_UNIT_ENGINE_SRC = src/core.c
 TDD_UNIT_TARGET = $(BUILD_DIR)/cgame_tdd_unit_tests
 
 # TDD Performance Tests

@@ -1,7 +1,7 @@
 # The World Bible: The Ghost Signal
 
 **ID**: `CANONICAL_WORLD_BIBLE`
-**Version**: 1.0
+**Version**: 2.0
 **Status**: **Supersedes all previous lore and design documents.**
 **Author**: Gemini, Chief Science Officer
 
@@ -45,24 +45,53 @@ The game takes place entirely within a single, massive star system known as "The
 
 ## Part III: The Mechanics
 
-### 7. The Core Loop: The Resonance Cascade
-This is the unified system that links exploration, narrative, and progression.
-*   **Resonance Cracking (The Action)**: The player uses their ship's **Resonance Attenuator** to "crack" **Resonance Locks** found on derelicts. This is a skill-based minigame of matching waveforms.
-*   **Echoes as Keys (The Strategy)**: Every piece of lore (**Echo**) has a **Resonance Type** (e.g., `Engineering`, `Security`). Slotting an Echo into the ship's **Attunement Matrix** reveals all nearby Resonance Locks of the corresponding type.
-*   **The Resonance Signature (The Risk)**: The player's ship has a **Resonance Signature** level. A higher signature reveals rarer locks but attracts more dangerous enemies. A lower signature allows for stealth but limits discovery.
+### 7. The Two States of Play: Strategy & Execution
 
-### 8. Player Progression: Schematic Fragmentation
-Upgrades are not found; they are reconstructed. The player collects **Schematic Fragments** from Echoes and uses them to craft new ship modules at a **Workbench**, directly tying narrative discovery to tangible, gameplay-altering rewards.
+Gameplay is divided into two distinct but interconnected states:
 
-### 9. Propulsion & Flight Model
-*   **The Attraction Drive ("A-Drive")**: The core gameplay uses a **Localized Attraction Drive** that projects a gravity field onto nearby surfaces, allowing for fast, agile, "sticky" flight within the dense derelicts. This costs significant energy.
-*   **The Fusion Torch**: For travel in open space between derelicts, the player must rely on slower, fuel-based Newtonian thrusters. This creates a clear distinction between high-action "canyon running" and strategic "long haul" travel.
+*   **Strategy (The Resonance Map)**: In the quiet moments, the player uses a strategic overlay to analyze the Graveyard, predict enemy movements, and plan their next infiltration.
+*   **Execution (In-Ship Piloting)**: The player pilots their ship directly, using their skills to navigate, explore, and survive the dangers they planned for.
+
+### 8. High-Speed Exploration (The A-Drive)
+
+This pillar defines the core moment-to-moment traversal within the vast derelicts.
+
+*   **The Mechanic: The Attraction Drive ("A-Drive")**: The player's symbiotic ship is equipped with a salvaged Aethelian **Localized Attraction Drive**. When activated near a surface, it projects a micro-gravity field, allowing the ship to "stick" to and "surf" along the hulls and corridors of derelicts at high speed.
+    *   **Gameplay**: This is a high-skill, physics-based system. Players can perform long, graceful drifts around corners, chain together boosts, and navigate complex wreckage with thrilling speed and agility.
+    *   **Cost & Risk**: The A-Drive consumes significant energy, making it a resource to be managed. High-speed surfing also increases the risk of collision and makes the player's Resonance Signature more detectable to nearby hostiles.
+*   **Contrast: The Fusion Torch**: For travel in the open void *between* derelicts, the player relies on slower, more deliberate Newtonian thrusters (the Fusion Torch). This creates a clear distinction between the strategic, long-haul travel of open space and the high-octane, tactical "canyon running" inside the wrecks.
+
+### 9. Strategic Infiltration (The Resonance Map)
+
+This pillar defines the player's strategic interaction with the world. It is the "abstract game layer."
+
+*   **The Mechanic: The Resonance Map**: This is not a command interface, but an **intelligence and prediction tool**. Accessed from a safe zone, it provides a top-down, schematic view of the current sector of the Graveyard.
+    *   **Information Display**: The map visualizes data intercepted from the Ghost Signal:
+        *   Known **Warden** patrol routes and escalation levels.
+        *   Predicted **Chrome-Baron** salvage operations and attack vectors.
+        *   Locations of **Echo-Scribe** data-shrines and their passive observation zones.
+        *   Areas of high resonance, potential Echo sources, and environmental hazards.
+    *   **Player Agency**: The player cannot command factions, but they can *influence* and *exploit* them.
+        *   **Planning**: Set waypoints and plot courses to avoid patrols or intercept targets of opportunity.
+        *   **Prediction**: See the likely outcome of faction clashes (e.g., "Chrome-Barons will be weakened after attacking that Warden outpost").
+        *   **Manipulation (Unlockable)**: Later upgrades, discovered via Echoes, might allow the player to trigger events, such as creating a "ghost" resonance signal to lure a Warden patrol away from their intended target.
+
+### 10. The Core Loop (The Resonance Cascade - Integrated)
+
+The Resonance Cascade remains the central loop, but it now integrates with the new pillars.
+
+1.  **Plan (Resonance Map)**: The player analyzes the map and identifies a target—a derelict with a promising `Engineering` Echo, currently unguarded.
+2.  **Travel (Fusion Torch)**: The player travels to the derelict's location using their slow, efficient thrusters.
+3.  **Infiltrate (A-Drive)**: Upon arrival, the player uses the A-Drive to skillfully "surf" through the derelict's interior, avoiding hazards and reaching the target location quickly.
+4.  **Exploit (Resonance Cracking)**: The player cracks the Resonance Lock to acquire the `Engineering` Echo.
+5.  **Upgrade (Schematic Fragmentation)**: The player returns to a safe zone. The new Echo provides a schematic fragment that, when combined with others, unlocks a new ship module—perhaps an upgrade that reveals more detailed information on the **Resonance Map**, creating a powerful, self-reinforcing loop.
 
 ---
 
 ## Part IV: The First Hour Experience
 
 The opening hour is a tightly scripted experience designed to teach these mechanics organically.
+
 1.  **The Cold Open (Minutes 0-10)**: The player's ship is dead. They must perform their first **Resonance Crack** to restart the core, learning the basic mechanic under pressure.
 2.  **The Graveyard (Minutes 10-30)**: The player takes their first flight, learns to follow the signal, and finds their first **Echo**, which provides a minor, immediate gameplay benefit.
 3.  **The First Threat (Minutes 30-50)**: The player's actions attract a **Warden Scout**. They are presented with a choice between a high-risk, high-reward target guarded by the Warden, and a low-risk, low-reward target, teaching them the core principles of the Resonance Signature system.
@@ -80,4 +109,3 @@ This section contains a living repository of the in-game text fragments, audio l
 *   **Fragment ID**: WDN-001-A (Warden Directive)
     *   **Source**: Warden Central Command
     *   **Data**: `Directive updated. Quarantine Protocol 7. Target signature class: Resonant. Priority: Absolute. Suppress all unauthorized signal amplification. Neutralize source entity. No exceptions.`
-*   *(...and so on, as populated in the full Lore Fragments document.)*

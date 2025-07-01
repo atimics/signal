@@ -283,12 +283,12 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
     return true;
 }
 
-void entity_remove_component(struct World* world, EntityID entity_id, ComponentType type)
+bool entity_remove_component(struct World* world, EntityID entity_id, ComponentType type)
 {
     struct Entity* entity = entity_get(world, entity_id);
     if (!entity || !(entity->component_mask & type))
     {
-        return;  // Entity not found or component doesn't exist
+        return false;  // Entity not found or component doesn't exist
     }
 
     entity->component_mask &= ~type;
@@ -326,6 +326,7 @@ void entity_remove_component(struct World* world, EntityID entity_id, ComponentT
             entity->scene_node = NULL;
             break;
     }
+    return true;
 }
 
 bool entity_has_component(struct World* world, EntityID entity_id, ComponentType type)
@@ -904,4 +905,88 @@ void camera_extract_frustum_planes(const struct Camera* camera, float frustum_pl
             frustum_planes[i][3] /= mag;
         }
     }
+}
+
+// ============================================================================
+// TDD FUNCTIONS - Sprint 19 Test-Driven Development
+// ============================================================================
+
+bool entity_add_components(struct World* world, EntityID entity_id, ComponentType components)
+{
+    if (!world || entity_id == INVALID_ENTITY_ID) return false;
+    
+    struct Entity* entity = entity_get(world, entity_id);
+    if (!entity) return false;
+    
+    // Define mask of all valid components
+    const ComponentType VALID_COMPONENTS = 
+        COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_COLLISION | 
+        COMPONENT_AI | COMPONENT_RENDERABLE | COMPONENT_PLAYER | 
+        COMPONENT_CAMERA | COMPONENT_SCENENODE;
+    
+    // Check if components contains any invalid bits
+    if (components & ~VALID_COMPONENTS) {
+        return false; // Invalid component type detected
+    }
+    
+    // Add each component individually
+    bool all_success = true;
+    
+    if (components & COMPONENT_TRANSFORM && !(entity->component_mask & COMPONENT_TRANSFORM)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_TRANSFORM)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_PHYSICS && !(entity->component_mask & COMPONENT_PHYSICS)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_PHYSICS)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_COLLISION && !(entity->component_mask & COMPONENT_COLLISION)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_COLLISION)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_AI && !(entity->component_mask & COMPONENT_AI)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_AI)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_RENDERABLE && !(entity->component_mask & COMPONENT_RENDERABLE)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_RENDERABLE)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_PLAYER && !(entity->component_mask & COMPONENT_PLAYER)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_PLAYER)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_CAMERA && !(entity->component_mask & COMPONENT_CAMERA)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_CAMERA)) {
+            all_success = false;
+        }
+    }
+    
+    return all_success;
+}
+
+bool entity_is_valid(struct World* world, EntityID entity_id)
+{
+    if (!world || entity_id == INVALID_ENTITY_ID) return false;
+    
+    // Check if entity exists in the world
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        if (world->entities[i].id == entity_id) {
+            return true;
+        }
+    }
+    
+    return false;
 }
