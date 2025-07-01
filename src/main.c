@@ -561,7 +561,7 @@ static void init(void)
     };
 
     // Initialize renderer
-    if (!render_init(&app_state.render_config, &asset_registry, (float)sapp_width(),
+    if (!render_init(&app_state.render_config, get_asset_registry(), (float)sapp_width(),
                      (float)sapp_height()))
     {
         printf("❌ Failed to initialize renderer\n");
