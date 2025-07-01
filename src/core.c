@@ -65,7 +65,9 @@ void world_clear(struct World* world)
     world->active_camera_entity = INVALID_ENTITY; // Reset active camera
     
     // Clear entity array
-    memset(world->entities, 0, sizeof(world->entities));
+    if (world->entities) {
+        memset(world->entities, 0, sizeof(struct Entity) * world->max_entities);
+    }
     
     printf("🌍 World cleared\n");
 }
