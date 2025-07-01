@@ -178,6 +178,16 @@ assets-wasm: $(BUILD_ASSETS_DIR)
 	@echo "📋 Using existing compiled assets from build/assets/"
 
 # ============================================================================
+# DOCUMENTATION TARGETS
+# ============================================================================
+
+# Generate API documentation using Doxygen
+docs: Doxyfile
+	@echo "📚 Generating API documentation..."
+	doxygen Doxyfile
+	@echo "✅ API documentation generated in docs/api_docs/html"
+
+# ============================================================================
 # TEST TARGETS - Sprint 15: Unity Testing Framework Integration
 # ============================================================================
 
@@ -294,9 +304,9 @@ TDD_UNIT_TESTS = tests/unit/test_ecs_core.c tests/vendor/unity.c
 TDD_UNIT_ENGINE_SRC = src/core.c
 TDD_UNIT_TARGET = $(BUILD_DIR)/cgame_tdd_unit_tests
 
-# TDD Performance Tests
-TDD_PERF_TESTS = tests/performance/test_memory_perf.c tests/vendor/unity.c
-TDD_PERF_ENGINE_SRC = src/system/memory.c src/core.c src/assets.c
+# TDD Performance Tests (isolated memory tests)
+TDD_PERF_TESTS = tests/performance/test_memory_isolated.c tests/vendor/unity.c
+TDD_PERF_ENGINE_SRC = src/system/memory.c src/core.c
 TDD_PERF_TARGET = $(BUILD_DIR)/cgame_tdd_perf_tests
 
 # TDD Integration Tests (future)
@@ -353,12 +363,12 @@ $(TDD_PERF_TARGET): $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) | $(BUILD_DIR)
 	@mkdir -p $(BUILD_DIR)
 ifeq ($(OS),Darwin)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
-		-DUNITY_TESTING -DTDD_TESTING -DSOKOL_DUMMY_BACKEND \
+		-DUNITY_TESTING -DTDD_TESTING \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) -lm
 else
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
-		-DUNITY_TESTING -DTDD_TESTING -DSOKOL_DUMMY_BACKEND \
+		-DUNITY_TESTING -DTDD_TESTING \
 		-D_POSIX_C_SOURCE=199309L \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) -lm -lrt

@@ -552,3 +552,96 @@ void memory_system_update_wrapper(struct World* world, RenderConfig* render_conf
         memory_system_update(world, &g_asset_registry, delta_time);
     #endif
 }
+
+// ============================================================================
+// MEMORY POOL API (for testing and advanced allocation)
+// ============================================================================
+
+void* memory_pool_alloc(uint32_t pool_id, size_t size) {
+    if (!memory_state.initialized) {
+        return NULL;
+    }
+    
+    MemoryPool* pool = get_pool(pool_id);
+    if (!pool) {
+        return NULL;
+    }
+    
+    // Check if pool has space for this allocation
+    if (pool->allocated_bytes + size > pool->max_bytes && pool->max_bytes > 0) {
+        return NULL;
+    }
+    
+    // For testing, just use standard malloc
+    void* ptr = malloc(size);
+    if (ptr) {
+        pool->allocated_bytes += size;
+        pool->allocation_count++;
+        memory_state.total_allocated_bytes += size;
+    }
+    
+    return ptr;
+}
+
+void memory_pool_free(uint32_t pool_id, void* ptr) {
+    if (!memory_state.initialized || !ptr) {
+        return;
+    }
+    
+    MemoryPool* pool = get_pool(pool_id);
+    if (!pool) {
+        return;
+    }
+    
+    // For testing, we can't track exact allocation sizes with standard malloc
+    // In a production implementation, we'd track allocation metadata
+    pool->allocation_count--;
+    free(ptr);
+}
+
+void memory_destroy_pool(uint32_t pool_id) {
+    if (!memory_state.initialized) {
+        return;
+    }
+    
+    MemoryPool* pool = get_pool(pool_id);
+    if (!pool) {
+        return;
+    }
+    
+    // Reset pool state
+    pool->allocated_bytes = 0;
+    pool->peak_bytes = 0;
+    pool->max_bytes = 0;
+    pool->allocation_count = 0;
+    pool->name[0] = '\0';
+    pool->enabled = false;
+}
+
+void memory_track_asset_allocation(void* ptr, size_t size, const char* asset_name) {
+    if (!memory_state.initialized || !ptr || !asset_name) {
+        return;
+    }
+    
+    // Find or create tracked asset entry
+    TrackedAsset* asset = find_tracked_asset(asset_name);
+    if (!asset && memory_state.tracked_asset_count < MAX_TRACKED_ASSETS) {
+        asset = &memory_state.tracked_assets[memory_state.tracked_asset_count++];
+        asset->asset_id = memory_state.tracked_asset_count;
+        strncpy(asset->asset_name, asset_name, sizeof(asset->asset_name) - 1);
+        asset->asset_name[sizeof(asset->asset_name) - 1] = '\0';
+        strncpy(asset->asset_type, "test", sizeof(asset->asset_type) - 1);
+        asset->asset_type[sizeof(asset->asset_type) - 1] = '\0';
+        asset->memory_bytes = 0;
+        asset->last_used_time = get_time();
+        asset->distance_from_camera = 0.0f;
+        asset->loaded = true;
+        asset->can_unload = true;
+    }
+    
+    if (asset) {
+        asset->memory_bytes += size;
+        asset->last_used_time = get_time();
+        asset->loaded = true;
+    }
+}

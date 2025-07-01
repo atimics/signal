@@ -4,8 +4,15 @@
 
 #include "../vendor/unity.h"
 #include "../../src/system/memory.h"
-#include "../../src/assets.h"
 #include "../../src/core.h"
+
+// Use mocks for graphics dependencies in testing
+#ifdef MOCK_GRAPHICS
+#include "../mocks/mock_graphics.h"
+#else
+#include "../../src/assets.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

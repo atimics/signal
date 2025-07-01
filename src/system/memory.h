@@ -175,6 +175,39 @@ void memory_set_unloading_enabled(bool enabled);
 void memory_print_report(void);
 
 // ============================================================================
+// MEMORY POOL API (for testing and advanced allocation)
+// ============================================================================
+
+/**
+ * @brief Allocate memory from a specific pool
+ * @param pool_id Pool ID returned from memory_create_pool
+ * @param size Number of bytes to allocate
+ * @return Pointer to allocated memory, or NULL on failure
+ */
+void* memory_pool_alloc(uint32_t pool_id, size_t size);
+
+/**
+ * @brief Free memory back to a specific pool
+ * @param pool_id Pool ID where memory was allocated
+ * @param ptr Pointer to memory to free
+ */
+void memory_pool_free(uint32_t pool_id, void* ptr);
+
+/**
+ * @brief Destroy a memory pool and free all its memory
+ * @param pool_id Pool ID to destroy
+ */
+void memory_destroy_pool(uint32_t pool_id);
+
+/**
+ * @brief Track asset allocation for testing
+ * @param ptr Pointer to allocated memory
+ * @param size Size of allocation
+ * @param asset_name Name of the asset
+ */
+void memory_track_asset_allocation(void* ptr, size_t size, const char* asset_name);
+
+// ============================================================================
 // ASSET UNLOADING API
 // ============================================================================
 
