@@ -534,7 +534,7 @@ static void init(void)
     loading_screen_set_progress(&app_state.loading_screen, 0.5f, "Creating loading cube...");
 
     // Create loading cube mesh (works with or without logo texture)
-    create_loading_cube_mesh(&asset_registry);
+    create_loading_cube_mesh(get_asset_registry());
     loading_screen_create_cube(&app_state.loading_screen, &app_state.world);
 
     if (!logo_loaded)

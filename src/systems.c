@@ -210,17 +210,13 @@ void scheduler_set_frequency(struct SystemScheduler* scheduler, SystemType type,
 }
 
 // ============================================================================
-// DATA ACCESS
+// GLOBAL REGISTRY ACCESS - TO BE REMOVED AFTER REFACTOR
 // ============================================================================
 
 DataRegistry* get_data_registry(void)
 {
     return &g_data_registry;
 }
-
-// ============================================================================
-// GLOBAL SYSTEM ACCESSORS
-// ============================================================================
 
 AssetRegistry* get_asset_registry(void)
 {
