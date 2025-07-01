@@ -517,7 +517,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         
         // Get material properties from the renderable component
         float glow_intensity = 0.0f;
-        if (entity->renderable && entity->renderable->material_id < MAX_MATERIALS) {
+        if (entity->renderable && entity->renderable->material_id < MAX_MATERIAL_REGISTRY) {
             MaterialProperties* material = material_get_by_id(entity->renderable->material_id);
             if (material) {
                 glow_intensity = material->glow_intensity;

@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 // Material registry for named materials
-#define MAX_MATERIALS 64
-static MaterialProperties material_registry[MAX_MATERIALS];
-static char material_names[MAX_MATERIALS][32];
+#define MAX_MATERIAL_REGISTRY 64
+static MaterialProperties material_registry[MAX_MATERIAL_REGISTRY];
+static char material_names[MAX_MATERIAL_REGISTRY][32];
 static uint32_t material_count = 0;
 
 void material_system_init(void) {
@@ -36,7 +36,7 @@ void material_system_shutdown(void) {
 }
 
 MaterialProperties* material_create(MaterialType type) {
-    if (material_count >= MAX_MATERIALS) {
+    if (material_count >= MAX_MATERIAL_REGISTRY) {
         printf("❌ Material registry full!\n");
         return NULL;
     }
