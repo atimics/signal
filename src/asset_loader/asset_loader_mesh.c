@@ -6,6 +6,7 @@
 #include "../assets.h"
 #include "../gpu_resources.h"
 #include "../sokol_gfx.h"
+#include "../system/memory.h"
 
 // Define the actual implementation of our opaque structs
 struct MeshGpuResources {
@@ -318,6 +319,14 @@ bool parse_obj_file(const char* filepath, Mesh* mesh) {
   mesh->index_count = current_index;
   mesh->loaded = true;
 
+  // Track memory usage
+  size_t vertex_memory = mesh->vertex_count * sizeof(Vertex);
+  size_t index_memory = mesh->index_count * sizeof(int);
+  size_t total_memory = vertex_memory + index_memory;
+  
+  // Track mesh memory allocation
+  memory_track_allocation(0, mesh->name, "mesh", total_memory);  // Use pool 0 (meshes)
+
   printf("🔍 DEBUG parse_obj_file: Three-pass parsing complete\n");
   printf("   Final vertices: %d, Final indices: %d\n", mesh->vertex_count,
          mesh->index_count);
@@ -457,10 +466,6 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath,
   mesh->aabb_min = header.aabb_min;
   mesh->aabb_max = header.aabb_max;
 
-  // Store AABB data from header
-  mesh->aabb_min = header.aabb_min;
-  mesh->aabb_max = header.aabb_max;
-
   // Create GPU resources for the loaded mesh
   if (!create_mesh_gpu_resources(mesh)) {
     printf("❌ Failed to create GPU resources for binary mesh: %s\n",
@@ -473,6 +478,15 @@ bool load_cobj_binary(AssetRegistry* registry, const char* absolute_filepath,
   }
 
   mesh->loaded = true;
+  
+  // Track memory usage for binary loaded mesh
+  size_t vertex_memory = mesh->vertex_count * sizeof(Vertex);
+  size_t index_memory = mesh->index_count * sizeof(int);
+  size_t total_memory = vertex_memory + index_memory;
+  
+  // Track mesh memory allocation
+  memory_track_allocation(0, mesh->name, "mesh", total_memory);  // Use pool 0 (meshes)
+  
   registry->mesh_count++;
 
   printf("✅ Loaded binary mesh: %s (%d vertices, %d indices) with AABB\n",

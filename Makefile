@@ -33,7 +33,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c main.c
+SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -260,3 +260,15 @@ test_lod: | $(BUILD_DIR)
 	@echo "✅ LOD system tests complete"
 
 .PHONY: test_lod
+
+# Sprint 19 Task 2.2: Test Memory Management system
+test_memory: | $(BUILD_DIR)
+	@echo "🧪 Building and running Memory Management system tests..."
+	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_memory \
+		tests/test_memory_management.c tests/vendor/unity.c \
+		src/system/memory.c src/system/performance.c src/core.c \
+		-lm
+	./$(BUILD_DIR)/test_memory
+	@echo "✅ Memory Management system tests complete"
+
+.PHONY: test_memory

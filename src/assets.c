@@ -11,6 +11,7 @@
 #include "gpu_resources.h"
 #include "graphics_api.h"
 #include "sokol_gfx.h"
+#include "system/memory.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -188,7 +189,11 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
     // In test mode, skip GPU resource creation
     texture->gpu_resources = NULL;
     texture->loaded = true;
-    stbi_image_free(image_data);
+    
+    // Track texture memory usage
+    size_t texture_memory = width * height * 4;  // RGBA bytes
+    memory_track_allocation(1, texture_name, "texture", texture_memory);  // Use pool 1 (textures)
+    
     registry->texture_count++;
     printf("✅ Loaded texture (test mode): %s (%dx%d)\n", texture_name, width, height);
     return true;

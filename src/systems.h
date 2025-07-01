@@ -16,6 +16,7 @@ struct DataRegistry;
 #include "system/camera.h"
 #include "system/lod.h"
 #include "system/performance.h"
+#include "system/memory.h"
 
 // ============================================================================
 // ENUMS AND STRUCTS
@@ -29,6 +30,7 @@ typedef enum
     SYSTEM_CAMERA,
     SYSTEM_LOD,
     SYSTEM_PERFORMANCE,
+    SYSTEM_MEMORY,
     SYSTEM_COUNT
 } SystemType;
 

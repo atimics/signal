@@ -16,9 +16,10 @@
 #include "system/camera.h"
 #include "system/lod.h"
 #include "system/performance.h"
+#include "system/memory.h"
 
 // Global asset and data registries
-static AssetRegistry g_asset_registry;
+AssetRegistry g_asset_registry;
 static DataRegistry g_data_registry;
 
 // ============================================================================
@@ -108,8 +109,19 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                           .enabled = true,
                                                           .update_func = performance_system_update };
 
+    scheduler->systems[SYSTEM_MEMORY] = (SystemInfo){ .name = "Memory",
+                                                     .frequency = 2.0f,   // 2 times per second
+                                                     .enabled = true,
+                                                     .update_func = memory_system_update_wrapper };
+
     // Initialize performance monitoring
     performance_init();
+    
+    // Initialize memory management (256MB limit)
+    if (!memory_system_init(256)) {
+        printf("❌ Failed to initialize memory system\n");
+        return false;
+    }
 
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
@@ -118,6 +130,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     printf("   Camera: %.1f Hz\n", scheduler->systems[SYSTEM_CAMERA].frequency);
     printf("   LOD: %.1f Hz\n", scheduler->systems[SYSTEM_LOD].frequency);
     printf("   Performance: %.1f Hz\n", scheduler->systems[SYSTEM_PERFORMANCE].frequency);
+    printf("   Memory: %.1f Hz\n", scheduler->systems[SYSTEM_MEMORY].frequency);
 
     return true;
 }
