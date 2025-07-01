@@ -189,6 +189,6 @@ void performance_set_warning_thresholds(float frame_time_ms, size_t memory_mb);
  * @param render_config Render configuration
  * @param delta_time Delta time (unused)
  */
-void performance_system_update(struct World* world, RenderConfig* render_config, float delta_time);
+void performance_system_update(struct World* world, struct RenderConfig* render_config, float delta_time);
 
 #endif // SYSTEM_PERFORMANCE_H
