@@ -186,6 +186,60 @@ def generate_wedge_ship():
     ]
     return vertices, faces, uvs
 
+def generate_logo_cube():
+    """
+    Generate a reference cube for testing and validation.
+    This is the gold standard cube used in the logo scene.
+    """
+    vertices = [
+        # Front face
+        [-1, -1,  1], [ 1, -1,  1], [ 1,  1,  1], [-1,  1,  1],
+        # Back face  
+        [-1, -1, -1], [-1,  1, -1], [ 1,  1, -1], [ 1, -1, -1],
+        # Top face
+        [-1,  1, -1], [-1,  1,  1], [ 1,  1,  1], [ 1,  1, -1],
+        # Bottom face
+        [-1, -1, -1], [ 1, -1, -1], [ 1, -1,  1], [-1, -1,  1],
+        # Right face
+        [ 1, -1, -1], [ 1,  1, -1], [ 1,  1,  1], [ 1, -1,  1],
+        # Left face
+        [-1, -1, -1], [-1, -1,  1], [-1,  1,  1], [-1,  1, -1]
+    ]
+    
+    # UV coordinates for each vertex (each face gets proper UV mapping)
+    uvs = [
+        # Front face
+        [0, 0], [1, 0], [1, 1], [0, 1],
+        # Back face
+        [1, 0], [1, 1], [0, 1], [0, 0],
+        # Top face
+        [0, 1], [0, 0], [1, 0], [1, 1],
+        # Bottom face
+        [1, 1], [0, 1], [0, 0], [1, 0],
+        # Right face
+        [1, 0], [1, 1], [0, 1], [0, 0],
+        # Left face
+        [0, 0], [1, 0], [1, 1], [0, 1]
+    ]
+    
+    # Faces (quads that will be triangulated)
+    faces = [
+        # Front face
+        [0, 1, 2, 3],
+        # Back face
+        [4, 5, 6, 7],
+        # Top face
+        [8, 9, 10, 11],
+        # Bottom face
+        [12, 13, 14, 15],
+        # Right face
+        [16, 17, 18, 19],
+        # Left face
+        [20, 21, 22, 23]
+    ]
+    
+    return vertices, faces, uvs
+
 def write_obj_file(filepath, vertices, uvs, faces):
     """Write vertices, UVs, normals, and faces to an OBJ file."""
     normals = np.zeros((len(vertices), 3), dtype=np.float32)
@@ -390,6 +444,7 @@ def main():
         "sun": generate_sun_sphere,
         "planet_surface": generate_planet_surface,
         "landing_pad": generate_landing_pad,
+        "logo_cube": generate_logo_cube,
     }
     
     if args.all:
