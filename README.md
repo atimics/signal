@@ -61,7 +61,7 @@ All changes must go through pull requests with:
 - Manual verification checklist (for main branch)
 - Conventional commit format
 
-See [Branch Protection Setup](./.github/BRANCH_PROTECTION_SETUP.md) for repository configuration.
+See [Repository Setup Guide](./.github/REPOSITORY_SETUP.md) for complete GitHub configuration.
 
 ## 📈 Project Status
 
