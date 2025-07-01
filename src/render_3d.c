@@ -519,7 +519,7 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         bool is_logo_cube = (logo_cube_id != INVALID_ENTITY && entity->id == logo_cube_id);
         
         // Apply glow intensity (higher for logo cube)
-        fs_params.glow_intensity = is_logo_cube ? 0.8f : 0.0f;
+        fs_params.glow_intensity = is_logo_cube ? 1.0f : 0.0f;
         
         // Clear padding
         fs_params._pad[0] = fs_params._pad[1] = fs_params._pad[2] = 0.0f;

@@ -26,16 +26,38 @@ fragment float4 fs_main(fs_in in [[stage_in]],
     
     // Add glow effect if intensity > 0
     if (uniforms.glow_intensity > 0.0) {
-        // Create a pulsing glow effect based on time
-        float pulse = 0.7 + 0.3 * sin(uniforms.time * 3.0); // Smooth pulsing
+        // Create a more pronounced pulsing glow effect
+        float pulse_speed = 3.0; // Faster pulse frequency for more noticeable effect
+        float pulse_amplitude = 0.8; // Higher amplitude for stronger pulsing (0.2 to 1.0)
+        float pulse_base = 0.2; // Lower minimum for more dramatic pulse
+        
+        float pulse = pulse_base + pulse_amplitude * (0.5 + 0.5 * sin(uniforms.time * pulse_speed));
         float glow_strength = uniforms.glow_intensity * pulse;
         
-        // Warm golden glow color
-        float3 glow_color = float3(1.2, 1.0, 0.6);
+        // Calculate luminance of the texture to identify bright/white areas
+        float luminance = dot(color.rgb, float3(0.299, 0.587, 0.114));
         
-        // Mix and additive glow
-        final_color = mix(final_color, glow_color, glow_strength * 0.3);
-        final_color += glow_color * glow_strength * 0.4; // Additive glow for brightness
+        // Create emissive mask for bright areas (white parts of the logo)
+        float emissive_mask = smoothstep(0.7, 0.95, luminance); // White areas get strong emission
+        float general_glow_mask = smoothstep(0.3, 0.8, luminance); // All bright areas get some glow
+        
+        // Bright warm emissive color for white parts
+        float3 emissive_color = float3(2.0, 1.8, 1.2); // Very bright warm white
+        float3 general_glow_color = float3(1.2, 1.0, 0.6); // Softer golden glow
+        
+        // Apply emissive effect to white areas (self-illuminated appearance)
+        float emissive_strength = emissive_mask * glow_strength * 1.5; // Extra strong for white parts
+        final_color += emissive_color * emissive_strength;
+        
+        // Apply general glow to all bright areas
+        float general_glow = general_glow_mask * glow_strength * 0.8;
+        final_color = mix(final_color, final_color * general_glow_color, general_glow * 0.3);
+        final_color += general_glow_color * general_glow * 0.4;
+        
+        // Add a subtle rim lighting effect
+        float rim = 1.0 - abs(dot(normal, float3(0.0, 0.0, 1.0))); // Fake view direction
+        rim = smoothstep(0.5, 1.0, rim);
+        final_color += general_glow_color * rim * glow_strength * 0.3;
     }
     
     return float4(final_color, color.a);
