@@ -361,6 +361,7 @@ $(TDD_UNIT_TARGET): $(TDD_UNIT_TESTS) $(TDD_UNIT_ENGINE_SRC) | $(BUILD_DIR)
 $(TDD_PERF_TARGET): $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building TDD performance test suite..."
 	@mkdir -p $(BUILD_DIR)
+	@mkdir -p tests/stubs
 ifeq ($(OS),Darwin)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
 		-DUNITY_TESTING -DTDD_TESTING \
