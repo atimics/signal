@@ -39,6 +39,30 @@ For detailed information about the engine's architecture, development workflow, 
 - **[Contributing Guidelines](./CONTRIBUTING.md)** - How to contribute to the project
 - **[API Documentation](./docs/API_REFERENCE.md)** - Technical API reference (coming soon)
 
+## 🔧 Development Workflow
+
+This project follows strict development standards with automated CI/CD pipelines:
+
+### 🌳 Branch Strategy
+- `main` - Production-ready releases only
+- `develop` - Integration branch for features  
+- `feature/*` - Individual feature development
+
+### 🚀 Continuous Integration
+- **Build Pipeline**: Automated builds for macOS, Linux, and WebAssembly
+- **Test Suite**: Comprehensive unit and integration testing
+- **Release Pipeline**: Semantic versioning with automated GitHub releases
+- **Quality Gates**: Mandatory code review and manual verification
+
+### 📋 Pull Request Requirements
+All changes must go through pull requests with:
+- Automated testing on all platforms
+- Code review from maintainers
+- Manual verification checklist (for main branch)
+- Conventional commit format
+
+See [Branch Protection Setup](./.github/BRANCH_PROTECTION_SETUP.md) for repository configuration.
+
 ## 📈 Project Status
 
 This project is under active development.
