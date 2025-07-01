@@ -41,6 +41,7 @@ void world_clear(struct World* world)
     // Clear all entities
     world->entity_count = 0;
     world->next_entity_id = 1; // Reset ID counter
+    world->active_camera_entity = INVALID_ENTITY; // Reset active camera
     
     // Clear entity array
     memset(world->entities, 0, sizeof(world->entities));

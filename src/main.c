@@ -297,11 +297,17 @@ static void frame(void)
         const char* next_scene = scene_state_get_next_scene(&app_state.scene_state);
         printf("🎬 Executing scene transition: %s -> %s\n", app_state.scene_state.current_scene_name, next_scene);
         
+        // Reset camera system before clearing world
+        camera_system_reset();
+        
         // Clear current scene
         world_clear(&app_state.world);
         
         // Load new scene
         load_scene_by_name(&app_state.world, next_scene, &app_state.player_id);
+        
+        // Reinitialize camera system with new scene entities
+        camera_system_init(&app_state.world, &app_state.render_config);
         
         // Update scene state
         strcpy(app_state.scene_state.current_scene_name, next_scene);
