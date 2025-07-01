@@ -55,6 +55,7 @@ static struct
     // Scene management
     char current_scene[64];
     SceneStateManager scene_state;
+    char requested_scene[64];  // CLI-requested scene override
     
     // Test modes
     bool capture_golden_reference;
@@ -237,8 +238,8 @@ static void init(void)
 
     printf("🏗️ Loading scene...\n");
 
-    // Load logo scene first - system test and validation
-    const char* scene_to_load = "logo";
+    // Load scene - CLI override or default to logo
+    const char* scene_to_load = (strlen(app_state.requested_scene) > 0) ? app_state.requested_scene : "logo";
     strcpy(app_state.current_scene, scene_to_load);
     printf("ℹ️ Loading scene: %s\n", scene_to_load);
 
@@ -505,6 +506,9 @@ static void event(const sapp_event* ev)
 
 sapp_desc sokol_main(int argc, char* argv[])
 {
+    // Initialize CLI scene override
+    app_state.requested_scene[0] = '\0';
+    
     // Parse command line arguments
     for (int i = 1; i < argc; i++)
     {
@@ -513,19 +517,53 @@ sapp_desc sokol_main(int argc, char* argv[])
             app_state.capture_golden_reference = true;
             printf("🏆 Golden reference capture mode enabled\n");
         }
+        else if (strcmp(argv[i], "--scene") == 0 || strcmp(argv[i], "-s") == 0)
+        {
+            if (i + 1 < argc)
+            {
+                strncpy(app_state.requested_scene, argv[i + 1], sizeof(app_state.requested_scene) - 1);
+                app_state.requested_scene[sizeof(app_state.requested_scene) - 1] = '\0';
+                printf("🎬 CLI scene override: %s\n", app_state.requested_scene);
+                i++; // Skip the scene name argument
+            }
+            else
+            {
+                printf("❌ Error: --scene requires a scene name\n");
+            }
+        }
+        else if (strcmp(argv[i], "--list-scenes") == 0 || strcmp(argv[i], "-l") == 0)
+        {
+            printf("🎬 Available scenes:\n");
+            printf("  logo              - Engine logo and system test\n");
+            printf("  navigation_menu   - FTL navigation interface\n");
+            printf("  system_overview   - System map for FTL navigation\n");
+            printf("  derelict_alpha    - Magnetic navigation through Aethelian Command Ship\n");
+            printf("  derelict_beta     - Smaller derelict exploration\n");
+            printf("  slipstream_nav    - FTL slipstream navigation test\n");
+            exit(0);
+        }
         else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
         {
             printf("CGame Engine Usage:\n");
+            printf("  --scene NAME, -s NAME     Launch directly into specified scene\n");
+            printf("  --list-scenes, -l         List all available scenes\n");
             printf("  --golden-reference, -g    Capture golden reference screenshot of loading cube\n");
             printf("  --help, -h                Show this help message\n");
+            printf("\nExamples:\n");
+            printf("  ./cgame --scene derelict_alpha    # Launch into magnetic navigation scene\n");
+            printf("  ./cgame -s navigation_menu        # Launch into FTL navigation\n");
+            printf("  ./cgame --list-scenes             # Show all available scenes\n");
             printf("\nGame Controls:\n");
-            printf("  ESC        Exit game\n");
+            printf("  ESC        Exit game / Return to navigation menu\n");
+            printf("  TAB        Switch between related scenes\n");
+            printf("  SPACE      Toggle magnetic navigation (in derelict scenes)\n");
             printf("  ENTER      Skip logo screen (on logo scene)\n");
             printf("  ~          Toggle debug UI & HUD\n");
             printf("  1-9        Switch cameras\n");
             printf("  C          Cycle cameras\n");
             printf("  W          Toggle wireframe mode\n");
             printf("  S          Take screenshot\n");
+            exit(0);
         }
     }
 
