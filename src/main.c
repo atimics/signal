@@ -333,7 +333,6 @@ static void create_loading_cube_mesh(AssetRegistry* assets)
     cube->loaded = true;
     assets->mesh_count++;
     printf("📦 Created loading cube mesh\n");
-    }
 }
 
 // ============================================================================
