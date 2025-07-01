@@ -10,8 +10,14 @@
 struct GpuResources;
 
 // GPU buffer and image types - completely opaque to users
-typedef struct { uint32_t id; } gpu_buffer_t;
-typedef struct { uint32_t id; } gpu_image_t;
+typedef struct
+{
+    uint32_t id;
+} gpu_buffer_t;
+typedef struct
+{
+    uint32_t id;
+} gpu_image_t;
 
 // Industry Standard: Constructor/Destructor
 struct GpuResources* gpu_resources_create(void);
@@ -32,4 +38,4 @@ bool gpu_resources_is_vertex_buffer_valid(struct GpuResources* resources);
 bool gpu_resources_is_index_buffer_valid(struct GpuResources* resources);
 bool gpu_resources_is_texture_valid(struct GpuResources* resources);
 
-#endif // GPU_RESOURCES_H
+#endif  // GPU_RESOURCES_H

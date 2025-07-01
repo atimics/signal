@@ -1,0 +1,31 @@
+{
+  "name": "cgame",
+  "version": "0.2.0",
+  "description": "High-Performance C Game Engine with Entity-Component-System Architecture",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atimics/cgame.git"
+  },
+  "keywords": [
+    "game-engine",
+    "c",
+    "ecs",
+    "sokol",
+    "graphics",
+    "3d"
+  ],
+  "author": "CGame Contributors",
+  "license": "MIT",
+  "engines": {
+    "python": ">=3.11"
+  },
+  "scripts": {
+    "build": "make",
+    "test": "make test",
+    "clean": "make clean",
+    "wasm": "make wasm"
+  },
+  "devDependencies": {
+    "semantic-release": "^19.0.0"
+  }
+}

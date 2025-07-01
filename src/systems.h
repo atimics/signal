@@ -5,21 +5,40 @@
 #include "data.h"
 #include "render.h"
 
+// Forward declarations for the scheduler
+struct AssetRegistry;
+struct DataRegistry;
+
+// Include modular system headers
+#include "system/physics.h"
+#include "system/collision.h"  
+#include "system/ai.h"
+#include "system/camera.h"
+#include "system/lod.h"
+#include "system/performance.h"
+#include "system/memory.h"
+
 // ============================================================================
 // ENUMS AND STRUCTS
 // ============================================================================
 
-typedef enum {
+typedef enum
+{
     SYSTEM_PHYSICS,
     SYSTEM_COLLISION,
     SYSTEM_AI,
     SYSTEM_CAMERA,
+    SYSTEM_LOD,
+    SYSTEM_PERFORMANCE,
+    SYSTEM_MEMORY,
     SYSTEM_COUNT
 } SystemType;
 
-typedef void (*SystemUpdateFunc)(struct World* world, RenderConfig* render_config, float delta_time);
+typedef void (*SystemUpdateFunc)(struct World* world, RenderConfig* render_config,
+                                 float delta_time);
 
-typedef struct {
+typedef struct
+{
     const char* name;
     float frequency;
     float last_update;
@@ -27,7 +46,8 @@ typedef struct {
     SystemUpdateFunc update_func;
 } SystemInfo;
 
-typedef struct SystemScheduler {
+typedef struct SystemScheduler
+{
     SystemInfo systems[SYSTEM_COUNT];
     float total_time;
     int frame_count;
@@ -50,14 +70,8 @@ void scheduler_enable_system(SystemScheduler* scheduler, SystemType type);
 void scheduler_disable_system(SystemScheduler* scheduler, SystemType type);
 void scheduler_set_frequency(SystemScheduler* scheduler, SystemType type, float frequency);
 
-// Individual Systems
-void physics_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-void collision_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-void ai_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-void camera_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-
-// Data Access
+// Data Access - These will be removed once the refactor is complete
 DataRegistry* get_data_registry(void);
-AssetRegistry* get_asset_registry(void);  // Access to global asset registry
+AssetRegistry* get_asset_registry(void);
 
-#endif // SYSTEMS_H
+#endif  // SYSTEMS_H

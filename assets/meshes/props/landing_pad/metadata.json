@@ -1,0 +1,11 @@
+{
+  "name": "landing_pad",
+  "geometry": "geometry.obj",
+  "tags": [
+    "platform",
+    "structure"
+  ],
+  "description": "A spaceport landing platform.",
+  "material": "material.mtl",
+  "texture": "texture.png"
+}

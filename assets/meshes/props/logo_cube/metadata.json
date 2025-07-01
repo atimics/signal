@@ -1,0 +1,11 @@
+{
+  "name": "logo_cube",
+  "geometry": "geometry.obj",
+  "tags": [
+    "reference",
+    "test"
+  ],
+  "description": "Gold standard reference cube for testing.",
+  "material": "material.mtl",
+  "texture": "logo.png"
+}

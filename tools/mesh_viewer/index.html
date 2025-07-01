@@ -3,658 +3,640 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CGame Semantic Material Mesh Viewer</title>
+    <title>CGame Mesh Viewer</title>
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
     <style>
-        body { 
-            margin: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #container {
             display: flex;
             height: 100vh;
-            background-color: #1e1e1e;
-            color: #fff;
         }
+        
         #sidebar {
-            width: 350px;
-            display: flex;
-            flex-direction: column;
-            background-color: #252526;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #444;
         }
-        #sidebar-header {
-            padding: 15px;
-            border-bottom: 1px solid #333;
-        }
-        #mode-selector {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .mode-button {
+        
+        #viewer {
             flex: 1;
-            padding: 8px 12px;
-            background-color: #3a3d41;
-            border: none;
-            border-radius: 4px;
-            color: #fff;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background-color 0.2s;
+            position: relative;
         }
-        .mode-button:hover {
-            background-color: #4a4d51;
+        
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 1.5em;
+            text-align: center;
+            color: #00ff88;
         }
-        .mode-button.active {
-            background-color: #0e639c;
-        }
-        #asset-info {
-            padding: 10px 15px;
-            background-color: #2d2d30;
-            border-bottom: 1px solid #333;
-            font-size: 12px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        #mesh-list-container {
-            overflow-y: auto;
-            flex-grow: 1;
-            padding: 10px;
-        }
-        details {
-            margin-bottom: 10px;
-        }
-        summary {
-            font-weight: bold;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 5px;
-            background-color: #3a3d41;
-            display: block;
-        }
-        .folder-content {
-            padding-left: 15px;
-            border-left: 1px solid #444;
-            margin-left: 8px;
-            padding-top: 5px;
-        }
+        
         .mesh-item {
-            padding: 8px 12px;
-            margin: 2px 0;
-            background-color: #3a3d41;
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
+        
         .mesh-item:hover {
-            background-color: #4a4d51;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #00ff88;
         }
+        
         .mesh-item.selected {
-            background-color: #0e639c;
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
         }
+        
+        .mesh-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #00ff88;
+        }
+        
+        .mesh-description {
+            font-size: 0.9em;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+        
+        .mesh-stats {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+        
+        .mesh-tags {
+            margin-top: 8px;
+        }
+        
         .tag {
             display: inline-block;
-            background-color: #444;
-            color: #fff;
+            background: #444;
             padding: 2px 6px;
             border-radius: 3px;
-            font-size: 10px;
-            margin: 1px 2px;
+            font-size: 0.7em;
+            margin: 2px;
+            color: #00ff88;
         }
-        .tag.priority-high {
-            background-color: #d73a49;
-        }
-        .tag.priority-medium {
-            background-color: #fb8500;
-        }
-        .tag.priority-low {
-            background-color: #28a745;
-        }
-        .material-preview {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            display: inline-block;
-            margin-right: 4px;
-            border: 1px solid #555;
-        }
-        #main-content {
-            flex-grow: 1;
-            position: relative;
-        }
-        #viewer-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
-        }
-        canvas { display: block; }
-        .status-message {
+        
+        #info {
             position: absolute;
             top: 20px;
             right: 20px;
             background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 12px 16px;
+            padding: 15px;
             border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
-            max-width: 300px;
-            z-index: 1000;
-            border-left: 4px solid #0e639c;
+            min-width: 200px;
+            border: 1px solid #444;
         }
-        .color-swatch {
-            width: 14px;
-            height: 14px;
-            border-radius: 2px;
-            display: inline-block;
-            margin-right: 4px;
-            border: 1px solid #555;
-            vertical-align: middle;
+        
+        .info-row {
+            margin: 5px 0;
         }
-        .info-section {
-            margin-bottom: 12px;
-        }
-        .info-section h4 {
-            margin: 0 0 4px 0;
-            color: #0e639c;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-        #texture-viewer {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 256px;
-            height: 256px;
-            background-color: #252526;
-            border: 1px solid #333;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            z-index: 1001;
-            display: none; /* Initially hidden */
-            flex-direction: column;
-        }
-        #texture-viewer-header {
-            background-color: #3a3d41;
-            color: #fff;
-            padding: 8px;
-            font-size: 12px;
+        
+        .info-label {
+            color: #00ff88;
             font-weight: bold;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 8px;
             text-align: center;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
+            display: none;
         }
-        #texture-viewer-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+        
+        .warning {
+            background: rgba(255, 165, 0, 0.2);
+            border: 1px solid #ffa500;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 0.9em;
         }
-        .info-section p {
-            margin: 0;
-            font-size: 11px;
-            line-height: 1.4;
+        
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        
+        .texture-status {
+            font-size: 0.8em;
+            margin-top: 5px;
+            padding: 3px 6px;
+            border-radius: 3px;
+        }
+        
+        .texture-success {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff88;
+        }
+        
+        .texture-error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
         }
     </style>
 </head>
 <body>
-    <div id="sidebar">
-        <div id="sidebar-header">
-            <h2>CGame Semantic Materials</h2>
-            <div id="mode-selector">
-                <button class="mode-button active" data-mode="source">Source</button>
-                <button class="mode-button" data-mode="compiled">Compiled</button>
+    <div id="container">
+        <div id="sidebar">
+            <h1>🎮 CGame Mesh Viewer</h1>
+            <div class="success">
+                <strong>Source Mode:</strong> Viewing original OBJ assets with UV-mapped textures.
+            </div>
+            <div id="mesh-list">
+                <div class="loading">Loading mesh index...</div>
             </div>
         </div>
-        <div id="asset-info"></div>
-        <div id="mesh-list-container"></div>
-    </div>
-    <div id="main-content">
-        <div id="viewer-container"></div>
-        <div id="texture-viewer">
-            <div id="texture-viewer-header">Texture Preview</div>
-            <img id="texture-viewer-image" src="" alt="Texture"/>
+        
+        <div id="viewer">
+            <div id="info">
+                <div class="info-row">
+                    <span class="info-label">Name:</span> <span id="current-name">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Vertices:</span> <span id="current-vertices">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Faces:</span> <span id="current-faces">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Material:</span> <span id="current-material">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Texture:</span> <span id="current-texture">-</span>
+                </div>
+                <div class="info-row" id="texture-preview-row" style="display: none;">
+                    <div style="margin-top: 10px;">
+                        <div class="info-label">Texture Preview:</div>
+                        <img id="texture-preview" style="max-width: 150px; max-height: 150px; border: 1px solid #444; border-radius: 3px; margin-top: 5px;" />
+                        <div id="texture-status" class="texture-status" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="loading">
+                <div>Loading mesh...</div>
+            </div>
         </div>
     </div>
 
-    <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
-        import { OBJLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/OBJLoader.js';
-        import { MTLLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/MTLLoader.js';
-        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/controls/OrbitControls.js';
-
-        let camera, scene, renderer, controls;
-        let materialDefinitions = null;
-        let currentMode = 'source';
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let currentMesh = null;
+        let meshData = [];
         
-        const meshListContainer = document.getElementById('mesh-list-container');
-        const viewerContainer = document.getElementById('viewer-container');
-        const assetInfo = document.getElementById('asset-info');
-        const textureViewer = document.getElementById('texture-viewer');
-        const textureViewerImage = document.getElementById('texture-viewer-image');
-        const sourceAssetsRoot = '../../assets/meshes/';
-        const compiledAssetsRoot = '../../build/assets/meshes/';
-
-        // ... (rest of the script)
-
-        function showTexture(texturePath) {
-            textureViewerImage.src = texturePath;
-            textureViewer.style.display = 'flex';
-        }
-
-        function hideTexture() {
-            textureViewer.style.display = 'none';
-        }
-
-        // Load material definitions for tag analysis
-        async function loadMaterialDefinitions() {
-            try {
-                const response = await fetch('../../assets/material_definitions.json');
-                materialDefinitions = await response.json();
-                console.log('Loaded material definitions:', materialDefinitions);
-            } catch (error) {
-                console.warn('Could not load material definitions:', error);
-                materialDefinitions = { definitions: {} };
-            }
-        }
-
-        // Get tag information including priority and colors
-        function getTagInfo(tag) {
-            const definition = materialDefinitions?.definitions?.[tag];
-            if (!definition) {
-                return {
-                    priority: 0,
-                    colors: { primary: '#888888' },
-                    material: null,
-                    description: 'Unknown tag'
-                };
-            }
-            return definition;
-        }
-
-        // Get priority class for styling
-        function getPriorityClass(priority) {
-            if (priority >= 80) return 'priority-high';
-            if (priority >= 40) return 'priority-medium';
-            return 'priority-low';
-        }
-
-        // Mode switching
-        document.getElementById('mode-selector').addEventListener('click', (e) => {
-            if (e.target.classList.contains('mode-button')) {
-                document.querySelectorAll('.mode-button').forEach(btn => btn.classList.remove('active'));
-                e.target.classList.add('active');
-                currentMode = e.target.dataset.mode;
-                fetchAndDisplayMeshes();
-            }
-        });
-
-        async function fetchAndDisplayMeshes() {
-            const assetsRoot = currentMode === 'source' ? sourceAssetsRoot : compiledAssetsRoot;
+        // Initialize Three.js
+        function initViewer() {
+            const viewerElement = document.getElementById('viewer');
             
-            try {
-                const indexResponse = await fetch(`${assetsRoot}index.json`);
-                const meshIndex = await indexResponse.json();
-
-                meshListContainer.innerHTML = '';
-                assetInfo.innerHTML = '';
-                
-                const meshesByGroup = {};
-
-                for (const metaPath of meshIndex) {
-                    const fullMetaPath = `${assetsRoot}${metaPath}`;
-                    const metaResponse = await fetch(fullMetaPath);
-                    const meta = await metaResponse.json();
-                    
-                    const group = getDirectoryName(metaPath);
-                    if (!meshesByGroup[group]) {
-                        meshesByGroup[group] = [];
-                    }
-
-                    meshesByGroup[group].push({
-                        meta,
-                        basePath: `${assetsRoot}${group}/`
-                    });
-                }
-
-                for (const groupName in meshesByGroup) {
-                    const details = document.createElement('details');
-                    details.open = true;
-                    
-                    const summary = document.createElement('summary');
-                    summary.textContent = groupName;
-                    details.appendChild(summary);
-
-                    const folderContent = document.createElement('div');
-                    folderContent.className = 'folder-content';
-
-                    meshesByGroup[groupName].sort((a, b) => a.meta.name.localeCompare(b.meta.name));
-
-                    for (const meshData of meshesByGroup[groupName]) {
-                        const meshItem = createMeshListItem(meshData);
-                        folderContent.appendChild(meshItem);
-                    }
-                    details.appendChild(folderContent);
-                    meshListContainer.appendChild(details);
-                }
-
-            } catch (error) {
-                console.error(`Failed to load ${currentMode} mesh index:`, error);
-                meshListContainer.innerHTML = `<p style="color: #ff6b6b; padding: 15px;">Failed to load ${currentMode} assets. Ensure you are running a local web server from the project root.</p>`;
-            }
-        }
-
-        function getDirectoryName(path) {
-            const lastSlash = path.lastIndexOf('/');
-            return lastSlash === -1 ? '' : path.substring(0, lastSlash);
-        }
-
-        function createMeshListItem(meshData) {
-            const { meta } = meshData;
-            const listItem = document.createElement('div');
-            listItem.className = 'mesh-item';
-            
-            // Get primary tag for color preview
-            const primaryTag = meta.tags?.[0];
-            const tagInfo = primaryTag ? getTagInfo(primaryTag) : null;
-            const primaryColor = tagInfo?.colors?.primary || '#888888';
-            
-            // Create tags display
-            const tagsHtml = meta.tags ? meta.tags.map(tag => {
-                const info = getTagInfo(tag);
-                const priorityClass = getPriorityClass(info.priority);
-                return `<span class="tag ${priorityClass}" title="${info.description}">${tag}</span>`;
-            }).join('') : '';
-            
-            const modeIcon = currentMode === 'source' ? '📄' : '⚙️';
-            const fileExt = currentMode === 'source' ? 'mesh/obj' : 'cobj';
-            
-            listItem.innerHTML = `
-                <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                    <div class="material-preview" style="background-color: ${primaryColor};" title="Primary tag color"></div>
-                    <div style="font-weight: 500;">${modeIcon} ${meta.name}</div>
-                </div>
-                <div style="font-size: 12px; color: #888; margin-bottom: 4px;">
-                    ${currentMode.charAt(0).toUpperCase() + currentMode.slice(1)} • ${fileExt}
-                </div>
-                <div>${tagsHtml}</div>
-            `;
-            
-            listItem.addEventListener('click', () => {
-                document.querySelectorAll('.mesh-item').forEach(item => item.classList.remove('selected'));
-                listItem.classList.add('selected');
-                updateAssetInfo(meshData);
-                loadMesh(meshData);
-            });
-            
-            return listItem;
-        }
-
-        function updateAssetInfo(meshData) {
-            const { meta } = meshData;
-            
-            // Get semantic material info from tags
-            const semanticInfo = analyzeSemanticMaterials(meta.tags || []);
-            
-            let infoHtml = `
-                <div class="info-section">
-                    <h4>Asset Info</h4>
-                    <p><strong>${meta.name}</strong></p>
-                    <p>${meta.description || 'No description'}</p>
-                </div>
-            `;
-            
-            if (meta.tags && meta.tags.length > 0) {
-                infoHtml += `
-                    <div class="info-section">
-                        <h4>Tags & Materials</h4>
-                `;
-                
-                meta.tags.forEach(tag => {
-                    const info = getTagInfo(tag);
-                    const priorityClass = getPriorityClass(info.priority);
-                    infoHtml += `
-                        <div style="margin-bottom: 6px;">
-                            <div class="color-swatch" style="background-color: ${info.colors.primary}"></div>
-                            <span class="tag ${priorityClass}">${tag}</span>
-                            <span style="font-size: 10px; color: #999; margin-left: 4px;">P${info.priority}</span>
-                        </div>
-                        <p style="margin-left: 18px; color: #bbb; font-size: 10px;">${info.description}</p>
-                    `;
-                });
-                
-                infoHtml += '</div>';
-            }
-            
-            if (semanticInfo.dominantTag) {
-                const dominant = getTagInfo(semanticInfo.dominantTag);
-                infoHtml += `
-                    <div class="info-section">
-                        <h4>Material Properties</h4>
-                        <p><strong>Dominant:</strong> ${semanticInfo.dominantTag}</p>
-                `;
-                
-                if (dominant.material) {
-                    infoHtml += `
-                        <p><strong>Ambient:</strong> RGB(${dominant.material.ambient.map(v => Math.round(v*255)).join(', ')})</p>
-                        <p><strong>Diffuse:</strong> RGB(${dominant.material.diffuse.map(v => Math.round(v*255)).join(', ')})</p>
-                        <p><strong>Specular:</strong> RGB(${dominant.material.specular.map(v => Math.round(v*255)).join(', ')})</p>
-                        <p><strong>Shininess:</strong> ${dominant.material.shininess}</p>
-                        ${dominant.material.emission ? `<p><strong>Emission:</strong> RGB(${dominant.material.emission.map(v => Math.round(v*255)).join(', ')})</p>` : ''}
-                    `;
-                }
-                
-                infoHtml += '</div>';
-            }
-            
-            infoHtml += `
-                <div class="info-section">
-                    <h4>Files</h4>
-                    <p><strong>Geometry:</strong> ${meta.geometry}</p>
-                    <p><strong>Mesh:</strong> ${meta.mesh}</p>
-                    <p><strong>Material:</strong> ${meta.material || 'N/A'}</p>
-                    <p><strong>Texture:</strong> ${meta.texture || 'N/A'}</p>
-                </div>
-            `;
-            
-            assetInfo.innerHTML = infoHtml;
-        }
-
-        function analyzeSemanticMaterials(tags) {
-            if (!tags || tags.length === 0) return { dominantTag: null };
-            
-            // Find the highest priority tag
-            let dominantTag = tags[0];
-            let highestPriority = getTagInfo(dominantTag).priority;
-            
-            for (const tag of tags) {
-                const info = getTagInfo(tag);
-                if (info.priority > highestPriority) {
-                    highestPriority = info.priority;
-                    dominantTag = tag;
-                }
-            }
-            
-            return { dominantTag };
-        }
-
-        function init() {
+            // Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1e1e1e);
-
-            camera = new THREE.PerspectiveCamera(75, viewerContainer.clientWidth / viewerContainer.clientHeight, 0.1, 1000);
-            camera.position.set(3, 3, 3);
-
+            scene.background = new THREE.Color(0x1a1a2e);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, viewerElement.clientWidth / viewerElement.clientHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+            
+            // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            viewerContainer.appendChild(renderer.domElement);
-
-            controls = new OrbitControls(camera, renderer.domElement);
+            renderer.setSize(viewerElement.clientWidth, viewerElement.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            viewerElement.appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            controls.dampingFactor = 0.05;
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
             scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-            directionalLight.position.set(1, 3, 2);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
             scene.add(directionalLight);
-
-            window.addEventListener('resize', onWindowResize, false);
             
-            onWindowResize();
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
             
-            // Load material definitions first, then meshes
-            loadMaterialDefinitions().then(() => {
-                return fetchAndDisplayMeshes();
-            }).then(() => {
-                const firstMeshItem = document.querySelector('.mesh-item');
-                if (firstMeshItem) {
-                    firstMeshItem.click();
-                }
-            });
-            
+            // Start render loop
             animate();
         }
-
-        async function loadMesh(meshData) {
-            const { meta, basePath } = meshData;
-            
-            try {
-                const isCompiled = currentMode === 'compiled';
-                const meshFile = isCompiled ? meta.geometry : meta.mesh;
-                console.log(`Loading mesh: ${meta.name} from ${basePath}${meshFile}`);
-                
-                const meshURL = `${basePath}${meshFile}`;
-                
-                const meshText = await (await fetch(meshURL)).text();
-                const objLoader = new OBJLoader();
-                let object;
-
-                try {
-                    // Try loading with materials first
-                    const mtlURL = `${basePath}${meta.material}`;
-                    const mtlText = await (await fetch(mtlURL)).text();
-                    const mtlLoader = new MTLLoader();
-                    
-                    // Set base path for texture loading
-                    mtlLoader.setResourcePath(basePath);
-                    const materials = mtlLoader.parse(mtlText, basePath);
-                    materials.preload();
-                    objLoader.setMaterials(materials);
-                    
-                    object = objLoader.parse(meshText);
-                    
-                    const semanticInfo = analyzeSemanticMaterials(meta.tags || []);
-                    const modeLabel = currentMode === 'source' ? 'Source' : 'Compiled';
-                    showMessage(`✅ Loaded: ${meta.name}`, `${modeLabel}: ${meshFile} • Semantic: ${semanticInfo.dominantTag || 'none'}`);
-
-                } catch (materialError) {
-                    console.warn(`Could not load materials for ${meta.name}, loading without:`, materialError);
-                    // Fallback to loading without materials
-                    object = objLoader.parse(meshText);
-                    showMessage(`⚠️ Loaded without materials: ${meta.name}`, `${currentMode}: ${meshFile} (MTL or texture failed)`);
-                }
-
-                // Apply transformations and add to scene
-                object.traverse((child) => {
-                    if (child.isMesh) {
-                        if (!child.material) {
-                             child.material = new THREE.MeshPhongMaterial({
-                                color: 0xcccccc,
-                                side: THREE.DoubleSide
-                            });
-                        }
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(m => m.side = THREE.DoubleSide);
-                        } else {
-                            child.material.side = THREE.DoubleSide;
-                        }
-                    }
-                });
-                
-                clearScene();
-                centerAndAddObject(object);
-
-                // Show the texture
-                const texturePath = `${basePath}${meta.texture}`;
-                showTexture(texturePath);
-
-            } catch (error) {
-                console.error(`Failed to load mesh: ${meta.name}`, error);
-                showMessage(`❌ Failed to load: ${meta.name}`, `Error: ${error.message}`);
-                hideTexture();
-            }
-        }
-
-        function showMessage(title, details) {
-            const existingMessage = document.querySelector('.status-message');
-            if (existingMessage) existingMessage.remove();
-
-            const message = document.createElement('div');
-            message.className = 'status-message';
-            message.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 4px;">${title}</div>
-                <div style="font-size: 12px; opacity: 0.8;">${details}</div>
-            `;
-            viewerContainer.appendChild(message);
-            
-            setTimeout(() => message.remove(), 5000);
+        
+        function onWindowResize() {
+            const viewerElement = document.getElementById('viewer');
+            camera.aspect = viewerElement.clientWidth / viewerElement.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(viewerElement.clientWidth, viewerElement.clientHeight);
         }
         
-        function clearScene() {
-            hideTexture();
-            const toRemove = [];
-            scene.traverse(child => {
-                if (child.isMesh || child.isGroup) toRemove.push(child);
-            });
-            toRemove.forEach(child => {
-                scene.remove(child);
-                if (child.geometry) child.geometry.dispose();
-                if (child.material) {
-                    if (Array.isArray(child.material)) {
-                        child.material.forEach(m => {
-                            if (m.map) m.map.dispose();
-                            m.dispose();
-                        });
-                    } else {
-                        if (child.material.map) child.material.map.dispose();
-                        child.material.dispose();
-                    }
-                }
-            });
-        }
-
-        function centerAndAddObject(object) {
-            const box = new THREE.Box3().setFromObject(object);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const fitHeightDistance = maxDim / (2 * Math.atan(Math.PI * camera.fov / 360));
-            const fitWidthDistance = fitHeightDistance / camera.aspect;
-            const distance = Math.max(fitHeightDistance, fitWidthDistance);
-
-            object.position.sub(center);
-            scene.add(object);
-
-            camera.position.copy(center);
-            camera.position.z += distance * 1.2;
-            camera.near = distance / 100;
-            camera.far = distance * 100;
-            camera.updateProjectionMatrix();
-
-            controls.target.copy(center);
-            controls.update();
-        }
-
-        function onWindowResize() {
-            const { clientWidth, clientHeight } = viewerContainer;
-            camera.aspect = clientWidth / clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(clientWidth, clientHeight);
-        }
-
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
             renderer.render(scene, camera);
         }
-
-        init();
+        
+        // Load mesh index
+        async function loadMeshIndex() {
+            try {
+                console.log('Loading mesh index from /assets/meshes/index.json');
+                const response = await fetch('/assets/meshes/index.json');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to load mesh index: ${response.status} ${response.statusText}`);
+                }
+                
+                const indexData = await response.json();
+                console.log('Loaded index data:', indexData);
+                
+                meshData = indexData.meshes || [];
+                console.log('Mesh data:', meshData);
+                
+                displayMeshList();
+                
+                // Load first mesh by default
+                if (meshData.length > 0) {
+                    loadMesh(meshData[0]);
+                }
+            } catch (error) {
+                console.error('Error loading mesh index:', error);
+                document.getElementById('mesh-list').innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> Could not load mesh index.<br>
+                        ${error.message}<br>
+                        Make sure the server is running from the project root.<br>
+                        Check browser console for details.
+                    </div>
+                `;
+            }
+        }
+        
+        function displayMeshList() {
+            const meshList = document.getElementById('mesh-list');
+            
+            if (meshData.length === 0) {
+                meshList.innerHTML = '<div class="warning">No meshes found in index.</div>';
+                return;
+            }
+            
+            meshList.innerHTML = '';
+            
+            meshData.forEach((mesh, index) => {
+                const meshItem = document.createElement('div');
+                meshItem.className = 'mesh-item';
+                if (index === 0) meshItem.classList.add('selected');
+                
+                const tags = mesh.tags ? mesh.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : '';
+                
+                meshItem.innerHTML = `
+                    <div class="mesh-name">${mesh.name}</div>
+                    <div class="mesh-description">${mesh.description || 'No description'}</div>
+                    <div class="mesh-stats">
+                        Geometry: ${mesh.geometry || 'N/A'} | 
+                        Material: ${mesh.material || 'N/A'}
+                    </div>
+                    <div class="mesh-tags">${tags}</div>
+                `;
+                
+                meshItem.addEventListener('click', () => {
+                    document.querySelectorAll('.mesh-item').forEach(item => item.classList.remove('selected'));
+                    meshItem.classList.add('selected');
+                    loadMesh(mesh);
+                });
+                
+                meshList.appendChild(meshItem);
+            });
+        }
+        
+        // Load and display a mesh
+        async function loadMesh(meshInfo) {
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'block';
+            loadingDiv.innerHTML = '<div>Loading mesh...</div>'; // Reset loading content
+            
+            console.log('Loading mesh:', meshInfo);
+            
+            try {
+                // Clear current mesh
+                if (currentMesh) {
+                    scene.remove(currentMesh);
+                    currentMesh = null;
+                }
+                
+                // Set base path for MTL loader to find textures
+                const basePath = `/assets/meshes/props/${meshInfo.name}/`;
+                
+                // Load material first
+                const mtlLoader = new THREE.MTLLoader();
+                mtlLoader.setPath(basePath); // Set path for texture loading
+                
+                // Also set resource path for better texture resolution
+                mtlLoader.setResourcePath(basePath);
+                
+                const materialPath = `${basePath}${meshInfo.material}`;
+                console.log('Loading material from:', materialPath);
+                console.log('MTL base path set to:', basePath);
+                
+                let materials = null;
+                try {
+                    materials = await new Promise((resolve, reject) => {
+                        mtlLoader.load(meshInfo.material, 
+                            (loadedMaterials) => {
+                                console.log('MTL loaded successfully:', loadedMaterials);
+                                console.log('Material names:', Object.keys(loadedMaterials.materials));
+                                resolve(loadedMaterials);
+                            }, 
+                            (progress) => {
+                                console.log('MTL loading progress:', progress);
+                            },
+                            (error) => {
+                                console.error('Material loading error:', error);
+                                reject(error);
+                            }
+                        );
+                    });
+                    materials.preload();
+                    console.log('Materials preloaded:', materials);
+                    
+                    // Debug: Check if textures were loaded
+                    Object.keys(materials.materials).forEach(matName => {
+                        const mat = materials.materials[matName];
+                        console.log(`Material ${matName}:`, {
+                            map: mat.map,
+                            mapUrl: mat.map ? mat.map.image?.src : 'no texture'
+                        });
+                    });
+                    
+                } catch (materialError) {
+                    console.warn('Failed to load materials, using default:', materialError);
+                    // Create a default material with texture
+                    materials = null;
+                }
+                
+                // Load OBJ with materials
+                const objLoader = new THREE.OBJLoader();
+                if (materials) {
+                    objLoader.setMaterials(materials);
+                }
+                
+                const geometryPath = `${basePath}${meshInfo.geometry}`;
+                console.log('Loading geometry from:', geometryPath);
+                
+                const object = await new Promise((resolve, reject) => {
+                    objLoader.load(geometryPath, resolve, undefined, (error) => {
+                        console.error('Geometry loading error:', error);
+                        reject(error);
+                    });
+                });
+                
+                // If materials failed to load, apply a default material with texture
+                if (!materials && meshInfo.texture) {
+                    console.log('Applying fallback material with texture');
+                    
+                    // Load texture manually
+                    const textureLoader = new THREE.TextureLoader();
+                    const texturePath = `${basePath}${meshInfo.texture}`;
+                    
+                    try {
+                        const texture = await new Promise((resolve, reject) => {
+                            textureLoader.load(texturePath, resolve, undefined, reject);
+                        });
+                        
+                        const defaultMaterial = new THREE.MeshLambertMaterial({ 
+                            map: texture
+                        });
+                        
+                        object.traverse((child) => {
+                            if (child.isMesh) {
+                                child.material = defaultMaterial;
+                                console.log('Applied textured fallback material to', child.name);
+                            }
+                        });
+                        
+                    } catch (textureError) {
+                        console.error('Failed to load fallback texture:', textureError);
+                        // Use untextured material as last resort
+                        const defaultMaterial = new THREE.MeshLambertMaterial({ 
+                            color: 0xcccccc
+                        });
+                        
+                        object.traverse((child) => {
+                            if (child.isMesh) {
+                                child.material = defaultMaterial;
+                            }
+                        });
+                    }
+                } else if (!materials) {
+                    // No materials and no texture - use basic material
+                    const defaultMaterial = new THREE.MeshLambertMaterial({ 
+                        color: 0xcccccc,
+                        wireframe: false
+                    });
+                    
+                    object.traverse((child) => {
+                        if (child.isMesh) {
+                            child.material = defaultMaterial;
+                        }
+                    });
+                    console.log('Applied default untextured material to mesh');
+                }
+                
+                // Add to scene
+                currentMesh = object;
+                scene.add(currentMesh);
+                
+                // Debug: Check what materials are actually applied
+                object.traverse((child) => {
+                    if (child.isMesh) {
+                        console.log(`Mesh ${child.name || 'unnamed'}:`, {
+                            material: child.material,
+                            hasTexture: !!child.material.map,
+                            textureUrl: child.material.map ? child.material.map.image?.src : 'none'
+                        });
+                    }
+                });
+                
+                // Force texture application if materials loaded but texture didn't apply
+                if (materials && meshInfo.texture) {
+                    const textureLoader = new THREE.TextureLoader();
+                    const texturePath = `${basePath}${meshInfo.texture}`;
+                    
+                    try {
+                        const texture = await new Promise((resolve, reject) => {
+                            textureLoader.load(texturePath, resolve, undefined, reject);
+                        });
+                        
+                        // Apply texture to all mesh materials
+                        object.traverse((child) => {
+                            if (child.isMesh && (!child.material.map || !child.material.map.image)) {
+                                console.log(`Manually applying texture to ${child.name || 'unnamed mesh'}`);
+                                if (child.material.map) {
+                                    child.material.map = texture;
+                                } else {
+                                    // Create new material with texture
+                                    const newMaterial = child.material.clone();
+                                    newMaterial.map = texture;
+                                    child.material = newMaterial;
+                                }
+                                child.material.needsUpdate = true;
+                            }
+                        });
+                        
+                        console.log('Manually applied texture:', texturePath);
+                        
+                    } catch (textureError) {
+                        console.error('Failed to manually load texture:', textureError);
+                    }
+                }
+                
+                // Center the mesh
+                const box = new THREE.Box3().setFromObject(currentMesh);
+                const center = box.getCenter(new THREE.Vector3());
+                currentMesh.position.sub(center);
+                
+                // Update camera to fit mesh
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const fov = camera.fov * (Math.PI / 180);
+                const cameraDistance = Math.abs(maxDim / Math.sin(fov / 2)) * 1.5;
+                
+                camera.position.set(cameraDistance, cameraDistance, cameraDistance);
+                camera.lookAt(0, 0, 0);
+                controls.reset();
+                
+                // Update info panel
+                updateInfoPanel(meshInfo, object);
+                
+                console.log('Mesh loaded successfully:', meshInfo.name);
+                
+            } catch (error) {
+                console.error('Error loading mesh:', error);
+                const errorMsg = `Failed to load mesh "${meshInfo.name}": ${error.message}`;
+                console.error(errorMsg);
+                
+                // Show error in loading div instead of alert
+                loadingDiv.innerHTML = `
+                    <div style="color: #ff6b6b; text-align: center;">
+                        <strong>Error:</strong><br>
+                        ${errorMsg}<br>
+                        <button onclick="document.getElementById('loading').style.display='none'" 
+                                style="margin-top: 10px; padding: 5px 10px; background: #333; color: white; border: 1px solid #666; border-radius: 3px; cursor: pointer;">
+                            Close
+                        </button>
+                    </div>
+                `;
+                return; // Don't hide loading div on error
+            }
+            
+            // Hide loading div on success
+            loadingDiv.style.display = 'none';
+        }
+        
+        function updateInfoPanel(meshInfo, object) {
+            document.getElementById('current-name').textContent = meshInfo.name;
+            document.getElementById('current-material').textContent = meshInfo.material || 'N/A';
+            document.getElementById('current-texture').textContent = meshInfo.texture || 'N/A';
+            
+            // Show texture preview if available
+            if (meshInfo.texture) {
+                const texturePreview = document.getElementById('texture-preview');
+                const texturePreviewRow = document.getElementById('texture-preview-row');
+                const textureStatus = document.getElementById('texture-status');
+                const texturePath = `/assets/meshes/props/${meshInfo.name}/${meshInfo.texture}`;
+                
+                console.log('Loading texture preview from:', texturePath);
+                
+                texturePreview.src = texturePath;
+                textureStatus.style.display = 'block';
+                textureStatus.textContent = 'Loading texture...';
+                textureStatus.className = 'texture-status';
+                
+                texturePreview.onerror = () => {
+                    console.error('Failed to load texture preview:', texturePath);
+                    textureStatus.textContent = 'Texture load failed';
+                    textureStatus.className = 'texture-status texture-error';
+                    texturePreviewRow.style.display = 'block'; // Still show the row with error
+                };
+                
+                texturePreview.onload = () => {
+                    console.log('Texture preview loaded successfully:', texturePath);
+                    textureStatus.textContent = `✅ ${texturePreview.naturalWidth}x${texturePreview.naturalHeight}`;
+                    textureStatus.className = 'texture-status texture-success';
+                    texturePreviewRow.style.display = 'block';
+                };
+            } else {
+                document.getElementById('texture-preview-row').style.display = 'none';
+            }
+            
+            // Count vertices and faces
+            let totalVertices = 0;
+            let totalFaces = 0;
+            
+            object.traverse((child) => {
+                if (child.isMesh && child.geometry) {
+                    const positions = child.geometry.attributes.position;
+                    if (positions) {
+                        totalVertices += positions.count;
+                    }
+                    if (child.geometry.index) {
+                        totalFaces += child.geometry.index.count / 3;
+                    } else if (positions) {
+                        totalFaces += positions.count / 3;
+                    }
+                }
+            });
+            
+            document.getElementById('current-vertices').textContent = totalVertices;
+            document.getElementById('current-faces').textContent = Math.floor(totalFaces);
+        }
+        
+        // Initialize everything when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initViewer();
+            loadMeshIndex();
+        });
     </script>
 </body>
 </html>

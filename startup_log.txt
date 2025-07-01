@@ -1,0 +1,129 @@
+🎮 CGGame - Sokol-based Component Engine
+==========================================
+
+🌍 World initialized - ready for 4096 entities
+📁 Asset root: /Users/ratimics/develop/cgame/build/assets
+📋 Data registry initialized
+   Data root: /Users/ratimics/develop/cgame/data
+📝 Loading entity templates from /Users/ratimics/develop/cgame/data/templates/entities.txt
+   ✅ Loaded 9 entity templates
+🏗️  Loading scene templates from /Users/ratimics/develop/cgame/data/scenes/mesh_test.txt
+   ✅ Loaded 1 scene templates
+🏗️  Loading scene templates from /Users/ratimics/develop/cgame/data/scenes/spaceport.txt
+   ✅ Loaded 2 scene templates
+🏗️  Loading scene templates from /Users/ratimics/develop/cgame/data/scenes/camera_test.txt
+   ✅ Loaded 3 scene templates
+🚀 Initializing Sokol-based renderer (1200x800)
+📂 Loading vertex shader: assets/shaders/basic_3d.vert.metal
+📂 Loading fragment shader: assets/shaders/basic_3d.frag.metal
+🔧 Creating shader with entry points: vs=vs_main, fs=fs_main
+🔍 Shader state: 2 (VALID=2, FAILED=3, INVALID=4)
+🔧 Creating pipeline with default swapchain-compatible formats
+🔧 Creating pipeline with default swapchain-compatible formats
+🔍 Pipeline created with default formats
+🔍 Pipeline state: 2 (VALID=2, FAILED=3, INVALID=4)
+✅ Sokol rendering pipeline initialized with external shaders
+✅ Render system initialized successfully
+🔍 Loading assets...
+📋 Loading asset index: /Users/ratimics/develop/cgame/build/assets/meshes/index.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/metadata.json
+🔍 DEBUG: Parsed metadata - name='Wedge Ship Mk2', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1003a9698, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', name='Wedge Ship Mk2'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', mesh_name='Wedge Ship Mk2'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj
+🔍 Loading binary mesh: 9 vertices, 48 indices
+🔍 DEBUG: Creating GPU buffers for Wedge Ship Mk2 - VB=288 bytes, IB=192 bytes
+✅ GPU resources created successfully for mesh Wedge Ship Mk2
+✅ Loaded binary mesh: Wedge Ship Mk2 (9 vertices, 48 indices) with AABB
+⚠️  Could not load texture: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/texture.png
+✅ Wedge Ship Mk2
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/metadata.json
+🔍 DEBUG: Parsed metadata - name='Sun', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1003a9698, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', name='Sun'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', mesh_name='Sun'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj
+🔍 Loading binary mesh: 60 vertices, 60 indices
+🔍 DEBUG: Creating GPU buffers for Sun - VB=1920 bytes, IB=240 bytes
+✅ GPU resources created successfully for mesh Sun
+✅ Loaded binary mesh: Sun (60 vertices, 60 indices) with AABB
+⚠️  Could not load texture: /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/texture.png
+✅ Sun
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/metadata.json
+🔍 DEBUG: Parsed metadata - name='Wedge Ship', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1003a9698, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', name='Wedge Ship'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', mesh_name='Wedge Ship'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj
+🔍 Loading binary mesh: 12 vertices, 12 indices
+🔍 DEBUG: Creating GPU buffers for Wedge Ship - VB=384 bytes, IB=48 bytes
+✅ GPU resources created successfully for mesh Wedge Ship
+✅ Loaded binary mesh: Wedge Ship (12 vertices, 12 indices) with AABB
+⚠️  Could not load texture: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/texture.png
+✅ Wedge Ship
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/metadata.json
+🔍 DEBUG: Parsed metadata - name='Control Tower', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1003a9698, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', name='Control Tower'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', mesh_name='Control Tower'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj
+🔍 Loading binary mesh: 192 vertices, 192 indices
+🔍 DEBUG: Creating GPU buffers for Control Tower - VB=6144 bytes, IB=768 bytes
+✅ GPU resources created successfully for mesh Control Tower
+✅ Loaded binary mesh: Control Tower (192 vertices, 192 indices) with AABB
+⚠️  Could not load texture: /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/texture.png
+✅ Control Tower
+📋 Loaded 4 meshes from asset index
+🎨 Initializing GPU resources...
+✅ All GPU resources initialized successfully
+📋 Loaded Assets:
+   Meshes (4):
+     Wedge Ship Mk2: 9 vertices, 48 indices ✅
+     Sun: 60 vertices, 60 indices ✅
+     Wedge Ship: 12 vertices, 12 indices ✅
+     Control Tower: 192 vertices, 192 indices ✅
+   Textures (0):
+   Materials (0):
+📋 Entity Templates (9):
+   - control_tower: Spaceport control structure
+   - sun: Central star
+   - wedge_ship: Standard wedge-shaped spacecraft
+   - wedge_ship_mk2: Advanced wedge-shaped spacecraft  
+   - player_ship: Basic player-controlled spacecraft
+   - chase_camera: Third-person chase camera
+   - security_camera: Fixed security camera
+   - ai_ship: AI-controlled spacecraft
+   - landing_pad: Spaceport landing platform
+🏗️  Scene Templates (3):
+   - mesh_test: 4 spawns
+   - spaceport_alpha: 24 spawns
+   - camera_test: 6 spawns
+🎯 System scheduler initialized
+   Physics: 60.0 Hz
+   Collision: 20.0 Hz
+   AI: 5.0 Hz (base)
+   Camera: 60.0 Hz
+🚀 Initializing Sokol-based renderer (1280x720)
+✅ Render system initialized successfully
+ℹ️ Loading default scene: camera_test
+🏗️  Loading scene 'camera_test' from data...
+🏗️  Loading scene: camera_test
+✅ Created renderable from mesh 'Wedge Ship Mk2': 48 indices
+✅ Entity 1 assigned mesh: Wedge Ship Mk2 (48 indices)
+   ✅ Spawned player_ship at (0.0, 0.0, 0.0)
+   ✅ Spawned chase_camera at (10.0, 25.0, 35.0)
+   ✅ Spawned security_camera at (-40.0, 35.0, -40.0)
+✅ Created renderable from mesh 'Control Tower': 192 indices
+✅ Entity 4 assigned mesh: Control Tower (192 indices)
+   ✅ Spawned control_tower at (-20.0, 0.0, -20.0)
+✅ Created renderable from mesh 'Sun': 60 indices
+✅ Entity 5 assigned mesh: Sun (60 indices)
+   ✅ Spawned sun at (0.0, 0.0, 30.0)
+✅ Created renderable from mesh 'Wedge Ship': 12 indices
+✅ Entity 6 assigned mesh: Wedge Ship (12 indices)
+   ✅ Spawned ai_ship at (20.0, 0.0, 20.0)
+🏗️  Scene loaded: 6 entities spawned
+🎯 Player found: Entity ID 1
+💡 Set ambient light: color(0.10,0.15,0.20) intensity=0.30
+💡 Added directional light: dir(0.30,-0.70,0.20) color(0.40

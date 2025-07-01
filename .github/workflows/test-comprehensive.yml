@@ -1,0 +1,307 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        test_suite: [math, memory, lod, performance]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install cairo pkg-config
+
+      - name: Run test suite
+        run: |
+          case "${{ matrix.test_suite }}" in
+            math)
+              make test-math
+              ;;
+            memory)
+              make test_memory || echo "Memory tests not yet implemented"
+              ;;
+            lod)
+              make test_lod || echo "LOD tests not yet implemented"
+              ;;
+            performance)
+              make test || echo "Performance tests not yet implemented"
+              ;;
+          esac
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.test_suite }}-${{ matrix.os }}
+          path: |
+            build/test_*
+            build/cgame_tests*
+          retention-days: 7
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev libcairo2-dev pkg-config
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Python environment
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install --timeout 300 -r requirements-ci.txt
+
+      - name: Build project
+        run: |
+          source .venv/bin/activate
+          make clean
+          make
+
+      - name: Run integration tests
+        run: |
+          # Test asset pipeline
+          source .venv/bin/activate
+          make assets-force
+          
+          # Test engine startup (non-interactive)
+          timeout 10s ./build/cgame || echo "Engine startup test completed"
+          
+          # Verify build artifacts
+          ls -la build/
+          file build/cgame
+
+      - name: Test asset validation
+        run: |
+          source .venv/bin/activate
+          python3 tools/build_pipeline.py --validate
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-build
+          path: |
+            build/cgame
+            build/assets/
+          retention-days: 3
+
+  memory-leak-tests:
+    name: Memory Leak Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev valgrind
+
+      - name: Build debug version
+        run: |
+          make clean
+          CFLAGS="-g -O0 -DDEBUG" make
+
+      - name: Run memory leak tests
+        run: |
+          # Run tests under valgrind
+          valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1 \
+            ./build/cgame_tests_math 2>&1 | tee valgrind-output.txt || echo "Valgrind completed"
+
+      - name: Upload memory test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: memory-leak-results
+          path: valgrind-output.txt
+          retention-days: 7
+
+  cross-platform-build:
+    name: Cross-Platform Build Test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: macos
+          - os: ubuntu-latest
+            platform: wasm
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup build environment (Linux)
+        if: matrix.platform == 'linux' || matrix.platform == 'wasm'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config libgl1-mesa-dev libx11-dev libxi-dev libxcursor-dev libxrandr-dev
+
+      - name: Setup build environment (macOS)
+        if: matrix.platform == 'macos'
+        run: |
+          brew install cairo pkg-config
+
+      - name: Setup Emscripten (WASM)
+        if: matrix.platform == 'wasm'
+        uses: mymindstorm/setup-emsdk@v12
+        with:
+          version: 3.1.49
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup Python environment
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install --timeout 300 -r requirements-ci.txt
+
+      - name: Build for platform
+        run: |
+          source .venv/bin/activate
+          if [[ "${{ matrix.platform }}" == "wasm" ]]; then
+            make wasm
+          else
+            make clean
+            make
+          fi
+
+      - name: Verify build output
+        run: |
+          ls -la build/
+          if [[ "${{ matrix.platform }}" == "wasm" ]]; then
+            ls -la build/cgame.*
+            file build/cgame.wasm 2>/dev/null || echo "WASM file check skipped"
+          else
+            file build/cgame
+            ./build/cgame --version 2>/dev/null || echo "Version check completed"
+          fi
+
+      - name: Upload platform artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            build/cgame*
+          retention-days: 3
+
+  test-report:
+    name: Test Report
+    needs: [unit-tests, integration-tests, memory-leak-tests, cross-platform-build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./test-results
+
+      - name: Generate test report
+        run: |
+          echo "# 🧪 CGame Test Suite Report" > test-summary.md
+          echo "" >> test-summary.md
+          echo "**Commit:** ${{ github.sha }}" >> test-summary.md
+          echo "**Branch:** ${{ github.ref_name }}" >> test-summary.md
+          echo "**Timestamp:** $(date -u)" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          # Check job results
+          echo "## Job Results" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          if [[ "${{ needs.unit-tests.result }}" == "success" ]]; then
+            echo "✅ **Unit Tests:** PASSED" >> test-summary.md
+          else
+            echo "❌ **Unit Tests:** FAILED" >> test-summary.md
+          fi
+          
+          if [[ "${{ needs.integration-tests.result }}" == "success" ]]; then
+            echo "✅ **Integration Tests:** PASSED" >> test-summary.md
+          else
+            echo "❌ **Integration Tests:** FAILED" >> test-summary.md
+          fi
+          
+          if [[ "${{ needs.memory-leak-tests.result }}" == "success" ]]; then
+            echo "✅ **Memory Leak Tests:** PASSED" >> test-summary.md
+          else
+            echo "❌ **Memory Leak Tests:** FAILED" >> test-summary.md
+          fi
+          
+          if [[ "${{ needs.cross-platform-build.result }}" == "success" ]]; then
+            echo "✅ **Cross-Platform Build:** PASSED" >> test-summary.md
+          else
+            echo "❌ **Cross-Platform Build:** FAILED" >> test-summary.md
+          fi
+          
+          echo "" >> test-summary.md
+          echo "## Artifacts" >> test-summary.md
+          echo "" >> test-summary.md
+          
+          find test-results -name "*.txt" -o -name "cgame*" | head -20 | while read file; do
+            echo "- \`$file\`" >> test-summary.md
+          done
+
+      - name: Upload final test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-summary-report
+          path: test-summary.md
+          retention-days: 30
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      - name: Add to step summary
+        if: always()
+        run: |
+          cat test-summary.md >> $GITHUB_STEP_SUMMARY

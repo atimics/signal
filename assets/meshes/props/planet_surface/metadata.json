@@ -1,0 +1,11 @@
+{
+  "name": "planet_surface",
+  "geometry": "geometry.obj",
+  "tags": [
+    "terrain",
+    "surface"
+  ],
+  "description": "A large planetary surface.",
+  "material": "material.mtl",
+  "texture": "texture.png"
+}

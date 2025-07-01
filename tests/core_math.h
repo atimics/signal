@@ -3,12 +3,14 @@
 #define CORE_MATH_H
 
 // Vector3 structure - just the math part
-typedef struct {
+typedef struct
+{
     float x, y, z;
 } Vector3;
 
 // Quaternion structure
-typedef struct {
+typedef struct
+{
     float x, y, z, w;
 } Quaternion;
 
@@ -20,4 +22,4 @@ Vector3 vector3_normalize(Vector3 v);
 float vector3_length(Vector3 v);
 float vector3_distance(Vector3 a, Vector3 b);
 
-#endif // CORE_MATH_H
+#endif  // CORE_MATH_H

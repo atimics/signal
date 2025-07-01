@@ -1,8 +1,11 @@
 {
-    "name": "Sun",
-    "filename": "geometry.mesh",
-    "tags": ["environment", "star", "celestial"],
-    "description": "A glowing sun mesh with bright texture for space environments",
-    "mtl": "material.mtl",
-    "texture": "texture.png"
+  "name": "sun",
+  "geometry": "geometry.obj",
+  "tags": [
+    "celestial",
+    "star"
+  ],
+  "description": "A low-poly sphere representing a star.",
+  "material": "material.mtl",
+  "texture": "texture.png"
 }

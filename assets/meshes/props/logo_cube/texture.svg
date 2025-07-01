@@ -1,0 +1,21 @@
+<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="primary_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700" />
+      <stop offset="100%" stop-color="#FFA500" />
+    </linearGradient>
+    <linearGradient id="secondary_gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFDF33" />
+      <stop offset="100%" stop-color="#B8860B" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#111"/>
+  <polygon points="0.00,1024.00 1024.00,1024.00 1024.00,0.00 0.00,0.00" fill="url(#primary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1024.00,1024.00 1024.00,0.00 0.00,0.00 0.00,1024.00" fill="url(#secondary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="0.00,0.00 0.00,1024.00 1024.00,1024.00 1024.00,0.00" fill="url(#primary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1024.00,0.00 0.00,0.00 0.00,1024.00 1024.00,1024.00" fill="url(#secondary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1024.00,1024.00 1024.00,0.00 0.00,0.00 0.00,1024.00" fill="url(#primary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="0.00,1024.00 1024.00,1024.00 1024.00,0.00 0.00,0.00" fill="url(#secondary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <text x="10" y="30" fill="white" font-family="Arial" font-size="20" font-weight="bold">Logo Cube UV Layout</text>
+  <text x="10" y="50" fill="#fff" font-family="Arial" font-size="12">This is the UV layout for the mesh. Edit this file to apply textures.</text>
+</svg>

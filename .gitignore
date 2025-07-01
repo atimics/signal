@@ -1,9 +1,13 @@
 # Build artifacts
 build/
 *.o
-*.obj
 *.exe
 cgame
+
+# Object files from C compilation (but not mesh .obj files)
+src/**/*.obj
+tests/**/*.obj
+tools/**/*.obj
 
 # Asset Build artifacts
 build/assets/
@@ -93,4 +97,5 @@ assets/**/*.temp
 !assets/meshes/metadata.json
 !assets/textures/metadata.json
 
-*.png
+# Keep mesh source files (.obj) - these are assets, not compiled objects
+!assets/**/*.obj

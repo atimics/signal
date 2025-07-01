@@ -2,12 +2,14 @@
 
 This document provides a curated index of the most relevant files in the CGame project, along with a brief summary of each file's purpose.
 
+**🔴 Active Sprint**: [Sprint 18: Systems Refactoring](docs/sprints/active/sprint_18_systems_refactor.md)
+
 ## Core Engine (`src/`)
 
 -   **`main.c`**: The main entry point for the application. Initializes the Sokol app, sets up the game world, and runs the main game loop.
 -   **`core.h` / `core.c`**: Defines the core data structures for the engine, including the `World`, `Entity`, and component structs. Manages the ECS memory and entity lifecycle.
--   **`systems.h` / `systems.c`**: Implements the system scheduler and the logic for all core gameplay systems (Physics, AI, Collision, etc.).
--   **`assets.h` / `assets.c`**: Manages the loading and unloading of game assets (meshes, materials, textures) from the compiled asset files.
+-   **`systems.h` / `systems.c`**: Implements the system scheduler and the logic for all core gameplay systems. **⚠️ Currently being refactored - see Sprint 18**.
+-   **`assets.h` / `assets.c`**: Manages the loading and unloading of game assets (meshes, materials, textures).
 -   **`data.h` / `data.c`**: Handles the loading of game data, such as scene definitions and entity templates, from text files.
 
 ## Rendering (`src/`)
@@ -33,9 +35,7 @@ This document provides a curated index of the most relevant files in the CGame p
 ## Documentation (`docs/`)
 
 -   **`README.md`**: The main documentation hub, providing a curated list of the most important documents.
--   **`project/`**: Contains high-level project management documents, including the `VISION.md`, `ROADMAP.md`, and `CURRENT_STATUS.md`.
 -   **`guides/`**: Contains detailed guides for developers, including the `DEVELOPMENT_GUIDE.md` and the `architecture/OVERVIEW.md`.
--   **`engineering/`**: Contains detailed engineering reports and briefs, such as the `NUKLEAR_INTEGRATION_REPORT.md`.
 -   **`sprints/`**: Contains the plans for current and upcoming development sprints.
 
 ## Assets (`assets/`)
@@ -46,8 +46,8 @@ This document provides a curated index of the most relevant files in the CGame p
 
 ## Tools (`tools/`)
 
--   **`asset_compiler.py`**: The main Python script for the asset compilation pipeline.
--   **`build_pipeline.py`**: A helper script for the build process.
+-   **`build_pipeline.py`**: The primary build script that orchestrates mesh compilation from OBJ to binary COBJ format.
+-   **`compile_mesh.py`**: Binary mesh compiler that converts OBJ files to COBJ format.
 -   **`validate_metadata.py`**: A script for validating asset metadata.
 
 ## Root Directory

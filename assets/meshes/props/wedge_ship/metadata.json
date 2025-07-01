@@ -1,8 +1,11 @@
 {
-    "name": "Wedge Ship",
-    "filename": "geometry.mesh",
-    "tags": ["ship", "vehicle", "spacecraft"],
-    "description": "A simple wedge-shaped spacecraft suitable for basic space exploration",
-    "mtl": "material.mtl",
-    "texture": "texture.png"
+  "name": "wedge_ship",
+  "geometry": "geometry.obj",
+  "tags": [
+    "ship",
+    "vehicle"
+  ],
+  "description": "A standard wedge-shaped spacecraft.",
+  "material": "material.mtl",
+  "texture": "texture.png"
 }

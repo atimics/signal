@@ -6,7 +6,7 @@
 
 # Core dependencies for asset processing
 trimesh==4.6.13
-xatlas==0.1.1  # Added for UV unwrapping
+xatlas==0.0.10  # Added for UV unwrapping
 numpy==2.3.1
 scipy==1.16.0
 

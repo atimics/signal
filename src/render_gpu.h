@@ -29,4 +29,4 @@ bool gpu_resources_is_vertex_buffer_valid(struct GpuResources* resources);
 bool gpu_resources_is_index_buffer_valid(struct GpuResources* resources);
 bool gpu_resources_is_texture_valid(struct GpuResources* resources);
 
-#endif // RENDER_GPU_H
+#endif  // RENDER_GPU_H

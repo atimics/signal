@@ -1,0 +1,6 @@
+newmtl planet_surface
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.5 0.5 0.5
+Ns 10.0
+map_Kd texture.png

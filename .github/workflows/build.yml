@@ -1,5 +1,10 @@
 name: Build and Test
 
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
 on:
   push:
     branches: [ "main", "develop" ]
@@ -192,3 +197,24 @@ jobs:
           else
             echo "❌ Test executable build failed" >> $GITHUB_STEP_SUMMARY
           fi
+
+  quality-gate-check:
+    name: Quality Gate Validation
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Validate Main Branch Push
+        run: |
+          echo "❌ Direct push to main branch detected!"
+          echo "According to CGame Release Standards, direct commits to main are prohibited."
+          echo "Please use pull requests for all changes to main branch."
+          echo ""
+          echo "Required workflow for main branch:"
+          echo "1. Create feature branch from develop"
+          echo "2. Make changes and commit"
+          echo "3. Create pull request to develop"
+          echo "4. After review, merge to develop"
+          echo "5. Create pull request from develop to main"
+          echo "6. Ensure all quality gates pass"
+          echo "7. Require manual verification before merge"
+          exit 1

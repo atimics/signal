@@ -12,4 +12,4 @@
 #include "sokol_gfx.h"
 #include "sokol_log.h"
 
-#endif // SOKOL_WRAPPER_H
+#endif  // SOKOL_WRAPPER_H

@@ -33,7 +33,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c assets.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c main.c
+SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -49,21 +49,54 @@ with-assets: assets $(TARGET)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Compile assets using Python asset compiler
+# Compile assets using the new binary pipeline
 assets: $(BUILD_ASSETS_DIR)
 
-$(BUILD_ASSETS_DIR): $(ASSET_COMPILER) $(shell find $(ASSETS_DIR) -name "*.obj" -o -name "*.mesh") | $(BUILD_DIR)
-	@echo "🔨 Compiling assets..."
-	@echo "📋 Note: Asset compilation requires Python dependencies (trimesh, cairo, numpy, scipy)"
-	@echo "📋 Install with: pip install trimesh cairosvg numpy scipy jsonschema"
-	$(PYTHON) $(ASSET_COMPILER) compile --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes
-	@echo "✅ Asset compilation attempted (check output above for any errors)"
+$(BUILD_ASSETS_DIR): | $(BUILD_DIR)
+	@echo "🔨 Compiling assets to binary format..."
+	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py
+	@echo "✅ Asset compilation complete."
 
 # Force asset recompilation
 assets-force:
 	@echo "🔨 Force recompiling assets..."
-	$(PYTHON) $(ASSET_COMPILER) compile --source_dir $(ASSETS_DIR)/meshes --build_dir $(BUILD_DIR)/assets/meshes --overwrite
-	@echo "✅ Asset compilation complete"
+	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py --force
+	@echo "✅ Asset compilation complete."
+
+# Generate all procedural source assets using clean pipeline
+generate-assets:
+	@echo "🌱 Generating all mesh assets with UV layouts..."
+	$(PYTHON) $(TOOLS_DIR)/clean_asset_pipeline.py --all
+	@echo "✅ Source asset generation complete."
+
+# Generate specific asset using clean pipeline  
+generate-asset:
+	@echo "🌱 Generating mesh asset: $(MESH)..."
+	$(PYTHON) $(TOOLS_DIR)/clean_asset_pipeline.py --mesh $(MESH)
+	@echo "✅ Asset $(MESH) generated."
+
+# Full asset regeneration and compilation
+regenerate-assets: clean-source-assets generate-assets assets
+
+# Clean source assets (SVGs, PNGs, OBJs)
+clean-source-assets:
+	@echo "🧹 Cleaning source assets..."
+	find $(ASSETS_DIR)/meshes/props -name "*.obj" -delete
+	find $(ASSETS_DIR)/meshes/props -name "*.svg" -delete
+	find $(ASSETS_DIR)/meshes/props -name "*.png" -delete
+	find $(ASSETS_DIR)/meshes/props -name "*.mtl" -delete
+	find $(ASSETS_DIR)/meshes/props -name "metadata.json" -delete
+	@echo "✅ Source assets cleaned."
+
+# Launch mesh viewer
+view-meshes:
+	@echo "🎨 Launching mesh viewer..."
+	$(PYTHON) $(TOOLS_DIR)/launch_mesh_viewer.py
+
+# Run performance test
+test-performance:
+	@echo "⚡ Running asset performance test..."
+	$(PYTHON) $(TOOLS_DIR)/test_asset_performance.py
 
 # Link executable
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)
@@ -71,6 +104,7 @@ $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 
 # Compile source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Special compilation rules for main.c (platform-specific)
@@ -117,6 +151,7 @@ wasm: assets-wasm | $(BUILD_DIR)
 	@echo "🌐 Building for WebAssembly..."
 	@echo "📋 Note: This requires Emscripten SDK to be installed and activated"
 	@echo "📋 Install with: https://emscripten.org/docs/getting_started/downloads.html"
+	@mkdir -p $(BUILD_DIR)
 	emcc -std=c99 -O2 -Isrc \
 		-DSOKOL_GLES3 \
 		-DSOKOL_IMPL \
@@ -124,15 +159,18 @@ wasm: assets-wasm | $(BUILD_DIR)
 		-DEMSCRIPTEN \
 		-Wno-unused-function \
 		-Wno-unused-variable \
+		-Wno-unused-parameter \
 		-s USE_WEBGL2=1 -s FULL_ES3=1 \
 		-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 		-s EXPORTED_FUNCTIONS='["_main"]' \
 		-s FORCE_FILESYSTEM=1 \
+		-s INITIAL_MEMORY=67108864 \
 		--preload-file $(BUILD_ASSETS_DIR)@/assets \
 		--shell-file src/shell.html \
-		src/core.c src/systems.c src/render_3d.c src/render_camera.c \
-		src/render_lighting.c src/render_mesh.c src/ui.c src/data.c src/graphics_api.c src/gpu_resources.c src/main.c \
+		$(addprefix src/,$(SOURCES)) \
 		-o $(BUILD_DIR)/cgame.html
+	@echo "✅ WebAssembly build complete: $(BUILD_DIR)/cgame.html"
+	@echo "📋 Serve with: python3 -m http.server 8000 (from build/ directory)"
 
 # Compile assets for WASM (simplified)
 assets-wasm: $(BUILD_ASSETS_DIR)
@@ -148,8 +186,8 @@ TEST_MATH_SRC = tests/test_main_simple.c tests/test_core_math.c tests/core_math.
 TEST_MATH_TARGET = $(BUILD_DIR)/cgame_tests_math
 
 # Phase 2 & 3: Full Integration Tests (With Sokol and engine dependencies)
-TEST_FULL_SRC = tests/test_runner.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/core_math.c tests/vendor/unity.c
-ENGINE_SRC_FOR_TEST = src/assets.c src/render_mesh.c src/gpu_resources.c
+TEST_FULL_SRC = tests/test_runner.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/vendor/unity.c
+ENGINE_SRC_FOR_TEST = src/assets.c src/asset_loader/asset_loader_index.c src/asset_loader/asset_loader_mesh.c src/asset_loader/asset_loader_material.c src/gpu_resources.c src/core.c
 TEST_FULL_TARGET = $(BUILD_DIR)/cgame_tests_full
 
 # Default test target - run Phase 1 (stable math tests)
@@ -214,3 +252,27 @@ test_sprint_10_5_task_3: | $(BUILD_DIR)
 	@echo "✅ Sprint 10.5 Task 3 test complete"
 
 .PHONY: test_sprint_10_5_task_3
+
+# Sprint 19 Task 1: Test LOD system
+test_lod: | $(BUILD_DIR)
+	@echo "🧪 Building and running LOD system tests..."
+	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_lod \
+		tests/test_performance_lod_simple.c tests/vendor/unity.c \
+		src/system/lod.c src/core.c \
+		-lm
+	./$(BUILD_DIR)/test_lod
+	@echo "✅ LOD system tests complete"
+
+.PHONY: test_lod
+
+# Sprint 19 Task 2.2: Test Memory Management system
+test_memory: | $(BUILD_DIR)
+	@echo "🧪 Building and running Memory Management system tests..."
+	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_memory \
+		tests/test_memory_management.c tests/vendor/unity.c \
+		src/system/memory.c src/system/performance.c src/core.c \
+		-lm
+	./$(BUILD_DIR)/test_memory
+	@echo "✅ Memory Management system tests complete"
+
+.PHONY: test_memory

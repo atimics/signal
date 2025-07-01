@@ -1,199 +1,203 @@
 #!/usr/bin/env python3
 """
-CGame Asset Pipeline - Unified Build System
+CGame Asset Pipeline - Binary Mesh Compiler
 
-This script combines mesh generation, asset compilation, and validation into a single pipeline.
-It can generate procedural meshes, compile existing meshes, and validate all metadata.
+This script finds all source .obj files, compiles them into the binary
+.cobj format, and generates the necessary metadata and index files
+for the engine to discover and load them.
 """
 
 import argparse
 import json
-import sys
+import struct
 from pathlib import Path
+from datetime import datetime
+import sys
+import os
+import json
+from pathlib import Path
+import subprocess
 
-# Import our tools
-from mesh_generator import main as mesh_generator_main, generate_mesh_with_textures
-from mesh_generator import generate_wedge_ship_mk2, generate_control_tower, generate_sun_sphere
-import asset_compiler
-from asset_compiler import validate_metadata
+def generate_and_write_metadata(source_metadata_path, build_prop_dir):
+    """
+    Reads source metadata, adds binary format info, and writes it to the build directory.
+    """
+    if not source_metadata_path.exists():
+        print(f"   ⚠️ WARNING: Source metadata not found at {source_metadata_path}")
+        return None
 
-def validate_all_metadata(source_dir, schema_path):
-    """Validate all metadata files in the source directory."""
-    print("🔍 Validating all metadata files...")
-    
-    metadata_files = list(Path(source_dir).glob("**/metadata.json"))
-    valid_count = 0
-    invalid_count = 0
-    
-    for metadata_file in metadata_files:
-        try:
-            with open(metadata_file, 'r') as f:
-                metadata = json.load(f)
-            
-            if validate_metadata(schema_path, metadata):
-                print(f"   ✅ {metadata_file.relative_to(Path(source_dir))}")
-                valid_count += 1
-            else:
-                print(f"   ❌ {metadata_file.relative_to(Path(source_dir))}")
-                invalid_count += 1
-                
-        except json.JSONDecodeError as e:
-            print(f"   ❌ {metadata_file.relative_to(Path(source_dir))} - Invalid JSON: {e}")
-            invalid_count += 1
-        except Exception as e:
-            print(f"   ❌ {metadata_file.relative_to(Path(source_dir))} - Error: {e}")
-            invalid_count += 1
-    
-    print(f"\n📊 Validation Results: {valid_count} valid, {invalid_count} invalid")
-    return invalid_count == 0
+    with open(source_metadata_path, 'r') as f:
+        metadata = json.load(f)
 
-def clean_build_directory(build_dir):
-    """Clean the build directory."""
-    print(f"🧹 Cleaning build directory: {build_dir}")
-    
-    import shutil
-    if Path(build_dir).exists():
-        shutil.rmtree(build_dir)
-    Path(build_dir).mkdir(parents=True, exist_ok=True)
-    
-    print("   ✅ Build directory cleaned")
+    # Add binary format information
+    metadata['format_version'] = "1.0"
+    metadata['geometry_format'] = "binary_cobj_v1"
+    metadata['geometry'] = "geometry.cobj" # Ensure it points to the binary file
 
-def generate_missing_meshes(source_dir, build_dir, schema_path):
-    """Generate any missing procedural meshes."""
-    print("🔧 Checking for missing procedural meshes...")
+    # Write the new metadata to the build directory
+    output_metadata_path = build_prop_dir / "metadata.json"
+    with open(output_metadata_path, 'w') as f:
+        json.dump(metadata, f, indent=2)
+        
+    return metadata
+
+def generate_asset_index(build_dir, compiled_assets):
+    """
+    Generates the main index.json file listing all compiled assets.
+    """
+    index_path = build_dir / "index.json"
     
-    # Define expected procedural meshes
-    procedural_meshes = {
-        "wedge_ship_mk2": generate_wedge_ship_mk2,
-        "control_tower": generate_control_tower, 
-        "sun": generate_sun_sphere,
+    # Load all metadata files and aggregate into a single index
+    meshes = []
+    source_dir = Path("assets/meshes")
+    
+    for asset_name in compiled_assets:
+        metadata_path = source_dir / "props" / asset_name / "metadata.json"
+        if metadata_path.exists():
+            try:
+                with open(metadata_path, 'r') as f:
+                    metadata = json.load(f)
+                meshes.append(metadata)
+            except json.JSONDecodeError as e:
+                print(f"⚠️  Warning: Invalid JSON in {metadata_path}: {e}")
+                continue
+        else:
+            print(f"⚠️  Warning: Missing metadata for {asset_name}")
+    
+    # Create index structure expected by mesh viewer
+    index_data = {
+        "meshes": meshes,
+        "generated": str(datetime.now().isoformat()),
+        "version": "1.0"
     }
     
-    generated_count = 0
+    with open(index_path, 'w') as f:
+        json.dump(index_data, f, indent=4)
     
-    for mesh_name, generator in procedural_meshes.items():
-        mesh_dir = Path(source_dir) / "props" / mesh_name
-        mesh_file = mesh_dir / "geometry.mesh"
-        
-        if not mesh_file.exists():
-            print(f"   🔧 Generating missing mesh: {mesh_name}")
-            if generate_mesh_with_textures(mesh_name, generator, source_dir, build_dir, schema_path):
-                generated_count += 1
-        else:
-            print(f"   ✓ {mesh_name} already exists")
+    # Also copy to source directory for mesh viewer
+    source_index_path = Path("assets/meshes/index.json")
+    with open(source_index_path, 'w') as f:
+        json.dump(index_data, f, indent=4)
     
-    if generated_count > 0:
-        print(f"   ✅ Generated {generated_count} missing meshes")
-    else:
-        print("   ✅ All procedural meshes exist")
-    
-    return generated_count
+    print(f"✅ Generated asset index with {len(meshes)} meshes: {index_path}")
+    print(f"✅ Copied asset index to source directory: {source_index_path}")
+
+import shutil
+
+def copy_supplementary_files(source_prop_dir, build_prop_dir):
+    """Copies .mtl and .png files from source to build."""
+    for ext in ["*.mtl", "*.png"]:
+        for source_file in source_prop_dir.glob(ext):
+            shutil.copy(source_file, build_prop_dir / source_file.name)
+            print(f"   Copied {source_file.name} to {build_prop_dir}")
 
 def main():
-    parser = argparse.ArgumentParser(description="CGame Asset Pipeline - Complete build system")
+    parser = argparse.ArgumentParser(description="CGame Asset Pipeline - Binary Compiler")
     
-    # Directories
-    parser.add_argument("--source_dir", default="assets/meshes", help="Source directory")
-    parser.add_argument("--build_dir", default="build/assets/meshes", help="Build directory")
-    
-    # Pipeline stages
-    parser.add_argument("--validate", action="store_true", help="Validate all metadata")
-    parser.add_argument("--generate", action="store_true", help="Generate missing procedural meshes")
-    parser.add_argument("--compile", action="store_true", help="Compile all meshes")
-    parser.add_argument("--clean", action="store_true", help="Clean build directory first")
-    parser.add_argument("--all", action="store_true", help="Run complete pipeline (clean, generate, validate, compile)")
-    
-    # Asset compiler options
-    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing build files")
-    
-    # Specific operations
-    parser.add_argument("--mesh", help="Generate specific mesh only")
+    parser.add_argument("--source_dir", default="assets/meshes", help="Source directory containing .obj files")
+    parser.add_argument("--build_dir", default="build/assets/meshes", help="Output directory for .cobj files")
+    parser.add_argument("--force", action="store_true", help="Force re-compilation even if output exists")
     
     args = parser.parse_args()
     
     source_dir = Path(args.source_dir)
     build_dir = Path(args.build_dir)
-    schema_path = source_dir / "schema.json"
     
     if not source_dir.exists():
         print(f"❌ Source directory not found: {source_dir}")
         return 1
         
-    if not schema_path.exists():
-        print(f"❌ Schema file not found: {schema_path}")
-        return 1
-    
     print(f"🚀 CGame Asset Pipeline")
     print(f"   Source: {source_dir}")
     print(f"   Build:  {build_dir}")
-    print()
+    print("-" * 40)
     
-    # Run pipeline stages
-    success = True
+    # Find all source metadata files to determine what to compile
+    source_metadata_files = list(source_dir.glob("**/metadata.json"))
     
-    try:
-        # Stage 1: Clean (if requested)
-        if args.clean or args.all:
-            clean_build_directory(build_dir)
+    if not source_metadata_files:
+        print("⚠️ No metadata.json files found in source directory. Nothing to compile.")
+        return 0
         
-        # Stage 2: Generate missing meshes (if requested)
-        if args.generate or args.all:
-            generate_missing_meshes(source_dir, build_dir, schema_path)
+    compiled_assets = []
+    error_count = 0
+    
+    for source_meta_file in source_metadata_files:
+        prop_dir = source_meta_file.parent
+        asset_name = prop_dir.name
         
-        # Stage 3: Generate specific mesh (if requested)
-        if args.mesh:
-            generators = {
-                "wedge_ship_mk2": generate_wedge_ship_mk2,
-                "control_tower": generate_control_tower,
-                "sun": generate_sun_sphere,
-            }
-            if args.mesh in generators:
-                generate_and_compile_mesh(args.mesh, generators[args.mesh], source_dir, build_dir, schema_path)
-            else:
-                print(f"❌ Unknown mesh: {args.mesh}")
-                return 1
+        # Determine source and output paths
+        source_obj_file = prop_dir / "geometry.obj"
+        build_prop_dir = build_dir / "props" / asset_name
+        output_cobj_file = build_prop_dir / "geometry.cobj"
         
-        # Stage 4: Validate metadata (if requested)
-        if args.validate or args.all:
-            if not validate_all_metadata(source_dir, schema_path):
-                print("❌ Metadata validation failed")
-                success = False
-        
-        # Stage 5: Compile assets (if requested)
-        if args.compile or args.all:
-            print("🔨 Compiling all assets...")
+        if not source_obj_file.exists():
+            print(f"   ⚠️ WARNING: Skipping {asset_name}, geometry.obj not found.")
+            continue
+
+        # Check if compilation is needed
+        if not args.force and output_cobj_file.exists() and output_cobj_file.stat().st_mtime > source_obj_file.stat().st_mtime:
+            print(f"   Skipping {asset_name} (up-to-date)")
+            compiled_assets.append(asset_name) # Still need to add to index
+            continue
             
-            # Set up asset compiler arguments
-            asset_compiler.args = argparse.Namespace()
-            asset_compiler.args.source_dir = str(source_dir)
-            asset_compiler.args.overwrite = args.overwrite or args.all
+        # Ensure the output directory exists
+        build_prop_dir.mkdir(parents=True, exist_ok=True)
+        
+        # --- Compile the .obj to .cobj ---
+        compiler_script = Path(__file__).parent / "compile_mesh.py"
+        command = [
+            sys.executable, 
+            str(compiler_script),
+            str(source_obj_file),
+            str(output_cobj_file)
+        ]
+        
+        try:
+            subprocess.run(command, check=True, capture_output=True, text=True)
             
-            # Run asset compiler
-            original_argv = sys.argv
+            # --- Validate the compiled binary mesh ---
+            validator_script = Path(__file__).parent / "validate_mesh.py"
+            validate_command = [
+                sys.executable,
+                str(validator_script),
+                str(output_cobj_file)
+            ]
+            
             try:
-                sys.argv = [
-                    "asset_compiler.py",
-                    "--source_dir", str(source_dir),
-                    "--build_dir", str(build_dir)
-                ]
-                if args.overwrite or args.all:
-                    sys.argv.append("--overwrite")
-                
-                asset_compiler.main()
-                print("   ✅ Asset compilation complete")
-                
-            finally:
-                sys.argv = original_argv
+                subprocess.run(validate_command, check=True, capture_output=True, text=True)
+                print(f"   ✅ Validation passed for {asset_name}")
+            except subprocess.CalledProcessError as e:
+                print(f"   ❌ Validation failed for {asset_name}:")
+                if e.stdout:
+                    print(f"      {e.stdout.strip()}")
+                if e.stderr:
+                    print(f"      {e.stderr.strip()}")
+                error_count += 1
+                continue  # Skip metadata generation for invalid assets
+            
+            # --- Generate the corresponding metadata.json in the build directory ---
+            generate_and_write_metadata(source_meta_file, build_prop_dir)
+            
+            # --- Copy supplementary files ---
+            copy_supplementary_files(prop_dir, build_prop_dir)
+            
+            compiled_assets.append(asset_name)
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to compile {source_obj_file}:")
+            print(e.stderr)
+            error_count += 1
+
+    print("-" * 40)
     
-    except Exception as e:
-        print(f"❌ Pipeline error: {e}")
-        success = False
-    
-    if success:
+    # --- Generate the final asset index ---
+    if error_count == 0:
+        generate_asset_index(build_dir, compiled_assets)
         print("\n🎉 Asset pipeline completed successfully!")
         return 0
     else:
-        print("\n💥 Asset pipeline failed!")
+        print(f"\n💥 Asset pipeline failed with {error_count} error(s).")
         return 1
 
 if __name__ == "__main__":
