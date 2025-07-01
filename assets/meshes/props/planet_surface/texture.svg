@@ -1,0 +1,17 @@
+<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="primary_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B35" />
+      <stop offset="100%" stop-color="#4A90E2" />
+    </linearGradient>
+    <linearGradient id="secondary_gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F1C40F" />
+      <stop offset="100%" stop-color="#9B59B6" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="#111"/>
+  <polygon points="0.00,1024.00 10240.00,1024.00 10240.00,-9216.00" fill="url(#primary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="0.00,1024.00 10240.00,-9216.00 0.00,-9216.00" fill="url(#secondary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <text x="10" y="30" fill="white" font-family="Arial" font-size="20" font-weight="bold">Planet Surface UV Layout</text>
+  <text x="10" y="50" fill="#fff" font-family="Arial" font-size="12">This is the UV layout for the mesh. Edit this file to apply textures.</text>
+</svg>

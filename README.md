@@ -40,9 +40,10 @@ This project is under active development.
 **Recent Accomplishments**:
 *   **Asset Pipeline Overhaul**: Migrated from a slow, text-based asset system to a high-performance, pre-compiled binary format.
 *   **Rendering Stabilization**: Resolved all critical rendering bugs, enabling the stable loading and display of textured 3D models.
+*   **UV Layout Pipeline**: Implemented a robust, data-driven asset pipeline that generates UV layout SVGs from mesh UVs, enabling artist-friendly texture workflow.
 *   **Vision Solidified**: Established a clear and compelling creative vision, "The Ghost Signal," to guide all future development.
 
 **Current Focus**:
-*   **Sprint 18**: A critical refactoring of the engine's core systems to improve modularity and enable future development.
+*   **Data-Driven Architecture**: Fully data-driven scene/entity/mesh/material/texture management with version control and artist-friendly workflows.
 
 See the [Active Sprint Guide](./docs/sprints/active/sprint_18_systems_refactor.md) for more details.

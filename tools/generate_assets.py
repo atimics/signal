@@ -1,21 +1,48 @@
 #!/usr/bin/env python3
 """
-CGame Asset Generator - Top-Level Script
+CGame Asset Generator - DEPRECATED
 
-This script serves as the main entry point for procedurally generating all
-source assets for the CGame engine. It calls the main function of the
-mesh_generator module.
+⚠️  DEPRECATION NOTICE ⚠️
+This script is deprecated in favor of the clean asset pipeline.
+Please use tools/clean_asset_pipeline.py instead.
+
+NEW USAGE:
+  python3 tools/clean_asset_pipeline.py --all
+  python3 tools/clean_asset_pipeline.py --mesh [mesh_name]
+  python3 tools/clean_asset_pipeline.py --list
+
+The clean pipeline provides:
+- Proper UV layout SVG generation
+- Artist-friendly texture workflow
+- Consistent material handling
+- Better performance and maintainability
 """
 
 import sys
+import subprocess
 from pathlib import Path
 
-# Add the tools directory to the Python path to allow importing the generator
-sys.path.append(str(Path(__file__).parent))
-
-from mesh_generator import main as mesh_generator_main
+def main():
+    print("⚠️  DEPRECATION WARNING ⚠️")
+    print("This script (generate_assets.py) is deprecated.")
+    print("Please use the clean asset pipeline instead:")
+    print()
+    print("  python3 tools/clean_asset_pipeline.py --all")
+    print()
+    print("Redirecting to clean asset pipeline...")
+    print()
+    
+    # Redirect to clean asset pipeline
+    try:
+        result = subprocess.run([
+            sys.executable, 
+            str(Path(__file__).parent / "clean_asset_pipeline.py"),
+            "--all"
+        ], check=True)
+        return result.returncode
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Clean asset pipeline failed: {e}")
+        return e.returncode
 
 if __name__ == "__main__":
-    # We can add more sophisticated argument parsing here later if needed,
-    # for now, we just pass all arguments through to the generator.
-    sys.exit(mesh_generator_main())
+    sys.exit(main())

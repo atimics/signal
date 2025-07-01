@@ -1,33 +1,21 @@
 <svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="gold_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="primary_gradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#FFD700" />
-      <stop offset="50%" stop-color="#FFA500" />
+      <stop offset="100%" stop-color="#FFA500" />
+    </linearGradient>
+    <linearGradient id="secondary_gradient" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFDF33" />
       <stop offset="100%" stop-color="#B8860B" />
     </linearGradient>
-    <radialGradient id="center_highlight" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFDF33" opacity="0.8" />
-      <stop offset="70%" stop-color="#CC8400" opacity="0.4" />
-      <stop offset="100%" stop-color="#8B4513" opacity="0.2" />
-    </radialGradient>
   </defs>
-  
-  <!-- Background -->
-  <rect width="100%" height="100%" fill="#1a1a1a"/>
-  
-  <!-- Central diamond pattern -->
-  <polygon points="512,256 768,512 512,768 256,512" fill="url(#gold_gradient)" stroke="#000" stroke-width="2" opacity="0.9"/>
-  
-  <!-- Corner accent triangles -->
-  <polygon points="0,0 256,0 128,128" fill="url(#gold_gradient)" opacity="0.6"/>
-  <polygon points="768,0 1024,0 896,128" fill="url(#gold_gradient)" opacity="0.6"/>
-  <polygon points="0,768 128,896 0,1024" fill="url(#gold_gradient)" opacity="0.6"/>
-  <polygon points="896,896 1024,768 1024,1024" fill="url(#gold_gradient)" opacity="0.6"/>
-  
-  <!-- Central highlight -->
-  <circle cx="512" cy="512" r="128" fill="url(#center_highlight)"/>
-  
-  <!-- Geometric border pattern -->
-  <rect x="128" y="128" width="768" height="768" fill="none" stroke="url(#gold_gradient)" stroke-width="4" opacity="0.7"/>
-  <rect x="192" y="192" width="640" height="640" fill="none" stroke="url(#gold_gradient)" stroke-width="2" opacity="0.5"/>
+  <rect width="100%" height="100%" fill="#111"/>
+  <polygon points="0.00,1024.00 1024.00,1024.00 1024.00,0.00 0.00,0.00" fill="url(#primary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1024.00,1024.00 1024.00,0.00 0.00,0.00 0.00,1024.00" fill="url(#secondary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="0.00,0.00 0.00,1024.00 1024.00,1024.00 1024.00,0.00" fill="url(#primary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1024.00,0.00 0.00,0.00 0.00,1024.00 1024.00,1024.00" fill="url(#secondary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="1024.00,1024.00 1024.00,0.00 0.00,0.00 0.00,1024.00" fill="url(#primary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <polygon points="0.00,1024.00 1024.00,1024.00 1024.00,0.00 0.00,0.00" fill="url(#secondary_gradient)" stroke="#000" stroke-width="1.5" opacity="0.8"/>
+  <text x="10" y="30" fill="white" font-family="Arial" font-size="20" font-weight="bold">Logo Cube UV Layout</text>
+  <text x="10" y="50" fill="#fff" font-family="Arial" font-size="12">This is the UV layout for the mesh. Edit this file to apply textures.</text>
 </svg>

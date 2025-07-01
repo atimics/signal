@@ -63,11 +63,30 @@ assets-force:
 	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py --force
 	@echo "✅ Asset compilation complete."
 
-# Generate all procedural source assets
+# Generate all procedural source assets using clean pipeline
 generate-assets:
-	@echo "🌱 Generating procedural source assets..."
-	$(PYTHON) $(TOOLS_DIR)/generate_assets.py --all
+	@echo "🌱 Generating all mesh assets with UV layouts..."
+	$(PYTHON) $(TOOLS_DIR)/clean_asset_pipeline.py --all
 	@echo "✅ Source asset generation complete."
+
+# Generate specific asset using clean pipeline  
+generate-asset:
+	@echo "🌱 Generating mesh asset: $(MESH)..."
+	$(PYTHON) $(TOOLS_DIR)/clean_asset_pipeline.py --mesh $(MESH)
+	@echo "✅ Asset $(MESH) generated."
+
+# Full asset regeneration and compilation
+regenerate-assets: clean-source-assets generate-assets assets
+
+# Clean source assets (SVGs, PNGs, OBJs)
+clean-source-assets:
+	@echo "🧹 Cleaning source assets..."
+	find $(ASSETS_DIR)/meshes/props -name "*.obj" -delete
+	find $(ASSETS_DIR)/meshes/props -name "*.svg" -delete
+	find $(ASSETS_DIR)/meshes/props -name "*.png" -delete
+	find $(ASSETS_DIR)/meshes/props -name "*.mtl" -delete
+	find $(ASSETS_DIR)/meshes/props -name "metadata.json" -delete
+	@echo "✅ Source assets cleaned."
 
 # Link executable
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)

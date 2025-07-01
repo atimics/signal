@@ -7,5 +7,5 @@
   ],
   "description": "Gold standard reference cube for testing.",
   "material": "material.mtl",
-  "texture": "logo.png"
+  "texture": "texture.png"
 }
