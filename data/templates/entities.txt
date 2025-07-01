@@ -72,6 +72,15 @@ fov=60.0
 near_plane=0.1
 far_plane=1000.0
 
+template: cockpit_camera
+description=First-person cockpit camera
+has_transform=true
+has_camera=true
+camera_behavior=first_person
+fov=75.0
+near_plane=0.01
+far_plane=1000.0
+
 template: security_camera
 description=Fixed security camera
 has_transform=true

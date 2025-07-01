@@ -9,6 +9,7 @@ It is designed to be called by the main build pipeline.
 
 import json
 import math
+import sys
 from pathlib import Path
 import numpy as np
 import argparse
@@ -98,6 +99,90 @@ def generate_sun_sphere():
     ])
     uvs = [[np.arctan2(v[0], v[2]) / (2 * np.pi) + 0.5, np.arcsin(v[1]) / np.pi + 0.5] for v in verts]
     return verts.tolist(), faces.tolist(), uvs
+
+def generate_planet_surface():
+    """Generate a large flat plane to represent the planet surface."""
+    size = 50.0  # Large surface
+    vertices = [
+        [-size, 0, -size], [size, 0, -size], [size, 0, size], [-size, 0, size]
+    ]
+    uvs = [
+        [0, 0], [10, 0], [10, 10], [0, 10]  # Tiled UVs for detail
+    ]
+    faces = [
+        [0, 1, 2], [0, 2, 3]  # Two triangles forming a quad
+    ]
+    return vertices, faces, uvs
+
+def generate_landing_pad():
+    """Generate a hexagonal landing pad with markers."""
+    vertices = []
+    faces = []
+    uvs = []
+    
+    # Central hexagon
+    radius = 3.0
+    height = 0.2
+    sides = 6
+    
+    # Bottom center point
+    vertices.append([0, 0, 0])
+    uvs.append([0.5, 0.5])
+    
+    # Top center point  
+    vertices.append([0, height, 0])
+    uvs.append([0.5, 0.5])
+    
+    # Bottom and top ring vertices
+    for i in range(sides):
+        angle = 2 * math.pi * i / sides
+        x = radius * math.cos(angle)
+        z = radius * math.sin(angle)
+        
+        # Bottom vertex
+        vertices.append([x, 0, z])
+        uvs.append([0.5 + 0.5 * math.cos(angle), 0.5 + 0.5 * math.sin(angle)])
+        
+        # Top vertex
+        vertices.append([x, height, z])
+        uvs.append([0.5 + 0.5 * math.cos(angle), 0.5 + 0.5 * math.sin(angle)])
+    
+    # Create faces
+    for i in range(sides):
+        i_next = (i + 1) % sides
+        
+        # Bottom face triangles
+        faces.append([0, 2 + i * 2, 2 + i_next * 2])
+        
+        # Top face triangles  
+        faces.append([1, 3 + i_next * 2, 3 + i * 2])
+        
+        # Side faces (quads as two triangles)
+        bottom_curr = 2 + i * 2
+        top_curr = 3 + i * 2
+        bottom_next = 2 + i_next * 2
+        top_next = 3 + i_next * 2
+        
+        faces.append([bottom_curr, top_curr, top_next])
+        faces.append([bottom_curr, top_next, bottom_next])
+    
+    return vertices, faces, uvs
+
+def generate_wedge_ship():
+    """Generate a simpler wedge ship for AI ships."""
+    vertices = [
+        [0.0, 0.0, 1.5],   # Nose
+        [-0.8, 0.3, -1.0], [0.8, 0.3, -1.0],   # Top wing tips
+        [-0.8, -0.3, -1.0], [0.8, -0.3, -1.0], # Bottom wing tips
+        [-0.3, -0.1, -1.5], [0.3, -0.1, -1.5]  # Rear engines
+    ]
+    uvs = [
+        [0.5, 1.0], [0.0, 0.5], [1.0, 0.5], [0.0, 0.2], [1.0, 0.2], [0.25, 0.0], [0.75, 0.0]
+    ]
+    faces = [
+        [0, 2, 1], [1, 2, 4, 3], [0, 3, 4], [0, 4, 2], [0, 1, 3], [3, 5, 6, 4], [1, 5, 6, 2]
+    ]
+    return vertices, faces, uvs
 
 def write_obj_file(filepath, vertices, uvs, faces):
     """Write vertices, UVs, normals, and faces to an OBJ file."""
@@ -196,8 +281,11 @@ def main():
     
     generators = {
         "wedge_ship_mk2": generate_wedge_ship_mk2,
+        "wedge_ship": generate_wedge_ship,
         "control_tower": generate_control_tower,
         "sun": generate_sun_sphere,
+        "planet_surface": generate_planet_surface,
+        "landing_pad": generate_landing_pad,
     }
     
     if args.all:

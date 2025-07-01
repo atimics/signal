@@ -264,7 +264,7 @@ static void init(void)
 
     printf("✅ Engine initialized successfully!\n");
     printf("\n🎮 Starting simulation...\n");
-    printf("Press ESC to exit, 1-9 to switch cameras\n");
+    printf("Press ESC to exit, C to cycle cameras, W for wireframe\n");
 }
 
 static void frame(void)
@@ -357,7 +357,7 @@ static void event(const sapp_event* ev)
                 printf("⎋ Escape key pressed - exiting\n");
                 sapp_request_quit();
             }
-            // Camera switching with number keys
+            // Camera switching with number keys (legacy support)
             else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
             {
                 int camera_index = ev->key_code - SAPP_KEYCODE_1;  // 0-8
@@ -375,6 +375,40 @@ static void event(const sapp_event* ev)
                 else
                 {
                     printf("📹 Camera %d not found\n", camera_index + 1);
+                }
+            }
+            // Camera cycling with C key
+            else if (ev->key_code == SAPP_KEYCODE_C)
+            {
+                if (cycle_to_next_camera(&app_state.world))
+                {
+                    // Get info about the new active camera
+                    EntityID active_camera = world_get_active_camera(&app_state.world);
+                    struct Camera* camera = entity_get_camera(&app_state.world, active_camera);
+                    
+                    const char* camera_type = "Unknown";
+                    if (camera)
+                    {
+                        switch (camera->behavior)
+                        {
+                            case CAMERA_BEHAVIOR_FIRST_PERSON: camera_type = "Cockpit"; break;
+                            case CAMERA_BEHAVIOR_THIRD_PERSON: camera_type = "Chase"; break;
+                            case CAMERA_BEHAVIOR_STATIC: camera_type = "Static/Overhead"; break;
+                            case CAMERA_BEHAVIOR_ORBITAL: camera_type = "Orbital"; break;
+                            default: camera_type = "Unknown"; break;
+                        }
+                    }
+                    
+                    printf("📹 Cycled to %s camera (Entity %d)\n", camera_type, active_camera);
+
+                    // Update aspect ratio for the new camera
+                    float aspect_ratio = (float)app_state.render_config.screen_width /
+                                         (float)app_state.render_config.screen_height;
+                    update_camera_aspect_ratio(&app_state.world, aspect_ratio);
+                }
+                else
+                {
+                    printf("📹 No cameras available to cycle through\n");
                 }
             }
             // Toggle wireframe mode with W key
