@@ -30,6 +30,14 @@ This area covers the fundamental architecture of the engine's simulation and wor
     *   **Synopsis**: A detailed breakdown of the requirements for a skeletal animation system, including rigging, skinning, and animation state machines.
     *   **Strategic Importance**: **Medium**. Essential for bringing characters and dynamic objects to life, this will become a priority after the core rendering and world systems are finalized.
 
+*   **[R23: Propulsion Systems](./core_systems/R23_Propulsion_Systems.md)**
+    *   **Synopsis**: A research document detailing the "Attraction Drive," a unique propulsion system based on localized gravity fields that allows for fast-paced, kinetic, "surface-sticky" flight within the Graveyard.
+    *   **Strategic Importance**: **High**. This document provides the core scientific and gameplay rationale for the game's signature flight model.
+
+*   **[R24: Scopes of Flight](./core_systems/R24_Scopes_of_Flight.md)**
+    *   **Synopsis**: Defines the three tiers of in-game propulsion technology (Localized, Interplanetary, Interstellar) and their relationship to the lore and gameplay loops.
+    *   **Strategic Importance**: **Medium**. This document is key to creating a believable world with a clear sense of scale and technological progression.
+
 ---
 
 ## 3. Rendering & Graphics
