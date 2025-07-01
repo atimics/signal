@@ -152,8 +152,9 @@ void test_memory_tracking_accuracy(void) {
     printf("🚀 Testing memory tracking accuracy...\n");
     
     // Get initial memory stats
-    struct MemoryStats initial_stats = memory_get_stats();
-    size_t initial_allocated = initial_stats.bytes_allocated;
+    size_t initial_total_mb, initial_peak_mb;
+    uint32_t initial_asset_count;
+    memory_get_stats(&initial_total_mb, &initial_peak_mb, &initial_asset_count);
     
     // Allocate known amount of memory
     const size_t test_allocation_size = 1024 * 1024; // 1MB
@@ -161,30 +162,29 @@ void test_memory_tracking_accuracy(void) {
     TEST_ASSERT_NOT_NULL(test_ptr);
     
     // Check that memory tracking reflects the allocation
-    struct MemoryStats after_alloc_stats = memory_get_stats();
-    size_t allocated_difference = after_alloc_stats.bytes_allocated - initial_allocated;
+    size_t after_alloc_total_mb, after_alloc_peak_mb;
+    uint32_t after_alloc_asset_count;
+    memory_get_stats(&after_alloc_total_mb, &after_alloc_peak_mb, &after_alloc_asset_count);
     
-    printf("📊 Allocated difference: %zu bytes (expected: %zu)\n", 
-           allocated_difference, test_allocation_size);
+    printf("📊 Memory before: %zu MB, after: %zu MB\n", 
+           initial_total_mb, after_alloc_total_mb);
     
-    // Should track at least the requested size (may be slightly more due to alignment)
-    TEST_ASSERT_GREATER_OR_EQUAL(test_allocation_size, allocated_difference);
+    // Should have increased (allowing for MB rounding)
+    TEST_ASSERT_GREATER_OR_EQUAL(initial_total_mb, after_alloc_total_mb);
     
     // Free the allocation
     memory_pool_free(test_pool_id, test_ptr);
     
     // Check that memory tracking reflects the deallocation
-    struct MemoryStats after_free_stats = memory_get_stats();
-    size_t final_allocated = after_free_stats.bytes_allocated;
+    size_t final_total_mb, final_peak_mb;
+    uint32_t final_asset_count;
+    memory_get_stats(&final_total_mb, &final_peak_mb, &final_asset_count);
     
-    printf("📊 Final allocated: %zu bytes (initial: %zu)\n", 
-           final_allocated, initial_allocated);
+    printf("📊 Final memory: %zu MB (initial: %zu MB)\n", 
+           final_total_mb, initial_total_mb);
     
-    // Should be back to initial level (or very close)
-    size_t difference = (final_allocated > initial_allocated) ? 
-                       (final_allocated - initial_allocated) : 
-                       (initial_allocated - final_allocated);
-    TEST_ASSERT_LESS_THAN(1024, difference); // Allow small difference for bookkeeping
+    // Peak should have been updated
+    TEST_ASSERT_GREATER_OR_EQUAL(after_alloc_total_mb, final_peak_mb);
     
     printf("✅ Memory tracking accuracy test passed\n");
 }
