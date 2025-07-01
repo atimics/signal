@@ -1,9 +1,9 @@
-#ifndef AI_H
-#define AI_H
+#ifndef SYSTEM_AI_H
+#define SYSTEM_AI_H
 
-#include "core.h"
-#include "systems.h"
+#include "../core.h"
+#include "../render.h"
 
 void ai_system_update(struct World* world, RenderConfig* render_config, float delta_time);
 
-#endif // AI_H
+#endif // SYSTEM_AI_H
