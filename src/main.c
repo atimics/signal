@@ -343,8 +343,16 @@ static void create_loading_cube_mesh(AssetRegistry* assets)
 
     // Mesh will be loaded when first rendered
     cube->loaded = true;
+    
+    // Create GPU resources for the procedural cube
+    if (!assets_upload_mesh_to_gpu(cube))
+    {
+        printf("❌ Failed to create GPU resources for loading cube\n");
+        return;
+    }
+    
     assets->mesh_count++;
-    printf("📦 Created loading cube mesh\n");
+    printf("📦 Created loading cube mesh with GPU resources\n");
 }
 
 // ============================================================================
@@ -659,7 +667,9 @@ static void frame(void)
             }
         }
         // Auto-complete loading screen after showing for 8 seconds at 100%
-        else if (app_state.loading_screen.progress >= 1.0f && app_state.simulation_time > 8.0f)
+        // For logo scene, finish immediately when 100% loaded
+        else if (app_state.loading_screen.progress >= 1.0f && 
+                 (strcmp(app_state.current_scene, "logo") == 0 || app_state.simulation_time > 8.0f))
         {
             loading_screen_finish(&app_state.loading_screen);
             app_state.initialized = true;
