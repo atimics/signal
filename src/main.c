@@ -23,6 +23,7 @@
 #include "render.h"
 #include "systems.h"
 #include "system/camera.h"
+#include "system/performance.h"
 #include "ui.h"
 #include "scene_state.h"
 #include "scene_script.h"
