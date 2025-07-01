@@ -234,37 +234,50 @@ bool load_single_mesh_metadata(AssetRegistry* registry,
   if (strlen(material_filename) > 0) {
     Mesh* mesh = assets_get_mesh(registry, mesh_name);
     if (mesh) {
-      // The MTL file should have created a material - find it
-      // For Logo Cube, we know the material name is "logo_cube_material"
-      // TODO: Make this more generic by parsing the MTL file to get the material name
-      if (strcmp(mesh_name, "Logo Cube") == 0) {
-        strncpy(mesh->material_name, "logo_cube_material", sizeof(mesh->material_name) - 1);
-        
-        // Also fix the material's texture reference to match the loaded texture name
-        Material* material = assets_get_material(registry, "logo_cube_material");
-        if (material && strcmp(material->diffuse_texture, "texture.png") == 0) {
-          // Update to use the actual loaded texture name
-          strncpy(material->diffuse_texture, "Logo Cube_texture", sizeof(material->diffuse_texture) - 1);
-          material->diffuse_texture[sizeof(material->diffuse_texture) - 1] = '\0';
-          printf("🔍 DEBUG: Updated material texture reference from 'texture.png' to 'Logo Cube_texture'\n");
-        }
-      } else {
-        // Fallback: use the MTL filename without extension as material name
-        char material_name[64];
-        strncpy(material_name, material_filename, sizeof(material_name) - 1);
-        material_name[sizeof(material_name) - 1] = '\0';
-        
-        // Remove .mtl extension if present
-        char* dot = strrchr(material_name, '.');
-        if (dot && strcmp(dot, ".mtl") == 0) {
-          *dot = '\0';
-        }
-        
-        strncpy(mesh->material_name, material_name, sizeof(mesh->material_name) - 1);
-      }
-      mesh->material_name[sizeof(mesh->material_name) - 1] = '\0';
+      // Parse the MTL file to get the actual material name
+      char mtl_path[512];
+      snprintf(mtl_path, sizeof(mtl_path), "%s/%s", mesh_dir, material_filename);
       
-      printf("🔍 DEBUG: Set material '%s' for mesh '%s'\n", mesh->material_name, mesh_name);
+      // Open MTL file and find the material name (line starting with "newmtl ")
+      FILE* mtl_file = fopen(mtl_path, "r");
+      if (mtl_file) {
+        char mtl_line[256];
+        while (fgets(mtl_line, sizeof(mtl_line), mtl_file)) {
+          // Remove whitespace and newlines
+          char* trimmed = mtl_line;
+          while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
+          trimmed[strcspn(trimmed, "\n\r")] = 0;
+          
+          // Look for "newmtl " line
+          if (strncmp(trimmed, "newmtl ", 7) == 0) {
+            // Extract material name
+            char* material_name = trimmed + 7; // Skip "newmtl "
+            strncpy(mesh->material_name, material_name, sizeof(mesh->material_name) - 1);
+            mesh->material_name[sizeof(mesh->material_name) - 1] = '\0';
+            
+            printf("🔍 DEBUG: Set material '%s' for mesh '%s'\n", mesh->material_name, mesh_name);
+            
+            // Also fix the material's texture reference to match the loaded texture name
+            Material* material = assets_get_material(registry, material_name);
+            if (material && strlen(texture_filename) > 0) {
+              char expected_texture_name[128];
+              snprintf(expected_texture_name, sizeof(expected_texture_name), "%s_texture", mesh_name);
+              
+              // Update the material's diffuse texture to reference the correctly named texture
+              if (strcmp(material->diffuse_texture, texture_filename) == 0) {
+                strncpy(material->diffuse_texture, expected_texture_name, sizeof(material->diffuse_texture) - 1);
+                material->diffuse_texture[sizeof(material->diffuse_texture) - 1] = '\0';
+                printf("🔍 DEBUG: Updated material '%s' texture reference from '%s' to '%s'\n", 
+                       material_name, texture_filename, expected_texture_name);
+              }
+            }
+            break;
+          }
+        }
+        fclose(mtl_file);
+      } else {
+        printf("⚠️  Could not open MTL file: %s\n", mtl_path);
+      }
     }
   }
 
