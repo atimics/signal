@@ -299,6 +299,36 @@ The binary compilation pipeline provides significant performance benefits:
 - **Texture Variants**: Multiple texture versions per mesh
 - **Material Editor**: Visual material property editing
 - **Preview Tools**: Real-time texture preview in engine
+- **Mesh Viewer**: Web-based 3D viewer for source assets
+
+## Mesh Viewer Tool
+
+The CGame engine includes a web-based mesh viewer for inspecting source assets:
+
+### **Usage**
+
+```bash
+# Start a local web server from the project root
+cd /path/to/cgame
+python3 -m http.server 8080
+
+# Open the mesh viewer in your browser
+open http://localhost:8080/tools/mesh_viewer/
+```
+
+### **Features**
+
+- **3D Visualization**: View source OBJ files with materials and textures
+- **UV Layout Preview**: See texture mapping in real-time
+- **Material Analysis**: Inspect material tags and color schemes
+- **Asset Information**: View metadata, descriptions, and file paths
+- **Interactive Controls**: Orbit, zoom, and pan around meshes
+
+### **Limitations**
+
+- **Source Assets Only**: Cannot view binary `.cobj` files (browser limitation)
+- **Local Server Required**: Must run from a web server due to CORS restrictions
+- **OBJ Format**: Only supports Wavefront OBJ geometry files
 
 ---
 

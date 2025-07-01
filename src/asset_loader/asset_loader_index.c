@@ -30,6 +30,9 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
   char line[512];
   bool success = true;
   int loaded_count = 0;
+  bool in_meshes_array = false;
+  bool in_mesh_object = false;
+  char current_mesh_name[128] = "";
 
   while (fgets(line, sizeof(line), file)) {
     // Remove whitespace and newlines
@@ -37,25 +40,33 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
     while (*trimmed == ' ' || *trimmed == '\t') trimmed++;
     trimmed[strcspn(trimmed, "\n\r")] = 0;
 
-    // Skip empty lines, comments, and JSON syntax
-    if (strlen(trimmed) == 0 || trimmed[0] == '/' || trimmed[0] == '#' ||
-        trimmed[0] == '[' || trimmed[0] == ']' || strcmp(trimmed, "{") == 0 ||
-        strcmp(trimmed, "}") == 0) {
+    // Skip empty lines and comments
+    if (strlen(trimmed) == 0 || trimmed[0] == '/' || trimmed[0] == '#') {
       continue;
     }
 
-    // Extract metadata path from JSON array entry
-    char* start = strchr(trimmed, '"');
-    if (start) {
-      start++;
-      char* end = strchr(start, '"');
-      if (end) {
-        // Extract the metadata path
-        char metadata_relative[256];
-        int len = end - start;
-        if (len > 0 && (size_t)len < sizeof(metadata_relative)) {
-          strncpy(metadata_relative, start, len);
-          metadata_relative[len] = 0;
+    // Check if we're entering the meshes array
+    if (strstr(trimmed, "\"meshes\"")) {
+      in_meshes_array = true;
+      continue;
+    }
+
+    // If we're in the meshes array, look for mesh objects
+    if (in_meshes_array) {
+      // Look for opening brace (start of mesh object)
+      if (strchr(trimmed, '{')) {
+        in_mesh_object = true;
+        current_mesh_name[0] = '\0'; // Reset mesh name
+        continue;
+      }
+
+      // Look for closing brace (end of mesh object)
+      if (strchr(trimmed, '}')) {
+        if (in_mesh_object && strlen(current_mesh_name) > 0) {
+          // We have a complete mesh object, construct metadata path
+          char metadata_relative[256];
+          snprintf(metadata_relative, sizeof(metadata_relative), 
+                   "props/%s/metadata.json", current_mesh_name);
 
           // Build full path
           char metadata_full_path[512];
@@ -67,6 +78,29 @@ bool load_assets_from_metadata(AssetRegistry* registry) {
             loaded_count++;
           } else {
             success = false;
+          }
+        }
+        in_mesh_object = false;
+        current_mesh_name[0] = '\0';
+        continue;
+      }
+
+      // If we're in a mesh object, look for the name field
+      if (in_mesh_object && strstr(trimmed, "\"name\":")) {
+        char* value_start = strstr(trimmed, ":");
+        if (value_start) {
+          value_start++;
+          while (*value_start == ' ' || *value_start == '\t') value_start++;
+          if (*value_start == '"') {
+            value_start++;
+            char* value_end = strchr(value_start, '"');
+            if (value_end) {
+              int len = value_end - value_start;
+              if (len > 0 && (size_t)len < sizeof(current_mesh_name)) {
+                strncpy(current_mesh_name, value_start, len);
+                current_mesh_name[len] = 0;
+              }
+            }
           }
         }
       }

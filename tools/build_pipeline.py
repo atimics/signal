@@ -8,6 +8,10 @@ for the engine to discover and load them.
 """
 
 import argparse
+import json
+import struct
+from pathlib import Path
+from datetime import datetime
 import sys
 import os
 import json
@@ -43,16 +47,40 @@ def generate_asset_index(build_dir, compiled_assets):
     """
     index_path = build_dir / "index.json"
     
-    # The paths in the index must be relative to the index file itself
-    metadata_paths = [
-        f"props/{asset_name}/metadata.json"
-        for asset_name in compiled_assets
-    ]
+    # Load all metadata files and aggregate into a single index
+    meshes = []
+    source_dir = Path("assets/meshes")
+    
+    for asset_name in compiled_assets:
+        metadata_path = source_dir / "props" / asset_name / "metadata.json"
+        if metadata_path.exists():
+            try:
+                with open(metadata_path, 'r') as f:
+                    metadata = json.load(f)
+                meshes.append(metadata)
+            except json.JSONDecodeError as e:
+                print(f"⚠️  Warning: Invalid JSON in {metadata_path}: {e}")
+                continue
+        else:
+            print(f"⚠️  Warning: Missing metadata for {asset_name}")
+    
+    # Create index structure expected by mesh viewer
+    index_data = {
+        "meshes": meshes,
+        "generated": str(datetime.now().isoformat()),
+        "version": "1.0"
+    }
     
     with open(index_path, 'w') as f:
-        json.dump(metadata_paths, f, indent=4)
+        json.dump(index_data, f, indent=4)
     
-    print(f"✅ Generated asset index with {len(metadata_paths)} entries: {index_path}")
+    # Also copy to source directory for mesh viewer
+    source_index_path = Path("assets/meshes/index.json")
+    with open(source_index_path, 'w') as f:
+        json.dump(index_data, f, indent=4)
+    
+    print(f"✅ Generated asset index with {len(meshes)} meshes: {index_path}")
+    print(f"✅ Copied asset index to source directory: {source_index_path}")
 
 import shutil
 

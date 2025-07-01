@@ -1,9 +1,84 @@
-[
-    "props/logo_cube/metadata.json",
-    "props/sun/metadata.json",
-    "props/wedge_ship/metadata.json",
-    "props/wedge_ship_mk2/metadata.json",
-    "props/control_tower/metadata.json",
-    "props/landing_pad/metadata.json",
-    "props/planet_surface/metadata.json"
-]
+{
+    "meshes": [
+        {
+            "name": "wedge_ship_mk2",
+            "geometry": "geometry.obj",
+            "tags": [
+                "ship",
+                "vehicle",
+                "player"
+            ],
+            "description": "An improved wedge-shaped spacecraft.",
+            "material": "material.mtl",
+            "texture": "texture.png"
+        },
+        {
+            "name": "sun",
+            "geometry": "geometry.obj",
+            "tags": [
+                "celestial",
+                "star"
+            ],
+            "description": "A low-poly sphere representing a star.",
+            "material": "material.mtl",
+            "texture": "texture.png"
+        },
+        {
+            "name": "wedge_ship",
+            "geometry": "geometry.obj",
+            "tags": [
+                "ship",
+                "vehicle"
+            ],
+            "description": "A standard wedge-shaped spacecraft.",
+            "material": "material.mtl",
+            "texture": "texture.png"
+        },
+        {
+            "name": "control_tower",
+            "geometry": "geometry.obj",
+            "tags": [
+                "building",
+                "structure"
+            ],
+            "description": "A control tower for spaceport environments.",
+            "material": "material.mtl",
+            "texture": "texture.png"
+        },
+        {
+            "name": "logo_cube",
+            "geometry": "geometry.obj",
+            "tags": [
+                "reference",
+                "test"
+            ],
+            "description": "Gold standard reference cube for testing.",
+            "material": "material.mtl",
+            "texture": "logo.png"
+        },
+        {
+            "name": "landing_pad",
+            "geometry": "geometry.obj",
+            "tags": [
+                "platform",
+                "structure"
+            ],
+            "description": "A spaceport landing platform.",
+            "material": "material.mtl",
+            "texture": "texture.png"
+        },
+        {
+            "name": "planet_surface",
+            "geometry": "geometry.obj",
+            "tags": [
+                "terrain",
+                "surface"
+            ],
+            "description": "A large planetary surface.",
+            "material": "material.mtl",
+            "texture": "texture.png"
+        }
+    ],
+    "generated": "2025-06-30T23:39:20.185020",
+    "version": "1.0"
+}

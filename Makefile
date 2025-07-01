@@ -88,6 +88,16 @@ clean-source-assets:
 	find $(ASSETS_DIR)/meshes/props -name "metadata.json" -delete
 	@echo "✅ Source assets cleaned."
 
+# Launch mesh viewer
+view-meshes:
+	@echo "🎨 Launching mesh viewer..."
+	$(PYTHON) $(TOOLS_DIR)/launch_mesh_viewer.py
+
+# Run performance test
+test-performance:
+	@echo "⚡ Running asset performance test..."
+	$(PYTHON) $(TOOLS_DIR)/test_asset_performance.py
+
 # Link executable
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 	$(CC) $(OBJECTS) -o $@ $(LIBS)
