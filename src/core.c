@@ -90,7 +90,7 @@ void world_update(struct World* world, float delta_time)
 
 EntityID entity_create(struct World* world)
 {
-    if (!world || world->entity_count >= MAX_ENTITIES)
+    if (!world || !world->entities || world->entity_count >= world->max_entities)
     {
         return INVALID_ENTITY;
     }
