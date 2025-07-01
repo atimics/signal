@@ -26,34 +26,32 @@ void physics_system_update(struct World* world, RenderConfig* render_config, flo
 
         if (physics->kinematic) continue;  // Skip kinematic objects
 
-        // Ground-effect racing mechanics for ships
-        float ground_effect = 1.0f;
-        float altitude = transform->position.y;
+        // DISABLED: Ground-effect racing mechanics for ships - causing player ship to fly away
+        // float ground_effect = 1.0f;
+        // float altitude = transform->position.y;
         
-        // Ships get speed boost when flying close to ground (ground effect)
-        if (altitude > 0.0f && altitude < 50.0f) {
-            // Stronger ground effect at lower altitudes (inverse relationship)
-            ground_effect = 1.0f + (50.0f - altitude) / 50.0f * 2.0f; // Up to 3x speed boost at ground level
-            
-            // Add some upward force to simulate ground effect lift
-            Vector3 ground_lift = {0.0f, (50.0f - altitude) * 0.1f, 0.0f};
-            physics->acceleration = vector3_add(physics->acceleration, ground_lift);
-        }
+        // DISABLED: Ships get speed boost when flying close to ground (ground effect)
+        // if (altitude > 0.0f && altitude < 50.0f) {
+        //     // Stronger ground effect at lower altitudes (inverse relationship)
+        //     ground_effect = 1.0f + (50.0f - altitude) / 50.0f * 2.0f; // Up to 3x speed boost at ground level
+        //     
+        //     // Add some upward force to simulate ground effect lift
+        //     Vector3 ground_lift = {0.0f, (50.0f - altitude) * 0.1f, 0.0f};
+        //     physics->acceleration = vector3_add(physics->acceleration, ground_lift);
+        // }
 
-        // Apply acceleration to velocity with ground effect multiplier
-        Vector3 effective_acceleration = vector3_multiply(physics->acceleration, ground_effect);
-        physics->velocity = vector3_add(physics->velocity, vector3_multiply(effective_acceleration, delta_time));
+        // SIMPLIFIED: Apply basic acceleration to velocity
+        physics->velocity = vector3_add(physics->velocity, vector3_multiply(physics->acceleration, delta_time));
 
-        // Apply drag (reduced at low altitude due to ground effect)
-        float effective_drag = physics->drag + (1.0f - ground_effect) * 0.02f; // Less drag near ground
-        physics->velocity = vector3_multiply(physics->velocity, effective_drag);
+        // SIMPLIFIED: Apply basic drag
+        physics->velocity = vector3_multiply(physics->velocity, physics->drag);
 
         // Apply velocity to position
         transform->position = vector3_add(transform->position, vector3_multiply(physics->velocity, delta_time));
 
-        // Prevent going below ground
-        if (transform->position.y < 1.0f) {
-            transform->position.y = 1.0f;
+        // Prevent going below ground level (much lower threshold for space navigation)
+        if (transform->position.y < -50.0f) {
+            transform->position.y = -50.0f;
             physics->velocity.y = fmaxf(0.0f, physics->velocity.y); // Stop downward velocity
         }
 

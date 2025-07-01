@@ -42,24 +42,22 @@ static void scene_selector_update(struct World* world, SceneStateManager* state,
 {
     (void)world; // Unused parameter
     (void)dt; // Unused parameter
-    // Keep the scene selector UI open
-    if (!ui_is_scene_selector_visible())
-    {
-        ui_show_scene_selector();
-    }
+    
+    // Don't automatically reopen the scene selector - let it close after selection
+    // The scene selector will be hidden automatically when a scene is selected
     
     // Handle scene change requests from UI
     if (ui_has_scene_change_request())
     {
         const char* requested_scene = ui_get_requested_scene();
         
-    // Don't transition to ourselves
-    if (strcmp(requested_scene, "navigation_menu") != 0)
-    {
-        printf("🧭 Navigation Menu: Transitioning to %s\n", requested_scene);
-        scene_state_request_transition(state, requested_scene);
-        ui_clear_scene_change_request();
-    }
+        // Don't transition to ourselves
+        if (strcmp(requested_scene, "navigation_menu") != 0)
+        {
+            printf("🧭 Navigation Menu: Transitioning to %s\n", requested_scene);
+            scene_state_request_transition(state, requested_scene);
+            ui_clear_scene_change_request();
+        }
         else
         {
             ui_clear_scene_change_request();

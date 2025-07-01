@@ -34,8 +34,8 @@ static float camera_target_zoom = 1.0f;
 
 // Physics constants for magnetic ship behavior
 #define GRAVITY_RANGE 120.0f
-#define MAGNETIC_ATTRACTION_FORCE 25.0f
-#define ORIENTATION_ADJUSTMENT_SPEED 1.5f
+#define MAGNETIC_ATTRACTION_FORCE 0.1f    // Much more reduced - was still too strong
+#define ORIENTATION_ADJUSTMENT_SPEED 0.05f // Much more reduced - was still too strong  
 #define DERELICT_SECTION_COUNT 8
 
 // Player control constants
@@ -126,10 +126,11 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
         struct Camera* cam_camera = entity_get_camera(world, cockpit_camera);
         
         if (cam_transform && cam_camera) {
-            cam_transform->position = (Vector3){0, -6, -115};  // Closer to player
-            cam_camera->target = (Vector3){0, -8, -120};       // Look at player ship
+            // Start the camera at a good chase position behind the player
+            cam_transform->position = (Vector3){10, -3, -105};  // Behind and above player start
+            cam_camera->target = (Vector3){0, -8, -120};        // Look at player ship start position
             cam_camera->matrices_dirty = true;
-            printf("📷 Repositioned cockpit camera to follow player ship\n");
+            printf("📷 Repositioned camera for dynamic chase behind player ship\n");
         }
     } else {
         printf("❌ Could not find suitable camera to override\n");
@@ -475,120 +476,131 @@ void derelict_navigation_update(struct World* world, SceneStateManager* state, f
     update_camera_system(world, delta_time);
     
     // Apply magnetic ship physics to all ships with physics components
-    for (uint32_t i = 0; i < world->entity_count; i++) {
-        struct Entity* entity = &world->entities[i];
-        
-        if (!(entity->component_mask & (COMPONENT_PHYSICS | COMPONENT_TRANSFORM))) continue;
-        
-        struct Physics* physics = entity->physics;
-        struct Transform* transform = entity->transform;
-        
-        if (!physics || !transform) continue;
-        
-        // Calculate dominant mass direction and field strength
-        float field_strength = 0.0f;
-        Vector3 gravity_dir = calculate_dominant_mass_direction(transform->position, &field_strength);
-        
-        // Apply magnetic attraction force toward dominant mass
-        float attraction_force = MAGNETIC_ATTRACTION_FORCE * field_strength * delta_time;
-        physics->acceleration.x += gravity_dir.x * attraction_force;
-        physics->acceleration.y += gravity_dir.y * attraction_force;
-        physics->acceleration.z += gravity_dir.z * attraction_force;
-        
-        // "Sticky ship" orientation: gradually align ship's up vector with away from mass
-        // This creates the feeling that the ship's "down" is toward the nearest mass
-        Vector3 desired_up = {-gravity_dir.x, -gravity_dir.y, -gravity_dir.z};
-        
-        // Apply gradual orientation adjustment
-        float orientation_speed = ORIENTATION_ADJUSTMENT_SPEED * delta_time;
-        
-        // Simulate ship rotation by adjusting velocity based on orientation
-        physics->velocity.x += desired_up.x * orientation_speed * 2.0f;
-        physics->velocity.y += desired_up.y * orientation_speed * 2.0f;
-        physics->velocity.z += desired_up.z * orientation_speed * 2.0f;
-        
-        // Add autonomous navigation for AI ships (skip player ship)
-        if (entity->id > 0 && entity->id != player_ship_id) {
-            float thrust_base = 8.0f;
+    // TEMPORARY: Disable magnetic physics to debug visibility
+    bool enable_magnetic_physics = false;  // Set to true once ship is visible
+    
+    if (enable_magnetic_physics) {
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
             
-            // Calculate distance to nearest obstacle for evasive maneuvers
-            float min_obstacle_distance = 1000.0f;
-            Vector3 avoidance_vector = {0, 0, 0};
+            if (!(entity->component_mask & (COMPONENT_PHYSICS | COMPONENT_TRANSFORM))) continue;
             
-            for (uint32_t j = 0; j < world->entity_count; j++) {
-                if (i == j) continue;
-                struct Entity* other = &world->entities[j];
-                if (!(other->component_mask & COMPONENT_TRANSFORM)) continue;
+            struct Physics* physics = entity->physics;
+            struct Transform* transform = entity->transform;
+            
+            if (!physics || !transform) continue;
+            
+            // DISABLED: Calculate dominant mass direction and field strength
+            // float field_strength = 0.0f;
+            // Vector3 gravity_dir = calculate_dominant_mass_direction(transform->position, &field_strength);
+            
+            // DISABLED: Apply magnetic attraction force toward dominant mass
+            // float attraction_force = MAGNETIC_ATTRACTION_FORCE * field_strength * delta_time;
+            // physics->acceleration.x += gravity_dir.x * attraction_force;
+            // physics->acceleration.y += gravity_dir.y * attraction_force;
+            // physics->acceleration.z += gravity_dir.z * attraction_force;
+            
+            // DISABLED: "Sticky ship" orientation: gradually align ship's up vector with away from mass
+            // This creates the feeling that the ship's "down" is toward the nearest mass
+            // Vector3 desired_up = {-gravity_dir.x, -gravity_dir.y, -gravity_dir.z};
+            
+            // DISABLED: Apply gradual orientation adjustment
+            // float orientation_speed = ORIENTATION_ADJUSTMENT_SPEED * delta_time;
+            
+            // DISABLED: Simulate ship rotation by adjusting velocity based on orientation (much reduced effect)
+            // physics->velocity.x += desired_up.x * orientation_speed * 0.05f;  // Much more reduced
+            // physics->velocity.y += desired_up.y * orientation_speed * 0.05f;  // Much more reduced
+            // physics->velocity.z += desired_up.z * orientation_speed * 0.05f;  // Much more reduced
+            
+            // DISABLED: Add autonomous navigation for AI ships (skip player ship)
+            if (false && entity->id > 0 && entity->id != player_ship_id) {
+                // DEBUG: Check if this is being applied to player ship by mistake
+                if (entity->id == 21) {  // Player ship entity (Entity 21 from logs)
+                    printf("❌ ERROR: AI navigation being applied to player ship! entity->id=%d, player_ship_id=%d\n", 
+                           entity->id, player_ship_id);
+                }
                 
-                struct Transform* other_transform = other->transform;
-                if (!other_transform) continue;
+                float thrust_base = 8.0f;
                 
-                float dx = transform->position.x - other_transform->position.x;
-                float dy = transform->position.y - other_transform->position.y;
-                float dz = transform->position.z - other_transform->position.z;
-                float distance = sqrtf(dx*dx + dy*dy + dz*dz);
+                // Calculate distance to nearest obstacle for evasive maneuvers
+                float min_obstacle_distance = 1000.0f;
+                Vector3 avoidance_vector = {0, 0, 0};
                 
-                if (distance < min_obstacle_distance && distance > 0.1f) {
-                    min_obstacle_distance = distance;
-                    // Calculate avoidance direction
-                    avoidance_vector.x = dx / distance;
-                    avoidance_vector.y = dy / distance;
-                    avoidance_vector.z = dz / distance;
+                for (uint32_t j = 0; j < world->entity_count; j++) {
+                    if (i == j) continue;
+                    struct Entity* other = &world->entities[j];
+                    if (!(other->component_mask & COMPONENT_TRANSFORM)) continue;
+                    
+                    struct Transform* other_transform = other->transform;
+                    if (!other_transform) continue;
+                    
+                    float dx = transform->position.x - other_transform->position.x;
+                    float dy = transform->position.y - other_transform->position.y;
+                    float dz = transform->position.z - other_transform->position.z;
+                    float distance = sqrtf(dx*dx + dy*dy + dz*dz);
+                    
+                    if (distance < min_obstacle_distance && distance > 0.1f) {
+                        min_obstacle_distance = distance;
+                        // Calculate avoidance direction
+                        avoidance_vector.x = dx / distance;
+                        avoidance_vector.y = dy / distance;
+                        avoidance_vector.z = dz / distance;
+                    }
+                }
+                
+                // Enhanced navigation based on proximity to obstacles
+                float navigation_multiplier = 1.0f;
+                if (min_obstacle_distance < 40.0f) {
+                    navigation_multiplier = 1.0f + (40.0f - min_obstacle_distance) / 40.0f * 3.0f;
+                    
+                    // Add avoidance thrust
+                    physics->acceleration.x += avoidance_vector.x * thrust_base * navigation_multiplier * delta_time;
+                    physics->acceleration.y += avoidance_vector.y * thrust_base * navigation_multiplier * delta_time;
+                    physics->acceleration.z += avoidance_vector.z * thrust_base * navigation_multiplier * delta_time;
+                }
+                
+                // Add patrol navigation - ships circle around derelict sections
+                float patrol_radius = 60.0f + (float)(entity->id % 3) * 20.0f;
+                float patrol_speed = 0.5f + (float)(entity->id % 2) * 0.3f;
+                float patrol_angle = navigation_time * patrol_speed + (float)entity->id;
+                
+                Vector3 patrol_target = {
+                    cosf(patrol_angle) * patrol_radius,
+                    sinf(patrol_angle * 0.7f) * 15.0f,
+                    sinf(patrol_angle) * patrol_radius
+                };
+                
+                Vector3 to_patrol = {
+                    patrol_target.x - transform->position.x,
+                    patrol_target.y - transform->position.y,
+                    patrol_target.z - transform->position.z
+                };
+                
+                float patrol_distance = sqrtf(to_patrol.x*to_patrol.x + to_patrol.y*to_patrol.y + to_patrol.z*to_patrol.z);
+                if (patrol_distance > 0.1f) {
+                    physics->acceleration.x += (to_patrol.x / patrol_distance) * thrust_base * 0.5f * delta_time;
+                    physics->acceleration.y += (to_patrol.y / patrol_distance) * thrust_base * 0.5f * delta_time;
+                    physics->acceleration.z += (to_patrol.z / patrol_distance) * thrust_base * 0.5f * delta_time;
                 }
             }
             
-            // Enhanced navigation based on proximity to obstacles
-            float navigation_multiplier = 1.0f;
-            if (min_obstacle_distance < 40.0f) {
-                navigation_multiplier = 1.0f + (40.0f - min_obstacle_distance) / 40.0f * 3.0f;
-                
-                // Add avoidance thrust
-                physics->acceleration.x += avoidance_vector.x * thrust_base * navigation_multiplier * delta_time;
-                physics->acceleration.y += avoidance_vector.y * thrust_base * navigation_multiplier * delta_time;
-                physics->acceleration.z += avoidance_vector.z * thrust_base * navigation_multiplier * delta_time;
+            // Apply atmospheric drag to prevent runaway acceleration
+            float drag_factor = 0.96f;
+            physics->velocity.x *= drag_factor;
+            physics->velocity.y *= drag_factor;
+            physics->velocity.z *= drag_factor;
+            
+            // Velocity limiting for stability
+            float max_velocity = 50.0f;
+            float velocity_magnitude = sqrtf(physics->velocity.x * physics->velocity.x + 
+                                           physics->velocity.y * physics->velocity.y + 
+                                           physics->velocity.z * physics->velocity.z);
+            if (velocity_magnitude > max_velocity) {
+                float scale = max_velocity / velocity_magnitude;
+                physics->velocity.x *= scale;
+                physics->velocity.y *= scale;
+                physics->velocity.z *= scale;
             }
-            
-            // Add patrol navigation - ships circle around derelict sections
-            float patrol_radius = 60.0f + (float)(entity->id % 3) * 20.0f;
-            float patrol_speed = 0.5f + (float)(entity->id % 2) * 0.3f;
-            float patrol_angle = navigation_time * patrol_speed + (float)entity->id;
-            
-            Vector3 patrol_target = {
-                cosf(patrol_angle) * patrol_radius,
-                sinf(patrol_angle * 0.7f) * 15.0f,
-                sinf(patrol_angle) * patrol_radius
-            };
-            
-            Vector3 to_patrol = {
-                patrol_target.x - transform->position.x,
-                patrol_target.y - transform->position.y,
-                patrol_target.z - transform->position.z
-            };
-            
-            float patrol_distance = sqrtf(to_patrol.x*to_patrol.x + to_patrol.y*to_patrol.y + to_patrol.z*to_patrol.z);
-            if (patrol_distance > 0.1f) {
-                physics->acceleration.x += (to_patrol.x / patrol_distance) * thrust_base * 0.5f * delta_time;
-                physics->acceleration.y += (to_patrol.y / patrol_distance) * thrust_base * 0.5f * delta_time;
-                physics->acceleration.z += (to_patrol.z / patrol_distance) * thrust_base * 0.5f * delta_time;
-            }
-        }
-        
-        // Apply atmospheric drag to prevent runaway acceleration
-        float drag_factor = 0.96f;
-        physics->velocity.x *= drag_factor;
-        physics->velocity.y *= drag_factor;
-        physics->velocity.z *= drag_factor;
-        
-        // Velocity limiting for stability
-        float max_velocity = 50.0f;
-        float velocity_magnitude = sqrtf(physics->velocity.x * physics->velocity.x + 
-                                       physics->velocity.y * physics->velocity.y + 
-                                       physics->velocity.z * physics->velocity.z);
-        if (velocity_magnitude > max_velocity) {
-            float scale = max_velocity / velocity_magnitude;
-            physics->velocity.x *= scale;
-            physics->velocity.y *= scale;
-            physics->velocity.z *= scale;
         }
     }
     
