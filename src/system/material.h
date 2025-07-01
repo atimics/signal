@@ -4,6 +4,9 @@
 #include "../core.h"
 #include <stdint.h>
 
+// Material registry configuration
+#define MAX_MATERIALS 64
+
 // Vector3 type for consistency
 typedef struct {
     float x, y, z;
@@ -46,6 +49,7 @@ void material_system_shutdown(void);
 // Material creation and management
 MaterialProperties* material_create(MaterialType type);
 MaterialProperties* material_get_by_name(const char* name);
+MaterialProperties* material_get_by_id(uint32_t material_id);
 void material_set_properties(MaterialProperties* material, MaterialType type);
 
 // Predefined material configurations

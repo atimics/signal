@@ -57,6 +57,13 @@ MaterialProperties* material_get_by_name(const char* name) {
     return NULL;
 }
 
+MaterialProperties* material_get_by_id(uint32_t material_id) {
+    if (material_id >= material_count) {
+        return NULL;
+    }
+    return &material_registry[material_id];
+}
+
 void material_set_properties(MaterialProperties* material, MaterialType type) {
     // Initialize with defaults
     material->metallic = 0.0f;

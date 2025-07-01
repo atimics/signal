@@ -8,6 +8,7 @@
 
 #include "assets.h"
 #include "gpu_resources.h"
+#include "system/material.h"
 #include "graphics_api.h"
 
 #ifndef M_PI
@@ -412,6 +413,21 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
         entity_add_component(world, id, COMPONENT_RENDERABLE);
         struct Renderable* renderable = entity_get_renderable(world, id);
         renderable->visible = template->visible;
+        
+        // Assign material based on material name
+        if (strlen(template->material_name) > 0) {
+            MaterialProperties* material = material_get_by_name(template->material_name);
+            if (material) {
+                // Calculate material ID from pointer offset
+                renderable->material_id = (uint32_t)(material - material_get_by_id(0));
+                printf("✅ Entity %d assigned material: %s (ID: %d)\n", id, template->material_name, renderable->material_id);
+            } else {
+                printf("⚠️  Entity %d failed to find material: %s - using default\n", id, template->material_name);
+                renderable->material_id = 0; // Default material
+            }
+        } else {
+            renderable->material_id = 0; // Default material
+        }
 
         // Try to create renderable from mesh name
         if (strlen(template->mesh_name) > 0)

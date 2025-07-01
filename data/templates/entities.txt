@@ -129,3 +129,4 @@ mass=1.0
 collision_radius=1.0
 kinematic=true
 mesh_name=logo_cube
+material_name=logo_glow
