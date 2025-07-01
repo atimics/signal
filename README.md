@@ -33,6 +33,12 @@ make test
 
 For detailed information about the engine's architecture, development workflow, and creative vision, please see the main **[Documentation Hub](./docs/README.md)**. This is the primary entry point for all developers.
 
+### 🔄 Development Standards
+
+- **[Release & Branch Management](./docs/RELEASE_STANDARDS.md)** - Comprehensive standards for releases, branching, and quality gates
+- **[Contributing Guidelines](./CONTRIBUTING.md)** - How to contribute to the project
+- **[API Documentation](./docs/API_REFERENCE.md)** - Technical API reference (coming soon)
+
 ## 📈 Project Status
 
 This project is under active development.

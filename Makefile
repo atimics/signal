@@ -151,6 +151,7 @@ wasm: assets-wasm | $(BUILD_DIR)
 	@echo "🌐 Building for WebAssembly..."
 	@echo "📋 Note: This requires Emscripten SDK to be installed and activated"
 	@echo "📋 Install with: https://emscripten.org/docs/getting_started/downloads.html"
+	@mkdir -p $(BUILD_DIR)
 	emcc -std=c99 -O2 -Isrc \
 		-DSOKOL_GLES3 \
 		-DSOKOL_IMPL \
@@ -158,15 +159,18 @@ wasm: assets-wasm | $(BUILD_DIR)
 		-DEMSCRIPTEN \
 		-Wno-unused-function \
 		-Wno-unused-variable \
+		-Wno-unused-parameter \
 		-s USE_WEBGL2=1 -s FULL_ES3=1 \
 		-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 		-s EXPORTED_FUNCTIONS='["_main"]' \
 		-s FORCE_FILESYSTEM=1 \
+		-s INITIAL_MEMORY=67108864 \
 		--preload-file $(BUILD_ASSETS_DIR)@/assets \
 		--shell-file src/shell.html \
-		src/core.c src/systems.c src/render_3d.c src/render_camera.c \
-		src/render_lighting.c src/render_mesh.c src/ui.c src/data.c src/graphics_api.c src/gpu_resources.c src/main.c \
+		$(addprefix src/,$(SOURCES)) \
 		-o $(BUILD_DIR)/cgame.html
+	@echo "✅ WebAssembly build complete: $(BUILD_DIR)/cgame.html"
+	@echo "📋 Serve with: python3 -m http.server 8000 (from build/ directory)"
 
 # Compile assets for WASM (simplified)
 assets-wasm: $(BUILD_ASSETS_DIR)

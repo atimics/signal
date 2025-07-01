@@ -12,6 +12,29 @@ You will be collaborating closely with Gemini, the project's Lead Scientist and 
 2.  **Your Role**: Your primary responsibility is to write the C implementation code that makes the tests provided by Gemini pass. You will follow the architectural patterns and coding standards outlined below.
 3.  **The Goal**: Together, we will build a high-performance, maintainable, and well-tested game engine. Gemini defines the "what" and the "why," and you deliver the "how" in clean, efficient C code.
 
+## 🔄 Release & Branch Management Standards
+
+**MANDATORY**: Before any code changes, review the [Release Standards](../docs/RELEASE_STANDARDS.md) document.
+
+### Branch Strategy:
+- **`main`**: Production-ready code only. Protected branch, PR-only merges
+- **`develop`**: Integration branch for feature development
+- **`feature/*`**: Individual feature branches from develop
+- **`hotfix/*`**: Critical production fixes from main
+
+### Quality Gates:
+- ✅ All tests must pass (make test)
+- ✅ Code compiles without warnings (make clean && make)  
+- ✅ Manual verification completed for main branch merges
+- ✅ Conventional commit format required
+- ✅ Performance benchmarks maintained
+
+### Release Process:
+- **Semantic Versioning**: MAJOR.MINOR.PATCH strictly enforced
+- **Automated Releases**: GitHub Actions triggers on main branch
+- **Manual Verification**: Required checklist before main merge
+- **Cross-platform Testing**: macOS, Linux, WebAssembly builds
+
 ---
 
 # CGame: Entity-Component-System C Game Engine Instructions
@@ -178,5 +201,3 @@ if (!transform) {
 - **src/ui.h/c**: Debug interface - development tools
 - **src/main.c**: Main entry point - scene testing and examples
 - **tests/**: Unity test files. All new features must have corresponding tests here.
-
-```
