@@ -3,10 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CGame Semantic Material Mesh Viewer</title>
+    <title>CGame Asset Viewer</title>
     <style>
-        body { 
-            margin: 0; 
+        bo    <div id="sidebar">
+        <div id="sidebar-header">
+            <h2>CGame Asset Viewer</h2>
+            <div id="mode-selector">
+                <button class="mode-button active" data-mode="source">📄 Source Assets</button>
+                <button class="mode-button" data-mode="compiled" disabled title="Binary assets cannot be viewed in browser">⚙️ Compiled</button>
+            </div>
+            <div style="font-size: 11px; color: #888; margin-top: 8px;">
+                View source OBJ files with UV layouts and textures. Compiled binary assets are used by the engine.
+            </div>
+        </div>          margin: 0; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             height: 100vh;
@@ -46,12 +55,17 @@
         .mode-button.active {
             background-color: #0e639c;
         }
+        .mode-button:disabled {
+            background-color: #2d2d30;
+            color: #666;
+            cursor: not-allowed;
+        }
         #asset-info {
             padding: 10px 15px;
             background-color: #2d2d30;
             border-bottom: 1px solid #333;
             font-size: 12px;
-            max-height: 200px;
+            max-height: 300px;
             overflow-y: auto;
         }
         #mesh-list-container {
