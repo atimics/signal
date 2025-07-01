@@ -7,7 +7,103 @@ assignees: ''
 ---
 
 ## 🎯 Summary
-<!-- Brief description of changes and motivation -->
+Brief description of changes and motivation.
+
+## 🧪 Testing
+- [ ] Unit tests added/updated
+- [ ] Manual testing completed
+- [ ] Performance impact assessed
+- [ ] Cross-platform compatibility verified (macOS/Linux)
+- [ ] Memory management validated (no leaks)
+
+## 📖 Documentation  
+- [ ] API documentation updated
+- [ ] CHANGELOG.md updated
+- [ ] README.md updated (if needed)
+- [ ] Release notes prepared (for main branch)
+
+## 🔗 Related Issues
+Closes #XXX
+Related to #XXX
+
+## 📸 Screenshots/Videos
+(If applicable - UI changes, visual features, etc.)
+
+## ⚠️ Breaking Changes
+(If any - requires MAJOR version bump)
+
+- [ ] None
+- [ ] API changes (explain impact)
+- [ ] Build system changes
+- [ ] Configuration changes
+
+## 🔧 Type of Change
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Code refactoring (no functional changes)
+- [ ] CI/CD improvements
+
+## 🎮 CGame-Specific Checklist
+- [ ] ECS components follow data-only pattern (no behavior in structs)
+- [ ] Systems use proper entity iteration patterns
+- [ ] Memory pools used appropriately for allocations
+- [ ] Graphics resources use PIMPL pattern
+- [ ] Asset loading follows pipeline conventions
+- [ ] Performance monitoring added for new systems
+- [ ] LOD system integration considered (if applicable)
+
+## 📊 Performance Impact
+- [ ] No performance impact
+- [ ] Improves performance (explain how)
+- [ ] May affect performance (benchmarks provided)
+- [ ] Needs performance testing
+
+---
+
+## ✅ Pre-Review Checklist
+
+**Code Quality:**
+- [ ] Code follows project style guidelines (.clang-format)
+- [ ] Self-review completed
+- [ ] Comments added for complex logic
+- [ ] Function names follow `module_action()` pattern
+- [ ] No compiler warnings introduced
+
+**Testing:**
+- [ ] All existing tests pass (`make test`)
+- [ ] New tests cover the changes
+- [ ] Memory leak tests pass (if applicable)
+- [ ] Cross-platform build verified
+
+**Documentation:**
+- [ ] Code changes documented
+- [ ] Breaking changes clearly marked
+- [ ] Migration guide provided (if breaking changes)
+- [ ] Commit messages follow conventional format
+
+**Release Standards:**
+- [ ] Branch up-to-date with target
+- [ ] Conventional commit format used
+- [ ] Semantic versioning considered
+- [ ] Release standards compliance verified
+
+---
+
+**Ready for Review:** ✅/❌
+
+<!-- 
+Remember to use conventional commits:
+- feat: new features
+- fix: bug fixes  
+- docs: documentation changes
+- test: test additions/modifications
+- refactor: code refactoring
+- perf: performance improvements
+- chore: maintenance tasks
+-->
 
 ## 📋 Type of Change
 <!-- Select the type that applies -->
