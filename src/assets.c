@@ -202,11 +202,6 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
         return false;
     }
 
-#ifdef CGAME_TESTING
-    // In test mode, skip GPU resource creation to avoid crashes
-    texture->gpu_resources->sg_image = (sg_image){ .id = SG_INVALID_ID };
-    printf("🔍 Texture loading returned: false (expected in test mode)\n");
-#else
     // Create Sokol image
     texture->gpu_resources->sg_image = sg_make_image(
         &(sg_image_desc){ .width = width,
@@ -214,7 +209,6 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
                           .pixel_format = SG_PIXELFORMAT_RGBA8,
                           .data.subimage[0][0] = { .ptr = image_data, .size = width * height * 4 },
                           .label = texture_name });
-#endif
 
     stbi_image_free(image_data);
 
