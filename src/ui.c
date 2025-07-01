@@ -22,11 +22,14 @@ void ui_init(void)
     ui_state.show_debug_panel = false;  // Start hidden
     ui_state.show_hud = false;          // Start hidden
     ui_state.show_wireframe = false;
+    ui_state.show_scene_selector = false;
     ui_state.camera_speed = 10.0f;
     ui_state.time_scale = 1.0f;
     ui_state.fps = 0.0f;
     ui_state.frame_count = 0;
     ui_state.fps_timer = 0.0f;
+    strcpy(ui_state.selected_scene, "logo");
+    ui_state.scene_change_requested = false;
 
     printf("✅ Nuklear UI initialized\n");
 }
@@ -312,6 +315,92 @@ static void draw_logo_overlay(struct nk_context* ctx)
     nk_end(ctx);
 }
 
+static void draw_scene_selector(struct nk_context* ctx, const char* current_scene)
+{
+    // Create a centered scene selector window
+    int screen_width = sapp_width();
+    int screen_height = sapp_height();
+    
+    int window_width = 400;
+    int window_height = 500;
+    int x = (screen_width - window_width) / 2;
+    int y = (screen_height - window_height) / 2;
+    
+    if (nk_begin(ctx, "Scene Selector", nk_rect(x, y, window_width, window_height),
+                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_CLOSABLE))
+    {
+        nk_layout_row_dynamic(ctx, 30, 1);
+        nk_label(ctx, "Select a Scene:", NK_TEXT_CENTERED);
+        
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_labelf(ctx, NK_TEXT_LEFT, "Current: %s", current_scene ? current_scene : "unknown");
+        
+        nk_layout_row_dynamic(ctx, 10, 1); // Spacer
+        nk_spacing(ctx, 1);
+        
+        // List of available scenes
+        const char* scenes[] = {
+            "logo",
+            "spaceport",
+            "racing_circuit", 
+            "mesh_test",
+            "camera_test"
+        };
+        const char* scene_descriptions[] = {
+            "Logo - System test and validation",
+            "Spaceport - Classic space station demo",
+            "Racing - High-speed ground-effect racing",
+            "Mesh Test - 3D model validation",
+            "Camera Test - Multi-camera demonstration"
+        };
+        int scene_count = sizeof(scenes) / sizeof(scenes[0]);
+        
+        nk_layout_row_dynamic(ctx, 35, 1);
+        for (int i = 0; i < scene_count; i++)
+        {
+            // Highlight current scene
+            if (current_scene && strcmp(current_scene, scenes[i]) == 0)
+            {
+                nk_style_push_color(ctx, &ctx->style.button.normal, nk_rgb(70, 120, 200));
+                nk_style_push_color(ctx, &ctx->style.button.hover, nk_rgb(80, 130, 210));
+            }
+            
+            if (nk_button_label(ctx, scene_descriptions[i]))
+            {
+                strcpy(ui_state.selected_scene, scenes[i]);
+                ui_state.scene_change_requested = true;
+                ui_state.show_scene_selector = false;
+                printf("🎬 Scene change requested: %s\n", scenes[i]);
+            }
+            
+            if (current_scene && strcmp(current_scene, scenes[i]) == 0)
+            {
+                nk_style_pop_color(ctx);
+                nk_style_pop_color(ctx);
+            }
+        }
+        
+        nk_layout_row_dynamic(ctx, 10, 1); // Spacer
+        nk_spacing(ctx, 1);
+        
+        nk_layout_row_dynamic(ctx, 30, 2);
+        if (nk_button_label(ctx, "Cancel"))
+        {
+            ui_state.show_scene_selector = false;
+        }
+        
+        nk_spacing(ctx, 1); // Empty space
+    }
+    
+    // Handle window close button
+    if (nk_window_is_closed(ctx, "Scene Selector"))
+    {
+        ui_state.show_scene_selector = false;
+    }
+    
+    nk_end(ctx);
+}
+
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
 {
     // Early exit if UI is not visible
@@ -338,6 +427,12 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     if (current_scene && strcmp(current_scene, "logo") == 0)
     {
         draw_logo_overlay(ctx);
+    }
+    
+    // Draw scene selector if visible
+    if (ui_state.show_scene_selector)
+    {
+        draw_scene_selector(ctx, current_scene);
     }
     
     // Only draw debug panel if debug UI is visible
@@ -377,6 +472,23 @@ bool ui_handle_event(const void* ev)
                 }
                 return true;  // UI captured this event
 
+            case SAPP_KEYCODE_ESCAPE:
+                // Toggle scene selector on ESC key
+                if (ui_state.show_scene_selector)
+                {
+                    ui_hide_scene_selector();
+                }
+                else
+                {
+                    ui_show_scene_selector();
+                }
+                return true;  // UI captured this event
+
+            case SAPP_KEYCODE_TAB:
+                // Show scene selector on TAB key
+                ui_show_scene_selector();
+                return true;  // UI captured this event
+
             default:
                 break;
         }
@@ -396,6 +508,38 @@ void ui_toggle_hud(void)
 {
     ui_state.show_hud = !ui_state.show_hud;
     printf("📊 HUD %s\n", ui_state.show_hud ? "enabled" : "disabled");
+}
+
+void ui_show_scene_selector(void)
+{
+    ui_state.show_scene_selector = true;
+    printf("🎬 Scene selector opened\n");
+}
+
+void ui_hide_scene_selector(void)
+{
+    ui_state.show_scene_selector = false;
+    printf("🎬 Scene selector closed\n");
+}
+
+bool ui_is_scene_selector_visible(void)
+{
+    return ui_state.show_scene_selector;
+}
+
+bool ui_has_scene_change_request(void)
+{
+    return ui_state.scene_change_requested;
+}
+
+const char* ui_get_requested_scene(void)
+{
+    return ui_state.selected_scene;
+}
+
+void ui_clear_scene_change_request(void)
+{
+    ui_state.scene_change_requested = false;
 }
 
 // ============================================================================
