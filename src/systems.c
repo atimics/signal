@@ -53,6 +53,12 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
     load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
 
+    // Initialize memory management BEFORE loading assets
+    if (!memory_system_init(256)) {
+        printf("❌ Failed to initialize memory system\n");
+        return false;
+    }
+
     // Initialize render system with asset registry FIRST
     if (!render_init(render_config, &g_asset_registry, 1200.0f, 800.0f))
     {
@@ -117,12 +123,6 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     // Initialize performance monitoring
     performance_init();
     
-    // Initialize memory management (256MB limit)
-    if (!memory_system_init(256)) {
-        printf("❌ Failed to initialize memory system\n");
-        return false;
-    }
-
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
     printf("   Collision: %.1f Hz\n", scheduler->systems[SYSTEM_COLLISION].frequency);

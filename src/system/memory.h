@@ -6,6 +6,7 @@
 
 #include "../core.h"
 #include "../assets.h"
+#include "../render.h"
 #include <stdint.h>
 #include <stdbool.h>
 

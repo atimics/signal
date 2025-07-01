@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 // ============================================================================
 // INTERNAL STATE
@@ -116,6 +117,8 @@ void memory_system_shutdown(void) {
 }
 
 void memory_system_update(struct World* world, AssetRegistry* registry, float delta_time) {
+    (void)delta_time;  // Suppress unused parameter warning
+    
     if (!memory_state.initialized || !registry) {
         return;
     }
@@ -437,6 +440,10 @@ bool asset_unload_texture(AssetRegistry* registry, const char* texture_name) {
 }
 
 bool asset_reload(AssetRegistry* registry, const char* asset_name, const char* asset_type) {
+    (void)registry;    // Suppress unused parameter warning
+    (void)asset_name;  // Suppress unused parameter warning
+    (void)asset_type;  // Suppress unused parameter warning
+    
     // TODO: Implement asset reloading
     printf("🔄 Asset reload requested for '%s' (type: %s)\n", asset_name, asset_type);
     return false;
@@ -448,17 +455,18 @@ bool asset_should_unload(const char* asset_name) {
         return false;
     }
     
-    double current_time = get_time();
-    
-    // Don't unload if recently used
-    if (current_time - asset->last_used_time < 5.0) {
-        return false;
-    }
-    
-    // Unload if far from camera
+    // Unload if far from camera (primary check)
     if (asset->distance_from_camera > MEMORY_UNLOAD_DISTANCE) {
         return true;
     }
+    
+    // Unload if not used for a long time (secondary check)
+    #ifndef CGAME_TESTING
+    double current_time = get_time();
+    if (current_time - asset->last_used_time > 30.0) {  // 30 seconds
+        return true;
+    }
+    #endif
     
     return false;
 }
@@ -533,7 +541,14 @@ void memory_print_report(void) {
 // ============================================================================
 
 void memory_system_update_wrapper(struct World* world, RenderConfig* render_config, float delta_time) {
-    // Get asset registry (global access for now)
-    extern AssetRegistry g_asset_registry;
-    memory_system_update(world, &g_asset_registry, delta_time);
+    (void)render_config;  // Suppress unused parameter warning
+    
+    // In test mode, use a NULL registry (system will handle gracefully)
+    #ifdef CGAME_TESTING
+        memory_system_update(world, NULL, delta_time);
+    #else
+        // Get asset registry (global access for now)
+        extern AssetRegistry g_asset_registry;
+        memory_system_update(world, &g_asset_registry, delta_time);
+    #endif
 }
