@@ -6,7 +6,7 @@
 #include "../core.h"
 #include "../render.h"
 #include "../system/material.h"
-#include "../system/gamepad.h"
+#include "../system/input.h"
 #include "../sokol_app.h"
 #include <stdio.h>
 #include <math.h>
@@ -30,28 +30,6 @@ static EntityID player_ship_id = INVALID_ENTITY;
 #define PLAYER_BOOST_MULTIPLIER 2.5f
 #define PLAYER_MANEUVER_FORCE 8.0f
 #define PLAYER_BRAKE_FACTOR 0.85f
-
-// Player input state
-typedef struct {
-    // Keyboard input
-    bool thrust_forward;
-    bool thrust_backward;
-    bool maneuver_left;
-    bool maneuver_right;
-    bool maneuver_up;
-    bool maneuver_down;
-    bool boost_active;
-    bool brake_active;
-    
-    // Gamepad input (processed values)
-    float gamepad_thrust;      // Forward/backward from left stick Y or triggers
-    float gamepad_strafe;      // Left/right from left stick X  
-    float gamepad_vertical;    // Up/down from right stick Y
-    float gamepad_boost;       // Right trigger for boost
-    bool gamepad_brake;        // Left trigger for brake
-} PlayerInput;
-
-static PlayerInput player_input = {0};
 
 // Derelict navigation zones
 typedef struct {
@@ -85,14 +63,9 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
         printf("⚠️  No player ship found - controls will be disabled\n");
     }
     
-    // Clear player input state
-    memset(&player_input, 0, sizeof(PlayerInput));
-    
-    // Initialize gamepad system
-    if (!gamepad_init()) {
-        printf("⚠️  Gamepad initialization failed - keyboard only\n");
-    } else {
-        printf("🎮 Gamepad system ready\n");
+    // Clear old input state and initialize new input system
+    if (!input_init()) {
+        printf("⚠️  Input initialization failed\n");
     }
     
     // Initialize derelict sections as gravity/magnetic sources
@@ -191,76 +164,6 @@ Vector3 calculate_dominant_mass_direction(Vector3 ship_pos, float* out_field_str
     return net_direction;
 }
 
-// Update player input from gamepad
-void update_gamepad_input(void) {
-    // Poll gamepad system
-    gamepad_poll();
-    
-    // Get the first connected gamepad
-    GamepadState* gamepad = gamepad_get_state(0);
-    
-    if (!gamepad || !gamepad->connected) {
-        // Clear gamepad input if no controller connected
-        player_input.gamepad_thrust = 0.0f;
-        player_input.gamepad_strafe = 0.0f;
-        player_input.gamepad_vertical = 0.0f;
-        player_input.gamepad_boost = 0.0f;
-        player_input.gamepad_brake = false;
-        return;
-    }
-    
-    // Map gamepad inputs with deadzone handling
-    const float deadzone = 0.15f;
-    
-    // Left stick Y for forward/backward thrust
-    float stick_y = gamepad->left_stick_y;
-    if (fabsf(stick_y) > deadzone) {
-        player_input.gamepad_thrust = -stick_y; // Invert Y (up is negative in stick coords)
-    } else {
-        player_input.gamepad_thrust = 0.0f;
-    }
-    
-    // Left stick X for left/right strafe
-    float stick_x = gamepad->left_stick_x;
-    if (fabsf(stick_x) > deadzone) {
-        player_input.gamepad_strafe = stick_x;
-    } else {
-        player_input.gamepad_strafe = 0.0f;
-    }
-    
-    // Right stick Y for vertical maneuvering  
-    float right_y = gamepad->right_stick_y;
-    if (fabsf(right_y) > deadzone) {
-        player_input.gamepad_vertical = -right_y; // Invert Y
-    } else {
-        player_input.gamepad_vertical = 0.0f;
-    }
-    
-    // Right trigger for boost (analog)
-    player_input.gamepad_boost = gamepad->right_trigger;
-    
-    // Left trigger for brake (digital, threshold at 50%)
-    player_input.gamepad_brake = gamepad->left_trigger > 0.5f;
-    
-    // Log gamepad activity for debugging
-    static float last_activity_log = 0.0f;
-    bool has_input = (fabsf(player_input.gamepad_thrust) > 0.1f ||
-                     fabsf(player_input.gamepad_strafe) > 0.1f ||
-                     fabsf(player_input.gamepad_vertical) > 0.1f ||
-                     player_input.gamepad_boost > 0.1f ||
-                     player_input.gamepad_brake);
-                     
-    if (has_input && navigation_time - last_activity_log > 3.0f) {
-        printf("🎮 Gamepad input: %s (T:%.2f S:%.2f V:%.2f B:%.2f)\n", 
-               gamepad->product_string,
-               player_input.gamepad_thrust,
-               player_input.gamepad_strafe, 
-               player_input.gamepad_vertical,
-               player_input.gamepad_boost);
-        last_activity_log = navigation_time;
-    }
-}
-
 // Apply player ship controls based on input state
 void apply_player_controls(struct World* world, float delta_time) {
     if (player_ship_id == INVALID_ENTITY) return;
@@ -283,55 +186,37 @@ void apply_player_controls(struct World* world, float delta_time) {
     
     if (!physics || !transform) return;
     
+    // Get unified input state
+    const InputState* input = input_get_state();
+    if (!input) return;
+    
     float thrust_force = PLAYER_THRUST_FORCE;
     float maneuver_force = PLAYER_MANEUVER_FORCE;
     
-    // Calculate combined input from keyboard and gamepad
-    float combined_thrust = 0.0f;
-    float combined_strafe = 0.0f;
-    float combined_vertical = 0.0f;
-    bool combined_boost = false;
-    bool combined_brake = false;
-    
-    // Keyboard input (digital)
-    if (player_input.thrust_forward) combined_thrust += 1.0f;
-    if (player_input.thrust_backward) combined_thrust -= 1.0f;
-    if (player_input.maneuver_right) combined_strafe += 1.0f;
-    if (player_input.maneuver_left) combined_strafe -= 1.0f;
-    if (player_input.maneuver_up) combined_vertical += 1.0f;
-    if (player_input.maneuver_down) combined_vertical -= 1.0f;
-    combined_boost = player_input.boost_active;
-    combined_brake = player_input.brake_active;
-    
-    // Add gamepad input (analog)
-    combined_thrust += player_input.gamepad_thrust;
-    combined_strafe += player_input.gamepad_strafe;
-    combined_vertical += player_input.gamepad_vertical;
-    
-    // Gamepad boost is analog (right trigger), keyboard boost is digital
-    float boost_intensity = combined_boost ? 1.0f : 0.0f;
-    boost_intensity = fmaxf(boost_intensity, player_input.gamepad_boost);
-    
-    // Brake from either source
-    combined_brake = combined_brake || player_input.gamepad_brake;
-    
-    // Clamp combined values
-    combined_thrust = fmaxf(-1.0f, fminf(1.0f, combined_thrust));
-    combined_strafe = fmaxf(-1.0f, fminf(1.0f, combined_strafe));
-    combined_vertical = fmaxf(-1.0f, fminf(1.0f, combined_vertical));
-    
-    // Apply boost multiplier based on intensity
-    float effective_boost = 1.0f + (PLAYER_BOOST_MULTIPLIER - 1.0f) * boost_intensity;
+    // Apply boost multiplier
+    float effective_boost = 1.0f + (PLAYER_BOOST_MULTIPLIER - 1.0f) * input->boost;
     thrust_force *= effective_boost;
     maneuver_force *= effective_boost;
     
     // Apply forces
-    physics->acceleration.z -= combined_thrust * thrust_force * delta_time; // Forward is negative Z
-    physics->acceleration.x += combined_strafe * maneuver_force * delta_time;
-    physics->acceleration.y += combined_vertical * maneuver_force * delta_time;
+    static float last_input_log = 0.0f;
+    bool has_input = (fabsf(input->thrust) > 0.01f || fabsf(input->strafe) > 0.01f || fabsf(input->vertical) > 0.01f);
+    
+    if (has_input) {
+        physics->acceleration.z -= input->thrust * thrust_force * delta_time; // Forward is negative Z
+        physics->acceleration.x += input->strafe * maneuver_force * delta_time;
+        physics->acceleration.y += input->vertical * maneuver_force * delta_time;
+        
+        // Log input activity occasionally
+        if (navigation_time - last_input_log > 2.0f) {
+            printf("🎮 Input: thrust:%.2f strafe:%.2f vertical:%.2f boost:%.2f\n", 
+                   input->thrust, input->strafe, input->vertical, input->boost);
+            last_input_log = navigation_time;
+        }
+    }
     
     // Apply braking
-    if (combined_brake) {
+    if (input->brake) {
         physics->velocity.x *= PLAYER_BRAKE_FACTOR;
         physics->velocity.y *= PLAYER_BRAKE_FACTOR;
         physics->velocity.z *= PLAYER_BRAKE_FACTOR;
@@ -343,11 +228,51 @@ void derelict_navigation_update(struct World* world, SceneStateManager* state, f
     
     navigation_time += delta_time;
     
-    // Update gamepad input first
-    update_gamepad_input();
+    // Update input system
+    input_update();
     
     // Apply player ship controls
     apply_player_controls(world, delta_time);
+    
+    // Update camera to follow player ship
+    if (player_ship_id != INVALID_ENTITY) {
+        struct Entity* player_entity = NULL;
+        struct Entity* camera_entity = NULL;
+        
+        // Find player and camera entities
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            if (entity->id == player_ship_id && (entity->component_mask & COMPONENT_PLAYER)) {
+                player_entity = entity;
+            }
+            if (entity->component_mask & COMPONENT_CAMERA) {
+                camera_entity = entity;
+            }
+        }
+        
+        // Update camera position to follow player
+        if (player_entity && camera_entity && 
+            player_entity->transform && camera_entity->transform) {
+            
+            Vector3 player_pos = player_entity->transform->position;
+            Vector3 camera_offset = {30.0f, 20.0f, -30.0f}; // Behind and above the player
+            
+            camera_entity->transform->position.x = player_pos.x + camera_offset.x;
+            camera_entity->transform->position.y = player_pos.y + camera_offset.y;
+            camera_entity->transform->position.z = player_pos.z + camera_offset.z;
+            
+            // Static debug output to avoid spam
+            static float last_pos_log = 0.0f;
+            if (navigation_time - last_pos_log > 2.0f) {
+                printf("🎮 Player pos:(%.1f,%.1f,%.1f) Camera pos:(%.1f,%.1f,%.1f)\n",
+                       player_pos.x, player_pos.y, player_pos.z,
+                       camera_entity->transform->position.x,
+                       camera_entity->transform->position.y,
+                       camera_entity->transform->position.z);
+                last_pos_log = navigation_time;
+            }
+        }
+    }
     
     // Apply magnetic ship physics to all ships with physics components
     for (uint32_t i = 0; i < world->entity_count; i++) {
@@ -501,70 +426,16 @@ static bool derelict_navigation_input(struct World* world, SceneStateManager* st
             return true;
         }
         
-        // Player ship controls - key down
-        switch (ev->key_code) {
-            case SAPP_KEYCODE_W:
-                player_input.thrust_forward = true;
-                return true;
-            case SAPP_KEYCODE_S:
-                player_input.thrust_backward = true;
-                return true;
-            case SAPP_KEYCODE_A:
-                player_input.maneuver_left = true;
-                return true;
-            case SAPP_KEYCODE_D:
-                player_input.maneuver_right = true;
-                return true;
-            case SAPP_KEYCODE_Q:
-                player_input.maneuver_up = true;
-                return true;
-            case SAPP_KEYCODE_E:
-                player_input.maneuver_down = true;
-                return true;
-            case SAPP_KEYCODE_LEFT_SHIFT:
-            case SAPP_KEYCODE_RIGHT_SHIFT:
-                player_input.boost_active = true;
-                return true;
-            case SAPP_KEYCODE_LEFT_CONTROL:
-            case SAPP_KEYCODE_RIGHT_CONTROL:
-                player_input.brake_active = true;
-                return true;
-            default:
-                break;
+        // Player ship controls - use input abstraction
+        if (input_handle_keyboard(ev->key_code, true)) {
+            return true;
         }
     }
     
     if (ev->type == SAPP_EVENTTYPE_KEY_UP) {
-        // Player ship controls - key up
-        switch (ev->key_code) {
-            case SAPP_KEYCODE_W:
-                player_input.thrust_forward = false;
-                return true;
-            case SAPP_KEYCODE_S:
-                player_input.thrust_backward = false;
-                return true;
-            case SAPP_KEYCODE_A:
-                player_input.maneuver_left = false;
-                return true;
-            case SAPP_KEYCODE_D:
-                player_input.maneuver_right = false;
-                return true;
-            case SAPP_KEYCODE_Q:
-                player_input.maneuver_up = false;
-                return true;
-            case SAPP_KEYCODE_E:
-                player_input.maneuver_down = false;
-                return true;
-            case SAPP_KEYCODE_LEFT_SHIFT:
-            case SAPP_KEYCODE_RIGHT_SHIFT:
-                player_input.boost_active = false;
-                return true;
-            case SAPP_KEYCODE_LEFT_CONTROL:
-            case SAPP_KEYCODE_RIGHT_CONTROL:
-                player_input.brake_active = false;
-                return true;
-            default:
-                break;
+        // Player ship controls - use input abstraction
+        if (input_handle_keyboard(ev->key_code, false)) {
+            return true;
         }
     }
     
