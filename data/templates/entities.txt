@@ -54,7 +54,7 @@ has_player=true
 has_camera=true
 mass=80.0
 collision_radius=4.0
-mesh_name=Wedge Ship Mk2
+mesh_name=Wedge_Ship_Mk2
 
 # Camera Templates
 
