@@ -45,6 +45,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
 
     // Load entity and scene templates
     load_entity_templates(&g_data_registry, "templates/entities.txt");
+    load_scene_templates(&g_data_registry, "scenes/logo.txt");         // Gold standard baseline scene
     load_scene_templates(&g_data_registry, "scenes/mesh_test.txt");
     load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
     load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
