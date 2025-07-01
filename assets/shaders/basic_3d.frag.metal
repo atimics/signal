@@ -24,7 +24,7 @@ fragment float4 fs_main(fs_in in [[stage_in]],
     // Apply base lighting
     float3 final_color = color.rgb * (0.3 + 0.7 * light);
     
-    // Add glow effect if intensity > 0
+    // Add glow effect only if intensity > 0 (logo cube only)
     if (uniforms.glow_intensity > 0.0) {
         // Create a more pronounced pulsing glow effect
         float pulse_speed = 3.0; // Faster pulse frequency for more noticeable effect
