@@ -5,6 +5,16 @@
 #include "data.h"
 #include "render.h"
 
+// Forward declarations for the scheduler
+struct AssetRegistry;
+struct DataRegistry;
+
+// Include modular system headers
+#include "system/physics.h"
+#include "system/collision.h"  
+#include "system/ai.h"
+#include "system/camera.h"
+
 // ============================================================================
 // ENUMS AND STRUCTS
 // ============================================================================
@@ -46,8 +56,7 @@ typedef struct SystemScheduler
 // System Scheduler
 bool scheduler_init(SystemScheduler* scheduler, RenderConfig* config);
 void scheduler_destroy(SystemScheduler* scheduler, RenderConfig* config);
-void scheduler_update(SystemScheduler* scheduler, struct World* world, RenderConfig* render_config,
-                      float delta_time);
+void scheduler_update(SystemScheduler* scheduler, struct World* world, RenderConfig* render_config, float delta_time);
 void scheduler_print_stats(SystemScheduler* scheduler);
 
 // System Control
@@ -55,14 +64,8 @@ void scheduler_enable_system(SystemScheduler* scheduler, SystemType type);
 void scheduler_disable_system(SystemScheduler* scheduler, SystemType type);
 void scheduler_set_frequency(SystemScheduler* scheduler, SystemType type, float frequency);
 
-// Individual Systems
-void physics_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-void collision_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-void ai_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-void camera_system_update(struct World* world, RenderConfig* render_config, float delta_time);
-
-// Data Access
+// Data Access - These will be removed once the refactor is complete
 DataRegistry* get_data_registry(void);
-AssetRegistry* get_asset_registry(void);  // Access to global asset registry
+AssetRegistry* get_asset_registry(void);
 
 #endif  // SYSTEMS_H

@@ -180,8 +180,7 @@ static void loading_screen_create_cube(LoadingScreen* loading, struct World* wor
     if (renderable)
     {
         // Connect the mesh to the renderable component
-        AssetRegistry* asset_registry = get_asset_registry();
-        if (assets_create_renderable_from_mesh(asset_registry, "loading_cube", renderable))
+        if (assets_create_renderable_from_mesh(&asset_registry, "loading_cube", renderable))
         {
             printf("✅ Loading cube renderable created successfully\n");
         }
@@ -355,10 +354,7 @@ static void load_scene_by_name(struct World* world, const char* scene_name, Enti
 {
     printf("🏗️  Loading scene '%s' from data...\n", scene_name);
 
-    DataRegistry* data_registry = get_data_registry();
-
-    // Load the scene from template
-    if (!load_scene(world, data_registry, get_asset_registry(), scene_name))
+    if (!load_scene(world, &data_registry, &asset_registry, scene_name))
     {
         printf("❌ Failed to load scene: %s\n", scene_name);
         return;
@@ -487,8 +483,33 @@ static void init(void)
 
     loading_screen_set_progress(&app_state.loading_screen, 0.3f, "Starting systems...");
 
+    // Initialize asset and data registries
+    AssetRegistry asset_registry;
+    DataRegistry data_registry;
+
+    if (!assets_init(&asset_registry, "/Users/ratimics/develop/cgame/build/assets"))
+    {
+        printf("❌ Failed to initialize asset system\n");
+        sapp_quit();
+        return;
+    }
+
+    if (!data_registry_init(&data_registry, "/Users/ratimics/develop/cgame/data"))
+    {
+        printf("❌ Failed to initialize data system\n");
+        sapp_quit();
+        return;
+    }
+
+    // Load entity and scene templates
+    load_entity_templates(&data_registry, "templates/entities.txt");
+    load_scene_templates(&data_registry, "scenes/logo.txt");         // Gold standard baseline scene
+    load_scene_templates(&data_registry, "scenes/mesh_test.txt");
+    load_scene_templates(&data_registry, "scenes/spaceport.txt");
+    load_scene_templates(&data_registry, "scenes/camera_test.txt");
+
     // Initialize system scheduler
-    if (!scheduler_init(&app_state.scheduler, &app_state.render_config))
+    if (!scheduler_init(&app_state.scheduler, &asset_registry, &data_registry, &app_state.render_config))
     {
         printf("❌ Failed to initialize scheduler\n");
         sapp_quit();
@@ -498,9 +519,7 @@ static void init(void)
     loading_screen_set_progress(&app_state.loading_screen, 0.4f, "Loading logo texture...");
 
     // Load logo texture early for loading screen
-    AssetRegistry* asset_registry = get_asset_registry();
-    bool logo_loaded = false;
-    if (load_texture(asset_registry, "logo.png", "game_logo"))
+    if (load_texture(&asset_registry, "logo.png", "game_logo"))
     {
         printf("✅ Logo texture loaded successfully!\n");
         logo_loaded = true;
@@ -509,7 +528,7 @@ static void init(void)
     {
         printf("⚠️  Logo texture loading failed (trying from textures/ directory)\n");
         // Try from textures directory as fallback
-        if (load_texture(asset_registry, "textures/logo.png", "game_logo"))
+        if (load_texture(&asset_registry, "textures/logo.png", "game_logo"))
         {
             printf("✅ Logo texture loaded from textures/ directory!\n");
             logo_loaded = true;
@@ -538,7 +557,7 @@ static void init(void)
     loading_screen_set_progress(&app_state.loading_screen, 0.5f, "Creating loading cube...");
 
     // Create loading cube mesh (works with or without logo texture)
-    create_loading_cube_mesh(asset_registry);
+    create_loading_cube_mesh(&asset_registry);
     loading_screen_create_cube(&app_state.loading_screen, &app_state.world);
 
     if (!logo_loaded)
@@ -565,7 +584,7 @@ static void init(void)
     };
 
     // Initialize renderer
-    if (!render_init(&app_state.render_config, get_asset_registry(), (float)sapp_width(),
+    if (!render_init(&app_state.render_config, &asset_registry, (float)sapp_width(),
                      (float)sapp_height()))
     {
         printf("❌ Failed to initialize renderer\n");
