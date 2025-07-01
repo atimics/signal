@@ -365,15 +365,19 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
         // Look up and assign material/texture if available
         if (mesh->material_name[0] != '\0')
         {
+            printf("🔍 DEBUG: Looking for material '%s' for mesh '%s'\n", mesh->material_name, mesh_name);
             Material* material = assets_get_material(registry, mesh->material_name);
             if (material && material->loaded)
             {
                 // Use diffuse texture from material
                 const char* texture_name = material->diffuse_texture;
 
+                printf("🔍 DEBUG: Material '%s' has diffuse texture: '%s'\n", mesh->material_name, texture_name);
+
                 if (texture_name[0] != '\0')
                 {
                     Texture* texture = assets_get_texture(registry, texture_name);
+                    printf("🔍 DEBUG: Looking for texture '%s', found: %s\n", texture_name, texture ? "YES" : "NO");
                     if (texture && texture->loaded && texture->gpu_resources)
                     {
                         // Assign texture to renderable (convert sg_image to gpu_image_t)

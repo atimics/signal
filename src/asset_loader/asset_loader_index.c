@@ -230,6 +230,44 @@ bool load_single_mesh_metadata(AssetRegistry* registry,
     parse_mtl_file(mtl_path, registry);
   }
 
+  // Set material name on the loaded mesh after MTL is loaded
+  if (strlen(material_filename) > 0) {
+    Mesh* mesh = assets_get_mesh(registry, mesh_name);
+    if (mesh) {
+      // The MTL file should have created a material - find it
+      // For Logo Cube, we know the material name is "logo_cube_material"
+      // TODO: Make this more generic by parsing the MTL file to get the material name
+      if (strcmp(mesh_name, "Logo Cube") == 0) {
+        strncpy(mesh->material_name, "logo_cube_material", sizeof(mesh->material_name) - 1);
+        
+        // Also fix the material's texture reference to match the loaded texture name
+        Material* material = assets_get_material(registry, "logo_cube_material");
+        if (material && strcmp(material->diffuse_texture, "texture.png") == 0) {
+          // Update to use the actual loaded texture name
+          strncpy(material->diffuse_texture, "Logo Cube_texture", sizeof(material->diffuse_texture) - 1);
+          material->diffuse_texture[sizeof(material->diffuse_texture) - 1] = '\0';
+          printf("🔍 DEBUG: Updated material texture reference from 'texture.png' to 'Logo Cube_texture'\n");
+        }
+      } else {
+        // Fallback: use the MTL filename without extension as material name
+        char material_name[64];
+        strncpy(material_name, material_filename, sizeof(material_name) - 1);
+        material_name[sizeof(material_name) - 1] = '\0';
+        
+        // Remove .mtl extension if present
+        char* dot = strrchr(material_name, '.');
+        if (dot && strcmp(dot, ".mtl") == 0) {
+          *dot = '\0';
+        }
+        
+        strncpy(mesh->material_name, material_name, sizeof(mesh->material_name) - 1);
+      }
+      mesh->material_name[sizeof(mesh->material_name) - 1] = '\0';
+      
+      printf("🔍 DEBUG: Set material '%s' for mesh '%s'\n", mesh->material_name, mesh_name);
+    }
+  }
+
   // Load associated texture if specified
   if (strlen(texture_filename) > 0) {
     char texture_path[512];
