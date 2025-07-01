@@ -197,9 +197,9 @@ void update_gamepad_input(void) {
     gamepad_poll();
     
     // Get the first connected gamepad
-    GamepadState gamepad = gamepad_get_state(0);
+    GamepadState* gamepad = gamepad_get_state(0);
     
-    if (!gamepad.connected) {
+    if (!gamepad || !gamepad->connected) {
         // Clear gamepad input if no controller connected
         player_input.gamepad_thrust = 0.0f;
         player_input.gamepad_strafe = 0.0f;
@@ -213,7 +213,7 @@ void update_gamepad_input(void) {
     const float deadzone = 0.15f;
     
     // Left stick Y for forward/backward thrust
-    float stick_y = gamepad.left_stick_y;
+    float stick_y = gamepad->left_stick_y;
     if (fabsf(stick_y) > deadzone) {
         player_input.gamepad_thrust = -stick_y; // Invert Y (up is negative in stick coords)
     } else {
@@ -221,7 +221,7 @@ void update_gamepad_input(void) {
     }
     
     // Left stick X for left/right strafe
-    float stick_x = gamepad.left_stick_x;
+    float stick_x = gamepad->left_stick_x;
     if (fabsf(stick_x) > deadzone) {
         player_input.gamepad_strafe = stick_x;
     } else {
@@ -229,7 +229,7 @@ void update_gamepad_input(void) {
     }
     
     // Right stick Y for vertical maneuvering  
-    float right_y = gamepad.right_stick_y;
+    float right_y = gamepad->right_stick_y;
     if (fabsf(right_y) > deadzone) {
         player_input.gamepad_vertical = -right_y; // Invert Y
     } else {
@@ -237,10 +237,28 @@ void update_gamepad_input(void) {
     }
     
     // Right trigger for boost (analog)
-    player_input.gamepad_boost = gamepad.right_trigger;
+    player_input.gamepad_boost = gamepad->right_trigger;
     
     // Left trigger for brake (digital, threshold at 50%)
-    player_input.gamepad_brake = gamepad.left_trigger > 0.5f;
+    player_input.gamepad_brake = gamepad->left_trigger > 0.5f;
+    
+    // Log gamepad activity for debugging
+    static float last_activity_log = 0.0f;
+    bool has_input = (fabsf(player_input.gamepad_thrust) > 0.1f ||
+                     fabsf(player_input.gamepad_strafe) > 0.1f ||
+                     fabsf(player_input.gamepad_vertical) > 0.1f ||
+                     player_input.gamepad_boost > 0.1f ||
+                     player_input.gamepad_brake);
+                     
+    if (has_input && navigation_time - last_activity_log > 3.0f) {
+        printf("🎮 Gamepad input: %s (T:%.2f S:%.2f V:%.2f B:%.2f)\n", 
+               gamepad->product_string,
+               player_input.gamepad_thrust,
+               player_input.gamepad_strafe, 
+               player_input.gamepad_vertical,
+               player_input.gamepad_boost);
+        last_activity_log = navigation_time;
+    }
 }
 
 // Apply player ship controls based on input state

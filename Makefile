@@ -9,6 +9,8 @@ ifeq ($(OS),Darwin)
     # macOS
     CFLAGS += -DSOKOL_METAL
     LIBS += -framework Metal -framework MetalKit -framework AppKit -framework QuartzCore
+    # Add hidapi support for gamepad input
+    LIBS += -framework IOKit -framework CoreFoundation
 else
     # Linux - define POSIX for clock_gettime and suppress problematic warnings
     CFLAGS += -DSOKOL_GLCORE -D_POSIX_C_SOURCE=199309L
@@ -18,6 +20,8 @@ else
     CFLAGS += -Wno-error=null-pointer-subtraction
     CFLAGS += -Wno-error=implicit-int
     LIBS += -lGL -lX11 -lXi -lXcursor -lXrandr -lm
+    # Add hidapi support for gamepad input
+    LIBS += -ludev -lrt -lpthread
 endif
 
 # Directories
@@ -33,7 +37,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/scene_selector_scene.c main.c
+SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/scene_selector_scene.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
