@@ -1,9 +1,13 @@
 # Build artifacts
 build/
 *.o
-*.obj
 *.exe
 cgame
+
+# Object files from C compilation (but not mesh .obj files)
+src/**/*.obj
+tests/**/*.obj
+tools/**/*.obj
 
 # Asset Build artifacts
 build/assets/
