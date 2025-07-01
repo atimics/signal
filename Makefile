@@ -306,7 +306,7 @@ TDD_UNIT_TARGET = $(BUILD_DIR)/cgame_tdd_unit_tests
 
 # TDD Performance Tests (isolated memory tests)
 TDD_PERF_TESTS = tests/performance/test_memory_isolated.c tests/vendor/unity.c
-TDD_PERF_ENGINE_SRC = src/system/memory.c src/core.c
+TDD_PERF_ENGINE_SRC = src/system/memory.c src/core.c tests/stubs/memory_test_stubs.c
 TDD_PERF_TARGET = $(BUILD_DIR)/cgame_tdd_perf_tests
 
 # TDD Integration Tests (future)
