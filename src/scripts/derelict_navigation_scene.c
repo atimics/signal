@@ -126,11 +126,11 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
         struct Camera* cam_camera = entity_get_camera(world, cockpit_camera);
         
         if (cam_transform && cam_camera) {
-            // Start the camera at a good chase position behind the player
-            cam_transform->position = (Vector3){10, -3, -105};  // Behind and above player start
+            // Start the camera at a much closer chase position behind the player
+            cam_transform->position = (Vector3){5, -5, -108};   // Much closer to player start
             cam_camera->target = (Vector3){0, -8, -120};        // Look at player ship start position
             cam_camera->matrices_dirty = true;
-            printf("📷 Repositioned camera for dynamic chase behind player ship\n");
+            printf("📷 Repositioned camera close to player ship for chase mode\n");
         }
     } else {
         printf("❌ Could not find suitable camera to override\n");
@@ -271,22 +271,24 @@ void update_camera_system(struct World* world, float delta_time) {
         case CAMERA_MODE_COCKPIT: {
             // Cockpit view - camera inside/on the ship
             desired_pos.x = player_pos.x;
-            desired_pos.y = player_pos.y + 1.0f;  // Slightly above player center
-            desired_pos.z = player_pos.z + 2.0f;  // Slightly forward
+            desired_pos.y = player_pos.y + 0.5f;  // Just slightly above player center
+            desired_pos.z = player_pos.z + 1.0f;  // Just slightly forward
             
-            // Look in direction of movement
-            Vector3 look_dir = {player_vel.x, player_vel.y, player_vel.z};
-            float vel_mag = sqrtf(look_dir.x * look_dir.x + look_dir.y * look_dir.y + look_dir.z * look_dir.z);
-            if (vel_mag > 0.1f) {
+            // Look in direction of movement, or default forward
+            if (player_speed > 0.5f) {
+                Vector3 look_dir = {player_vel.x, player_vel.y, player_vel.z};
+                float vel_mag = sqrtf(look_dir.x * look_dir.x + look_dir.y * look_dir.y + look_dir.z * look_dir.z);
                 look_dir.x /= vel_mag;
                 look_dir.y /= vel_mag;
                 look_dir.z /= vel_mag;
-                desired_target.x = player_pos.x + look_dir.x * 10.0f;
-                desired_target.y = player_pos.y + look_dir.y * 10.0f;
-                desired_target.z = player_pos.z + look_dir.z * 10.0f;
+                desired_target.x = player_pos.x + look_dir.x * 5.0f;
+                desired_target.y = player_pos.y + look_dir.y * 5.0f;
+                desired_target.z = player_pos.z + look_dir.z * 5.0f;
             } else {
                 // Default forward direction
-                desired_target.z = player_pos.z - 10.0f;
+                desired_target.x = player_pos.x;
+                desired_target.y = player_pos.y;
+                desired_target.z = player_pos.z - 5.0f;
             }
             break;
         }
@@ -296,38 +298,30 @@ void update_camera_system(struct World* world, float delta_time) {
             // Base distance varies with speed (zoom out on acceleration)
             float base_distance = 15.0f;
             float speed_factor = player_speed / 20.0f;  // Normalize speed
-            camera_target_zoom = 1.0f + speed_factor * 1.5f;  // Zoom out with speed
+            camera_target_zoom = 1.0f + speed_factor * 0.5f;  // Much less zoom out with speed
             
             // Smooth zoom transition with elasticity
-            float zoom_spring = 8.0f;
-            float zoom_damping = 0.7f;
+            float zoom_spring = 5.0f;  // Reduced responsiveness
+            float zoom_damping = 0.5f;  // Reduced damping
             float zoom_diff = camera_target_zoom - camera_zoom_factor;
             camera_zoom_factor += zoom_diff * zoom_spring * delta_time;
-            camera_zoom_factor *= (1.0f - zoom_damping * delta_time);
             
             float distance = base_distance * camera_zoom_factor;
             
-            // Camera position behind and above player
-            Vector3 offset = {distance * 0.6f, distance * 0.4f, distance};
+            // Camera position behind and above player (much closer)
+            Vector3 offset = {5.0f, 3.0f, 12.0f};  // Fixed offset instead of dynamic
             
-            // Add velocity prediction for smoother camera
-            Vector3 predicted_pos = {
-                player_pos.x + player_vel.x * 0.3f,
-                player_pos.y + player_vel.y * 0.3f,
-                player_pos.z + player_vel.z * 0.3f
-            };
-            
-            desired_pos.x = predicted_pos.x + offset.x;
-            desired_pos.y = predicted_pos.y + offset.y;
-            desired_pos.z = predicted_pos.z + offset.z;
-            desired_target = predicted_pos;
+            // Use actual player position, not predicted
+            desired_pos.x = player_pos.x + offset.x;
+            desired_pos.y = player_pos.y + offset.y;
+            desired_pos.z = player_pos.z + offset.z;
+            desired_target = player_pos;  // Always look at actual player position
             break;
         }
         
         case CAMERA_MODE_CHASE_FAR: {
             // Stable far chase camera with less elasticity
-            float distance = 40.0f;
-            Vector3 offset = {distance * 0.7f, distance * 0.5f, distance * 0.8f};
+            Vector3 offset = {20.0f, 10.0f, 25.0f};  // Fixed offset, closer than before
             
             desired_pos.x = player_pos.x + offset.x;
             desired_pos.y = player_pos.y + offset.y;
@@ -343,27 +337,27 @@ void update_camera_system(struct World* world, float delta_time) {
             break;
     }
     
-    // Apply camera movement with elasticity
+    // Apply camera movement with elasticity (much reduced to prevent overshoot)
     float elasticity = 0.0f;
     float damping = 0.0f;
     
     switch (current_camera_mode) {
         case CAMERA_MODE_COCKPIT:
-            elasticity = 15.0f;  // Very responsive
-            damping = 0.9f;
+            elasticity = 8.0f;   // Reduced from 15.0f
+            damping = 0.95f;     // Increased damping
             break;
         case CAMERA_MODE_CHASE_NEAR:
-            elasticity = 6.0f;   // Moderate elasticity
-            damping = 0.8f;
+            elasticity = 3.0f;   // Reduced from 6.0f
+            damping = 0.9f;      // Increased damping
             break;
         case CAMERA_MODE_CHASE_FAR:
-            elasticity = 3.0f;   // Less elastic, more stable
-            damping = 0.6f;
+            elasticity = 2.0f;   // Reduced from 3.0f
+            damping = 0.85f;     // Increased damping
             break;
         case CAMERA_MODE_COUNT:
         default:
-            elasticity = 6.0f;   // Default to chase near
-            damping = 0.8f;
+            elasticity = 3.0f;   // Default to chase near
+            damping = 0.9f;
             break;
     }
     
@@ -389,17 +383,43 @@ void update_camera_system(struct World* world, float delta_time) {
     camera_entity->transform->position.y += camera_velocity.y * delta_time;
     camera_entity->transform->position.z += camera_velocity.z * delta_time;
     
+    // CONSTRAINT: Prevent camera from getting too far from player
+    Vector3 cam_to_player = {
+        player_pos.x - camera_entity->transform->position.x,
+        player_pos.y - camera_entity->transform->position.y,
+        player_pos.z - camera_entity->transform->position.z
+    };
+    float distance_to_player = sqrtf(cam_to_player.x * cam_to_player.x + 
+                                    cam_to_player.y * cam_to_player.y + 
+                                    cam_to_player.z * cam_to_player.z);
+    
+    // Max distance based on camera mode
+    float max_distance = (current_camera_mode == CAMERA_MODE_CHASE_FAR) ? 50.0f : 30.0f;
+    if (distance_to_player > max_distance) {
+        // Pull camera back toward player
+        float scale = max_distance / distance_to_player;
+        camera_entity->transform->position.x = player_pos.x - cam_to_player.x * scale;
+        camera_entity->transform->position.y = player_pos.y - cam_to_player.y * scale;
+        camera_entity->transform->position.z = player_pos.z - cam_to_player.z * scale;
+        printf("⚠️  Camera too far (%.1f), constraining to %.1f\n", distance_to_player, max_distance);
+    }
+    
     // Update camera target
     camera_entity->camera->target = desired_target;
     
-    // Debug output (less frequent)
+    // Debug output (more frequent during debugging)
     static float last_cam_log = 0.0f;
-    if (navigation_time - last_cam_log > 3.0f) {
+    if (navigation_time - last_cam_log > 1.0f) {  // Every 1 second instead of 3
         const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
-        printf("📷 Camera [%s] Player:(%.1f,%.1f,%.1f) Speed:%.1f Zoom:%.2f\n",
+        Vector3 cam_pos = camera_entity->transform->position;
+        float cam_distance = sqrtf((cam_pos.x - player_pos.x) * (cam_pos.x - player_pos.x) + 
+                                  (cam_pos.y - player_pos.y) * (cam_pos.y - player_pos.y) + 
+                                  (cam_pos.z - player_pos.z) * (cam_pos.z - player_pos.z));
+        printf("📷 [%s] Player:(%.1f,%.1f,%.1f) Camera:(%.1f,%.1f,%.1f) Dist:%.1f Speed:%.1f\n",
                mode_names[current_camera_mode],
                player_pos.x, player_pos.y, player_pos.z,
-               player_speed, camera_zoom_factor);
+               cam_pos.x, cam_pos.y, cam_pos.z,
+               cam_distance, player_speed);
         last_cam_log = navigation_time;
     }
 }
