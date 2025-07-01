@@ -325,6 +325,11 @@ void update_camera_system(struct World* world, float delta_time) {
             elasticity = 3.0f;   // Less elastic, more stable
             damping = 0.6f;
             break;
+        case CAMERA_MODE_COUNT:
+        default:
+            elasticity = 6.0f;   // Default to chase near
+            damping = 0.8f;
+            break;
     }
     
     // Calculate camera movement forces
