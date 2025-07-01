@@ -640,9 +640,25 @@ void memory_pool_free(uint32_t pool_id, void* ptr) {
         return;
     }
     
-    // For testing, we can't track exact allocation sizes with standard malloc
-    // In a production implementation, we'd track allocation metadata
-    pool->allocation_count--;
+    // Find the allocation metadata to get the size
+    AllocationMetadata* metadata = find_allocation(ptr);
+    if (metadata && metadata->pool_id == pool_id) {
+        // Update pool statistics
+        pool->allocated_bytes -= metadata->size;
+        pool->allocation_count--;
+        memory_state.total_allocated_bytes -= metadata->size;
+        memory_state.bytes_freed_total += metadata->size;
+        
+        // Remove from tracking
+        remove_allocation_tracking(ptr);
+    } else {
+        // Fallback: just decrement count if we can't find the metadata
+        // This should not happen in normal operation
+        if (pool->allocation_count > 0) {
+            pool->allocation_count--;
+        }
+    }
+    
     free(ptr);
 }
 
