@@ -1,0 +1,10 @@
+{
+  "name": "Planet Surface",
+  "geometry": "geometry.obj",
+  "tags": [
+    "procedural"
+  ],
+  "description": "A procedurally generated mesh.",
+  "material": "material.mtl",
+  "texture": "texture.png"
+}
