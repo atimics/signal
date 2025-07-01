@@ -44,11 +44,16 @@ This document outlines the prioritized development sprints for the CGame engine,
 *   **Justification**: With a stable and performant core, we can now confidently proceed with major feature development. PBR is the highest priority feature for the engine.
 *   **Relevant Research**: `R03`, `R14`
 
+### Sprint 16: Core Gameplay Systems - The Resonance Cascade
+*   **Status**: **BACKLOG**
+*   **Goal**: To implement the foundational C-side systems required for the Resonance Cascade gameplay loop.
+*   **Implementation Guide**: `sprint_15_core_gameplay_systems.md`
+
 ---
 
 ## Phase 4: AI & World Simulation
 
-### Sprint 16: AI Foundation (Proof of Concept)
+### Sprint 17: AI Foundation (Proof of Concept)
 *   **Status**: **BACKLOG**
 *   **Goal**: To create a "single agent" proof-of-concept by integrating the core technologies needed for the generative swarm AI system.
 *   **Justification**: This R&D sprint will de-risk the immense technical challenges of the AI vision by solving the core integration problems on a small scale before building the full swarm infrastructure.

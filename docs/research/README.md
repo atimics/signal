@@ -82,4 +82,8 @@ This section details our ambitious plans for a generative, swarm-based AI system
 
 *   **[R07: Generative AI Feedback](./ai/R07_Generative_AI_Feedback.md)**
     *   **Synopsis**: An early exploration of how large language models (LLMs) can be integrated into the engine to provide dynamic, emergent behavior for NPCs.
-    *   **Strategic Importance**: **High (Long-Term)**. This research is the foundation for one of the engine's key unique selling propositions. It directly informs the planning for the AI Foundation sprint (Sprint 15).
+    *   **Strategic Importance**: **High (Long-Term)**. This research is the foundation for one of the engine's key unique selling propositions. It directly informs the planning for the AI Foundation sprint.
+
+*   **[R25: AI System Integration](./ai/R25_AI_System_Integration.md)**
+    *   **Synopsis**: A detailed technical specification for integrating a generative AI system (`llama.cpp`) with our ECS architecture. It outlines an asynchronous, database-driven approach for performant and scalable AI.
+    *   **Strategic Importance**: **High**. This is the technical blueprint for implementing the AI Foundation sprint and bringing our dynamic world to life.
