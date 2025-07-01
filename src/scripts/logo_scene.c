@@ -4,6 +4,7 @@
  */
 
 #include "../scene_script.h"
+#include "../sokol_app.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -58,7 +59,7 @@ static void logo_on_update(struct World* world, SceneStateManager* state, float 
         }
     }
     
-    // Check if 3 seconds have passed
+    // Check if 3 seconds have passed for automatic transition
     if (state->state_timer >= 3.0f)
     {
         printf("🎬 Logo scene: 3 seconds elapsed, transitioning to spaceport\n");
@@ -79,6 +80,23 @@ static void logo_on_exit(struct World* world, SceneStateManager* state)
     printf("🎬 Logo scene: UI restored for game scene\n");
 }
 
+static bool logo_on_input(struct World* world, SceneStateManager* state, const void* event)
+{
+    const sapp_event* ev = (const sapp_event*)event;
+    
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN)
+    {
+        if (ev->key_code == SAPP_KEYCODE_ENTER || ev->key_code == SAPP_KEYCODE_KP_ENTER)
+        {
+            printf("🎬 Logo scene: ENTER pressed, transitioning to spaceport\n");
+            scene_transition_to("spaceport_alpha", world, state);
+            return true; // Event handled
+        }
+    }
+    
+    return false; // Event not handled
+}
+
 // ============================================================================
 // LOGO SCRIPT DEFINITION
 // ============================================================================
@@ -87,5 +105,6 @@ const SceneScript logo_script = {
     .scene_name = "logo",
     .on_enter = logo_on_enter,
     .on_update = logo_on_update,
-    .on_exit = logo_on_exit
+    .on_exit = logo_on_exit,
+    .on_input = logo_on_input
 };

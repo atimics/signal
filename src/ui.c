@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 // Nuklear configuration - declarations only (no implementation)
 #define NK_INCLUDE_FIXED_TYPES
@@ -300,7 +301,27 @@ static void draw_debug_panel(struct nk_context* ctx, struct World* world,
     nk_end(ctx);
 }
 
-void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time)
+static void draw_logo_overlay(struct nk_context* ctx)
+{
+    // Create a centered overlay window for the "[Press ENTER to begin]" text
+    int screen_width = sapp_width();
+    int screen_height = sapp_height();
+    
+    int overlay_width = 300;
+    int overlay_height = 80;
+    int x = (screen_width - overlay_width) / 2;
+    int y = screen_height - overlay_height - 50; // Near bottom of screen
+    
+    if (nk_begin(ctx, "[Press ENTER to begin]", nk_rect(x, y, overlay_width, overlay_height),
+                 NK_WINDOW_NO_INPUT | NK_WINDOW_BACKGROUND | NK_WINDOW_BORDER))
+    {
+        nk_layout_row_dynamic(ctx, 30, 1);
+        nk_label(ctx, "[Press ENTER to begin]", NK_TEXT_CENTERED);
+    }
+    nk_end(ctx);
+}
+
+void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
 {
     // Early exit if UI is not visible
     if (!ui_visible) return;
@@ -321,6 +342,12 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
 
     // Draw UI components
     draw_hud(ctx, world);
+    
+    // Draw logo overlay if in logo scene
+    if (current_scene && strcmp(current_scene, "logo") == 0)
+    {
+        draw_logo_overlay(ctx);
+    }
     
     // Only draw debug panel if debug UI is visible
     if (debug_ui_visible)

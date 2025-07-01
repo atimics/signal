@@ -18,7 +18,17 @@
 #include "assets.h"
 #include "core.h"
 #include "data.h"
-#include "gpu_resources.h"
+#in            printf("CGame Engine Usage:\n");
+            printf("  --golden-reference, -g    Capture golden reference screenshot of loading cube\n");
+            printf("  --help, -h                Show this help message\n");
+            printf("\nGame Controls:\n");
+            printf("  ESC        Exit game\n");
+            printf("  ENTER      Skip logo screen (on logo scene)\n");
+            printf("  ~          Toggle debug UI\n");
+            printf("  1-9        Switch cameras\n");
+            printf("  C          Cycle cameras\n");
+            printf("  W          Toggle wireframe mode\n");
+            printf("  S          Take screenshot\n");resources.h"
 #include "nuklear.h"
 #include "render.h"
 #include "systems.h"
@@ -247,6 +257,9 @@ static void init(void)
     scene_state_init(&app_state.scene_state);
     strcpy(app_state.scene_state.current_scene_name, scene_to_load);
     
+    // Start with debug UI hidden (~ to toggle)
+    scene_state_set_debug_ui_visible(&app_state.scene_state, false);
+    
     // Initialize camera system after scene is loaded
     camera_system_init(&app_state.world, &app_state.render_config);
     
@@ -313,7 +326,7 @@ static void frame(void)
     // Render entities
     render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
 
-    ui_render(&app_state.world, &app_state.scheduler, dt);
+    ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
 
     sg_end_pass();
     sg_commit();
@@ -348,7 +361,13 @@ static void event(const sapp_event* ev)
         return;  // UI captured this event
     }
 
-    // Process game events only if UI didn't capture them
+    // Handle scene-specific input events
+    if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
+    {
+        return;  // Scene script handled this event
+    }
+
+    // Process global game events only if UI and scene scripts didn't capture them
     switch (ev->type)
     {
         case SAPP_EVENTTYPE_KEY_DOWN:
@@ -356,6 +375,13 @@ static void event(const sapp_event* ev)
             {
                 printf("⎋ Escape key pressed - exiting\n");
                 sapp_request_quit();
+            }
+            // Toggle debug UI with tilde (~) key
+            else if (ev->key_code == SAPP_KEYCODE_GRAVE_ACCENT)
+            {
+                bool current_visible = scene_state_is_debug_ui_visible(&app_state.scene_state);
+                scene_state_set_debug_ui_visible(&app_state.scene_state, !current_visible);
+                printf("🔧 Debug UI: %s\n", !current_visible ? "ON" : "OFF");
             }
             // Camera switching with number keys (legacy support)
             else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
@@ -459,7 +485,10 @@ sapp_desc sokol_main(int argc, char* argv[])
             printf("  --help, -h                Show this help message\n");
             printf("\nGame Controls:\n");
             printf("  ESC        Exit game\n");
+            printf("  ENTER      Begin game (from logo screen)\n");
+            printf("  F12        Toggle debug UI\n");
             printf("  1-9        Switch cameras\n");
+            printf("  C          Cycle cameras\n");
             printf("  W          Toggle wireframe mode\n");
             printf("  S          Take screenshot\n");
         }

@@ -21,7 +21,7 @@ typedef struct
 
 void ui_init(void);
 void ui_shutdown(void);
-void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time);
+void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene);
 bool ui_handle_event(const void* ev);  // Returns true if UI captured the event
 void ui_toggle_debug_panel(void);
 void ui_toggle_hud(void);

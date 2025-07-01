@@ -69,6 +69,16 @@ void scene_script_execute_exit(const char* scene_name, struct World* world, Scen
     }
 }
 
+bool scene_script_execute_input(const char* scene_name, struct World* world, SceneStateManager* state, const void* event)
+{
+    const SceneScript* script = scene_script_find(scene_name);
+    if (script && script->on_input)
+    {
+        return script->on_input(world, state, event);
+    }
+    return false; // Event not handled
+}
+
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
