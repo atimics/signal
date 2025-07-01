@@ -1,4 +1,4 @@
-#include "system_collision.h"
+#include "collision.h"
 
 #include <stdio.h>
 
