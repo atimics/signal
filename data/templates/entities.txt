@@ -9,7 +9,7 @@ has_renderable=true
 mass=1000.0
 collision_radius=3.0
 kinematic=true
-mesh_name=Control Tower
+mesh_name=Control_Tower
 
 template: sun
 description=Central star
@@ -30,7 +30,7 @@ has_renderable=true
 mass=100.0
 collision_radius=5.0
 drag=0.99
-mesh_name=Wedge Ship
+mesh_name=Wedge_Ship
 
 template: wedge_ship_mk2
 description=Advanced wedge-shaped spacecraft  
@@ -42,7 +42,7 @@ has_player=true
 mass=90.0
 collision_radius=4.5
 drag=0.98
-mesh_name=Wedge Ship Mk2
+mesh_name=Wedge_Ship_Mk2
 
 template: player_ship
 description=Basic player-controlled spacecraft

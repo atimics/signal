@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 import numpy as np
 import argparse
+from PIL import Image, ImageDraw
+import random
 
 def generate_wedge_ship_mk2():
     """Generate an improved wedge ship with better proportions and UVs."""
@@ -235,6 +237,102 @@ def write_mtl_file(filepath, material_name, texture_filename):
         f.write("Ns 10.0\n")
         f.write(f"map_Kd {texture_filename}\n")
 
+def load_material_definitions():
+    """Load the material definitions JSON file."""
+    material_file = Path("assets/material_definitions.json")
+    if not material_file.exists():
+        return {}
+    
+    with open(material_file, 'r') as f:
+        return json.load(f)
+
+def hex_to_rgb(hex_color):
+    """Convert hex color to RGB tuple."""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def generate_texture_from_tags(texture_path, tags):
+    """Generate a colorful gradient texture based on material tags."""
+    # Load material definitions
+    material_defs = load_material_definitions()
+    definitions = material_defs.get('definitions', {})
+    
+    # Find the best matching material definition based on tags
+    best_match = None
+    highest_priority = -1
+    
+    for tag in tags:
+        if tag in definitions:
+            priority = definitions[tag].get('priority', 0)
+            if priority > highest_priority:
+                highest_priority = priority
+                best_match = definitions[tag]
+    
+    # Fallback to default colors if no match found
+    if not best_match:
+        colors = {
+            "primary": "#FF6B35",
+            "secondary": "#4A90E2", 
+            "tertiary": "#F1C40F",
+            "accent": "#9B59B6"
+        }
+    else:
+        colors = best_match.get('colors', {
+            "primary": "#FF6B35",
+            "secondary": "#4A90E2",
+            "tertiary": "#F1C40F", 
+            "accent": "#9B59B6"
+        })
+    
+    # Convert colors to RGB
+    primary_rgb = hex_to_rgb(colors.get('primary', '#FF6B35'))
+    secondary_rgb = hex_to_rgb(colors.get('secondary', '#4A90E2'))
+    tertiary_rgb = hex_to_rgb(colors.get('tertiary', '#F1C40F'))
+    accent_rgb = hex_to_rgb(colors.get('accent', '#9B59B6'))
+    
+    # Create texture with gradient triangles
+    size = 512
+    img = Image.new('RGB', (size, size), primary_rgb)
+    draw = ImageDraw.Draw(img)
+    
+    # Define our color palette
+    colors_list = [primary_rgb, secondary_rgb, tertiary_rgb, accent_rgb]
+    
+    # Create a colorful gradient pattern with triangles
+    # Generate multiple triangular regions with different colors
+    triangle_count = 8
+    for i in range(triangle_count):
+        # Random triangle points
+        x1 = random.randint(0, size)
+        y1 = random.randint(0, size)
+        x2 = random.randint(0, size)
+        y2 = random.randint(0, size)
+        x3 = random.randint(0, size)
+        y3 = random.randint(0, size)
+        
+        # Cycle through our colors
+        color = colors_list[i % len(colors_list)]
+        
+        # Draw the triangle with some transparency for blending
+        overlay = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+        overlay_draw = ImageDraw.Draw(overlay)
+        overlay_draw.polygon([(x1, y1), (x2, y2), (x3, y3)], fill=(*color, 128))
+        
+        # Blend with existing image
+        img = Image.alpha_composite(img.convert('RGBA'), overlay).convert('RGB')
+    
+    # Add some noise/detail
+    for _ in range(200):
+        x = random.randint(0, size-1)
+        y = random.randint(0, size-1)
+        # Small colored dots for texture detail
+        color = colors_list[random.randint(0, len(colors_list)-1)]
+        draw.ellipse([x-2, y-2, x+2, y+2], fill=color)
+    
+    # Save the texture
+    img.save(texture_path)
+    print(f"   🎨 Generated colorful texture: {texture_path}")
+
 def generate_source_asset(mesh_name, generator_func, source_dir):
     """Generate all source files for a procedural asset."""
     print(f"🔧 Generating source asset: {mesh_name}")
@@ -263,10 +361,8 @@ def generate_source_asset(mesh_name, generator_func, source_dir):
     # Write .mtl file
     write_mtl_file(mesh_source_dir / "material.mtl", metadata["name"], metadata["texture"])
 
-    # Create a placeholder texture.png
-    from PIL import Image
-    img = Image.new('RGB', (512, 512), color = 'grey')
-    img.save(mesh_source_dir / "texture.png")
+    # Create a colorful texture based on material tags
+    generate_texture_from_tags(mesh_source_dir / "texture.png", metadata["tags"])
     
     print(f"   ✅ Created source files in {mesh_source_dir}")
     return True

@@ -1,5 +1,5 @@
 {
-  "name": "Wedge Ship",
+  "name": "Wedge_Ship",
   "geometry": "geometry.obj",
   "tags": [
     "procedural"

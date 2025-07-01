@@ -50,6 +50,21 @@ void camera_system_update(struct World* world, RenderConfig* render_config, floa
         camera_system_init(world, render_config);
     }
 
+    // Check for and initialize any newly created cameras
+    for (uint32_t i = 0; i < world->entity_count; i++)
+    {
+        struct Entity* entity = &world->entities[i];
+        if (entity->component_mask & COMPONENT_CAMERA)
+        {
+            struct Camera* camera = entity_get_camera(world, entity->id);
+            if (camera && (camera->position.x == 0.0f && camera->position.y == 0.0f && camera->position.z == 0.0f))
+            {
+                // This camera hasn't been initialized yet
+                camera_initialize_from_transform(world, entity->id);
+            }
+        }
+    }
+
     EntityID active_camera_id = world_get_active_camera(world);
     if (active_camera_id == INVALID_ENTITY)
     {

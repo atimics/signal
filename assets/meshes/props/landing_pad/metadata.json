@@ -1,5 +1,5 @@
 {
-  "name": "Landing Pad",
+  "name": "Landing_Pad",
   "geometry": "geometry.obj",
   "tags": [
     "procedural"
