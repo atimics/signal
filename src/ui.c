@@ -19,6 +19,8 @@
 #include "ui.h"
 
 static UIState ui_state = { 0 };
+static bool ui_visible = true;
+static bool debug_ui_visible = true;
 
 void ui_init(void)
 {
@@ -300,6 +302,9 @@ static void draw_debug_panel(struct nk_context* ctx, struct World* world,
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time)
 {
+    // Early exit if UI is not visible
+    if (!ui_visible) return;
+    
     // Get new frame context from sokol_nuklear
     struct nk_context* ctx = snk_new_frame();
 
@@ -316,7 +321,12 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
 
     // Draw UI components
     draw_hud(ctx, world);
-    draw_debug_panel(ctx, world, scheduler);
+    
+    // Only draw debug panel if debug UI is visible
+    if (debug_ui_visible)
+    {
+        draw_debug_panel(ctx, world, scheduler);
+    }
 
     // Render the UI
     snk_render(sapp_width(), sapp_height());
@@ -368,4 +378,28 @@ void ui_toggle_hud(void)
 {
     ui_state.show_hud = !ui_state.show_hud;
     printf("📊 HUD %s\n", ui_state.show_hud ? "enabled" : "disabled");
+}
+
+// ============================================================================
+// UI VISIBILITY CONTROL
+// ============================================================================
+
+void ui_set_visible(bool visible)
+{
+    ui_visible = visible;
+}
+
+void ui_set_debug_visible(bool visible)
+{
+    debug_ui_visible = visible;
+}
+
+bool ui_is_visible(void)
+{
+    return ui_visible;
+}
+
+bool ui_is_debug_visible(void)
+{
+    return debug_ui_visible;
 }

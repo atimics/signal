@@ -219,6 +219,21 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             entity->camera->follow_smoothing = 0.02f;
             break;
 
+        case COMPONENT_SCENENODE:
+            if (world->components.scene_node_count >= MAX_ENTITIES) return false;
+            entity->scene_node = &world->components.scene_nodes[world->components.scene_node_count++];
+            memset(entity->scene_node, 0, sizeof(struct SceneNode));
+            entity->scene_node->entity_id = entity_id;
+            entity->scene_node->parent = INVALID_ENTITY;
+            entity->scene_node->num_children = 0;
+            entity->scene_node->transform_dirty = true;
+            entity->scene_node->is_visible = true;
+            entity->scene_node->depth = 0;
+            // Initialize transforms to identity
+            mat4_identity(entity->scene_node->local_transform);
+            mat4_identity(entity->scene_node->world_transform);
+            break;
+
         default:
             entity->component_mask &= ~type;  // Remove flag
             return false;
@@ -261,6 +276,13 @@ void entity_remove_component(struct World* world, EntityID entity_id, ComponentT
             break;
         case COMPONENT_CAMERA:
             entity->camera = NULL;
+            break;
+        case COMPONENT_SCENENODE:
+            // Remove from parent's children list if it has a parent
+            if (entity->scene_node && entity->scene_node->parent != INVALID_ENTITY) {
+                scene_node_remove_child(world, entity->scene_node->parent, entity_id);
+            }
+            entity->scene_node = NULL;
             break;
     }
 }
@@ -317,6 +339,12 @@ struct Camera* entity_get_camera(struct World* world, EntityID entity_id)
     return entity ? entity->camera : NULL;
 }
 
+struct SceneNode* entity_get_scene_node(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->scene_node : NULL;
+}
+
 // ============================================================================
 // CAMERA MANAGEMENT
 // ============================================================================
@@ -352,6 +380,113 @@ void world_set_active_camera(struct World* world, EntityID camera_entity)
 EntityID world_get_active_camera(struct World* world)
 {
     return world ? world->active_camera_entity : INVALID_ENTITY;
+}
+
+// ============================================================================
+// SCENE GRAPH MANAGEMENT
+// ============================================================================
+
+void scene_graph_update(struct World* world)
+{
+    if (!world) return;
+
+    // First pass: Update all root nodes (nodes with no parent)
+    for (uint32_t i = 0; i < world->entity_count; i++)
+    {
+        struct Entity* entity = &world->entities[i];
+        if (!(entity->component_mask & COMPONENT_SCENENODE)) continue;
+        
+        struct SceneNode* node = entity->scene_node;
+        if (node->parent == INVALID_ENTITY)
+        {
+            // This is a root node - update its world transform and children
+            float identity[16];
+            mat4_identity(identity);
+            scene_node_update_world_transform(world, entity->id, identity);
+        }
+    }
+}
+
+static void scene_node_update_world_transform_recursive(struct World* world, EntityID entity_id, const float* parent_transform)
+{
+    struct SceneNode* node = entity_get_scene_node(world, entity_id);
+    if (!node) return;
+
+    // Calculate world transform = parent_transform * local_transform
+    mat4_multiply(node->world_transform, parent_transform, node->local_transform);
+    node->transform_dirty = false;
+
+    // Update all children
+    for (uint32_t i = 0; i < node->num_children; i++)
+    {
+        scene_node_update_world_transform_recursive(world, node->children[i], node->world_transform);
+    }
+}
+
+void scene_node_update_world_transform(struct World* world, EntityID entity_id, const float* parent_transform)
+{
+    scene_node_update_world_transform_recursive(world, entity_id, parent_transform);
+}
+
+bool scene_node_add_child(struct World* world, EntityID parent_id, EntityID child_id)
+{
+    struct SceneNode* parent = entity_get_scene_node(world, parent_id);
+    struct SceneNode* child = entity_get_scene_node(world, child_id);
+    
+    if (!parent || !child) return false;
+    if (parent->num_children >= MAX_SCENE_CHILDREN) return false;
+    if (child->parent != INVALID_ENTITY) return false; // Child already has a parent
+    
+    // Add child to parent's children list
+    parent->children[parent->num_children++] = child_id;
+    
+    // Set parent reference in child
+    child->parent = parent_id;
+    child->depth = parent->depth + 1;
+    child->transform_dirty = true;
+    
+    return true;
+}
+
+bool scene_node_remove_child(struct World* world, EntityID parent_id, EntityID child_id)
+{
+    struct SceneNode* parent = entity_get_scene_node(world, parent_id);
+    struct SceneNode* child = entity_get_scene_node(world, child_id);
+    
+    if (!parent || !child) return false;
+    if (child->parent != parent_id) return false;
+    
+    // Find and remove child from parent's children list
+    for (uint32_t i = 0; i < parent->num_children; i++)
+    {
+        if (parent->children[i] == child_id)
+        {
+            // Shift remaining children down
+            for (uint32_t j = i; j < parent->num_children - 1; j++)
+            {
+                parent->children[j] = parent->children[j + 1];
+            }
+            parent->num_children--;
+            break;
+        }
+    }
+    
+    // Clear parent reference in child
+    child->parent = INVALID_ENTITY;
+    child->depth = 0;
+    child->transform_dirty = true;
+    
+    return true;
+}
+
+EntityID scene_node_find_by_name(struct World* world, const char* name)
+{
+    // TODO: Implement entity name system
+    // For now, this is a placeholder that returns INVALID_ENTITY
+    // This will be implemented when we add entity names/tags
+    (void)world; // Suppress unused parameter warning
+    (void)name;
+    return INVALID_ENTITY;
 }
 
 // ============================================================================

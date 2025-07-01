@@ -26,4 +26,10 @@ bool ui_handle_event(const void* ev);  // Returns true if UI captured the event
 void ui_toggle_debug_panel(void);
 void ui_toggle_hud(void);
 
+// UI visibility control
+void ui_set_visible(bool visible);
+void ui_set_debug_visible(bool visible);
+bool ui_is_visible(void);
+bool ui_is_debug_visible(void);
+
 #endif  // UI_H

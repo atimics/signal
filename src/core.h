@@ -53,6 +53,7 @@ typedef enum
     COMPONENT_RENDERABLE = 1 << 4,
     COMPONENT_PLAYER = 1 << 5,
     COMPONENT_CAMERA = 1 << 6,
+    COMPONENT_SCENENODE = 1 << 7,
 } ComponentType;
 
 // ============================================================================
@@ -183,6 +184,25 @@ struct Camera
     bool is_active;
 };
 
+/** @brief Defines a node in the scene graph hierarchy. */
+#define MAX_SCENE_CHILDREN 16
+struct SceneNode
+{
+    EntityID entity_id;                      /**< The entity this node belongs to. */
+    EntityID parent;                         /**< Parent entity ID, INVALID_ENTITY if root. */
+    EntityID children[MAX_SCENE_CHILDREN];   /**< Child entity IDs. */
+    uint32_t num_children;                   /**< Current number of children. */
+    
+    // Transform hierarchy
+    float local_transform[16];               /**< Transform relative to parent. */
+    float world_transform[16];               /**< Final transform in world space. */
+    bool transform_dirty;                    /**< Whether world transform needs recalculation. */
+    
+    // Scene graph metadata
+    bool is_visible;                         /**< Visibility flag set by culling system. */
+    uint32_t depth;                          /**< Depth in the scene graph (0 = root). */
+};
+
 // ============================================================================
 // ENTITY DEFINITION
 // ============================================================================
@@ -203,6 +223,7 @@ struct Entity
     struct Renderable* renderable;
     struct Player* player;
     struct Camera* camera;
+    struct SceneNode* scene_node;
 };
 
 // ============================================================================
@@ -219,6 +240,7 @@ struct ComponentPools
     struct Renderable renderables[MAX_ENTITIES];
     struct Player players[MAX_ENTITIES];
     struct Camera cameras[MAX_ENTITIES];
+    struct SceneNode scene_nodes[MAX_ENTITIES];
 
     uint32_t transform_count;
     uint32_t physics_count;
@@ -227,6 +249,7 @@ struct ComponentPools
     uint32_t renderable_count;
     uint32_t player_count;
     uint32_t camera_count;
+    uint32_t scene_node_count;
 };
 
 // ============================================================================
@@ -276,6 +299,7 @@ struct AI* entity_get_ai(struct World* world, EntityID entity_id);
 struct Renderable* entity_get_renderable(struct World* world, EntityID entity_id);
 struct Player* entity_get_player(struct World* world, EntityID entity_id);
 struct Camera* entity_get_camera(struct World* world, EntityID entity_id);
+struct SceneNode* entity_get_scene_node(struct World* world, EntityID entity_id);
 
 // Camera management
 void world_set_active_camera(struct World* world, EntityID camera_entity);
@@ -290,6 +314,13 @@ void update_camera_aspect_ratio(struct World* world, float aspect_ratio);
  * @param frustum_planes A 2D array to store the six plane equations (Ax + By + Cz + D = 0).
  */
 void camera_extract_frustum_planes(const struct Camera* camera, float frustum_planes[6][4]);
+
+// Scene graph management
+void scene_graph_update(struct World* world);
+bool scene_node_add_child(struct World* world, EntityID parent_id, EntityID child_id);
+bool scene_node_remove_child(struct World* world, EntityID parent_id, EntityID child_id);
+void scene_node_update_world_transform(struct World* world, EntityID entity_id, const float* parent_transform);
+EntityID scene_node_find_by_name(struct World* world, const char* name);
 
 // Utility functions
 Vector3 vector3_add(Vector3 a, Vector3 b);

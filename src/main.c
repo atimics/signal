@@ -24,6 +24,8 @@
 #include "systems.h"
 #include "system/camera.h"
 #include "ui.h"
+#include "scene_state.h"
+#include "scene_script.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -51,6 +53,7 @@ static struct
 
     // Scene management
     char current_scene[64];
+    SceneStateManager scene_state;
     
     // Test modes
     bool capture_golden_reference;
@@ -240,10 +243,17 @@ static void init(void)
 
     load_scene_by_name(&app_state.world, scene_to_load, &app_state.player_id);
     
+    // Initialize scene state management
+    scene_state_init(&app_state.scene_state);
+    strcpy(app_state.scene_state.current_scene_name, scene_to_load);
+    
     // Initialize camera system after scene is loaded
     camera_system_init(&app_state.world, &app_state.render_config);
     
     list_available_cameras(&app_state.world);
+
+    // Execute scene script enter callback for logo scene
+    scene_script_execute_enter(scene_to_load, &app_state.world, &app_state.scene_state);
 
     // Initialize application state
     app_state.frame_count = 0;
@@ -265,6 +275,26 @@ static void frame(void)
 
     // Skip rendering if not initialized
     if (!app_state.initialized) return;
+
+    // Update scene state and scripts
+    scene_state_update(&app_state.scene_state, dt);
+    scene_script_execute_update(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, dt);
+    
+    // Handle scene transitions
+    if (scene_state_has_pending_transition(&app_state.scene_state))
+    {
+        const char* next_scene = scene_state_get_next_scene(&app_state.scene_state);
+        printf("🎬 Executing scene transition: %s -> %s\n", app_state.scene_state.current_scene_name, next_scene);
+        
+        // TODO: Add proper scene loading/unloading here
+        // For now, just update the current scene name and clear transition
+        strcpy(app_state.scene_state.current_scene_name, next_scene);
+        strcpy(app_state.current_scene, next_scene);
+        app_state.scene_state.transition_pending = false;
+        
+        // Execute enter script for new scene
+        scene_script_execute_enter(next_scene, &app_state.world, &app_state.scene_state);
+    }
 
     // Update world and systems
     world_update(&app_state.world, dt);
