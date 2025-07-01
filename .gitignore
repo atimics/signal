@@ -96,3 +96,6 @@ assets/**/*.temp
 # Keep important asset metadata
 !assets/meshes/metadata.json
 !assets/textures/metadata.json
+
+# Keep mesh source files (.obj) - these are assets, not compiled objects
+!assets/**/*.obj
