@@ -1,7 +1,7 @@
 # Scene Templates - Racing Circuit Scene
 # Format: scene: name followed by spawn: entity_type x y z
 
-scene: racing_circuit
+scene: racing
 description=High-speed racing circuit with ground-effect ships
 
 # Massive planet surface as racing terrain (10x bigger)

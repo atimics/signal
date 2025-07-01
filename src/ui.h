@@ -22,6 +22,12 @@ typedef struct
     // Scene selector
     char selected_scene[64];
     bool scene_change_requested;
+    
+    // Dynamic scene list
+    char** scene_names;
+    char** scene_descriptions;
+    int scene_count;
+    bool scenes_loaded;
 } UIState;
 
 void ui_init(void);

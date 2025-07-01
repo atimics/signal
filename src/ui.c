@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <dirent.h>  // For directory scanning
+#include <stdlib.h>  // For malloc/free
 
 #include "core.h"
 #include "ui.h"
@@ -13,6 +15,11 @@
 static UIState ui_state = { 0 };
 static bool ui_visible = true;
 static bool debug_ui_visible = false;  // Start hidden
+
+// Dynamic scene discovery functions
+static void load_available_scenes(void);
+static void free_scene_list(void);
+static const char* get_scene_description(const char* scene_name);
 
 void ui_init(void)
 {
@@ -30,12 +37,19 @@ void ui_init(void)
     ui_state.fps_timer = 0.0f;
     strcpy(ui_state.selected_scene, "logo");
     ui_state.scene_change_requested = false;
+    
+    // Initialize dynamic scene list
+    ui_state.scene_names = NULL;
+    ui_state.scene_descriptions = NULL;
+    ui_state.scene_count = 0;
+    ui_state.scenes_loaded = false;
 
     printf("✅ Nuklear UI initialized\n");
 }
 
 void ui_shutdown(void)
 {
+    free_scene_list();
     snk_shutdown();
     printf("✅ Nuklear UI shutdown\n");
 }
@@ -318,6 +332,11 @@ static void draw_logo_overlay(struct nk_context* ctx)
 
 static void draw_scene_selector(struct nk_context* ctx, const char* current_scene)
 {
+    // Load scenes dynamically if not already loaded
+    if (!ui_state.scenes_loaded) {
+        load_available_scenes();
+    }
+    
     // Create a centered scene selector window
     int screen_width = sapp_width();
     int screen_height = sapp_height();
@@ -339,47 +358,34 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
         nk_layout_row_dynamic(ctx, 10, 1); // Spacer
         nk_spacing(ctx, 1);
         
-        // List of available scenes
-        const char* scenes[] = {
-            "logo",
-            "spaceport",
-            "racing", 
-            "mesh_test",
-            "camera_test",
-            "logo_test"
-        };
-        const char* scene_descriptions[] = {
-            "Logo - System test and validation",
-            "Spaceport - Classic space station demo",
-            "Racing - High-speed ground-effect racing",
-            "Mesh Test - 3D model validation",
-            "Camera Test - Multi-camera demonstration",
-            "Logo Test - Additional logo testing"
-        };
-        int scene_count = sizeof(scenes) / sizeof(scenes[0]);
-        
-        nk_layout_row_dynamic(ctx, 35, 1);
-        for (int i = 0; i < scene_count; i++)
-        {
-            // Highlight current scene
-            if (current_scene && strcmp(current_scene, scenes[i]) == 0)
+        // Use dynamic scene list
+        if (ui_state.scene_count == 0) {
+            nk_layout_row_dynamic(ctx, 25, 1);
+            nk_label(ctx, "No scenes found in data/scenes/", NK_TEXT_CENTERED);
+        } else {
+            nk_layout_row_dynamic(ctx, 35, 1);
+            for (int i = 0; i < ui_state.scene_count; i++)
             {
-                nk_style_push_color(ctx, &ctx->style.button.normal.data.color, nk_rgb(70, 120, 200));
-                nk_style_push_color(ctx, &ctx->style.button.hover.data.color, nk_rgb(80, 130, 210));
-            }
-            
-            if (nk_button_label(ctx, scene_descriptions[i]))
-            {
-                strcpy(ui_state.selected_scene, scenes[i]);
-                ui_state.scene_change_requested = true;
-                ui_state.show_scene_selector = false;
-                printf("🎬 Scene change requested: %s\n", scenes[i]);
-            }
-            
-            if (current_scene && strcmp(current_scene, scenes[i]) == 0)
-            {
-                nk_style_pop_color(ctx);
-                nk_style_pop_color(ctx);
+                // Highlight current scene
+                if (current_scene && strcmp(current_scene, ui_state.scene_names[i]) == 0)
+                {
+                    nk_style_push_color(ctx, &ctx->style.button.normal.data.color, nk_rgb(70, 120, 200));
+                    nk_style_push_color(ctx, &ctx->style.button.hover.data.color, nk_rgb(80, 130, 210));
+                }
+                
+                if (nk_button_label(ctx, ui_state.scene_descriptions[i]))
+                {
+                    strcpy(ui_state.selected_scene, ui_state.scene_names[i]);
+                    ui_state.scene_change_requested = true;
+                    ui_state.show_scene_selector = false;
+                    printf("🎬 Scene change requested: %s\n", ui_state.scene_names[i]);
+                }
+                
+                if (current_scene && strcmp(current_scene, ui_state.scene_names[i]) == 0)
+                {
+                    nk_style_pop_color(ctx);
+                    nk_style_pop_color(ctx);
+                }
             }
         }
         
@@ -392,7 +398,12 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
             ui_state.show_scene_selector = false;
         }
         
-        nk_spacing(ctx, 1); // Empty space
+        if (nk_button_label(ctx, "Refresh"))
+        {
+            // Reload scene list
+            free_scene_list();
+            load_available_scenes();
+        }
     }
     
     // Handle window close button
@@ -559,4 +570,107 @@ bool ui_is_visible(void)
 bool ui_is_debug_visible(void)
 {
     return debug_ui_visible;
+}
+
+static void load_available_scenes(void)
+{
+    if (ui_state.scenes_loaded) {
+        return; // Already loaded
+    }
+    
+    // Free existing data if any
+    free_scene_list();
+    
+    DIR* dir = opendir("data/scenes");
+    if (!dir) {
+        printf("⚠️  Could not open data/scenes directory\n");
+        return;
+    }
+    
+    // First pass: count valid scene files
+    ui_state.scene_count = 0;
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strstr(entry->d_name, ".txt") && 
+            strcmp(entry->d_name, "scene_selector.txt") != 0) {  // Skip the selector itself
+            ui_state.scene_count++;
+        }
+    }
+    
+    if (ui_state.scene_count == 0) {
+        closedir(dir);
+        return;
+    }
+    
+    // Allocate arrays
+    ui_state.scene_names = malloc(ui_state.scene_count * sizeof(char*));
+    ui_state.scene_descriptions = malloc(ui_state.scene_count * sizeof(char*));
+    
+    // Second pass: collect scene names
+    rewinddir(dir);
+    int index = 0;
+    while ((entry = readdir(dir)) != NULL && index < ui_state.scene_count) {
+        if (strstr(entry->d_name, ".txt") && 
+            strcmp(entry->d_name, "scene_selector.txt") != 0) {
+            
+            // Remove .txt extension for scene name
+            char* scene_name = malloc(strlen(entry->d_name) + 1);
+            strcpy(scene_name, entry->d_name);
+            char* dot = strrchr(scene_name, '.');
+            if (dot) *dot = '\0';
+            
+            ui_state.scene_names[index] = scene_name;
+            
+            // Generate description
+            const char* desc = get_scene_description(scene_name);
+            ui_state.scene_descriptions[index] = malloc(strlen(desc) + 1);
+            strcpy(ui_state.scene_descriptions[index], desc);
+            
+            index++;
+        }
+    }
+    
+    closedir(dir);
+    ui_state.scenes_loaded = true;
+    
+    printf("✅ Loaded %d available scenes dynamically\n", ui_state.scene_count);
+}
+
+static void free_scene_list(void)
+{
+    if (ui_state.scene_names) {
+        for (int i = 0; i < ui_state.scene_count; i++) {
+            free(ui_state.scene_names[i]);
+            free(ui_state.scene_descriptions[i]);
+        }
+        free(ui_state.scene_names);
+        free(ui_state.scene_descriptions);
+        ui_state.scene_names = NULL;
+        ui_state.scene_descriptions = NULL;
+    }
+    ui_state.scene_count = 0;
+    ui_state.scenes_loaded = false;
+}
+
+static const char* get_scene_description(const char* scene_name)
+{
+    // Generate friendly descriptions for known scenes
+    if (strcmp(scene_name, "logo") == 0) {
+        return "Logo - System test and validation";
+    } else if (strcmp(scene_name, "spaceport") == 0) {
+        return "Spaceport - Classic space station demo";
+    } else if (strcmp(scene_name, "racing") == 0) {
+        return "Racing - High-speed ground-effect racing";
+    } else if (strcmp(scene_name, "mesh_test") == 0) {
+        return "Mesh Test - 3D model validation";
+    } else if (strcmp(scene_name, "camera_test") == 0) {
+        return "Camera Test - Multi-camera demonstration";
+    } else if (strcmp(scene_name, "logo_test") == 0) {
+        return "Logo Test - Additional logo testing";
+    } else {
+        // Default description for unknown scenes
+        static char default_desc[128];
+        snprintf(default_desc, sizeof(default_desc), "%s - Scene", scene_name);
+        return default_desc;
+    }
 }

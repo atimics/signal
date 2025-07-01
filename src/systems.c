@@ -49,11 +49,9 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
 
     // Load entity and scene templates
     load_entity_templates(&g_data_registry, "templates/entities.txt");
-    load_scene_templates(&g_data_registry, "scenes/logo.txt");         // Gold standard baseline scene
-    load_scene_templates(&g_data_registry, "scenes/mesh_test.txt");
-    load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
-    load_scene_templates(&g_data_registry, "scenes/racing.txt");       // New racing circuit scene
-    load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
+    
+    // Dynamically load all scene templates from scenes directory
+    load_all_scene_templates(&g_data_registry, "scenes");
 
     // Initialize memory management BEFORE loading assets
     if (!memory_system_init(256)) {

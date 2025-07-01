@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 #include "assets.h"
 #include "gpu_resources.h"
@@ -590,4 +591,45 @@ void list_scene_templates(DataRegistry* registry)
         SceneTemplate* s = &registry->scene_templates[i];
         printf("   - %s: %d spawns\n", s->name, s->spawn_count);
     }
+}
+
+bool load_all_scene_templates(DataRegistry* registry, const char* scenes_dir)
+{
+    if (!registry || !scenes_dir) return false;
+
+    char full_dir_path[1024];
+    snprintf(full_dir_path, sizeof(full_dir_path), "%s/%s", registry->data_root, scenes_dir);
+
+    DIR* dir = opendir(full_dir_path);
+    if (!dir) {
+        printf("⚠️  Could not open scenes directory: %s\n", full_dir_path);
+        return false;
+    }
+
+    printf("🏗️  Dynamically loading all scene templates from %s\n", full_dir_path);
+
+    struct dirent* entry;
+    int loaded_count = 0;
+    
+    while ((entry = readdir(dir)) != NULL) {
+        // Skip hidden files, current/parent directories
+        if (entry->d_name[0] == '.') continue;
+        
+        // Only process .txt files
+        if (!strstr(entry->d_name, ".txt")) continue;
+        
+        // Build relative path for load_scene_templates
+        char relative_path[512];
+        snprintf(relative_path, sizeof(relative_path), "%s/%s", scenes_dir, entry->d_name);
+        
+        // Load this scene template file
+        if (load_scene_templates(registry, relative_path)) {
+            loaded_count++;
+        }
+    }
+    
+    closedir(dir);
+    
+    printf("✅ Dynamically loaded %d scene template files\n", loaded_count);
+    return loaded_count > 0;
 }

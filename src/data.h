@@ -100,6 +100,7 @@ void data_registry_cleanup(DataRegistry* registry);
 // Template loading
 bool load_entity_templates(DataRegistry* registry, const char* templates_path);
 bool load_scene_templates(DataRegistry* registry, const char* scenes_path);
+bool load_all_scene_templates(DataRegistry* registry, const char* scenes_dir);
 
 // Entity creation from templates
 EntityID create_entity_from_template(struct World* world, DataRegistry* registry,
