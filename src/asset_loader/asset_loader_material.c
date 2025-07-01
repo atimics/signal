@@ -61,9 +61,6 @@ bool parse_mtl_file(const char* filepath, AssetRegistry* registry) {
     // Diffuse texture map (primary texture)
     else if (strncmp(line, "map_Kd ", 7) == 0 && current_material) {
       sscanf(line, "map_Kd %63s", current_material->diffuse_texture);
-      // Also set legacy texture_name for compatibility
-      strncpy(current_material->texture_name, current_material->diffuse_texture,
-              sizeof(current_material->texture_name) - 1);
     }
     // Normal/bump map
     else if (strncmp(line, "map_Bump ", 9) == 0 && current_material) {

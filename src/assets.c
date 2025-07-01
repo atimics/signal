@@ -374,10 +374,8 @@ bool assets_create_renderable_from_mesh(AssetRegistry* registry, const char* mes
             Material* material = assets_get_material(registry, mesh->material_name);
             if (material && material->loaded)
             {
-                // Try to get texture from material
-                const char* texture_name = material->texture_name[0] != '\0'
-                                               ? material->texture_name
-                                               : material->diffuse_texture;
+                // Use diffuse texture from material
+                const char* texture_name = material->diffuse_texture;
 
                 if (texture_name[0] != '\0')
                 {

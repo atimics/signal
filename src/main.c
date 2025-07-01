@@ -329,20 +329,10 @@ static void create_loading_cube_mesh(AssetRegistry* assets)
     cube->aabb_min = (Vector3){ -1.0f, -1.0f, -1.0f };
     cube->aabb_max = (Vector3){ 1.0f, 1.0f, 1.0f };
 
-    // Create GPU resources using the asset system's mesh upload function
-    if (assets_upload_mesh_to_gpu(cube))
-    {
-        cube->loaded = true;
-        assets->mesh_count++;
-        printf("📦 Created loading cube mesh with GPU resources\n");
-    }
-    else
-    {
-        printf("❌ Failed to create GPU resources for loading cube\n");
-        free(cube->vertices);
-        free(cube->indices);
-        cube->vertices = NULL;
-        cube->indices = NULL;
+    // Mesh will be loaded when first rendered
+    cube->loaded = true;
+    assets->mesh_count++;
+    printf("📦 Created loading cube mesh\n");
     }
 }
 
@@ -520,7 +510,6 @@ static void init(void)
     {
         Material* logo_material = &asset_registry->materials[asset_registry->material_count];
         strncpy(logo_material->name, "game_logo", sizeof(logo_material->name) - 1);
-        strncpy(logo_material->texture_name, "game_logo", sizeof(logo_material->texture_name) - 1);
         strncpy(logo_material->diffuse_texture, "game_logo",
                 sizeof(logo_material->diffuse_texture) - 1);
 
