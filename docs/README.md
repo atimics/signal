@@ -1,29 +1,70 @@
-# Documentation Hub
+# CGame Engine Documentation
 
-Welcome to the central documentation hub for the **SIGNAL** project. This is the primary entry point for all developers, both human and AI, to understand the project's vision, architecture, and development processes.
+**Last Updated**: June 30, 2025
 
-## 1. The Vision (Start Here)
+Welcome to the CGame engine documentation. This directory contains comprehensive documentation for the engine's architecture, development process, and current status.
 
-This is the creative and strategic heart of the project. All development work should be in service of this vision.
+## 📋 Current Status
 
-*   **[Current Status](./CURRENT_STATUS.md)**: A real-time overview of the project's status, active sprint, and key priorities.
-*   **[The Research Library](./research/README.md)**: A curated collection of documents that define our world, mechanics, and technology. It is the "why" behind our work and the first point of reference for any new development task.
+- **Current Sprint**: [Sprint 19: Performance Optimization & Polish](./sprints/active/sprint_19_performance_optimization.md)
+- **Project Status**: [CURRENT_STATUS.md](./CURRENT_STATUS.md)
+- **Asset Pipeline**: [ASSET_PIPELINE_VALIDATION.md](../ASSET_PIPELINE_VALIDATION.md) ✅ COMPLETE
 
-## 2. Developer Guides
+## 🚀 Quick Start
 
-These documents provide the practical, hands-on information needed for day-to-day development.
+1. **For Developers**: See [CURRENT_STATUS.md](./CURRENT_STATUS.md) for the latest engine status
+2. **For Artists**: See [Asset Pipeline Guide](./guides/) for content creation workflow
+3. **For Contributors**: Check [active sprints](./sprints/active/) for current development focus
 
-*   **[Getting Started](./guides/GETTING_STARTED.md)**: A step-by-step guide to setting up your development environment, building the project, and running the engine for the first time.
-*   **[Development Workflow & Tooling](./guides/Development_Workflow_and_Tooling.md)**: A detailed guide covering our `Makefile`, the Python asset pipeline, testing procedures, and coding standards.
+## 📚 Documentation Structure
 
-## 3. Project Management
+### Core Documentation
+- **[CURRENT_STATUS.md](./CURRENT_STATUS.md)** - Real-time project status and current focus
+- **[STRATEGIC_PLAN.md](./STRATEGIC_PLAN.md)** - Long-term project roadmap and vision
+- **[ASSET_PIPELINE.md](./ASSET_PIPELINE.md)** - Complete asset pipeline documentation
 
-This section contains our operational documents for planning and tracking progress.
+### Development
+- **[sprints/](./sprints/)** - Sprint planning and execution tracking
+  - [active/](./sprints/active/) - Currently running sprints
+  - [completed/](./sprints/completed/) - Completed sprint documentation
+  - [backlog/](./sprints/backlog/) - Planned future sprints
+- **[guides/](./guides/)** - Technical guides and tutorials
+- **[research/](./research/)** - Technical research and analysis
 
-*   **[Active Sprint](./sprints/active/sprint_18_systems_refactor.md)**: A detailed implementation plan for the current development sprint.
-*   **[Development Backlog](./sprints/backlog/README.md)**: The prioritized list of all upcoming development sprints.
-*   **[Completed Sprints](./sprints/completed/)**: An archive of all past sprint plans and their outcomes.
+### Archive
+- **[archive/](./archive/)** - Historical documentation and deprecated guides
 
-## 4. Archive
+## 🎯 Current Capabilities
 
-The [archive](./archive/) directory contains historical documents, early design notes, and outdated reports. It is preserved for historical context but should not be considered representative of the project's current state.
+### ✅ Complete Systems
+- **Asset Pipeline**: UV-mapped mesh generation with SVG texture editing
+- **Engine Core**: ECS architecture with scene management
+- **Rendering**: 7 working meshes with proper UV textures
+- **Development Tools**: Web-based mesh viewer and asset validation
+
+### 🔄 Active Development
+- **Performance Optimization**: LOD systems and memory optimization
+- **Developer Experience**: Hot-reload and profiling tools
+- **Production Polish**: Release configuration and documentation
+
+### 📋 Planned Features
+- **Gameplay Systems**: Physics, AI, player controls
+- **Audio System**: 3D spatial audio and music
+- **Advanced Rendering**: Shadows, lighting, post-processing
+
+## 📊 Key Metrics
+
+- **Assets**: 7 meshes, all rendering with textures ✅
+- **Performance**: 60+ FPS stable in all test scenes ✅
+- **Memory**: Under 256MB usage target ✅
+- **Loading**: ~10x faster than OBJ parsing ✅
+- **File Size**: 40-50% reduction with binary format ✅
+
+## 🔗 Quick Links
+
+- **Build & Run**: See [README.md](../README.md) in project root
+- **Asset Creation**: [Asset Pipeline Validation](../ASSET_PIPELINE_VALIDATION.md)
+- **Mesh Viewer**: `make view-meshes` for web-based 3D preview
+- **Performance Testing**: `make test-performance`
+
+For detailed technical information, see the [guides/](./guides/) directory.
