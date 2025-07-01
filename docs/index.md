@@ -42,7 +42,7 @@ This section provides a curated index of the most relevant files and directories
 
 ### Documentation (`docs/`)
 
--   **`README.md`**: This file - the documentation hub.
+-   **`index.md`**: This file - the documentation hub.
 -   **`guides/`**: Detailed developer guides.
 -   **`sprints/`**: Sprint plans and history.
 -   **`research/`**: Technical research and analysis.
@@ -77,3 +77,9 @@ This section provides a curated index of the most relevant files and directories
 
 - **[Asset Pipeline Overview](./ASSET_PIPELINE.md)** - Complete asset pipeline documentation.
 - **[Asset Pipeline Validation](../ASSET_PIPELINE_VALIDATION.md)** - Validation checklist for the asset pipeline.
+
+## 📝 Blog
+
+{% for post in site.posts %}
+* [{{ post.title }}]({{ post.url }})
+{% endfor %}
