@@ -1,5 +1,5 @@
 {
-  "name": "Planet_Surface",
+  "name": "Planet Surface",
   "geometry": "geometry.obj",
   "tags": [
     "procedural"

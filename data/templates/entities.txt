@@ -99,7 +99,7 @@ has_renderable=true
 has_ai=true
 mass=100.0
 collision_radius=5.0
-mesh_name=Wedge Ship
+mesh_name=Wedge_Ship
 
 template: landing_pad
 description=Spaceport landing platform
@@ -109,7 +109,7 @@ has_renderable=true
 mass=1000.0
 collision_radius=8.0
 kinematic=true
-mesh_name=Landing Pad
+mesh_name=Landing_Pad
 
 template: planet_surface
 description=Large planetary surface
@@ -119,7 +119,7 @@ has_renderable=true
 mass=10000.0
 collision_radius=50.0
 kinematic=true
-mesh_name=Planet Surface
+mesh_name=Planet_Surface
 
 template: logo_cube
 description=Gold standard reference cube for testing and validation
@@ -128,4 +128,4 @@ has_renderable=true
 mass=1.0
 collision_radius=1.0
 kinematic=true
-mesh_name=Logo Cube
+mesh_name=Logo_Cube
