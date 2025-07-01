@@ -33,16 +33,6 @@
 // APPLICATION STATE
 // ============================================================================
 
-// Loading screen state
-typedef struct
-{
-    bool active;
-    float rotation;
-    EntityID cube_entity;
-    float progress;
-    char status_text[256];
-} LoadingScreen;
-
 static struct
 {
     // Core ECS
@@ -61,299 +51,11 @@ static struct
 
     // Scene management
     char current_scene[64];
-
-    // Loading screen
-    LoadingScreen loading_screen;
     
     // Test modes
     bool capture_golden_reference;
     float golden_reference_timer;
 } app_state = { 0 };
-
-// ============================================================================
-// LOADING SCREEN MANAGEMENT
-// ============================================================================
-//
-// ACHIEVEMENT: Fully functional loading screen with textured spinning cube
-// ✅ Procedural cube mesh generation (24 vertices, proper normals/UVs/winding)
-// ✅ Logo texture loading and material system integration
-// ✅ GPU resource management with texture assignment
-// ✅ Entity visibility management (hide scene during loading)
-// ✅ Smooth rotation animation with quaternion math
-// ✅ Progressive loading with status updates
-//
-// This loading screen serves as "gold standard" reference for mesh correctness.
-// The cube renders perfectly because it bypasses the problematic OBJ→Binary
-// asset pipeline. This proves the rendering system works - the issue is in
-// the mesh compilation process (see Sprint 13.1).
-//
-
-static void loading_screen_init(LoadingScreen* loading)
-{
-    loading->active = true;
-    loading->rotation = 0.0f;
-    loading->progress = 0.0f;
-    loading->cube_entity = INVALID_ENTITY;
-    strcpy(loading->status_text, "Initializing...");
-}
-
-static void loading_screen_hide_scene_entities(struct World* world, EntityID cube_entity)
-{
-    // Hide all entities except the loading cube during loading screen
-    for (uint32_t i = 0; i < world->entity_count; i++)
-    {
-        struct Entity* entity = &world->entities[i];
-        if (entity->id != cube_entity && (entity->component_mask & COMPONENT_RENDERABLE))
-        {
-            struct Renderable* renderable = entity_get_renderable(world, entity->id);
-            if (renderable)
-            {
-                renderable->visible = false;
-            }
-        }
-    }
-}
-
-static void loading_screen_show_scene_entities(struct World* world, EntityID cube_entity)
-{
-    // Show all entities except the loading cube after loading screen
-    for (uint32_t i = 0; i < world->entity_count; i++)
-    {
-        struct Entity* entity = &world->entities[i];
-        if (entity->id != cube_entity && (entity->component_mask & COMPONENT_RENDERABLE))
-        {
-            struct Renderable* renderable = entity_get_renderable(world, entity->id);
-            if (renderable)
-            {
-                renderable->visible = true;
-            }
-        }
-    }
-
-    // Hide the loading cube
-    if (cube_entity != INVALID_ENTITY)
-    {
-        struct Renderable* cube_renderable = entity_get_renderable(world, cube_entity);
-        if (cube_renderable)
-        {
-            cube_renderable->visible = false;
-        }
-    }
-}
-
-static void loading_screen_create_cube(LoadingScreen* loading, struct World* world)
-{
-    // Create a simple rotating cube entity for the loading screen
-    loading->cube_entity = entity_create(world);
-
-    if (loading->cube_entity == INVALID_ENTITY)
-    {
-        printf("❌ Failed to create loading screen cube entity\n");
-        return;
-    }
-
-    // Add transform component
-    if (!entity_add_component(world, loading->cube_entity, COMPONENT_TRANSFORM))
-    {
-        printf("❌ Failed to add transform component to loading cube\n");
-        return;
-    }
-
-    struct Transform* transform = entity_get_transform(world, loading->cube_entity);
-    if (transform)
-    {
-        transform->position = (Vector3){ 0.0f, 0.0f, 0.0f };
-        transform->rotation = (Quaternion){ 0.0f, 0.0f, 0.0f, 1.0f };
-        transform->scale =
-            (Vector3){ 4.0f, 4.0f,
-                       4.0f };  // Make the cube impressively large for the loading screen
-        transform->dirty = true;
-    }
-
-    // Add renderable component
-    if (!entity_add_component(world, loading->cube_entity, COMPONENT_RENDERABLE))
-    {
-        printf("❌ Failed to add renderable component to loading cube\n");
-        return;
-    }
-
-    struct Renderable* renderable = entity_get_renderable(world, loading->cube_entity);
-    if (renderable)
-    {
-        // Connect the mesh to the renderable component
-        if (assets_create_renderable_from_mesh(get_asset_registry(), "loading_cube", renderable))
-        {
-            printf("✅ Loading cube renderable created successfully\n");
-        }
-        else
-        {
-            printf("❌ Failed to create renderable from loading cube mesh\n");
-            renderable->visible = false;
-        }
-
-        renderable->lod_distance = 100.0f;
-        renderable->lod_level = 0;
-    }
-
-    printf("📦 Created loading screen cube entity: %d\n", loading->cube_entity);
-}
-
-static void loading_screen_update(LoadingScreen* loading, float dt)
-{
-    if (!loading->active) return;
-
-    // Rotate the cube
-    loading->rotation += dt * 2.0f;  // 2 radians per second
-    if (loading->rotation > 2.0f * M_PI)
-    {
-        loading->rotation -= 2.0f * M_PI;
-    }
-
-    // Update cube rotation if entity exists
-    if (loading->cube_entity != INVALID_ENTITY)
-    {
-        struct Transform* transform = entity_get_transform(&app_state.world, loading->cube_entity);
-        if (transform)
-        {
-            // Rotate around Y axis
-            float half_angle = loading->rotation * 0.5f;
-            transform->rotation = (Quaternion){ 0.0f, sinf(half_angle), 0.0f, cosf(half_angle) };
-            transform->dirty = true;
-        }
-    }
-}
-
-static void loading_screen_set_progress(LoadingScreen* loading, float progress, const char* status)
-{
-    loading->progress = progress;
-    if (status)
-    {
-        strncpy(loading->status_text, status, sizeof(loading->status_text) - 1);
-        loading->status_text[sizeof(loading->status_text) - 1] = '\0';
-    }
-    printf("📋 Loading: %.1f%% - %s\n", progress * 100.0f, loading->status_text);
-}
-
-static void loading_screen_finish(LoadingScreen* loading)
-{
-    // Check if we're in golden reference capture mode
-    if (app_state.capture_golden_reference)
-    {
-        printf("🏆 Entering golden reference capture mode - extending loading screen\n");
-        app_state.golden_reference_timer = 3.0f;  // Show for 3 seconds
-        return;  // Don't finish loading screen yet
-    }
-    
-    loading->active = false;
-
-    // Show scene entities and hide loading cube
-    loading_screen_show_scene_entities(&app_state.world, loading->cube_entity);
-
-    printf("✅ Loading screen completed\n");
-}
-
-static void create_loading_cube_mesh(AssetRegistry* assets)
-{
-    // Create a simple textured cube mesh for the loading screen
-    if (assets->mesh_count >= MAX_MESHES)
-    {
-        printf("❌ Cannot create loading cube - mesh limit reached\n");
-        return;
-    }
-
-    Mesh* cube = &assets->meshes[assets->mesh_count];
-    strncpy(cube->name, "loading_cube", sizeof(cube->name) - 1);
-    strncpy(cube->material_name, "game_logo", sizeof(cube->material_name) - 1);
-
-    // Cube vertices (24 vertices, 4 per face for proper normals)
-    cube->vertex_count = 24;
-    cube->vertices = malloc(cube->vertex_count * sizeof(Vertex));
-
-    // Cube indices (12 triangles * 3 vertices = 36 indices)
-    cube->index_count = 36;
-    cube->indices = malloc(cube->index_count * sizeof(int));
-
-    if (!cube->vertices || !cube->indices)
-    {
-        printf("❌ Failed to allocate memory for loading cube\n");
-        return;
-    }
-
-    // Define 24 cube vertices (4 per face) with correct normals and UV coordinates
-    Vertex cube_vertices[24] = {
-        // Front face (Z+)
-        { { -1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f } },  // 0
-        { { 1.0f, -1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } },   // 1
-        { { 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f } },    // 2
-        { { -1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f } },   // 3
-
-        // Back face (Z-)
-        { { 1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 0.0f } },   // 4
-        { { -1.0f, -1.0f, -1.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 0.0f } },  // 5
-        { { -1.0f, 1.0f, -1.0f }, { 0.0f, 0.0f, -1.0f }, { 1.0f, 1.0f } },   // 6
-        { { 1.0f, 1.0f, -1.0f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f } },    // 7
-
-        // Left face (X-)
-        { { -1.0f, -1.0f, -1.0f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },  // 8
-        { { -1.0f, -1.0f, 1.0f }, { -1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },   // 9
-        { { -1.0f, 1.0f, 1.0f }, { -1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } },    // 10
-        { { -1.0f, 1.0f, -1.0f }, { -1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f } },   // 11
-
-        // Right face (X+)
-        { { 1.0f, -1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },   // 12
-        { { 1.0f, -1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f } },  // 13
-        { { 1.0f, 1.0f, -1.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } },   // 14
-        { { 1.0f, 1.0f, 1.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f } },    // 15
-
-        // Top face (Y+)
-        { { -1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f } },   // 16
-        { { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 0.0f } },    // 17
-        { { 1.0f, 1.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }, { 1.0f, 1.0f } },   // 18
-        { { -1.0f, 1.0f, -1.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } },  // 19
-
-        // Bottom face (Y-)
-        { { -1.0f, -1.0f, -1.0f }, { 0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f } },  // 20
-        { { 1.0f, -1.0f, -1.0f }, { 0.0f, -1.0f, 0.0f }, { 1.0f, 0.0f } },   // 21
-        { { 1.0f, -1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, { 1.0f, 1.0f } },    // 22
-        { { -1.0f, -1.0f, 1.0f }, { 0.0f, -1.0f, 0.0f }, { 0.0f, 1.0f } }    // 23
-    };
-
-    // Define cube indices with correct winding (counter-clockwise when viewed from outside)
-    int cube_indices[36] = { // Front face
-                             0, 1, 2, 0, 2, 3,
-                             // Back face
-                             4, 5, 6, 4, 6, 7,
-                             // Left face
-                             8, 9, 10, 8, 10, 11,
-                             // Right face
-                             12, 13, 14, 12, 14, 15,
-                             // Top face
-                             16, 17, 18, 16, 18, 19,
-                             // Bottom face
-                             20, 21, 22, 20, 22, 23
-    };
-
-    // Copy data
-    memcpy(cube->vertices, cube_vertices, sizeof(cube_vertices));
-    memcpy(cube->indices, cube_indices, sizeof(cube_indices));
-
-    // Set AABB
-    cube->aabb_min = (Vector3){ -1.0f, -1.0f, -1.0f };
-    cube->aabb_max = (Vector3){ 1.0f, 1.0f, 1.0f };
-
-    // Mesh will be loaded when first rendered
-    cube->loaded = true;
-    
-    // Create GPU resources for the procedural cube
-    if (!assets_upload_mesh_to_gpu(cube))
-    {
-        printf("❌ Failed to create GPU resources for loading cube\n");
-        return;
-    }
-    
-    assets->mesh_count++;
-    printf("📦 Created loading cube mesh with GPU resources\n");
-}
 
 // ============================================================================
 // SCENE MANAGEMENT
@@ -459,13 +161,10 @@ static void init(void)
     printf("🎮 CGGame - Sokol-based Component Engine\n");
     printf("==========================================\n\n");
 
-    // Initialize loading screen
-    loading_screen_init(&app_state.loading_screen);
-
     // Initialize random seed
     srand((unsigned int)time(NULL));
 
-    loading_screen_set_progress(&app_state.loading_screen, 0.1f, "Initializing graphics...");
+    printf("🔧 Initializing graphics...\n");
 
     // Initialize Sokol graphics
     sg_setup(&(sg_desc){
@@ -480,7 +179,7 @@ static void init(void)
         return;
     }
 
-    loading_screen_set_progress(&app_state.loading_screen, 0.2f, "Setting up world...");
+    printf("🌍 Setting up world...\n");
 
     // Initialize world
     if (!world_init(&app_state.world))
@@ -490,7 +189,7 @@ static void init(void)
         return;
     }
 
-    loading_screen_set_progress(&app_state.loading_screen, 0.3f, "Starting systems...");
+    printf("⚙️ Starting systems...\n");
 
     // Initialize system scheduler
     if (!scheduler_init(&app_state.scheduler, &app_state.render_config))
@@ -500,65 +199,14 @@ static void init(void)
         return;
     }
 
-    loading_screen_set_progress(&app_state.loading_screen, 0.4f, "Loading logo texture...");
-
-    // Track logo loading state
-    bool logo_loaded = false;
-    // Load logo texture early for loading screen
-    if (load_texture(get_asset_registry(), "logo.png", "game_logo"))
-    {
-        printf("✅ Logo texture loaded successfully!\n");
-        logo_loaded = true;
-    }
-    else
-    {
-        printf("⚠️  Logo texture loading failed (trying from textures/ directory)\n");
-        // Try from textures directory as fallback
-        if (load_texture(get_asset_registry(), "textures/logo.png", "game_logo"))
-        {
-            printf("✅ Logo texture loaded from textures/ directory!\n");
-            logo_loaded = true;
-        }
-    }
-
-    // Create a simple material for the logo
-    if (logo_loaded && get_asset_registry()->material_count < MAX_MATERIALS)
-    {
-        Material* logo_material = &get_asset_registry()->materials[get_asset_registry()->material_count];
-        strncpy(logo_material->name, "game_logo", sizeof(logo_material->name) - 1);
-        strncpy(logo_material->diffuse_texture, "game_logo",
-                sizeof(logo_material->diffuse_texture) - 1);
-
-        // Set default material properties
-        logo_material->diffuse_color = (Vector3){ 1.0f, 1.0f, 1.0f };
-        logo_material->ambient_color = (Vector3){ 0.2f, 0.2f, 0.2f };
-        logo_material->specular_color = (Vector3){ 0.5f, 0.5f, 0.5f };
-        logo_material->shininess = 32.0f;
-        logo_material->loaded = true;
-
-        get_asset_registry()->material_count++;
-        printf("✅ Created logo material with texture reference\n");
-    }
-
-    loading_screen_set_progress(&app_state.loading_screen, 0.5f, "Creating loading cube...");
-
-    // Create loading cube mesh (works with or without logo texture)
-    create_loading_cube_mesh(get_asset_registry());
-    loading_screen_create_cube(&app_state.loading_screen, &app_state.world);
-
-    if (!logo_loaded)
-    {
-        printf("⚠️  Loading cube created without logo texture (will use default)\n");
-    }
-
-    loading_screen_set_progress(&app_state.loading_screen, 0.6f, "Configuring renderer...");
+    printf("🎨 Configuring renderer...\n");
 
     // Initialize render config
     app_state.render_config = (RenderConfig){
         .screen_width = (int)sapp_width(),
         .screen_height = (int)sapp_height(),
         .assets = get_asset_registry(),
-        .camera = { .position = { 0.0f, 0.0f, 5.0f },  // Position for loading screen
+        .camera = { .position = { 0.0f, 5.0f, 10.0f },  // Default camera position
                     .target = { 0.0f, 0.0f, 0.0f },
                     .up = { 0.0f, 1.0f, 0.0f },
                     .fov = 45.0f * M_PI / 180.0f,
@@ -583,12 +231,12 @@ static void init(void)
         (sg_pass_action){ .colors[0] = { .load_action = SG_LOADACTION_CLEAR,
                                          .clear_value = { 0.0f, 0.05f, 0.1f, 1.0f } } };
 
-    loading_screen_set_progress(&app_state.loading_screen, 0.8f, "Loading scene...");
+    printf("🏗️ Loading scene...\n");
 
-    // Load default scene - Logo scene is our gold standard baseline
+    // Load logo scene directly - no loading screen needed
     const char* scene_to_load = "logo";
     strcpy(app_state.current_scene, scene_to_load);
-    printf("ℹ️ Loading default scene: %s\n", scene_to_load);
+    printf("ℹ️ Loading scene: %s\n", scene_to_load);
 
     load_scene_by_name(&app_state.world, scene_to_load, &app_state.player_id);
     
@@ -597,36 +245,14 @@ static void init(void)
     
     list_available_cameras(&app_state.world);
 
-    // Activate the first camera immediately for the logo scene
-    if (world_get_active_camera(&app_state.world) == INVALID_ENTITY)
-    {
-        switch_to_camera(&app_state.world, 0);  // Switch to first camera
-        printf("📹 Activated first camera for logo scene\n");
-    }
-
-    // For the logo scene, show the cube immediately (skip loading screen hide)
-    if (strcmp(scene_to_load, "logo") == 0)
-    {
-        printf("📦 Logo scene loaded - showing cube immediately\n");
-        // Don't hide scene entities for logo scene - it IS the content we want to show
-    }
-    else
-    {
-        // Hide all scene entities during loading screen (only show loading cube)
-        loading_screen_hide_scene_entities(&app_state.world, app_state.loading_screen.cube_entity);
-    }
-
-    loading_screen_set_progress(&app_state.loading_screen, 0.9f, "Finalizing...");
-
     // Initialize application state
     app_state.frame_count = 0;
     app_state.simulation_time = 0.0f;
+    app_state.initialized = true;  // Ready to render immediately
 
     ui_init();
 
-    loading_screen_set_progress(&app_state.loading_screen, 1.0f, "Ready!");
-
-    // Keep loading screen active for a moment to show the rotating cube
+    printf("✅ Engine initialized successfully!\n");
     printf("\n🎮 Starting simulation...\n");
     printf("Press ESC to exit, 1-9 to switch cameras\n");
 }
@@ -637,68 +263,7 @@ static void frame(void)
     app_state.simulation_time += dt;
     app_state.frame_count++;
 
-    // Handle loading screen
-    if (app_state.loading_screen.active)
-    {
-        loading_screen_update(&app_state.loading_screen, dt);
-
-        // Handle golden reference capture mode
-        if (app_state.capture_golden_reference && app_state.golden_reference_timer > 0.0f)
-        {
-            app_state.golden_reference_timer -= dt;
-            
-            // Capture screenshot at exactly 1.5 seconds
-            if (app_state.golden_reference_timer <= 1.5f && app_state.golden_reference_timer > 1.4f)
-            {
-                char filename[256];
-                snprintf(filename, sizeof(filename), "screenshots/golden_reference_cube_%ld.bmp", time(NULL));
-                if (render_take_screenshot(&app_state.render_config, filename))
-                {
-                    printf("🏆 Golden reference captured: %s\n", filename);
-                }
-            }
-            
-            // Finish when timer expires
-            if (app_state.golden_reference_timer <= 0.0f)
-            {
-                app_state.capture_golden_reference = false;
-                loading_screen_finish(&app_state.loading_screen);
-                app_state.initialized = true;
-            }
-        }
-        // Auto-complete loading screen after showing for 8 seconds at 100%
-        // For logo scene, finish immediately when 100% loaded
-        else if (app_state.loading_screen.progress >= 1.0f && 
-                 (strcmp(app_state.current_scene, "logo") == 0 || app_state.simulation_time > 8.0f))
-        {
-            loading_screen_finish(&app_state.loading_screen);
-            app_state.initialized = true;
-
-            // Switch camera back to scene camera
-            if (world_get_active_camera(&app_state.world) == INVALID_ENTITY)
-            {
-                switch_to_camera(&app_state.world, 0);  // Switch to first camera
-            }
-        }
-
-        // Render loading screen
-        sg_begin_pass(
-            &(sg_pass){ .swapchain = sglue_swapchain(), .action = app_state.pass_action });
-
-        // Render the rotating cube if it exists
-        if (app_state.loading_screen.cube_entity != INVALID_ENTITY)
-        {
-            render_frame(&app_state.world, &app_state.render_config, INVALID_ENTITY, dt);
-        }
-
-        // TODO: Render loading progress UI here
-
-        sg_end_pass();
-        sg_commit();
-        return;
-    }
-
-    // Normal game frame (after loading is complete)
+    // Skip rendering if not initialized
     if (!app_state.initialized) return;
 
     // Update world and systems
