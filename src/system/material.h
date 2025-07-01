@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // Material registry configuration
-#define MAX_MATERIALS 64
+#define MAX_MATERIAL_REGISTRY 64
 
 // Vector3 type for consistency
 typedef struct {
