@@ -19,5 +19,5 @@ void init_test_render_config(RenderConfig* config) {
     memset(config, 0, sizeof(RenderConfig));
     config->screen_width = 1920;
     config->screen_height = 1080;
-    config->mode = RENDER_MODE_3D;
+    config->mode = RENDER_MODE_SOLID;  // Use valid render mode
 }

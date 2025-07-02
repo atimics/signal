@@ -393,7 +393,8 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
         entity_add_component(world, id, COMPONENT_PHYSICS);
         struct Physics* physics = entity_get_physics(world, id);
         physics->mass = template->mass;
-        physics->drag = template->drag;
+        physics->drag_linear = template->drag;
+        physics->drag_angular = template->drag;
         physics->velocity = template->velocity;
         physics->acceleration = template->acceleration;
         physics->kinematic = template->kinematic;

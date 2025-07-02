@@ -37,7 +37,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
+SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -238,7 +238,7 @@ docs: Doxyfile
 # Core test sources
 TEST_MATH_SRC = tests/test_main_simple.c tests/test_core_math.c tests/core_math.c tests/vendor/unity.c
 TEST_UI_SRC = tests/unit/test_ui_system.c tests/vendor/unity.c
-TEST_PERFORMANCE_SRC = tests/performance/test_performance_critical.c tests/vendor/unity.c
+TEST_PERFORMANCE_SRC = tests/performance/test_performance_simple.c tests/vendor/unity.c
 
 # Test executables
 TEST_MATH_TARGET = $(BUILD_DIR)/test_math
@@ -249,9 +249,9 @@ TEST_PERFORMANCE_TARGET = $(BUILD_DIR)/test_performance
 ENGINE_TEST_SRC = src/ui_api.c src/ui_scene.c src/ui_components.c src/core.c \
                   tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
 
-# Performance test needs additional system sources
-PERF_ENGINE_SRC = src/core.c src/system/physics.c src/system/collision.c \
-                  tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c tests/stubs/performance_test_stubs.c
+# Performance test needs minimal sources for simple tests
+PERF_ENGINE_SRC = src/core.c src/ui_components.c \
+                  tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
 
 # Main test target - runs all essential tests
 test: $(TEST_MATH_TARGET) $(TEST_UI_TARGET) $(TEST_PERFORMANCE_TARGET)

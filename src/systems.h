@@ -18,6 +18,7 @@ struct DataRegistry;
 #include "system/performance.h"
 #include "system/memory.h"
 #include "system/material.h"
+#include "system/thrusters.h"
 
 // ============================================================================
 // ENUMS AND STRUCTS
@@ -32,6 +33,7 @@ typedef enum
     SYSTEM_LOD,
     SYSTEM_PERFORMANCE,
     SYSTEM_MEMORY,
+    SYSTEM_THRUSTERS,
     SYSTEM_COUNT
 } SystemType;
 

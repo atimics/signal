@@ -283,6 +283,31 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             mat4_identity(entity->scene_node->world_transform);
             break;
 
+        case COMPONENT_THRUSTER_SYSTEM:
+            if (world->components.thruster_system_count >= MAX_ENTITIES) return false;
+            entity->thruster_system = &world->components.thruster_systems[world->components.thruster_system_count++];
+            memset(entity->thruster_system, 0, sizeof(struct ThrusterSystem));
+            // Initialize thruster capabilities
+            entity->thruster_system->max_linear_force = (Vector3){ 100.0f, 100.0f, 100.0f };
+            entity->thruster_system->max_angular_torque = (Vector3){ 50.0f, 50.0f, 50.0f };
+            entity->thruster_system->thrust_response_time = 0.1f;
+            entity->thruster_system->atmosphere_efficiency = 0.8f;
+            entity->thruster_system->vacuum_efficiency = 1.0f;
+            entity->thruster_system->thrusters_enabled = true;
+            break;
+
+        case COMPONENT_CONTROL_AUTHORITY:
+            if (world->components.control_authority_count >= MAX_ENTITIES) return false;
+            entity->control_authority = &world->components.control_authorities[world->components.control_authority_count++];
+            memset(entity->control_authority, 0, sizeof(struct ControlAuthority));
+            // Initialize control settings
+            entity->control_authority->controlled_by = INVALID_ENTITY;
+            entity->control_authority->control_sensitivity = 1.0f;
+            entity->control_authority->stability_assist = 0.5f;
+            entity->control_authority->flight_assist_enabled = true;
+            entity->control_authority->control_mode = CONTROL_ASSISTED;
+            break;
+
         default:
             entity->component_mask &= ~type;  // Remove flag
             return false;
@@ -332,6 +357,12 @@ bool entity_remove_component(struct World* world, EntityID entity_id, ComponentT
                 scene_node_remove_child(world, entity->scene_node->parent, entity_id);
             }
             entity->scene_node = NULL;
+            break;
+        case COMPONENT_THRUSTER_SYSTEM:
+            entity->thruster_system = NULL;
+            break;
+        case COMPONENT_CONTROL_AUTHORITY:
+            entity->control_authority = NULL;
             break;
     }
     return true;
@@ -393,6 +424,18 @@ struct SceneNode* entity_get_scene_node(struct World* world, EntityID entity_id)
 {
     struct Entity* entity = entity_get(world, entity_id);
     return entity ? entity->scene_node : NULL;
+}
+
+struct ThrusterSystem* entity_get_thruster_system(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->thruster_system : NULL;
+}
+
+struct ControlAuthority* entity_get_control_authority(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->control_authority : NULL;
 }
 
 // ============================================================================

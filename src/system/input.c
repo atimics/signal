@@ -52,12 +52,23 @@ void input_update(void) {
     memset(&current_input, 0, sizeof(InputState));
     
     // Process keyboard input (digital)
+    // Linear movement
     if (keyboard_state[INPUT_ACTION_THRUST_FORWARD]) current_input.thrust += 1.0f;
     if (keyboard_state[INPUT_ACTION_THRUST_BACKWARD]) current_input.thrust -= 1.0f;
     if (keyboard_state[INPUT_ACTION_STRAFE_RIGHT]) current_input.strafe += 1.0f;
     if (keyboard_state[INPUT_ACTION_STRAFE_LEFT]) current_input.strafe -= 1.0f;
     if (keyboard_state[INPUT_ACTION_MANEUVER_UP]) current_input.vertical += 1.0f;
     if (keyboard_state[INPUT_ACTION_MANEUVER_DOWN]) current_input.vertical -= 1.0f;
+    
+    // Angular movement (6DOF)
+    if (keyboard_state[INPUT_ACTION_PITCH_UP]) current_input.pitch += 1.0f;
+    if (keyboard_state[INPUT_ACTION_PITCH_DOWN]) current_input.pitch -= 1.0f;
+    if (keyboard_state[INPUT_ACTION_YAW_RIGHT]) current_input.yaw += 1.0f;
+    if (keyboard_state[INPUT_ACTION_YAW_LEFT]) current_input.yaw -= 1.0f;
+    if (keyboard_state[INPUT_ACTION_ROLL_RIGHT]) current_input.roll += 1.0f;
+    if (keyboard_state[INPUT_ACTION_ROLL_LEFT]) current_input.roll -= 1.0f;
+    
+    // Modifiers
     if (keyboard_state[INPUT_ACTION_BOOST]) current_input.boost = 1.0f;
     if (keyboard_state[INPUT_ACTION_BRAKE]) current_input.brake = true;
     
@@ -74,15 +85,33 @@ void input_update(void) {
             current_input.strafe += gamepad->left_stick_x;
         }
         
-        // Right stick Y for vertical
+        // Right stick for pitch/yaw (6DOF controls)
         if (fabsf(gamepad->right_stick_y) > deadzone) {
-            current_input.vertical -= gamepad->right_stick_y; // Invert Y
+            current_input.pitch -= gamepad->right_stick_y; // Invert Y (up stick = nose up)
+        }
+        if (fabsf(gamepad->right_stick_x) > deadzone) {
+            current_input.yaw += gamepad->right_stick_x; // Right stick = turn right
         }
         
-        // Triggers
-        current_input.boost = fmaxf(current_input.boost, gamepad->right_trigger);
-        if (gamepad->left_trigger > 0.5f) {
-            current_input.brake = true;
+        // Triggers for vertical movement and roll
+        if (gamepad->right_trigger > deadzone) {
+            current_input.vertical += gamepad->right_trigger; // Right trigger = up
+        }
+        if (gamepad->left_trigger > deadzone) {
+            current_input.vertical -= gamepad->left_trigger; // Left trigger = down
+        }
+        
+        // Shoulder buttons for roll
+        if (gamepad->right_shoulder) {
+            current_input.roll += 1.0f; // Right shoulder = roll right
+        }
+        if (gamepad->left_shoulder) {
+            current_input.roll -= 1.0f; // Left shoulder = roll left
+        }
+        
+        // Boost on one of the face buttons
+        if (gamepad->button_a) {
+            current_input.boost = 1.0f;
         }
     }
     
@@ -90,6 +119,9 @@ void input_update(void) {
     current_input.thrust = fmaxf(-1.0f, fminf(1.0f, current_input.thrust));
     current_input.strafe = fmaxf(-1.0f, fminf(1.0f, current_input.strafe));
     current_input.vertical = fmaxf(-1.0f, fminf(1.0f, current_input.vertical));
+    current_input.pitch = fmaxf(-1.0f, fminf(1.0f, current_input.pitch));
+    current_input.yaw = fmaxf(-1.0f, fminf(1.0f, current_input.yaw));
+    current_input.roll = fmaxf(-1.0f, fminf(1.0f, current_input.roll));
     current_input.boost = fmaxf(0.0f, fminf(1.0f, current_input.boost));
 }
 
@@ -125,6 +157,27 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
         case SAPP_KEYCODE_RIGHT_CONTROL:
             action = INPUT_ACTION_BRAKE;
             break;
+        
+        // Angular controls (6DOF)
+        case SAPP_KEYCODE_UP:
+            action = INPUT_ACTION_PITCH_UP;
+            break;
+        case SAPP_KEYCODE_DOWN:
+            action = INPUT_ACTION_PITCH_DOWN;
+            break;
+        case SAPP_KEYCODE_LEFT:
+            action = INPUT_ACTION_YAW_LEFT;
+            break;
+        case SAPP_KEYCODE_RIGHT:
+            action = INPUT_ACTION_YAW_RIGHT;
+            break;
+        case SAPP_KEYCODE_Z:
+            action = INPUT_ACTION_ROLL_LEFT;
+            break;
+        case SAPP_KEYCODE_C:
+            action = INPUT_ACTION_ROLL_RIGHT;
+            break;
+            
         default:
             return false;
     }
@@ -152,10 +205,13 @@ bool input_has_gamepad(void) {
 void input_print_debug(void) {
     if (!input_initialized) return;
     
-    printf("🎮 Input: T:%.2f S:%.2f V:%.2f B:%.2f Brake:%s Gamepad:%s\n",
+    printf("🎮 Input: T:%.2f S:%.2f V:%.2f P:%.2f Y:%.2f R:%.2f B:%.2f Brake:%s Gamepad:%s\n",
            current_input.thrust,
            current_input.strafe,
            current_input.vertical,
+           current_input.pitch,
+           current_input.yaw,
+           current_input.roll,
            current_input.boost,
            current_input.brake ? "ON" : "OFF",
            input_has_gamepad() ? "YES" : "NO");
