@@ -142,7 +142,8 @@ void test_physics_torque_accumulation(void)
 void test_physics_torque_only_when_6dof_enabled(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     
@@ -164,7 +165,8 @@ void test_physics_torque_only_when_6dof_enabled(void)
 void test_physics_angular_velocity_integration(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     physics_set_6dof_enabled(physics, true);
@@ -189,8 +191,10 @@ void test_physics_moment_of_inertia_effects(void)
     EntityID entity1 = entity_create(&test_world);
     EntityID entity2 = entity_create(&test_world);
     
-    entity_add_component(&test_world, entity1, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
-    entity_add_component(&test_world, entity2, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity1, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity1, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity2, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity2, COMPONENT_TRANSFORM);
     
     struct Physics* physics1 = entity_get_physics(&test_world, entity1);
     struct Physics* physics2 = entity_get_physics(&test_world, entity2);
@@ -220,7 +224,8 @@ void test_physics_moment_of_inertia_effects(void)
 void test_physics_force_at_point_generates_torque(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     physics_set_6dof_enabled(physics, true);
@@ -247,7 +252,8 @@ void test_physics_force_at_point_generates_torque(void)
 void test_physics_force_at_point_no_torque_without_6dof(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     physics_set_6dof_enabled(physics, false); // Disable 6DOF
@@ -274,7 +280,8 @@ void test_physics_force_at_point_no_torque_without_6dof(void)
 void test_physics_environmental_contexts(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     
@@ -292,7 +299,8 @@ void test_physics_environmental_contexts(void)
 void test_physics_angular_drag_effects(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     physics_set_6dof_enabled(physics, true);
@@ -330,7 +338,8 @@ void test_physics_null_pointer_safety(void)
 void test_physics_large_force_stability(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     
@@ -356,7 +365,8 @@ void test_physics_multiple_entities_6dof_performance(void)
     // Create many 6DOF entities
     for (int i = 0; i < entity_count; i++) {
         entities[i] = entity_create(&test_world);
-        entity_add_component(&test_world, entities[i], COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+        entity_add_component(&test_world, entities[i], COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entities[i], COMPONENT_TRANSFORM);
         
         struct Physics* physics = entity_get_physics(&test_world, entities[i]);
         physics_set_6dof_enabled(physics, true);
@@ -450,7 +460,8 @@ void test_physics_velocity_integration_basic(void)
 void test_physics_force_accumulator_timing(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     TEST_ASSERT_NOT_NULL(physics);
@@ -477,7 +488,8 @@ void test_physics_force_accumulator_timing(void)
 void test_physics_multiple_force_accumulation(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     TEST_ASSERT_NOT_NULL(physics);
@@ -512,7 +524,8 @@ void test_physics_multiple_force_accumulation(void)
 void test_physics_zero_mass_safety(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     TEST_ASSERT_NOT_NULL(physics);

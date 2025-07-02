@@ -11,7 +11,8 @@ static EntityID g_player_entity = INVALID_ENTITY;
 // CONTROL PROCESSING FUNCTIONS
 // ============================================================================
 
-// Enhanced sensitivity curve with velocity-adaptive response
+// Enhanced sensitivity curve with velocity-adaptive response (disabled for now)
+/*
 static float apply_adaptive_sensitivity(float input, float base_sensitivity, float current_velocity, float max_velocity) {
     if (fabsf(input) < 0.001f) return 0.0f;
     
@@ -38,8 +39,10 @@ static float apply_adaptive_sensitivity(float input, float base_sensitivity, flo
     
     return sign * response * base_sensitivity * velocity_factor;
 }
+*/
 
 // Turn rate limiter to prevent over-rotation (disabled for now)
+/*
 static Vector3 apply_turn_rate_limiting(Vector3 input, Vector3 previous_angular, float delta_limit) {
     (void)previous_angular;  // Unused - rate limiting disabled
     (void)delta_limit;       // Unused - rate limiting disabled
@@ -47,6 +50,7 @@ static Vector3 apply_turn_rate_limiting(Vector3 input, Vector3 previous_angular,
     // Return input unchanged - rate limiting was causing steering issues
     return input;
 }
+*/
 
 // Gamepad-specific input processing with separate tuning
 static Vector3 process_gamepad_angular_input(const InputState* input, float sensitivity, Vector3 current_velocity) {
@@ -105,6 +109,7 @@ static Vector3 process_angular_input(const InputState* input, struct ControlAuth
     if (!input || !control) return (Vector3){ 0.0f, 0.0f, 0.0f };
     
     static Vector3 previous_angular = { 0.0f, 0.0f, 0.0f };
+    (void)previous_angular;  // Unused for now - rate limiting disabled
     
     // Check if this is gamepad input (more sophisticated detection)
     bool is_gamepad_input = (fabsf(input->pitch) < 1.0f && fabsf(input->pitch) > 0.0f) ||
@@ -118,8 +123,8 @@ static Vector3 process_angular_input(const InputState* input, struct ControlAuth
         Vector3 current_angular_velocity = physics ? physics->angular_velocity : (Vector3){ 0.0f, 0.0f, 0.0f };
         angular_commands = process_gamepad_angular_input(input, control->control_sensitivity, current_angular_velocity);
         
-        // Apply turn rate limiting for smooth gamepad control
-        angular_commands = apply_turn_rate_limiting(angular_commands, previous_angular, 0.15f); // Limit to 15% change per frame
+        // Turn rate limiting disabled - was causing steering issues
+        // angular_commands = apply_turn_rate_limiting(angular_commands, previous_angular, 0.15f);
     } else {
         // Canyon racer banking flight model for keyboard
         float banking_input = input->strafe;
