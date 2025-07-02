@@ -74,6 +74,14 @@ static void physics_apply_forces(struct Physics* physics, float delta_time)
     
     // Linear dynamics: F = ma -> a = F/m
     Vector3 linear_acceleration = vector3_multiply(physics->force_accumulator, 1.0f / physics->mass);
+    
+    // Clamp acceleration to prevent numerical instability
+    const float max_acceleration = 1000.0f; // Maximum acceleration
+    float accel_magnitude = vector3_length(linear_acceleration);
+    if (accel_magnitude > max_acceleration) {
+        linear_acceleration = vector3_multiply(vector3_normalize(linear_acceleration), max_acceleration);
+    }
+    
     physics->acceleration = linear_acceleration;
     
     // Debug output for non-zero forces (reduced frequency)
@@ -148,6 +156,13 @@ void physics_integrate_linear(struct Physics* physics, struct Transform* transfo
     
     // Apply drag
     physics->velocity = vector3_multiply(physics->velocity, 1.0f - physics->drag_linear);
+    
+    // Clamp velocity to prevent numerical overflow
+    const float max_speed = 500.0f; // Maximum speed in units per second
+    float speed = vector3_length(physics->velocity);
+    if (speed > max_speed) {
+        physics->velocity = vector3_multiply(vector3_normalize(physics->velocity), max_speed);
+    }
     
     Vector3 vel_after_drag = physics->velocity;
     
@@ -317,6 +332,13 @@ void physics_system_update(struct World* world, RenderConfig* render_config, flo
 void physics_add_force(struct Physics* physics, Vector3 force)
 {
     if (!physics) return;
+    
+    // Clamp individual force to prevent numerical issues
+    const float max_force = 100000.0f; // Maximum force component
+    force.x = fmaxf(-max_force, fminf(max_force, force.x));
+    force.y = fmaxf(-max_force, fminf(max_force, force.y));
+    force.z = fmaxf(-max_force, fminf(max_force, force.z));
+    
     physics->force_accumulator = vector3_add(physics->force_accumulator, force);
 }
 

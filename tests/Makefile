@@ -172,18 +172,46 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-tests/CMakeFiles/test_cmake-core.dir/rule:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-core.dir/rule
-.PHONY : tests/CMakeFiles/test_cmake-core.dir/rule
+tests/CMakeFiles/test_cmake-core_test_components.dir/rule:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-core_test_components.dir/rule
+.PHONY : tests/CMakeFiles/test_cmake-core_test_components.dir/rule
 
 # Convenience name for target.
-test_cmake-core: tests/CMakeFiles/test_cmake-core.dir/rule
-.PHONY : test_cmake-core
+test_cmake-core_test_components: tests/CMakeFiles/test_cmake-core_test_components.dir/rule
+.PHONY : test_cmake-core_test_components
 
 # fast build rule for target.
-test_cmake-core/fast:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/build
-.PHONY : test_cmake-core/fast
+test_cmake-core_test_components/fast:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/build
+.PHONY : test_cmake-core_test_components/fast
+
+# Convenience name for target.
+tests/CMakeFiles/test_cmake-core_test_math.dir/rule:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-core_test_math.dir/rule
+.PHONY : tests/CMakeFiles/test_cmake-core_test_math.dir/rule
+
+# Convenience name for target.
+test_cmake-core_test_math: tests/CMakeFiles/test_cmake-core_test_math.dir/rule
+.PHONY : test_cmake-core_test_math
+
+# fast build rule for target.
+test_cmake-core_test_math/fast:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/build
+.PHONY : test_cmake-core_test_math/fast
+
+# Convenience name for target.
+tests/CMakeFiles/test_cmake-core_test_world.dir/rule:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-core_test_world.dir/rule
+.PHONY : tests/CMakeFiles/test_cmake-core_test_world.dir/rule
+
+# Convenience name for target.
+test_cmake-core_test_world: tests/CMakeFiles/test_cmake-core_test_world.dir/rule
+.PHONY : test_cmake-core_test_world
+
+# fast build rule for target.
+test_cmake-core_test_world/fast:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/build
+.PHONY : test_cmake-core_test_world/fast
 
 # Convenience name for target.
 tests/CMakeFiles/test_cmake-rendering.dir/rule:
@@ -228,18 +256,60 @@ test_cmake-integration/fast:
 .PHONY : test_cmake-integration/fast
 
 # Convenience name for target.
-tests/CMakeFiles/test_cmake-performance.dir/rule:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-performance.dir/rule
-.PHONY : tests/CMakeFiles/test_cmake-performance.dir/rule
+tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/rule:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/rule
+.PHONY : tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/rule
 
 # Convenience name for target.
-test_cmake-performance: tests/CMakeFiles/test_cmake-performance.dir/rule
-.PHONY : test_cmake-performance
+test_cmake-performance_test_memory_isolated: tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/rule
+.PHONY : test_cmake-performance_test_memory_isolated
 
 # fast build rule for target.
-test_cmake-performance/fast:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/build
-.PHONY : test_cmake-performance/fast
+test_cmake-performance_test_memory_isolated/fast:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build
+.PHONY : test_cmake-performance_test_memory_isolated/fast
+
+# Convenience name for target.
+tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/rule:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/rule
+.PHONY : tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/rule
+
+# Convenience name for target.
+test_cmake-performance_test_memory_perf: tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/rule
+.PHONY : test_cmake-performance_test_memory_perf
+
+# fast build rule for target.
+test_cmake-performance_test_memory_perf/fast:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build
+.PHONY : test_cmake-performance_test_memory_perf/fast
+
+# Convenience name for target.
+tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/rule:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/rule
+.PHONY : tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/rule
+
+# Convenience name for target.
+test_cmake-performance_test_performance_critical: tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/rule
+.PHONY : test_cmake-performance_test_performance_critical
+
+# fast build rule for target.
+test_cmake-performance_test_performance_critical/fast:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build
+.PHONY : test_cmake-performance_test_performance_critical/fast
+
+# Convenience name for target.
+tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/rule:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/rule
+.PHONY : tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/rule
+
+# Convenience name for target.
+test_cmake-performance_test_performance_simple: tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/rule
+.PHONY : test_cmake-performance_test_performance_simple
+
+# fast build rule for target.
+test_cmake-performance_test_performance_simple/fast:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build
+.PHONY : test_cmake-performance_test_performance_simple/fast
 
 # Convenience name for target.
 tests/CMakeFiles/run-ctest.dir/rule:
@@ -260,7 +330,7 @@ core/test_components.o: core/test_components.c.o
 
 # target to build an object file
 core/test_components.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_components.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/core/test_components.c.o
 .PHONY : core/test_components.c.o
 
 core/test_components.i: core/test_components.c.i
@@ -268,7 +338,7 @@ core/test_components.i: core/test_components.c.i
 
 # target to preprocess a source file
 core/test_components.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_components.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/core/test_components.c.i
 .PHONY : core/test_components.c.i
 
 core/test_components.s: core/test_components.c.s
@@ -276,7 +346,7 @@ core/test_components.s: core/test_components.c.s
 
 # target to generate assembly for a file
 core/test_components.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_components.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/core/test_components.c.s
 .PHONY : core/test_components.c.s
 
 core/test_math.o: core/test_math.c.o
@@ -284,7 +354,7 @@ core/test_math.o: core/test_math.c.o
 
 # target to build an object file
 core/test_math.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_math.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/core/test_math.c.o
 .PHONY : core/test_math.c.o
 
 core/test_math.i: core/test_math.c.i
@@ -292,7 +362,7 @@ core/test_math.i: core/test_math.c.i
 
 # target to preprocess a source file
 core/test_math.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_math.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/core/test_math.c.i
 .PHONY : core/test_math.c.i
 
 core/test_math.s: core/test_math.c.s
@@ -300,7 +370,7 @@ core/test_math.s: core/test_math.c.s
 
 # target to generate assembly for a file
 core/test_math.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_math.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/core/test_math.c.s
 .PHONY : core/test_math.c.s
 
 core/test_world.o: core/test_world.c.o
@@ -308,7 +378,7 @@ core/test_world.o: core/test_world.c.o
 
 # target to build an object file
 core/test_world.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_world.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/core/test_world.c.o
 .PHONY : core/test_world.c.o
 
 core/test_world.i: core/test_world.c.i
@@ -316,7 +386,7 @@ core/test_world.i: core/test_world.c.i
 
 # target to preprocess a source file
 core/test_world.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_world.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/core/test_world.c.i
 .PHONY : core/test_world.c.i
 
 core/test_world.s: core/test_world.c.s
@@ -324,7 +394,7 @@ core/test_world.s: core/test_world.c.s
 
 # target to generate assembly for a file
 core/test_world.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/core/test_world.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/core/test_world.c.s
 .PHONY : core/test_world.c.s
 
 integration/test_flight_integration.o: integration/test_flight_integration.c.o
@@ -356,7 +426,7 @@ performance/test_memory_isolated.o: performance/test_memory_isolated.c.o
 
 # target to build an object file
 performance/test_memory_isolated.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_memory_isolated.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/performance/test_memory_isolated.c.o
 .PHONY : performance/test_memory_isolated.c.o
 
 performance/test_memory_isolated.i: performance/test_memory_isolated.c.i
@@ -364,7 +434,7 @@ performance/test_memory_isolated.i: performance/test_memory_isolated.c.i
 
 # target to preprocess a source file
 performance/test_memory_isolated.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_memory_isolated.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/performance/test_memory_isolated.c.i
 .PHONY : performance/test_memory_isolated.c.i
 
 performance/test_memory_isolated.s: performance/test_memory_isolated.c.s
@@ -372,7 +442,7 @@ performance/test_memory_isolated.s: performance/test_memory_isolated.c.s
 
 # target to generate assembly for a file
 performance/test_memory_isolated.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_memory_isolated.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/performance/test_memory_isolated.c.s
 .PHONY : performance/test_memory_isolated.c.s
 
 performance/test_memory_perf.o: performance/test_memory_perf.c.o
@@ -380,7 +450,7 @@ performance/test_memory_perf.o: performance/test_memory_perf.c.o
 
 # target to build an object file
 performance/test_memory_perf.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_memory_perf.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/performance/test_memory_perf.c.o
 .PHONY : performance/test_memory_perf.c.o
 
 performance/test_memory_perf.i: performance/test_memory_perf.c.i
@@ -388,7 +458,7 @@ performance/test_memory_perf.i: performance/test_memory_perf.c.i
 
 # target to preprocess a source file
 performance/test_memory_perf.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_memory_perf.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/performance/test_memory_perf.c.i
 .PHONY : performance/test_memory_perf.c.i
 
 performance/test_memory_perf.s: performance/test_memory_perf.c.s
@@ -396,7 +466,7 @@ performance/test_memory_perf.s: performance/test_memory_perf.c.s
 
 # target to generate assembly for a file
 performance/test_memory_perf.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_memory_perf.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/performance/test_memory_perf.c.s
 .PHONY : performance/test_memory_perf.c.s
 
 performance/test_performance_critical.o: performance/test_performance_critical.c.o
@@ -404,7 +474,7 @@ performance/test_performance_critical.o: performance/test_performance_critical.c
 
 # target to build an object file
 performance/test_performance_critical.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_performance_critical.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/performance/test_performance_critical.c.o
 .PHONY : performance/test_performance_critical.c.o
 
 performance/test_performance_critical.i: performance/test_performance_critical.c.i
@@ -412,7 +482,7 @@ performance/test_performance_critical.i: performance/test_performance_critical.c
 
 # target to preprocess a source file
 performance/test_performance_critical.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_performance_critical.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/performance/test_performance_critical.c.i
 .PHONY : performance/test_performance_critical.c.i
 
 performance/test_performance_critical.s: performance/test_performance_critical.c.s
@@ -420,7 +490,7 @@ performance/test_performance_critical.s: performance/test_performance_critical.c
 
 # target to generate assembly for a file
 performance/test_performance_critical.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_performance_critical.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/performance/test_performance_critical.c.s
 .PHONY : performance/test_performance_critical.c.s
 
 performance/test_performance_simple.o: performance/test_performance_simple.c.o
@@ -428,7 +498,7 @@ performance/test_performance_simple.o: performance/test_performance_simple.c.o
 
 # target to build an object file
 performance/test_performance_simple.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_performance_simple.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/performance/test_performance_simple.c.o
 .PHONY : performance/test_performance_simple.c.o
 
 performance/test_performance_simple.i: performance/test_performance_simple.c.i
@@ -436,7 +506,7 @@ performance/test_performance_simple.i: performance/test_performance_simple.c.i
 
 # target to preprocess a source file
 performance/test_performance_simple.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_performance_simple.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/performance/test_performance_simple.c.i
 .PHONY : performance/test_performance_simple.c.i
 
 performance/test_performance_simple.s: performance/test_performance_simple.c.s
@@ -444,7 +514,7 @@ performance/test_performance_simple.s: performance/test_performance_simple.c.s
 
 # target to generate assembly for a file
 performance/test_performance_simple.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/performance/test_performance_simple.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/performance/test_performance_simple.c.s
 .PHONY : performance/test_performance_simple.c.s
 
 rendering/test_rendering.o: rendering/test_rendering.c.o
@@ -476,11 +546,16 @@ stubs/engine_test_stubs.o: stubs/engine_test_stubs.c.o
 
 # target to build an object file
 stubs/engine_test_stubs.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/stubs/engine_test_stubs.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/stubs/engine_test_stubs.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/stubs/engine_test_stubs.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/stubs/engine_test_stubs.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/stubs/engine_test_stubs.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/engine_test_stubs.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/stubs/engine_test_stubs.c.o
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/stubs/engine_test_stubs.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/stubs/engine_test_stubs.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/stubs/engine_test_stubs.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/stubs/engine_test_stubs.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/engine_test_stubs.c.o
 .PHONY : stubs/engine_test_stubs.c.o
 
 stubs/engine_test_stubs.i: stubs/engine_test_stubs.c.i
@@ -488,11 +563,16 @@ stubs/engine_test_stubs.i: stubs/engine_test_stubs.c.i
 
 # target to preprocess a source file
 stubs/engine_test_stubs.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/stubs/engine_test_stubs.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/stubs/engine_test_stubs.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/stubs/engine_test_stubs.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/stubs/engine_test_stubs.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/stubs/engine_test_stubs.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/engine_test_stubs.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/stubs/engine_test_stubs.c.i
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/stubs/engine_test_stubs.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/stubs/engine_test_stubs.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/stubs/engine_test_stubs.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/stubs/engine_test_stubs.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/engine_test_stubs.c.i
 .PHONY : stubs/engine_test_stubs.c.i
 
 stubs/engine_test_stubs.s: stubs/engine_test_stubs.c.s
@@ -500,11 +580,16 @@ stubs/engine_test_stubs.s: stubs/engine_test_stubs.c.s
 
 # target to generate assembly for a file
 stubs/engine_test_stubs.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/stubs/engine_test_stubs.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/stubs/engine_test_stubs.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/stubs/engine_test_stubs.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/stubs/engine_test_stubs.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/stubs/engine_test_stubs.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/engine_test_stubs.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/stubs/engine_test_stubs.c.s
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/stubs/engine_test_stubs.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/stubs/engine_test_stubs.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/stubs/engine_test_stubs.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/stubs/engine_test_stubs.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/engine_test_stubs.c.s
 .PHONY : stubs/engine_test_stubs.c.s
 
 stubs/graphics_api_test_stub.o: stubs/graphics_api_test_stub.c.o
@@ -515,7 +600,10 @@ stubs/graphics_api_test_stub.c.o:
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/stubs/graphics_api_test_stub.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/graphics_api_test_stub.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/stubs/graphics_api_test_stub.c.o
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/stubs/graphics_api_test_stub.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/stubs/graphics_api_test_stub.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/stubs/graphics_api_test_stub.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/stubs/graphics_api_test_stub.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/graphics_api_test_stub.c.o
 .PHONY : stubs/graphics_api_test_stub.c.o
 
 stubs/graphics_api_test_stub.i: stubs/graphics_api_test_stub.c.i
@@ -526,7 +614,10 @@ stubs/graphics_api_test_stub.c.i:
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/stubs/graphics_api_test_stub.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/graphics_api_test_stub.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/stubs/graphics_api_test_stub.c.i
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/stubs/graphics_api_test_stub.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/stubs/graphics_api_test_stub.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/stubs/graphics_api_test_stub.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/stubs/graphics_api_test_stub.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/graphics_api_test_stub.c.i
 .PHONY : stubs/graphics_api_test_stub.c.i
 
 stubs/graphics_api_test_stub.s: stubs/graphics_api_test_stub.c.s
@@ -537,7 +628,10 @@ stubs/graphics_api_test_stub.c.s:
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/stubs/graphics_api_test_stub.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/graphics_api_test_stub.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/stubs/graphics_api_test_stub.c.s
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/stubs/graphics_api_test_stub.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/stubs/graphics_api_test_stub.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/stubs/graphics_api_test_stub.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/stubs/graphics_api_test_stub.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/graphics_api_test_stub.c.s
 .PHONY : stubs/graphics_api_test_stub.c.s
 
 support/test_utilities.o: support/test_utilities.c.o
@@ -545,11 +639,16 @@ support/test_utilities.o: support/test_utilities.c.o
 
 # target to build an object file
 support/test_utilities.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/support/test_utilities.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/support/test_utilities.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/support/test_utilities.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/support/test_utilities.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/support/test_utilities.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/support/test_utilities.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/support/test_utilities.c.o
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/support/test_utilities.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/support/test_utilities.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/support/test_utilities.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/support/test_utilities.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/support/test_utilities.c.o
 .PHONY : support/test_utilities.c.o
 
 support/test_utilities.i: support/test_utilities.c.i
@@ -557,11 +656,16 @@ support/test_utilities.i: support/test_utilities.c.i
 
 # target to preprocess a source file
 support/test_utilities.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/support/test_utilities.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/support/test_utilities.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/support/test_utilities.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/support/test_utilities.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/support/test_utilities.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/support/test_utilities.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/support/test_utilities.c.i
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/support/test_utilities.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/support/test_utilities.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/support/test_utilities.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/support/test_utilities.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/support/test_utilities.c.i
 .PHONY : support/test_utilities.c.i
 
 support/test_utilities.s: support/test_utilities.c.s
@@ -569,11 +673,16 @@ support/test_utilities.s: support/test_utilities.c.s
 
 # target to generate assembly for a file
 support/test_utilities.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/support/test_utilities.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/support/test_utilities.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/support/test_utilities.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/support/test_utilities.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/support/test_utilities.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/support/test_utilities.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/support/test_utilities.c.s
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/support/test_utilities.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/support/test_utilities.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/support/test_utilities.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/support/test_utilities.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/support/test_utilities.c.s
 .PHONY : support/test_utilities.c.s
 
 ui/test_ui_system.o: ui/test_ui_system.c.o
@@ -605,11 +714,16 @@ vendor/unity.o: vendor/unity.c.o
 
 # target to build an object file
 vendor/unity.c.o:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/vendor/unity.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/vendor/unity.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/vendor/unity.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/vendor/unity.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/vendor/unity.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/vendor/unity.c.o
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/vendor/unity.c.o
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/vendor/unity.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/vendor/unity.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/vendor/unity.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/vendor/unity.c.o
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/vendor/unity.c.o
 .PHONY : vendor/unity.c.o
 
 vendor/unity.i: vendor/unity.c.i
@@ -617,11 +731,16 @@ vendor/unity.i: vendor/unity.c.i
 
 # target to preprocess a source file
 vendor/unity.c.i:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/vendor/unity.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/vendor/unity.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/vendor/unity.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/vendor/unity.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/vendor/unity.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/vendor/unity.c.i
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/vendor/unity.c.i
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/vendor/unity.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/vendor/unity.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/vendor/unity.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/vendor/unity.c.i
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/vendor/unity.c.i
 .PHONY : vendor/unity.c.i
 
 vendor/unity.s: vendor/unity.c.s
@@ -629,11 +748,16 @@ vendor/unity.s: vendor/unity.c.s
 
 # target to generate assembly for a file
 vendor/unity.c.s:
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/vendor/unity.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/vendor/unity.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/vendor/unity.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/vendor/unity.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-rendering.dir/build.make tests/CMakeFiles/test_cmake-rendering.dir/vendor/unity.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/vendor/unity.c.s
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-integration.dir/build.make tests/CMakeFiles/test_cmake-integration.dir/vendor/unity.c.s
-	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/vendor/unity.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/vendor/unity.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/vendor/unity.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/vendor/unity.c.s
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/vendor/unity.c.s
 .PHONY : vendor/unity.c.s
 
 # Help Target
@@ -650,9 +774,14 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... run-ctest"
-	@echo "... test_cmake-core"
+	@echo "... test_cmake-core_test_components"
+	@echo "... test_cmake-core_test_math"
+	@echo "... test_cmake-core_test_world"
 	@echo "... test_cmake-integration"
-	@echo "... test_cmake-performance"
+	@echo "... test_cmake-performance_test_memory_isolated"
+	@echo "... test_cmake-performance_test_memory_perf"
+	@echo "... test_cmake-performance_test_performance_critical"
+	@echo "... test_cmake-performance_test_performance_simple"
 	@echo "... test_cmake-rendering"
 	@echo "... test_cmake-ui"
 	@echo "... core/test_components.o"

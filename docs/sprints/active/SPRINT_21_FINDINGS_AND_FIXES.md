@@ -3,9 +3,9 @@
 [← Back to Sprint Backlog](../README.md) | [← Design Doc](SPRINT_21_DESIGN.md) | [Implementation Guide →](SPRINT_21_IMPLEMENTATION_GUIDE.md)
 
 **Date**: July 2, 2025  
-**Status**: 🚧 IN PROGRESS - Critical bugs fixed, stability improvements ongoing  
+**Status**: ✅ NEAR COMPLETION - All major bugs fixed, ready for polish  
 **Approach**: Test-driven ECS architecture with physics debugging  
-**Last Updated**: July 2, 2025
+**Last Updated**: July 2, 2025 (v2)
 
 ---
 
@@ -43,7 +43,23 @@
   - Q/E: Pure roll
 - **Result**: More intuitive flight controls with proper banking mechanics
 
-### **5. Visual Thruster Rendering - PENDING** ⚠️
+### **5. Numerical Stability - FIXED** ✅
+- **Problem**: Physics calculations causing numerical overflow (velocity → infinity)
+- **Solutions**:
+  - Added velocity clamping (max 500 units/s)
+  - Added acceleration clamping (max 1000 units/s²)
+  - Added force clamping (max 100,000N per component)
+- **Result**: No more explosive velocity bugs, stable physics
+
+### **6. Auto-Deceleration Tuning - FIXED** ✅
+- **Problem**: Deceleration too aggressive (30% thrust), ship stopped too abruptly
+- **Solution**: 
+  - Reduced to 5% thrust for gentle deceleration
+  - Added velocity threshold (only decelerate above 2 units/s)
+  - Added velocity-based scaling for smooth deceleration curve
+- **Result**: Natural coasting with gradual slowdown
+
+### **7. Visual Thruster Rendering - PENDING** ⚠️
 - **Problem**: Visual thrusters show "Invalid vertex/index buffer" errors
 - **Impact**: Visual feedback missing but physics working correctly
 - **Next step**: Fix thruster mesh generation

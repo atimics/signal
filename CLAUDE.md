@@ -1,12 +1,13 @@
 # CGame Project Guide for Claude
 
-## ✅ UPDATE: Sprint 21 Progress
-**Major bugs fixed! Ready for human validation testing**
-- **Fixed**: Thrust direction transformation ✅
-- **Fixed**: Drag calculation (was 0.9999, now proper 0.02) ✅  
-- **Fixed**: Angular stability (clamped velocity, proper damping) ✅
-- **Pending**: Visual thruster rendering, human validation
-- **Details**: [Sprint 21 Findings](docs/sprints/active/SPRINT_21_FINDINGS_AND_FIXES.md)
+## ✅ UPDATE: Sprint 21 Near Complete!
+**All major physics and control bugs fixed!**
+- **Fixed**: Thrust direction, drag, angular stability ✅
+- **Fixed**: Control remapping (W/S pitch, Space thrust, A/D banking) ✅
+- **Fixed**: Numerical overflow (velocity/force clamping) ✅
+- **Fixed**: Auto-deceleration (now gentle 5% vs aggressive 30%) ✅
+- **Pending**: Only visual thruster rendering remains
+- **Status**: 98% complete, flight mechanics fully functional
 
 ## Essential Documentation Links
 

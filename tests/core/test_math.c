@@ -2,6 +2,14 @@
 #include "../support/test_utilities.h"
 #include "../../src/core.h"
 
+void setUp(void) {
+    // Math tests don't need world setup
+}
+
+void tearDown(void) {
+    // Math tests don't need world teardown
+}
+
 // Test function for vector addition
 void test_vector_addition(void)
 {
@@ -110,3 +118,12 @@ void suite_core_math(void)
     RUN_TEST(test_quaternion_rotate_vector_90_deg_y);
     RUN_TEST(test_quaternion_rotate_vector_180_deg_z);
 }
+
+// Stand-alone test runner
+#ifdef TEST_STANDALONE
+int main(void) {
+    UNITY_BEGIN();
+    suite_core_math();
+    return UNITY_END();
+}
+#endif

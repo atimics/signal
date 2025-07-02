@@ -705,17 +705,43 @@ docs/fast:
 .PHONY : docs/fast
 
 #=============================================================================
-# Target rules for targets named test_cmake-core
+# Target rules for targets named test_cmake-core_test_components
 
 # Build rule for target.
-test_cmake-core: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-core
-.PHONY : test_cmake-core
+test_cmake-core_test_components: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-core_test_components
+.PHONY : test_cmake-core_test_components
 
 # fast build rule for target.
-test_cmake-core/fast:
-	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core.dir/build.make tests/CMakeFiles/test_cmake-core.dir/build
-.PHONY : test_cmake-core/fast
+test_cmake-core_test_components/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_components.dir/build.make tests/CMakeFiles/test_cmake-core_test_components.dir/build
+.PHONY : test_cmake-core_test_components/fast
+
+#=============================================================================
+# Target rules for targets named test_cmake-core_test_math
+
+# Build rule for target.
+test_cmake-core_test_math: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-core_test_math
+.PHONY : test_cmake-core_test_math
+
+# fast build rule for target.
+test_cmake-core_test_math/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_math.dir/build.make tests/CMakeFiles/test_cmake-core_test_math.dir/build
+.PHONY : test_cmake-core_test_math/fast
+
+#=============================================================================
+# Target rules for targets named test_cmake-core_test_world
+
+# Build rule for target.
+test_cmake-core_test_world: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-core_test_world
+.PHONY : test_cmake-core_test_world
+
+# fast build rule for target.
+test_cmake-core_test_world/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-core_test_world.dir/build.make tests/CMakeFiles/test_cmake-core_test_world.dir/build
+.PHONY : test_cmake-core_test_world/fast
 
 #=============================================================================
 # Target rules for targets named test_cmake-rendering
@@ -757,17 +783,56 @@ test_cmake-integration/fast:
 .PHONY : test_cmake-integration/fast
 
 #=============================================================================
-# Target rules for targets named test_cmake-performance
+# Target rules for targets named test_cmake-performance_test_memory_isolated
 
 # Build rule for target.
-test_cmake-performance: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-performance
-.PHONY : test_cmake-performance
+test_cmake-performance_test_memory_isolated: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-performance_test_memory_isolated
+.PHONY : test_cmake-performance_test_memory_isolated
 
 # fast build rule for target.
-test_cmake-performance/fast:
-	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance.dir/build.make tests/CMakeFiles/test_cmake-performance.dir/build
-.PHONY : test_cmake-performance/fast
+test_cmake-performance_test_memory_isolated/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_isolated.dir/build
+.PHONY : test_cmake-performance_test_memory_isolated/fast
+
+#=============================================================================
+# Target rules for targets named test_cmake-performance_test_memory_perf
+
+# Build rule for target.
+test_cmake-performance_test_memory_perf: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-performance_test_memory_perf
+.PHONY : test_cmake-performance_test_memory_perf
+
+# fast build rule for target.
+test_cmake-performance_test_memory_perf/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build.make tests/CMakeFiles/test_cmake-performance_test_memory_perf.dir/build
+.PHONY : test_cmake-performance_test_memory_perf/fast
+
+#=============================================================================
+# Target rules for targets named test_cmake-performance_test_performance_critical
+
+# Build rule for target.
+test_cmake-performance_test_performance_critical: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-performance_test_performance_critical
+.PHONY : test_cmake-performance_test_performance_critical
+
+# fast build rule for target.
+test_cmake-performance_test_performance_critical/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build
+.PHONY : test_cmake-performance_test_performance_critical/fast
+
+#=============================================================================
+# Target rules for targets named test_cmake-performance_test_performance_simple
+
+# Build rule for target.
+test_cmake-performance_test_performance_simple: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cmake-performance_test_performance_simple
+.PHONY : test_cmake-performance_test_performance_simple
+
+# fast build rule for target.
+test_cmake-performance_test_performance_simple/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build
+.PHONY : test_cmake-performance_test_performance_simple/fast
 
 #=============================================================================
 # Target rules for targets named run-ctest
@@ -1744,9 +1809,14 @@ help:
 	@echo "... scene_selector_scene_script"
 	@echo "... scene_state"
 	@echo "... systems"
-	@echo "... test_cmake-core"
+	@echo "... test_cmake-core_test_components"
+	@echo "... test_cmake-core_test_math"
+	@echo "... test_cmake-core_test_world"
 	@echo "... test_cmake-integration"
-	@echo "... test_cmake-performance"
+	@echo "... test_cmake-performance_test_memory_isolated"
+	@echo "... test_cmake-performance_test_memory_perf"
+	@echo "... test_cmake-performance_test_performance_critical"
+	@echo "... test_cmake-performance_test_performance_simple"
 	@echo "... test_cmake-rendering"
 	@echo "... test_cmake-ui"
 	@echo "... thrusters"

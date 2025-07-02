@@ -37,7 +37,7 @@ cgame_add_test_suite(
 cgame_add_test_suite(
     NAME cmake-rendering
     SOURCES rendering/test_rendering.c
-    LIBS core render_3d render_camera render_mesh render_lighting gpu_resources graphics_api
+    LIBS core render_3d render_camera render_mesh render_lighting gpu_resources
     STUBS graphics_api_test_stub
 )
 
@@ -57,14 +57,31 @@ cgame_add_test_suite(
     STUBS graphics_api_test_stub
 )
 
-# Performance Tests
+# Performance Tests - Individual executables
 cgame_add_test_suite(
-    NAME cmake-performance
-    SOURCES 
-        performance/test_memory_isolated.c
-        performance/test_memory_perf.c
-        performance/test_performance_critical.c
-        performance/test_performance_simple.c
+    NAME cmake-performance_test_memory_isolated
+    SOURCES performance/test_memory_isolated.c
+    LIBS core systems physics performance
+    STUBS graphics_api_test_stub
+)
+
+cgame_add_test_suite(
+    NAME cmake-performance_test_memory_perf
+    SOURCES performance/test_memory_perf.c
+    LIBS core systems physics performance
+    STUBS graphics_api_test_stub
+)
+
+cgame_add_test_suite(
+    NAME cmake-performance_test_performance_critical
+    SOURCES performance/test_performance_critical.c
+    LIBS core systems physics performance
+    STUBS graphics_api_test_stub
+)
+
+cgame_add_test_suite(
+    NAME cmake-performance_test_performance_simple
+    SOURCES performance/test_performance_simple.c
     LIBS core systems physics performance
     STUBS graphics_api_test_stub
 )
