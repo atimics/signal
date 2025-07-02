@@ -27,6 +27,11 @@
 #define NK_INCLUDE_STANDARD_VARARGS
 #include "nuklear.h"
 #include "sokol_nuklear.h"
+#else
+// Test mode: include minimal nuklear definitions
+#ifdef TEST_MODE
+#include "../tests/stubs/ui_test_stubs.h"
+#endif
 #endif
 
 #include "sokol_log.h"
@@ -38,5 +43,14 @@
  * @return true on success, false on failure
  */
 bool graphics_capture_screenshot(const char* filename);
+
+// Test mode function declarations
+#ifdef TEST_MODE
+struct nk_context* get_nuklear_context(void);
+void graphics_begin_frame(void);
+void graphics_end_frame(void);
+bool graphics_init(int width, int height);
+void graphics_cleanup(void);
+#endif
 
 #endif  // GRAPHICS_API_H

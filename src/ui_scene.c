@@ -13,6 +13,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef TEST_MODE
+#include "../tests/stubs/ui_test_stubs.h"
+#endif
+
 #define MAX_SCENE_UI_MODULES 32
 
 // ============================================================================

@@ -424,10 +424,11 @@ TEST_SCENE_SRC = tests/unit/test_scene_system.c tests/vendor/unity.c
 TEST_SYSTEMS_SRC = tests/unit/test_systems.c tests/vendor/unity.c
 TEST_PERFORMANCE_CRITICAL_SRC = tests/performance/test_performance_critical.c tests/vendor/unity.c
 
-# Engine sources needed for comprehensive tests
+# Engine sources needed for comprehensive tests (excluding sokol implementations)
 ENGINE_COMPREHENSIVE_SRC = src/core.c src/systems.c src/ui_api.c src/ui_scene.c src/ui_components.c \
                           src/scene_state.c src/scene_script.c src/system/physics.c src/system/camera.c \
-                          src/system/performance.c src/system/memory.c src/system/input.c src/data.c
+                          src/system/performance.c src/system/memory.c src/system/input.c src/data.c \
+                          tests/mocks/mock_graphics.c tests/stubs/memory_test_stubs.c tests/stubs/graphics_api_test_stub.c
 
 # Test targets
 TEST_UI_TARGET = $(BUILD_DIR)/test_ui_system
@@ -472,28 +473,28 @@ test-performance-critical: $(TEST_PERFORMANCE_CRITICAL_TARGET)
 # Build targets for individual tests
 $(TEST_UI_TARGET): $(TEST_UI_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building UI system tests..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TEST_UI_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
 
 $(TEST_SCENE_TARGET): $(TEST_SCENE_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building scene system tests..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TEST_SCENE_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
 
 $(TEST_SYSTEMS_TARGET): $(TEST_SYSTEMS_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building ECS & systems tests..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TEST_SYSTEMS_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
 
 $(TEST_PERFORMANCE_CRITICAL_TARGET): $(TEST_PERFORMANCE_CRITICAL_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building performance critical tests..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TEST_PERFORMANCE_CRITICAL_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm

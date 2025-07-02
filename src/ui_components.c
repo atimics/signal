@@ -13,6 +13,10 @@
 #include <string.h>
 #include <dirent.h>
 
+#ifdef TEST_MODE
+#include "../tests/stubs/ui_test_stubs.h"
+#endif
+
 // ============================================================================
 // SCENE LIST WIDGET
 // ============================================================================
