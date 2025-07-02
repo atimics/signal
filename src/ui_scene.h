@@ -75,4 +75,7 @@ SceneUIModule* create_debug_ui_module(void);
 // Logo scene UI module
 SceneUIModule* create_logo_ui_module(void);
 
+// Navigation menu UI module
+SceneUIModule* create_navigation_menu_ui_module(void);
+
 #endif // UI_SCENE_H

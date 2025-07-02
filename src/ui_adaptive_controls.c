@@ -5,9 +5,11 @@
 #include "system/gamepad.h"
 #include "system/gamepad_hotplug.h"
 #include "sokol_app.h"
-#include "nuklear.h"
 #include <stdio.h>
 #include <string.h>
+
+// Forward declaration to avoid including nuklear.h
+struct nk_context;
 
 // State tracking
 static struct {
@@ -24,19 +26,19 @@ static struct {
 
 // Common control hints
 const ControlHint UI_HINT_SELECT = {
-    "Select", "Enter", "A", SAPP_KEYCODE_ENTER, GAMEPAD_BUTTON_A
+    "Select", "Enter", "A", SAPP_KEYCODE_ENTER, 0  // GAMEPAD_BUTTON_A
 };
 
 const ControlHint UI_HINT_BACK = {
-    "Back", "ESC", "B", SAPP_KEYCODE_ESCAPE, GAMEPAD_BUTTON_B
+    "Back", "ESC", "B", SAPP_KEYCODE_ESCAPE, 1  // GAMEPAD_BUTTON_B
 };
 
 const ControlHint UI_HINT_NAVIGATE = {
-    "Navigate", "↑↓ / WS", "LS/D-Pad", SAPP_KEYCODE_UP, GAMEPAD_BUTTON_DPAD_UP
+    "Navigate", "↑↓ / WS", "LS/D-Pad", SAPP_KEYCODE_UP, 10  // GAMEPAD_BUTTON_DPAD_UP
 };
 
 const ControlHint UI_HINT_PAUSE = {
-    "Pause", "ESC", "Start", SAPP_KEYCODE_ESCAPE, GAMEPAD_BUTTON_START
+    "Pause", "ESC", "Start", SAPP_KEYCODE_ESCAPE, 7  // GAMEPAD_BUTTON_START
 };
 
 // Callbacks for gamepad connection events
@@ -46,6 +48,8 @@ static void on_gamepad_connected(int index) {
 }
 
 static void on_gamepad_disconnected(int index) {
+    printf("🎮 UI: Gamepad %d disconnected\n", index);
+    
     // Check if any gamepads are still connected
     bool any_connected = false;
     for (int i = 0; i < MAX_GAMEPADS; i++) {
@@ -103,27 +107,17 @@ void ui_adaptive_controls_update(float delta_time) {
     }
 }
 
-void ui_adaptive_render_hint(struct nk_context* ctx, const ControlHint* hint) {
-    if (!ctx || !hint) return;
+const char* ui_adaptive_get_hint_text(const ControlHint* hint) {
+    if (!hint) return "";
     
-    const char* text = (adaptive_state.current_display_device == INPUT_DEVICE_GAMEPAD) 
-                       ? hint->gamepad_hint 
-                       : hint->keyboard_hint;
-    
-    // Could add icon rendering here
-    nk_label(ctx, text, NK_TEXT_CENTERED);
+    return (adaptive_state.current_display_device == INPUT_DEVICE_GAMEPAD) 
+           ? hint->gamepad_hint 
+           : hint->keyboard_hint;
 }
 
-void ui_adaptive_render_hints(struct nk_context* ctx, const ControlHint* hints, int hint_count) {
-    if (!ctx || !hints || hint_count <= 0) return;
-    
-    // Create a row for hints
-    nk_layout_row_dynamic(ctx, 20, hint_count * 2); // action + control for each
-    
-    for (int i = 0; i < hint_count; i++) {
-        nk_label(ctx, hints[i].action_name, NK_TEXT_RIGHT);
-        ui_adaptive_render_hint(ctx, &hints[i]);
-    }
+bool ui_adaptive_hint_is_gamepad(const ControlHint* hint) {
+    (void)hint; // Not used, but kept for API consistency
+    return adaptive_state.current_display_device == INPUT_DEVICE_GAMEPAD;
 }
 
 const char* ui_adaptive_get_control_text(const char* action_name, 
@@ -176,7 +170,7 @@ bool ui_adaptive_menu_navigate(int* selected_index, int menu_item_count) {
 bool ui_adaptive_menu_select(void) {
     GamepadState* gamepad = gamepad_get_primary();
     if (gamepad && gamepad->connected) {
-        if (gamepad_button_just_pressed(gamepad_get_primary_index(), GAMEPAD_BUTTON_A)) {
+        if (gamepad_button_just_pressed(gamepad_get_primary_index(), 0)) {  // GAMEPAD_BUTTON_A
             input_set_last_device_type(INPUT_DEVICE_GAMEPAD);
             return true;
         }
@@ -189,7 +183,7 @@ bool ui_adaptive_menu_select(void) {
 bool ui_adaptive_menu_back(void) {
     GamepadState* gamepad = gamepad_get_primary();
     if (gamepad && gamepad->connected) {
-        if (gamepad_button_just_pressed(gamepad_get_primary_index(), GAMEPAD_BUTTON_B)) {
+        if (gamepad_button_just_pressed(gamepad_get_primary_index(), 1)) {  // GAMEPAD_BUTTON_B
             input_set_last_device_type(INPUT_DEVICE_GAMEPAD);
             return true;
         }

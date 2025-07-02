@@ -627,6 +627,32 @@ ui_scene/fast:
 .PHONY : ui_scene/fast
 
 #=============================================================================
+# Target rules for targets named ui_adaptive_controls
+
+# Build rule for target.
+ui_adaptive_controls: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ui_adaptive_controls
+.PHONY : ui_adaptive_controls
+
+# fast build rule for target.
+ui_adaptive_controls/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_adaptive_controls.dir/build.make CMakeFiles/ui_adaptive_controls.dir/build
+.PHONY : ui_adaptive_controls/fast
+
+#=============================================================================
+# Target rules for targets named ui_navigation_menu
+
+# Build rule for target.
+ui_navigation_menu: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ui_navigation_menu
+.PHONY : ui_navigation_menu
+
+# fast build rule for target.
+ui_navigation_menu/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_navigation_menu.dir/build.make CMakeFiles/ui_navigation_menu.dir/build
+.PHONY : ui_navigation_menu/fast
+
+#=============================================================================
 # Target rules for targets named ui
 
 # Build rule for target.
@@ -1663,6 +1689,30 @@ src/ui.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui.dir/build.make CMakeFiles/ui.dir/src/ui.c.s
 .PHONY : src/ui.c.s
 
+src/ui_adaptive_controls.o: src/ui_adaptive_controls.c.o
+.PHONY : src/ui_adaptive_controls.o
+
+# target to build an object file
+src/ui_adaptive_controls.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_adaptive_controls.dir/build.make CMakeFiles/ui_adaptive_controls.dir/src/ui_adaptive_controls.c.o
+.PHONY : src/ui_adaptive_controls.c.o
+
+src/ui_adaptive_controls.i: src/ui_adaptive_controls.c.i
+.PHONY : src/ui_adaptive_controls.i
+
+# target to preprocess a source file
+src/ui_adaptive_controls.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_adaptive_controls.dir/build.make CMakeFiles/ui_adaptive_controls.dir/src/ui_adaptive_controls.c.i
+.PHONY : src/ui_adaptive_controls.c.i
+
+src/ui_adaptive_controls.s: src/ui_adaptive_controls.c.s
+.PHONY : src/ui_adaptive_controls.s
+
+# target to generate assembly for a file
+src/ui_adaptive_controls.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_adaptive_controls.dir/build.make CMakeFiles/ui_adaptive_controls.dir/src/ui_adaptive_controls.c.s
+.PHONY : src/ui_adaptive_controls.c.s
+
 src/ui_api.o: src/ui_api.c.o
 .PHONY : src/ui_api.o
 
@@ -1710,6 +1760,54 @@ src/ui_components.s: src/ui_components.c.s
 src/ui_components.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_components.dir/build.make CMakeFiles/ui_components.dir/src/ui_components.c.s
 .PHONY : src/ui_components.c.s
+
+src/ui_navigation_menu_impl.o: src/ui_navigation_menu_impl.c.o
+.PHONY : src/ui_navigation_menu_impl.o
+
+# target to build an object file
+src/ui_navigation_menu_impl.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_navigation_menu.dir/build.make CMakeFiles/ui_navigation_menu.dir/src/ui_navigation_menu_impl.c.o
+.PHONY : src/ui_navigation_menu_impl.c.o
+
+src/ui_navigation_menu_impl.i: src/ui_navigation_menu_impl.c.i
+.PHONY : src/ui_navigation_menu_impl.i
+
+# target to preprocess a source file
+src/ui_navigation_menu_impl.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_navigation_menu.dir/build.make CMakeFiles/ui_navigation_menu.dir/src/ui_navigation_menu_impl.c.i
+.PHONY : src/ui_navigation_menu_impl.c.i
+
+src/ui_navigation_menu_impl.s: src/ui_navigation_menu_impl.c.s
+.PHONY : src/ui_navigation_menu_impl.s
+
+# target to generate assembly for a file
+src/ui_navigation_menu_impl.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_navigation_menu.dir/build.make CMakeFiles/ui_navigation_menu.dir/src/ui_navigation_menu_impl.c.s
+.PHONY : src/ui_navigation_menu_impl.c.s
+
+src/ui_navigation_menu_render.o: src/ui_navigation_menu_render.c.o
+.PHONY : src/ui_navigation_menu_render.o
+
+# target to build an object file
+src/ui_navigation_menu_render.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_navigation_menu.dir/build.make CMakeFiles/ui_navigation_menu.dir/src/ui_navigation_menu_render.c.o
+.PHONY : src/ui_navigation_menu_render.c.o
+
+src/ui_navigation_menu_render.i: src/ui_navigation_menu_render.c.i
+.PHONY : src/ui_navigation_menu_render.i
+
+# target to preprocess a source file
+src/ui_navigation_menu_render.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_navigation_menu.dir/build.make CMakeFiles/ui_navigation_menu.dir/src/ui_navigation_menu_render.c.i
+.PHONY : src/ui_navigation_menu_render.c.i
+
+src/ui_navigation_menu_render.s: src/ui_navigation_menu_render.c.s
+.PHONY : src/ui_navigation_menu_render.s
+
+# target to generate assembly for a file
+src/ui_navigation_menu_render.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_navigation_menu.dir/build.make CMakeFiles/ui_navigation_menu.dir/src/ui_navigation_menu_render.c.s
+.PHONY : src/ui_navigation_menu_render.c.s
 
 src/ui_scene.o: src/ui_scene.c.o
 .PHONY : src/ui_scene.o
@@ -1821,8 +1919,10 @@ help:
 	@echo "... test_cmake-ui"
 	@echo "... thrusters"
 	@echo "... ui"
+	@echo "... ui_adaptive_controls"
 	@echo "... ui_api"
 	@echo "... ui_components"
+	@echo "... ui_navigation_menu"
 	@echo "... ui_scene"
 	@echo "... src/asset_loader/asset_loader_index.o"
 	@echo "... src/asset_loader/asset_loader_index.i"
@@ -1926,12 +2026,21 @@ help:
 	@echo "... src/ui.o"
 	@echo "... src/ui.i"
 	@echo "... src/ui.s"
+	@echo "... src/ui_adaptive_controls.o"
+	@echo "... src/ui_adaptive_controls.i"
+	@echo "... src/ui_adaptive_controls.s"
 	@echo "... src/ui_api.o"
 	@echo "... src/ui_api.i"
 	@echo "... src/ui_api.s"
 	@echo "... src/ui_components.o"
 	@echo "... src/ui_components.i"
 	@echo "... src/ui_components.s"
+	@echo "... src/ui_navigation_menu_impl.o"
+	@echo "... src/ui_navigation_menu_impl.i"
+	@echo "... src/ui_navigation_menu_impl.s"
+	@echo "... src/ui_navigation_menu_render.o"
+	@echo "... src/ui_navigation_menu_render.i"
+	@echo "... src/ui_navigation_menu_render.s"
 	@echo "... src/ui_scene.o"
 	@echo "... src/ui_scene.i"
 	@echo "... src/ui_scene.s"

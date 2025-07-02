@@ -23,11 +23,11 @@ void ui_adaptive_controls_init(void);
 // Update adaptive controls (call each frame)
 void ui_adaptive_controls_update(float delta_time);
 
-// Render control hints based on last used device
-void ui_adaptive_render_hint(struct nk_context* ctx, const ControlHint* hint);
+// Get the appropriate hint text based on current device
+const char* ui_adaptive_get_hint_text(const ControlHint* hint);
 
-// Render a set of control hints (e.g., at bottom of screen)
-void ui_adaptive_render_hints(struct nk_context* ctx, const ControlHint* hints, int hint_count);
+// Helper to check if hint should show gamepad version
+bool ui_adaptive_hint_is_gamepad(const ControlHint* hint);
 
 // Get formatted text for a control (returns static buffer)
 const char* ui_adaptive_get_control_text(const char* action_name, 
