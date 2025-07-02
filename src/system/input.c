@@ -72,33 +72,38 @@ void input_update(void) {
     if (keyboard_state[INPUT_ACTION_BOOST]) current_input.boost = 1.0f;
     if (keyboard_state[INPUT_ACTION_BRAKE]) current_input.brake = true;
     
-    // Add gamepad input (analog)
+    // Add gamepad input (analog) - Modern 6DOF flight control scheme
     GamepadState* gamepad = gamepad_get_state(0);
     if (gamepad && gamepad->connected) {
-        const float deadzone = 0.15f;
+        const float deadzone = 0.12f;  // Slightly smaller deadzone for precision
         
-        // Left stick for thrust/strafe
+        // Left stick for pitch/yaw (primary flight control like flight sims)
         if (fabsf(gamepad->left_stick_y) > deadzone) {
-            current_input.thrust -= gamepad->left_stick_y; // Invert Y
+            float value = gamepad->left_stick_y;
+            // Apply smooth curve for precision near center
+            value = value * value * value * (value > 0 ? 1.0f : -1.0f);
+            current_input.pitch -= value; // Invert Y (up stick = nose up)
         }
         if (fabsf(gamepad->left_stick_x) > deadzone) {
-            current_input.strafe += gamepad->left_stick_x;
+            float value = gamepad->left_stick_x;
+            value = value * value * value * (value > 0 ? 1.0f : -1.0f);
+            current_input.yaw += value; // Right stick = turn right
         }
         
-        // Right stick for pitch/yaw (6DOF controls)
-        if (fabsf(gamepad->right_stick_y) > deadzone) {
-            current_input.pitch -= gamepad->right_stick_y; // Invert Y (up stick = nose up)
-        }
+        // Right stick for lateral/vertical thrust (strafing)
         if (fabsf(gamepad->right_stick_x) > deadzone) {
-            current_input.yaw += gamepad->right_stick_x; // Right stick = turn right
+            current_input.strafe += gamepad->right_stick_x;
+        }
+        if (fabsf(gamepad->right_stick_y) > deadzone) {
+            current_input.vertical -= gamepad->right_stick_y; // Invert Y (up stick = thrust up)
         }
         
-        // Triggers for vertical movement and roll
+        // Triggers for forward/reverse thrust
         if (gamepad->right_trigger > deadzone) {
-            current_input.vertical += gamepad->right_trigger; // Right trigger = up
+            current_input.thrust += gamepad->right_trigger; // Right trigger = forward
         }
         if (gamepad->left_trigger > deadzone) {
-            current_input.vertical -= gamepad->left_trigger; // Left trigger = down
+            current_input.thrust -= gamepad->left_trigger; // Left trigger = reverse
         }
         
         // Shoulder buttons for roll
@@ -109,9 +114,12 @@ void input_update(void) {
             current_input.roll -= 1.0f; // Left bumper = roll left
         }
         
-        // Boost on A button
+        // Face buttons
         if (gamepad->buttons[GAMEPAD_BUTTON_A]) {
-            current_input.boost = 1.0f;
+            current_input.boost = 1.0f; // A = Boost
+        }
+        if (gamepad->buttons[GAMEPAD_BUTTON_B]) {
+            current_input.brake = true; // B = Brake
         }
     }
     
@@ -131,6 +139,7 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
     InputAction action = INPUT_ACTION_COUNT; // Invalid
     
     switch (key_code) {
+        // Modern WASD + Mouse flight scheme
         case SAPP_KEYCODE_W:
             action = INPUT_ACTION_THRUST_FORWARD;
             break;
@@ -143,22 +152,31 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
         case SAPP_KEYCODE_D:
             action = INPUT_ACTION_STRAFE_RIGHT;
             break;
-        case SAPP_KEYCODE_Q:
+        case SAPP_KEYCODE_SPACE:
             action = INPUT_ACTION_MANEUVER_UP;
             break;
-        case SAPP_KEYCODE_E:
+        case SAPP_KEYCODE_LEFT_CONTROL:
+        case SAPP_KEYCODE_RIGHT_CONTROL:
             action = INPUT_ACTION_MANEUVER_DOWN;
             break;
         case SAPP_KEYCODE_LEFT_SHIFT:
         case SAPP_KEYCODE_RIGHT_SHIFT:
             action = INPUT_ACTION_BOOST;
             break;
-        case SAPP_KEYCODE_LEFT_CONTROL:
-        case SAPP_KEYCODE_RIGHT_CONTROL:
+        case SAPP_KEYCODE_LEFT_ALT:
+        case SAPP_KEYCODE_RIGHT_ALT:
             action = INPUT_ACTION_BRAKE;
             break;
         
-        // Angular controls (6DOF)
+        // Roll controls (Q/E like many flight games)
+        case SAPP_KEYCODE_Q:
+            action = INPUT_ACTION_ROLL_LEFT;
+            break;
+        case SAPP_KEYCODE_E:
+            action = INPUT_ACTION_ROLL_RIGHT;
+            break;
+            
+        // Arrow keys as backup for pitch/yaw (for non-mouse users)
         case SAPP_KEYCODE_UP:
             action = INPUT_ACTION_PITCH_UP;
             break;
@@ -170,12 +188,6 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
             break;
         case SAPP_KEYCODE_RIGHT:
             action = INPUT_ACTION_YAW_RIGHT;
-            break;
-        case SAPP_KEYCODE_Z:
-            action = INPUT_ACTION_ROLL_LEFT;
-            break;
-        case SAPP_KEYCODE_C:
-            action = INPUT_ACTION_ROLL_RIGHT;
             break;
             
         default:

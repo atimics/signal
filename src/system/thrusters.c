@@ -74,6 +74,9 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
         // Calculate linear forces
         Vector3 linear_force = calculate_linear_force(thrusters, physics, efficiency);
         if (linear_force.x != 0.0f || linear_force.y != 0.0f || linear_force.z != 0.0f) {
+            printf("🚀 Applying force: [%.2f,%.2f,%.2f] from thrust [%.2f,%.2f,%.2f]\n",
+                   linear_force.x, linear_force.y, linear_force.z,
+                   thrusters->current_linear_thrust.x, thrusters->current_linear_thrust.y, thrusters->current_linear_thrust.z);
             physics_add_force(physics, linear_force);
             force_applications++;
         }
@@ -81,6 +84,9 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
         // Calculate angular torques (6DOF)
         Vector3 angular_torque = calculate_angular_torque(thrusters, physics, efficiency);
         if (angular_torque.x != 0.0f || angular_torque.y != 0.0f || angular_torque.z != 0.0f) {
+            printf("🌀 Applying torque: [%.2f,%.2f,%.2f] from thrust [%.2f,%.2f,%.2f]\n",
+                   angular_torque.x, angular_torque.y, angular_torque.z,
+                   thrusters->current_angular_thrust.x, thrusters->current_angular_thrust.y, thrusters->current_angular_thrust.z);
             physics_add_torque(physics, angular_torque);
             force_applications++;
         }

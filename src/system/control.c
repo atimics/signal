@@ -103,11 +103,24 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
             // Process linear input (thrust, strafe, vertical)
             Vector3 linear_commands = process_linear_input(input, control);
             control->input_linear = linear_commands;
+            
+            // Debug: Print commands being sent to thrusters
+            if (linear_commands.x != 0.0f || linear_commands.y != 0.0f || linear_commands.z != 0.0f) {
+                printf("🎮 Sending linear commands: [%.2f,%.2f,%.2f] to thrusters\n",
+                       linear_commands.x, linear_commands.y, linear_commands.z);
+            }
+            
             thruster_set_linear_command(thrusters, linear_commands);
             
             // Process angular input (pitch, yaw, roll) - 6DOF
             Vector3 angular_commands = process_angular_input(input, control, physics);
             control->input_angular = angular_commands;
+            
+            if (angular_commands.x != 0.0f || angular_commands.y != 0.0f || angular_commands.z != 0.0f) {
+                printf("🎮 Sending angular commands: [%.2f,%.2f,%.2f] to thrusters\n",
+                       angular_commands.x, angular_commands.y, angular_commands.z);
+            }
+            
             thruster_set_angular_command(thrusters, angular_commands);
             
             // Store boost and brake state
@@ -198,12 +211,13 @@ Vector3 apply_stability_assist(Vector3 input, Vector3 current_angular_velocity, 
 
 Vector3 apply_sensitivity_curve(Vector3 input, float sensitivity)
 {
-    // Apply sensitivity scaling
-    Vector3 result = {
-        input.x * sensitivity,
-        input.y * sensitivity,
-        input.z * sensitivity
-    };
+    // Apply smooth response curve for better control feel
+    Vector3 result;
+    
+    // Use cubic curve for smooth response near center, more aggressive at extremes
+    result.x = input.x * input.x * input.x * (input.x > 0 ? 1.0f : -1.0f) * sensitivity;
+    result.y = input.y * input.y * input.y * (input.y > 0 ? 1.0f : -1.0f) * sensitivity;
+    result.z = input.z * input.z * input.z * (input.z > 0 ? 1.0f : -1.0f) * sensitivity;
     
     // Clamp to valid range
     result.x = fmaxf(-1.0f, fminf(1.0f, result.x));

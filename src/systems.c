@@ -129,7 +129,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                          .update_func = thruster_system_update };
 
     scheduler->systems[SYSTEM_CONTROL] = (SystemInfo){ .name = "Control",
-                                                       .frequency = 30.0f,  // Reduce frequency to avoid conflicts
+                                                       .frequency = 60.0f,  // Match physics frequency for responsive controls
                                                        .enabled = true,
                                                        .update_func = control_system_update };
 

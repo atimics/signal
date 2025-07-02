@@ -86,8 +86,13 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
             struct ThrusterSystem* thrusters = entity_get_thruster_system(world, player_ship_id);
             if (thrusters) {
                 // Configure thruster capabilities for responsive flight
-                thrusters->max_linear_force = (Vector3){ FLIGHT_THRUST_FORCE, FLIGHT_MANEUVER_FORCE, FLIGHT_MANEUVER_FORCE };
-                thrusters->max_angular_torque = (Vector3){ 25.0f, 25.0f, 20.0f }; // Pitch, Yaw, Roll
+                // Need much stronger forces to overcome gravity (784.8N) and provide acceleration
+                thrusters->max_linear_force = (Vector3){ 
+                    FLIGHT_THRUST_FORCE * 30.0f,     // Forward/back: 1050N 
+                    FLIGHT_MANEUVER_FORCE * 50.0f,   // Up/down: 900N (can overcome gravity + accelerate)
+                    FLIGHT_MANEUVER_FORCE * 30.0f    // Left/right: 540N
+                };
+                thrusters->max_angular_torque = (Vector3){ 150.0f, 150.0f, 100.0f }; // Much stronger rotation
                 thrusters->thrust_response_time = 0.05f; // Very responsive
                 thrusters->atmosphere_efficiency = 1.0f; // Full power in atmosphere
                 thrusters->vacuum_efficiency = 1.0f;     // Full power in vacuum
@@ -173,24 +178,23 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     
     printf("🚀 Flight test initialized\n");
     printf("🌍 Plain size: %.0fx%.0f units\n", PLAIN_SIZE, PLAIN_SIZE);
-    printf("🎮 Enhanced 6DOF Flight Controls:\n");
-    printf("   LINEAR MOVEMENT:\n");
+    printf("🎮 Modern 6DOF Flight Controls:\n");
+    printf("   KEYBOARD (Mouse + WASD):\n");
     printf("     W/S - Forward/Backward thrust (%.0f force)\n", FLIGHT_THRUST_FORCE);
     printf("     A/D - Strafe left/right (%.0f force)\n", FLIGHT_MANEUVER_FORCE);
-    printf("     Q/E - Vertical up/down\n");
-    printf("   ANGULAR MOVEMENT (6DOF):\n");
-    printf("     Arrow Keys - Pitch (Up/Down) and Yaw (Left/Right)\n");
-    printf("     Z/C - Roll left/right\n");
-    printf("   MODIFIERS:\n");
+    printf("     Space/Ctrl - Vertical up/down\n");
+    printf("     Q/E - Roll left/right\n");
+    printf("     Mouse - Pitch/Yaw (like FPS aiming)\n");
     printf("     Shift - Boost (%.1fx multiplier)\n", FLIGHT_BOOST_MULTIPLIER);
-    printf("     Ctrl - Brake\n");
-    printf("     C - Cycle camera modes\n");
-    printf("   GAMEPAD:\n");
-    printf("     Left Stick - Thrust/Strafe\n");
-    printf("     Right Stick - Pitch/Yaw\n");
-    printf("     Triggers - Vertical movement\n");
-    printf("     Bumpers - Roll\n");
-    printf("     A Button - Boost\n");
+    printf("     Alt - Brake\n");
+    printf("     Tab - Cycle camera modes\n");
+    printf("   XBOX CONTROLLER (Modern Layout):\n");
+    printf("     Left Stick - Pitch/Yaw (primary flight control)\n");
+    printf("     Right Stick - Lateral/Vertical thrust\n");
+    printf("     Right Trigger - Forward thrust\n");
+    printf("     Left Trigger - Reverse thrust\n");
+    printf("     Bumpers - Roll left/right\n");
+    printf("     A Button - Boost, B Button - Brake\n");
     printf("📷 Camera Modes: COCKPIT → CHASE_NEAR → CHASE_FAR → OVERHEAD\n");
     printf("🎯 Physics: 6DOF enabled with flight assistance\n");
 }
@@ -460,8 +464,8 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
             return true;
         }
         
-        if (ev->key_code == SAPP_KEYCODE_C) {
-            // Cycle camera modes
+        if (ev->key_code == SAPP_KEYCODE_TAB) {
+            // Cycle camera modes - moved from C to TAB to avoid conflict with roll control
             current_camera_mode = (FlightCameraMode)((current_camera_mode + 1) % CAMERA_MODE_COUNT);
             const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR", "OVERHEAD"};
             printf("📷 Flight camera mode: %s\n", mode_names[current_camera_mode]);

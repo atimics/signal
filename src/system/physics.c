@@ -67,11 +67,25 @@ static Quaternion quaternion_normalize(Quaternion q)
 static void physics_apply_forces(struct Physics* physics, float delta_time)
 {
     (void)delta_time;  // Unused parameter
-    if (physics->mass <= 0.0f) return;
+    if (physics->mass <= 0.0f) {
+        printf("❌ Physics: Mass is zero or negative! Mass: %.3f\n", physics->mass);
+        return;
+    }
     
     // Linear dynamics: F = ma -> a = F/m
     Vector3 linear_acceleration = vector3_multiply(physics->force_accumulator, 1.0f / physics->mass);
     physics->acceleration = linear_acceleration;
+    
+    // Debug output for non-zero forces
+    float force_mag = sqrtf(physics->force_accumulator.x * physics->force_accumulator.x + 
+                          physics->force_accumulator.y * physics->force_accumulator.y + 
+                          physics->force_accumulator.z * physics->force_accumulator.z);
+    if (force_mag > 0.1f) {
+        printf("⚡ Force: [%.2f,%.2f,%.2f] Mass: %.2f -> Accel: [%.2f,%.2f,%.2f]\n",
+               physics->force_accumulator.x, physics->force_accumulator.y, physics->force_accumulator.z,
+               physics->mass,
+               linear_acceleration.x, linear_acceleration.y, linear_acceleration.z);
+    }
     
     // Clear force accumulator for next frame
     physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
@@ -147,8 +161,8 @@ static void physics_apply_environmental_effects(struct Physics* physics, struct 
             // Apply atmospheric drag (stronger than space)
             physics->drag_linear *= 0.98f;  // Additional atmospheric drag
             
-            // Apply gravity if in atmosphere
-            Vector3 gravity = { 0.0f, -9.81f * physics->mass, 0.0f };
+            // Apply reduced gravity for better flight feel (space station or low gravity)
+            Vector3 gravity = { 0.0f, -3.0f * physics->mass, 0.0f };  // Much lighter gravity
             physics->force_accumulator = vector3_add(physics->force_accumulator, gravity);
             break;
     }
@@ -165,6 +179,7 @@ void physics_system_update(struct World* world, RenderConfig* render_config, flo
 
     uint32_t linear_updates = 0;
     uint32_t angular_updates = 0;
+    uint32_t force_applications = 0;
 
     // Update all entities with physics + transform components
     for (uint32_t i = 0; i < world->entity_count; i++)
@@ -184,6 +199,17 @@ void physics_system_update(struct World* world, RenderConfig* render_config, flo
 
         // Apply environmental effects
         physics_apply_environmental_effects(physics, transform, delta_time);
+        
+        // Debug: Track force applications for player entity
+        bool is_player = (entity->component_mask & COMPONENT_PLAYER);
+        if (is_player) {
+            float force_mag = sqrtf(physics->force_accumulator.x * physics->force_accumulator.x + 
+                                  physics->force_accumulator.y * physics->force_accumulator.y + 
+                                  physics->force_accumulator.z * physics->force_accumulator.z);
+            if (force_mag > 0.1f) {
+                force_applications++;
+            }
+        }
         
         // Apply accumulated forces and torques
         physics_apply_forces(physics, delta_time);
@@ -208,12 +234,12 @@ void physics_system_update(struct World* world, RenderConfig* render_config, flo
         transform->dirty = true;
     }
 
-    // Performance logging
+    // Debug logging
     static uint32_t log_counter = 0;
-    if (++log_counter % 600 == 0)  // Every 10 seconds at 60 FPS
+    if (++log_counter % 120 == 0)  // Every 2 seconds at 60 FPS
     {
-        printf("🔧 Physics: %d linear + %d angular updates (6DOF enabled)\n", 
-               linear_updates, angular_updates);
+        printf("🔧 Physics: %d linear + %d angular updates, %d force applications\n", 
+               linear_updates, angular_updates, force_applications);
     }
 }
 
