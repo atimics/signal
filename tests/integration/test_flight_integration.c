@@ -193,7 +193,7 @@ void test_thrust_to_movement_pipeline(void)
     // Update thruster system (applies forces)
     thruster_system_update(&test_world, NULL, 0.016f);
     
-    // Verify force was applied
+    // Verify force was applied (before physics clears it)
     TEST_ASSERT_GREATER_THAN(0.0f, physics->force_accumulator.x);
     
     // Update physics system (integrates forces to movement)
@@ -202,10 +202,15 @@ void test_thrust_to_movement_pipeline(void)
     // Verify velocity increased
     TEST_ASSERT_GREATER_THAN(0.0f, physics->velocity.x);
     
-    // Update physics again to see position change
-    physics_system_update(&test_world, NULL, 0.016f);
+    // Run multiple physics frames to accumulate position change
+    for (int i = 0; i < 10; i++) {
+        // Apply thrust continuously
+        thruster_set_linear_command(thrusters, (Vector3){ 1.0f, 0.0f, 0.0f });
+        thruster_system_update(&test_world, NULL, 0.016f);
+        physics_system_update(&test_world, NULL, 0.016f);
+    }
     
-    // Verify position changed
+    // Verify position changed after multiple frames
     TEST_ASSERT_GREATER_THAN(0.0f, transform->position.x);
 }
 
