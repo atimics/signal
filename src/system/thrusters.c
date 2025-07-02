@@ -86,9 +86,9 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
         }
     }
 
-    // Performance logging
+    // Debug logging (more frequent for troubleshooting)
     static uint32_t log_counter = 0;
-    if (++log_counter % 600 == 0)  // Every 10 seconds at 60 FPS
+    if (++log_counter % 120 == 0)  // Every 2 seconds at 60 FPS
     {
         printf("🚀 Thrusters: %d updates, %d force applications\n", 
                thruster_updates, force_applications);

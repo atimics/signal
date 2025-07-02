@@ -120,12 +120,19 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
         }
     }
 
-    // Performance logging
+    // Debug logging (more frequent for troubleshooting)
     static uint32_t log_counter = 0;
-    if (++log_counter % 600 == 0)  // Every 10 seconds at 60 FPS
+    if (++log_counter % 120 == 0)  // Every 2 seconds at 60 FPS
     {
         printf("🎮 Control: %d entities processed, Player: %d\n", 
                control_updates, g_player_entity);
+        
+        // Print input state for debugging
+        if (input) {
+            printf("🎮 Input: T:%.2f S:%.2f V:%.2f P:%.2f Y:%.2f R:%.2f\n",
+                   input->thrust, input->strafe, input->vertical,
+                   input->pitch, input->yaw, input->roll);
+        }
     }
 }
 

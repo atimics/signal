@@ -94,7 +94,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     scheduler->systems[SYSTEM_COLLISION] =
         (SystemInfo){ .name = "Collision",
                       .frequency = 20.0f,  // Every 3 frames at 60 FPS
-                      .enabled = true,
+                      .enabled = false,  // Temporarily disabled - causing runaway loop
                       .update_func = collision_system_update };
 
     scheduler->systems[SYSTEM_AI] =
@@ -115,7 +115,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
 
     scheduler->systems[SYSTEM_PERFORMANCE] = (SystemInfo){ .name = "Performance",
                                                           .frequency = 5.0f,   // 5 times per second
-                                                          .enabled = true,
+                                                          .enabled = false,  // Temporarily disabled - causing runaway loop
                                                           .update_func = performance_system_update };
 
     scheduler->systems[SYSTEM_MEMORY] = (SystemInfo){ .name = "Memory",
@@ -129,7 +129,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                          .update_func = thruster_system_update };
 
     scheduler->systems[SYSTEM_CONTROL] = (SystemInfo){ .name = "Control",
-                                                       .frequency = 60.0f,  // Every frame
+                                                       .frequency = 30.0f,  // Reduce frequency to avoid conflicts
                                                        .enabled = true,
                                                        .update_func = control_system_update };
 
