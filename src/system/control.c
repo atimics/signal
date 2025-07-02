@@ -39,31 +39,29 @@ static float apply_adaptive_sensitivity(float input, float base_sensitivity, flo
     return sign * response * base_sensitivity * velocity_factor;
 }
 
-// Turn rate limiter to prevent over-rotation
+// Turn rate limiter to prevent over-rotation (disabled for now)
 static Vector3 apply_turn_rate_limiting(Vector3 input, Vector3 previous_angular, float delta_limit) {
-    Vector3 limited = input;
+    (void)previous_angular;  // Unused - rate limiting disabled
+    (void)delta_limit;       // Unused - rate limiting disabled
     
-    // Limit rate of change for each axis
-    limited.x = fmaxf(previous_angular.x - delta_limit, fminf(previous_angular.x + delta_limit, input.x));
-    limited.y = fmaxf(previous_angular.y - delta_limit, fminf(previous_angular.y + delta_limit, input.y));
-    limited.z = fmaxf(previous_angular.z - delta_limit, fminf(previous_angular.z + delta_limit, input.z));
-    
-    return limited;
+    // Return input unchanged - rate limiting was causing steering issues
+    return input;
 }
 
 // Gamepad-specific input processing with separate tuning
 static Vector3 process_gamepad_angular_input(const InputState* input, float sensitivity, Vector3 current_velocity) {
     Vector3 result = { 0.0f, 0.0f, 0.0f };
+    (void)current_velocity;  // Unused for now - simplified approach
     
-    // Enhanced gamepad sensitivity for canyon racing
-    const float gamepad_pitch_sensitivity = sensitivity * 1.2f;
-    const float gamepad_yaw_sensitivity = sensitivity * 1.4f;  // Higher for quick turns
-    const float gamepad_roll_sensitivity = sensitivity * 1.6f;  // Highest for banking
+    // Reduced gamepad sensitivity to fix flipping issues
+    const float gamepad_pitch_sensitivity = sensitivity * 1.0f;
+    const float gamepad_yaw_sensitivity = sensitivity * 1.1f;   // Slightly higher for turns
+    const float gamepad_roll_sensitivity = sensitivity * 1.0f;  // Normal for banking
     
-    // Apply adaptive curves to each axis
-    result.x = apply_adaptive_sensitivity(input->pitch, gamepad_pitch_sensitivity, current_velocity.x, 5.0f);
-    result.y = apply_adaptive_sensitivity(input->yaw, gamepad_yaw_sensitivity, current_velocity.y, 5.0f);
-    result.z = apply_adaptive_sensitivity(input->roll, gamepad_roll_sensitivity, current_velocity.z, 5.0f);
+    // Simple linear response instead of adaptive curves
+    result.x = input->pitch * gamepad_pitch_sensitivity;
+    result.y = input->yaw * gamepad_yaw_sensitivity;
+    result.z = input->roll * gamepad_roll_sensitivity;
     
     return result;
 }

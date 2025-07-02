@@ -117,7 +117,8 @@ void test_physics_force_accumulation(void)
 void test_physics_torque_accumulation(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(&test_world, entity);
     physics_set_6dof_enabled(physics, true);
