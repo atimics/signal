@@ -346,6 +346,154 @@ void test_thruster_entity_without_physics(void)
     TEST_ASSERT_TRUE(true);
 }
 
+// ============================================================================
+// THRUST DIRECTION TRANSFORMATION TESTS
+// ============================================================================
+
+void test_thruster_direction_identity_rotation(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    // Set identity rotation (no rotation)
+    transform->rotation = (Quaternion){ 0.0f, 0.0f, 0.0f, 1.0f };
+    
+    // Enable thrusters and set forward thrust
+    thrusters->thrusters_enabled = true;
+    thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 1.0f }); // Forward thrust
+    
+    // Clear any existing forces
+    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    
+    // Update thruster system
+    thruster_system_update(&test_world, NULL, 0.016f);
+    
+    // With identity rotation, force should still be in Z direction
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.y);
+    TEST_ASSERT_TRUE(physics->accumulated_force.z > 0.0f);
+}
+
+void test_thruster_direction_90_degree_yaw(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    // Set 90-degree rotation around Y axis (yaw right)
+    // sin(45°) = 0.707, cos(45°) = 0.707 for quaternion
+    transform->rotation = (Quaternion){ 0.0f, 0.707f, 0.0f, 0.707f };
+    
+    // Enable thrusters and set forward thrust
+    thrusters->thrusters_enabled = true;
+    thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 1.0f }); // Forward thrust
+    
+    // Clear any existing forces
+    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    
+    // Update thruster system
+    thruster_system_update(&test_world, NULL, 0.016f);
+    
+    // After 90-degree yaw, forward thrust should point along positive X
+    TEST_ASSERT_TRUE(physics->accumulated_force.x > 0.0f);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.z);
+}
+
+void test_thruster_direction_90_degree_pitch(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    // Set 90-degree rotation around X axis (pitch up)
+    transform->rotation = (Quaternion){ 0.707f, 0.0f, 0.0f, 0.707f };
+    
+    // Enable thrusters and set forward thrust
+    thrusters->thrusters_enabled = true;
+    thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 1.0f }); // Forward thrust
+    
+    // Clear any existing forces
+    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    
+    // Update thruster system
+    thruster_system_update(&test_world, NULL, 0.016f);
+    
+    // After 90-degree pitch up, forward thrust should point along negative Y
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.x);
+    TEST_ASSERT_TRUE(physics->accumulated_force.y < -0.01f); // Pointing down
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.z);
+}
+
+void test_thruster_direction_combined_rotation(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    // Set arbitrary rotation (normalized quaternion)
+    transform->rotation = (Quaternion){ 0.2f, 0.3f, 0.1f, 0.924f }; // Arbitrary but normalized
+    
+    // Enable thrusters and set thrust in multiple directions
+    thrusters->thrusters_enabled = true;
+    thruster_set_linear_command(thrusters, (Vector3){ 1.0f, 0.5f, 2.0f });
+    
+    // Clear any existing forces
+    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    
+    // Update thruster system
+    thruster_system_update(&test_world, NULL, 0.016f);
+    
+    // Force should be non-zero and transformed
+    float force_magnitude = sqrtf(
+        physics->accumulated_force.x * physics->accumulated_force.x +
+        physics->accumulated_force.y * physics->accumulated_force.y +
+        physics->accumulated_force.z * physics->accumulated_force.z
+    );
+    TEST_ASSERT_TRUE(force_magnitude > 0.0f);
+}
+
+void test_thruster_direction_zero_thrust(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    // Set arbitrary rotation
+    transform->rotation = (Quaternion){ 0.2f, 0.3f, 0.1f, 0.924f };
+    
+    // Enable thrusters but set zero thrust
+    thrusters->thrusters_enabled = true;
+    thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 0.0f });
+    
+    // Clear any existing forces
+    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    
+    // Update thruster system
+    thruster_system_update(&test_world, NULL, 0.016f);
+    
+    // Zero thrust should remain zero after transformation
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->accumulated_force.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->accumulated_force.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->accumulated_force.z);
+}
+
 void test_thruster_multiple_entities_performance(void)
 {
     const int entity_count = 30;
@@ -433,6 +581,13 @@ void suite_thrusters(void)
     RUN_TEST(test_thruster_entity_without_physics);
     RUN_TEST(test_thruster_multiple_entities_performance);
     RUN_TEST(test_thruster_zero_max_force_safety);
+    
+    printf("🧭 Testing Thrust Direction Transformation...\n");
+    RUN_TEST(test_thruster_direction_identity_rotation);
+    RUN_TEST(test_thruster_direction_90_degree_yaw);
+    RUN_TEST(test_thruster_direction_90_degree_pitch);
+    RUN_TEST(test_thruster_direction_combined_rotation);
+    RUN_TEST(test_thruster_direction_zero_thrust);
     
     printf("✅ Thruster System Tests Complete\n");
 }

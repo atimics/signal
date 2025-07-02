@@ -3,9 +3,10 @@
 ## Current Sprint Status
 
 ### 🚨 ACTIVE: Sprint 21 - Ship Flight Mechanics Overhaul
-**Status**: 90% Complete - BLOCKED by critical bug  
+**Status**: 95% Complete - Core bugs fixed, ready for human validation  
 **Priority**: HIGH - Essential gameplay foundation  
-**Blocker**: Thrust direction transformation bug in `src/system/thrusters.c:77`
+**Fixed**: ✅ Thrust direction, ✅ Drag calculation, ✅ Angular stability  
+**Pending**: Visual thrusters, Human validation testing
 
 #### Quick Links
 - [Sprint 21 Design Document](active/SPRINT_21_DESIGN.md)
@@ -14,11 +15,11 @@
 - [Sprint 21 Implementation Plan](active/SPRINT_21_IMPLEMENTATION_PLAN.md)
 - [Best Practices Report](active/THRUST_AND_GAMEPAD_NAVIGATION_BEST_PRACTICES_REPORT.md)
 
-#### Critical Bug Summary
-- **Issue**: Forces applied in world space instead of ship-relative space
-- **Impact**: Ships can only move forward relative to camera, not based on orientation
-- **Solution**: Implement `quaternion_rotate_vector()` and transform forces to world space
-- **Location**: `src/system/thrusters.c:77`
+#### Recent Fixes (July 2, 2025)
+1. **Thrust Direction**: ✅ Implemented `quaternion_rotate_vector()` - forces now correctly transformed
+2. **Drag Calculation**: ✅ Fixed formula from `vel * drag` to `vel * (1 - drag)`
+3. **Angular Stability**: ✅ Added velocity clamping and proper damping
+4. **Next Steps**: Fix visual thrusters, conduct human validation testing
 
 ## Sprint Overview
 

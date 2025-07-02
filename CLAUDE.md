@@ -1,11 +1,12 @@
 # CGame Project Guide for Claude
 
-## 🚨 CRITICAL: Current Blocker
-**Sprint 21 is blocked by a thrust direction bug!**
-- **Location**: `src/system/thrusters.c:77`
-- **Issue**: Forces applied in world space instead of ship-relative space
-- **Fix**: Implement `quaternion_rotate_vector()` and transform forces
-- **Details**: [Sprint 21 Implementation Guide](docs/sprints/active/SPRINT_21_IMPLEMENTATION_GUIDE.md)
+## ✅ UPDATE: Sprint 21 Progress
+**Major bugs fixed! Ready for human validation testing**
+- **Fixed**: Thrust direction transformation ✅
+- **Fixed**: Drag calculation (was 0.9999, now proper 0.02) ✅  
+- **Fixed**: Angular stability (clamped velocity, proper damping) ✅
+- **Pending**: Visual thruster rendering, human validation
+- **Details**: [Sprint 21 Findings](docs/sprints/active/SPRINT_21_FINDINGS_AND_FIXES.md)
 
 ## Essential Documentation Links
 

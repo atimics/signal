@@ -264,6 +264,9 @@ struct ThrusterSystem
     ShipType ship_type;            /**< Ship type for handling characteristics */
     float power_efficiency;        /**< Overall power efficiency (0-1) */
     float heat_generation;         /**< Heat generated per thrust unit */
+    
+    // Auto-deceleration
+    bool auto_deceleration;        /**< Enable automatic deceleration when no input */
 };
 
 /** @brief Defines input processing and control authority for an entity. */

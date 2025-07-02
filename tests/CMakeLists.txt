@@ -1,0 +1,75 @@
+# CGame Engine - Main Test Suite Configuration
+# ============================================================================
+# Comprehensive test suite configuration maintaining compatibility with
+# existing test organization and Makefile targets
+
+cmake_minimum_required(VERSION 3.20)
+
+# ============================================================================
+# TEST DISCOVERY & CONFIGURATION
+# ============================================================================
+include(cmake/TestDiscovery.cmake)
+
+# ============================================================================
+# TEST SUITE DEFINITION
+# ============================================================================
+
+# Core Engine Tests
+cgame_add_test_suite(
+    NAME cmake-core
+    SOURCES 
+        core/test_components.c
+        core/test_math.c
+        core/test_world.c
+    LIBS core
+)
+
+# Rendering Tests
+cgame_add_test_suite(
+    NAME cmake-rendering
+    SOURCES rendering/test_rendering.c
+    LIBS core render_3d render_camera render_mesh render_lighting gpu_resources graphics_api
+    STUBS graphics_api_test_stub
+)
+
+# UI System Tests
+cgame_add_test_suite(
+    NAME cmake-ui
+    SOURCES ui/test_ui_system.c
+    LIBS core ui ui_api ui_scene ui_components
+    STUBS graphics_api_test_stub
+)
+
+# Integration Tests
+cgame_add_test_suite(
+    NAME cmake-integration
+    SOURCES integration/test_flight_integration.c
+    LIBS core systems physics control thrusters input camera
+    STUBS graphics_api_test_stub
+)
+
+# Performance Tests
+cgame_add_test_suite(
+    NAME cmake-performance
+    SOURCES 
+        performance/test_memory_isolated.c
+        performance/test_memory_perf.c
+        performance/test_performance_critical.c
+        performance/test_performance_simple.c
+    LIBS core systems physics performance
+    STUBS graphics_api_test_stub
+)
+
+# ============================================================================
+# CTEST CONFIGURATION
+# ============================================================================
+enable_testing()
+
+# The 'test' target is automatically created by enable_testing()
+# and will run all tests defined with add_test().
+# We can still define a custom target if we need to pass specific
+# arguments to ctest.
+add_custom_target(run-ctest
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)

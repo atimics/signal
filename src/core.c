@@ -294,6 +294,7 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             entity->thruster_system->atmosphere_efficiency = 0.8f;
             entity->thruster_system->vacuum_efficiency = 1.0f;
             entity->thruster_system->thrusters_enabled = true;
+            entity->thruster_system->auto_deceleration = false;  // Explicitly initialize to false
             break;
 
         case COMPONENT_CONTROL_AUTHORITY:

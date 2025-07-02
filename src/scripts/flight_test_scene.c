@@ -105,6 +105,9 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
                 float base_thrust = FLIGHT_THRUST_FORCE * 300.0f;  // Zippy thrust for canyon racing
                 thruster_configure_ship_type(thrusters, SHIP_TYPE_FIGHTER, base_thrust);
                 
+                // Enable auto-deceleration to prevent skidding
+                thrusters->auto_deceleration = true;
+                
                 // Apply ship characteristics to physics
                 struct Physics* physics = entity_get_physics(world, player_ship_id);
                 if (physics) {
@@ -143,8 +146,8 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         if (physics) {
             physics->has_6dof = true;
             physics->moment_of_inertia = (Vector3){ 2.0f, 2.0f, 1.5f }; // Ship-like inertia
-            physics->drag_linear = 0.9999f;  // Minimal drag for space flight
-            physics->drag_angular = 0.70f;   // Strong angular drag with quick stabilization
+            physics->drag_linear = 0.02f;   // Space drag (2% velocity loss per frame)
+            physics->drag_angular = 0.10f;  // Moderate angular damping for stability
             physics->environment = PHYSICS_SPACE; // Zero gravity space flight
             printf("   ✅ 6DOF Physics enabled with reduced drag\n");
         }
@@ -204,13 +207,14 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     printf("🌍 Plain size: %.0fx%.0f units\n", PLAIN_SIZE, PLAIN_SIZE);
     printf("🏎️ CANYON RACER Flight Controls:\n");
     printf("   KEYBOARD (Banking Flight Model):\n");
-    printf("     W/S - Forward/Backward thrust (%.0f force)\n", FLIGHT_THRUST_FORCE);
-    printf("     A/D - BANKING TURNS (roll + yaw combined)\n");
-    printf("     Space/Ctrl - Vertical up/down\n");
-    printf("     Q/E - Aerobatic roll (separate from banking)\n");
+    printf("     W/S - Pitch control (dive/climb)\n");
+    printf("     A/D - BANKING TURNS (coordinated turn)\n");
+    printf("     Space/X - Forward/Backward thrust\n");
+    printf("     R/F - Vertical up/down\n");
+    printf("     Q/E - Pure roll (barrel roll)\n");
     printf("     ARROW KEYS - Direct pitch/yaw for fine control\n");
     printf("     Shift - Boost (%.1fx multiplier)\n", FLIGHT_BOOST_MULTIPLIER);
-    printf("     Alt - Brake\n");
+    printf("     Alt - Brake + Auto-deceleration\n");
     printf("     Tab - Cycle camera modes\n");
     printf("   XBOX CONTROLLER (Canyon Racer Layout):\n");
     printf("     Left Stick - Pitch/Yaw (primary flight control)\n");

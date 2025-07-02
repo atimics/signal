@@ -13,16 +13,33 @@
 
 static Vector3 calculate_linear_force(struct ThrusterSystem* thrusters, struct Physics* physics, float efficiency)
 {
-    (void)physics;  // Unused parameter
     if (!thrusters->thrusters_enabled) {
         return (Vector3){ 0.0f, 0.0f, 0.0f };
     }
     
-    return (Vector3){
+    Vector3 thrust_force = {
         thrusters->current_linear_thrust.x * thrusters->max_linear_force.x * efficiency,
         thrusters->current_linear_thrust.y * thrusters->max_linear_force.y * efficiency,
         thrusters->current_linear_thrust.z * thrusters->max_linear_force.z * efficiency
     };
+    
+    // Add automatic deceleration when no thrust commanded
+    if (physics && thrusters->auto_deceleration) {
+        const float decel_strength = 0.3f; // 30% of max thrust for deceleration
+        
+        // If no thrust commanded and velocity exists, apply counter-thrust
+        if (fabsf(thrusters->current_linear_thrust.x) < 0.1f && fabsf(physics->velocity.x) > 0.5f) {
+            thrust_force.x -= physics->velocity.x * thrusters->max_linear_force.x * decel_strength;
+        }
+        if (fabsf(thrusters->current_linear_thrust.y) < 0.1f && fabsf(physics->velocity.y) > 0.5f) {
+            thrust_force.y -= physics->velocity.y * thrusters->max_linear_force.y * decel_strength;
+        }
+        if (fabsf(thrusters->current_linear_thrust.z) < 0.1f && fabsf(physics->velocity.z) > 0.5f) {
+            thrust_force.z -= physics->velocity.z * thrusters->max_linear_force.z * decel_strength;
+        }
+    }
+    
+    return thrust_force;
 }
 
 static Vector3 calculate_angular_torque(struct ThrusterSystem* thrusters, struct Physics* physics, float efficiency)

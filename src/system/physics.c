@@ -147,7 +147,7 @@ void physics_integrate_linear(struct Physics* physics, struct Transform* transfo
     physics->velocity = vector3_add(physics->velocity, vector3_multiply(physics->acceleration, delta_time));
     
     // Apply drag
-    physics->velocity = vector3_multiply(physics->velocity, physics->drag_linear);
+    physics->velocity = vector3_multiply(physics->velocity, 1.0f - physics->drag_linear);
     
     Vector3 vel_after_drag = physics->velocity;
     
@@ -185,7 +185,17 @@ void physics_integrate_angular(struct Physics* physics, struct Transform* transf
                                           vector3_multiply(physics->angular_acceleration, delta_time));
     
     // Apply angular drag
-    physics->angular_velocity = vector3_multiply(physics->angular_velocity, physics->drag_angular);
+    physics->angular_velocity = vector3_multiply(physics->angular_velocity, 1.0f - physics->drag_angular);
+    
+    // Clamp angular velocity to prevent excessive spinning
+    const float max_angular_speed = 5.0f; // radians per second
+    float angular_speed = vector3_length(physics->angular_velocity);
+    if (angular_speed > max_angular_speed) {
+        physics->angular_velocity = vector3_multiply(
+            vector3_normalize(physics->angular_velocity), 
+            max_angular_speed
+        );
+    }
     
     // Convert angular velocity to quaternion rotation
     Quaternion rotation_delta = quaternion_from_angular_velocity(physics->angular_velocity, delta_time);

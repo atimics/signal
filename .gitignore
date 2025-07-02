@@ -4,6 +4,22 @@ html/
 *.o
 *.exe
 cgame
+Makefile.original
+
+# CMake related files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake
+Testing/
+
+# Build artifacts
+*.a
+*.so
+*.dylib
 
 # Object files from C compilation (but not mesh .obj files)
 src/**/*.obj

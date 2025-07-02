@@ -141,10 +141,10 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
     switch (key_code) {
         // Modern WASD + Mouse flight scheme
         case SAPP_KEYCODE_W:
-            action = INPUT_ACTION_THRUST_FORWARD;
+            action = INPUT_ACTION_PITCH_DOWN;  // W = nose down (dive)
             break;
         case SAPP_KEYCODE_S:
-            action = INPUT_ACTION_THRUST_BACKWARD;
+            action = INPUT_ACTION_PITCH_UP;    // S = nose up (climb)
             break;
         case SAPP_KEYCODE_A:
             action = INPUT_ACTION_STRAFE_LEFT;
@@ -153,10 +153,15 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
             action = INPUT_ACTION_STRAFE_RIGHT;
             break;
         case SAPP_KEYCODE_SPACE:
+            action = INPUT_ACTION_THRUST_FORWARD;
+            break;
+        case SAPP_KEYCODE_X:
+            action = INPUT_ACTION_THRUST_BACKWARD;
+            break;
+        case SAPP_KEYCODE_R:
             action = INPUT_ACTION_MANEUVER_UP;
             break;
-        case SAPP_KEYCODE_LEFT_CONTROL:
-        case SAPP_KEYCODE_RIGHT_CONTROL:
+        case SAPP_KEYCODE_F:
             action = INPUT_ACTION_MANEUVER_DOWN;
             break;
         case SAPP_KEYCODE_LEFT_SHIFT:

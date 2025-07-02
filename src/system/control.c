@@ -126,14 +126,16 @@ static Vector3 process_angular_input(const InputState* input, struct ControlAuth
         // Turn rate limiting disabled - was causing steering issues
         // angular_commands = apply_turn_rate_limiting(angular_commands, previous_angular, 0.15f);
     } else {
-        // Canyon racer banking flight model for keyboard
-        float banking_input = input->strafe;
-        float banking_strength = 1.5f;
+        // Proper flight model for keyboard
+        // A/D control banking turns (combined yaw and roll)
+        float banking_input = input->strafe;  // A = -1, D = +1
+        float bank_yaw_strength = 1.2f;
+        float bank_roll_strength = 0.8f;
         
         angular_commands = (Vector3){
-            input->pitch,                    // X = Pitch (nose up/down)
-            banking_input * banking_strength + input->yaw, // Y = Banking + direct yaw
-            banking_input * banking_strength + input->roll  // Z = Banking + direct roll
+            input->pitch,                              // X = Pitch (nose up/down)
+            banking_input * bank_yaw_strength + input->yaw,   // Y = Yaw (turn)
+            -banking_input * bank_roll_strength + input->roll  // Z = Roll (bank opposite to turn)
         };
         
         // Apply standard sensitivity curve for keyboard

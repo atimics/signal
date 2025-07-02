@@ -3,10 +3,50 @@
 [← Back to Sprint Backlog](../README.md) | [← Design Doc](SPRINT_21_DESIGN.md) | [Implementation Guide →](SPRINT_21_IMPLEMENTATION_GUIDE.md)
 
 **Date**: July 2, 2025  
-**Status**: ✅ COMPLETED - Enhanced 6DOF Flight Mechanics Successfully Implemented  
-**Approach**: Test-driven ECS architecture with physics debugging
+**Status**: 🚧 IN PROGRESS - Critical bugs fixed, stability improvements ongoing  
+**Approach**: Test-driven ECS architecture with physics debugging  
+**Last Updated**: July 2, 2025
 
 ---
+
+## 🔧 **Critical Fixes Implemented**
+
+### **1. Thrust Direction Bug - FIXED** ✅
+- **Problem**: Forces were applied in world space instead of ship-relative space
+- **Solution**: Implemented `quaternion_rotate_vector()` function
+- **Result**: Ships now correctly fly based on their orientation
+
+### **2. Drag Coefficient Bug - FIXED** ✅
+- **Problem**: Drag value of 0.9999 meant 99.99% velocity retention (almost no drag)
+- **Solution**: Fixed drag formula from `vel * drag` to `vel * (1 - drag)`
+- **Updated values**: Linear drag = 0.02 (2% loss), Angular drag = 0.10 (10% loss)
+
+### **3. Angular Stability - IMPROVED** ✅
+- **Problem**: Ship was spinning uncontrollably due to high torque and low damping
+- **Solutions**:
+  - Fixed angular drag calculation
+  - Added angular velocity clamping (max 5.0 rad/s)
+  - Adjusted angular damping from 0.70 to 0.10
+- **Result**: More stable flight with controlled rotation
+
+### **4. Control System Improvements - FIXED** ✅
+- **Problems Fixed**:
+  - A/D both rotating in same direction → Fixed with proper banking (roll opposite to yaw)
+  - Ship skidding when turning → Added auto-deceleration system
+  - W/S controlling wrong axis → Remapped to pitch control
+  - No keyboard thrust control → Space/X now control forward/backward thrust
+- **New Control Scheme**:
+  - W/S: Pitch (dive/climb)
+  - A/D: Banking turns (coordinated yaw + roll)
+  - Space/X: Forward/backward thrust
+  - R/F: Vertical movement
+  - Q/E: Pure roll
+- **Result**: More intuitive flight controls with proper banking mechanics
+
+### **5. Visual Thruster Rendering - PENDING** ⚠️
+- **Problem**: Visual thrusters show "Invalid vertex/index buffer" errors
+- **Impact**: Visual feedback missing but physics working correctly
+- **Next step**: Fix thruster mesh generation
 
 ## ✅ **Issue Resolved: Physics Integration Working**
 
@@ -195,8 +235,16 @@ struct ControlAuthority {
 4. **Add regression tests** to prevent future issues
 
 ### **Sprint 21 Continuation**
-Once the integration bug is fixed:
-1. **Complete Phase 1** (Enhanced Physics Foundation) ✅ 
+Sprint 21 Progress Update:
+1. **Phase 1** (Enhanced Physics Foundation) ✅ COMPLETE
+2. **Phase 2** (Thruster System) ✅ COMPLETE  
+3. **Phase 3** (Control Authority) ✅ COMPLETE
+4. **Phase 4** (Integration & Polish) 🚧 IN PROGRESS
+   - Thrust direction bug: ✅ FIXED
+   - Drag calculation: ✅ FIXED
+   - Angular stability: ✅ IMPROVED
+   - Visual thrusters: ⚠️ PENDING
+   - Human validation: ⏳ READY FOR TESTING 
 2. **Begin Phase 2** (Thruster System refinement) 
 3. **Continue Phase 3** (Flight Model refinement)
 4. **Complete Phase 4** (Polish & Integration)
