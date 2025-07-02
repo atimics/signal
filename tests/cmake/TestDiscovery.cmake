@@ -406,6 +406,13 @@ function(cgame_add_test_suite)
         ${CMAKE_SOURCE_DIR}/tests/stubs
     )
 
+    # Configure test compilation flags
+    target_compile_options(${TEST_EXECUTABLE} PRIVATE
+        -Wall -Wextra -std=c99 -O2 -g
+        -DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND -DTEST_STANDALONE
+        -Wno-error=unused-function -Wno-error=unused-variable
+    )
+
     # Link libraries
     target_link_libraries(${TEST_EXECUTABLE} PRIVATE ${SUITE_LIBS})
 

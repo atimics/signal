@@ -70,8 +70,8 @@ void test_component_addition_incremental(void) {
     entity_add_component(test_world, entity, COMPONENT_PHYSICS);
     TEST_ASSERT_EQUAL(COMPONENT_TRANSFORM | COMPONENT_PHYSICS, entity_ptr->component_mask);
     
-    entity_add_component(test_world, entity, COMPONENT_CONTROL);
-    TEST_ASSERT_EQUAL(COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CONTROL, 
+    entity_add_component(test_world, entity, COMPONENT_CONTROL_AUTHORITY);
+    TEST_ASSERT_EQUAL(COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CONTROL_AUTHORITY, 
                      entity_ptr->component_mask);
     
     TEST_LOG_SUCCESS("Incremental component addition works");
@@ -104,7 +104,7 @@ void test_component_removal_multiple(void) {
     TEST_LOG_PROGRESS("Testing multiple component removal");
     
     EntityID entity = entity_create(test_world);
-    ComponentType initial_components = COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CAMERA | COMPONENT_CONTROL;
+    ComponentType initial_components = COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CAMERA | COMPONENT_CONTROL_AUTHORITY;
     entity_add_component(test_world, entity, initial_components);
     
     ComponentType components_to_remove = COMPONENT_PHYSICS | COMPONENT_CAMERA;
@@ -116,7 +116,7 @@ void test_component_removal_multiple(void) {
     
     // Verify correct components remain
     TEST_ASSERT_NOT_NULL(entity_get_transform(test_world, entity));
-    TEST_ASSERT_NOT_NULL(entity_get_control(test_world, entity));
+    TEST_ASSERT_NOT_NULL(entity_get_control_authority(test_world, entity));
     TEST_ASSERT_NULL(entity_get_physics(test_world, entity));
     TEST_ASSERT_NULL(entity_get_camera(test_world, entity));
     

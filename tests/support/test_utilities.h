@@ -91,7 +91,7 @@ double test_time_function(const char* description, void (*func)(void));
 
 /**
  * @brief Macro to time a code block
- * Usage: TEST_TIME_BLOCK("my operation") { /* code */ }
+ * Usage: TEST_TIME_BLOCK("my operation") { code }
  */
 #define TEST_TIME_BLOCK(desc) \
     for (double _start = test_get_time_ms(), _duration = 0; \

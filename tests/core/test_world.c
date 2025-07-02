@@ -121,7 +121,7 @@ void test_entity_removal(void) {
     TEST_ASSERT_EQUAL(3, test_world->entity_count);
     
     // Remove middle entity
-    entity_remove(test_world, entity2);
+    entity_destroy(test_world, entity2);
     TEST_ASSERT_EQUAL(2, test_world->entity_count);
     
     // Verify entity is no longer accessible
@@ -156,7 +156,7 @@ void test_world_capacity_management(void) {
     // Remove some entities
     uint32_t entities_to_remove = 5;
     for (uint32_t i = 0; i < entities_to_remove; i++) {
-        entity_remove(test_world, i);
+        entity_destroy(test_world, i);
     }
     
     TEST_ASSERT_EQUAL(initial_capacity - entities_to_remove, test_world->entity_count);

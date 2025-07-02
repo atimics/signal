@@ -185,6 +185,19 @@ cgame/fast:
 .PHONY : cgame/fast
 
 #=============================================================================
+# Target rules for targets named hidapi
+
+# Build rule for target.
+hidapi: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hidapi
+.PHONY : hidapi
+
+# fast build rule for target.
+hidapi/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hidapi.dir/build.make CMakeFiles/hidapi.dir/build
+.PHONY : hidapi/fast
+
+#=============================================================================
 # Target rules for targets named core
 
 # Build rule for target.
@@ -196,19 +209,6 @@ core: cmake_check_build_system
 core/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core.dir/build.make CMakeFiles/core.dir/build
 .PHONY : core/fast
-
-#=============================================================================
-# Target rules for targets named systems
-
-# Build rule for target.
-systems: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 systems
-.PHONY : systems
-
-# fast build rule for target.
-systems/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/systems.dir/build.make CMakeFiles/systems.dir/build
-.PHONY : systems/fast
 
 #=============================================================================
 # Target rules for targets named physics
@@ -224,56 +224,56 @@ physics/fast:
 .PHONY : physics/fast
 
 #=============================================================================
-# Target rules for targets named control
+# Target rules for targets named collision
 
 # Build rule for target.
-control: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 control
-.PHONY : control
+collision: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 collision
+.PHONY : collision
 
 # fast build rule for target.
-control/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/control.dir/build.make CMakeFiles/control.dir/build
-.PHONY : control/fast
+collision/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/collision.dir/build.make CMakeFiles/collision.dir/build
+.PHONY : collision/fast
 
 #=============================================================================
-# Target rules for targets named thrusters
+# Target rules for targets named ai
 
 # Build rule for target.
-thrusters: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 thrusters
-.PHONY : thrusters
+ai: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ai
+.PHONY : ai
 
 # fast build rule for target.
-thrusters/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/thrusters.dir/build.make CMakeFiles/thrusters.dir/build
-.PHONY : thrusters/fast
+ai/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ai.dir/build.make CMakeFiles/ai.dir/build
+.PHONY : ai/fast
 
 #=============================================================================
-# Target rules for targets named input
+# Target rules for targets named camera_system
 
 # Build rule for target.
-input: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 input
-.PHONY : input
+camera_system: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 camera_system
+.PHONY : camera_system
 
 # fast build rule for target.
-input/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/input.dir/build.make CMakeFiles/input.dir/build
-.PHONY : input/fast
+camera_system/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera_system.dir/build.make CMakeFiles/camera_system.dir/build
+.PHONY : camera_system/fast
 
 #=============================================================================
-# Target rules for targets named camera
+# Target rules for targets named lod
 
 # Build rule for target.
-camera: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 camera
-.PHONY : camera
+lod: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lod
+.PHONY : lod
 
 # fast build rule for target.
-camera/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera.dir/build.make CMakeFiles/camera.dir/build
-.PHONY : camera/fast
+lod/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lod.dir/build.make CMakeFiles/lod.dir/build
+.PHONY : lod/fast
 
 #=============================================================================
 # Target rules for targets named performance
@@ -289,17 +289,251 @@ performance/fast:
 .PHONY : performance/fast
 
 #=============================================================================
-# Target rules for targets named render_3d
+# Target rules for targets named memory
 
 # Build rule for target.
-render_3d: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 render_3d
-.PHONY : render_3d
+memory: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 memory
+.PHONY : memory
 
 # fast build rule for target.
-render_3d/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_3d.dir/build.make CMakeFiles/render_3d.dir/build
-.PHONY : render_3d/fast
+memory/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/memory.dir/build.make CMakeFiles/memory.dir/build
+.PHONY : memory/fast
+
+#=============================================================================
+# Target rules for targets named material
+
+# Build rule for target.
+material: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 material
+.PHONY : material
+
+# fast build rule for target.
+material/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/material.dir/build.make CMakeFiles/material.dir/build
+.PHONY : material/fast
+
+#=============================================================================
+# Target rules for targets named gamepad
+
+# Build rule for target.
+gamepad: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gamepad
+.PHONY : gamepad
+
+# fast build rule for target.
+gamepad/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gamepad.dir/build.make CMakeFiles/gamepad.dir/build
+.PHONY : gamepad/fast
+
+#=============================================================================
+# Target rules for targets named input
+
+# Build rule for target.
+input: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 input
+.PHONY : input
+
+# fast build rule for target.
+input/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/input.dir/build.make CMakeFiles/input.dir/build
+.PHONY : input/fast
+
+#=============================================================================
+# Target rules for targets named thrusters
+
+# Build rule for target.
+thrusters: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 thrusters
+.PHONY : thrusters
+
+# fast build rule for target.
+thrusters/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/thrusters.dir/build.make CMakeFiles/thrusters.dir/build
+.PHONY : thrusters/fast
+
+#=============================================================================
+# Target rules for targets named control
+
+# Build rule for target.
+control: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 control
+.PHONY : control
+
+# fast build rule for target.
+control/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/control.dir/build.make CMakeFiles/control.dir/build
+.PHONY : control/fast
+
+#=============================================================================
+# Target rules for targets named systems
+
+# Build rule for target.
+systems: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 systems
+.PHONY : systems
+
+# fast build rule for target.
+systems/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/systems.dir/build.make CMakeFiles/systems.dir/build
+.PHONY : systems/fast
+
+#=============================================================================
+# Target rules for targets named gpu_resources
+
+# Build rule for target.
+gpu_resources: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gpu_resources
+.PHONY : gpu_resources
+
+# fast build rule for target.
+gpu_resources/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gpu_resources.dir/build.make CMakeFiles/gpu_resources.dir/build
+.PHONY : gpu_resources/fast
+
+#=============================================================================
+# Target rules for targets named asset_loader
+
+# Build rule for target.
+asset_loader: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 asset_loader
+.PHONY : asset_loader
+
+# fast build rule for target.
+asset_loader/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/build
+.PHONY : asset_loader/fast
+
+#=============================================================================
+# Target rules for targets named assets
+
+# Build rule for target.
+assets: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 assets
+.PHONY : assets
+
+# fast build rule for target.
+assets/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assets.dir/build.make CMakeFiles/assets.dir/build
+.PHONY : assets/fast
+
+#=============================================================================
+# Target rules for targets named data
+
+# Build rule for target.
+data: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 data
+.PHONY : data
+
+# fast build rule for target.
+data/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data.dir/build.make CMakeFiles/data.dir/build
+.PHONY : data/fast
+
+#=============================================================================
+# Target rules for targets named scene_state
+
+# Build rule for target.
+scene_state: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 scene_state
+.PHONY : scene_state
+
+# fast build rule for target.
+scene_state/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_state.dir/build.make CMakeFiles/scene_state.dir/build
+.PHONY : scene_state/fast
+
+#=============================================================================
+# Target rules for targets named config
+
+# Build rule for target.
+config: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 config
+.PHONY : config
+
+# fast build rule for target.
+config/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/config.dir/build.make CMakeFiles/config.dir/build
+.PHONY : config/fast
+
+#=============================================================================
+# Target rules for targets named logo_scene_script
+
+# Build rule for target.
+logo_scene_script: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 logo_scene_script
+.PHONY : logo_scene_script
+
+# fast build rule for target.
+logo_scene_script/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logo_scene_script.dir/build.make CMakeFiles/logo_scene_script.dir/build
+.PHONY : logo_scene_script/fast
+
+#=============================================================================
+# Target rules for targets named derelict_navigation_scene_script
+
+# Build rule for target.
+derelict_navigation_scene_script: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 derelict_navigation_scene_script
+.PHONY : derelict_navigation_scene_script
+
+# fast build rule for target.
+derelict_navigation_scene_script/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/derelict_navigation_scene_script.dir/build.make CMakeFiles/derelict_navigation_scene_script.dir/build
+.PHONY : derelict_navigation_scene_script/fast
+
+#=============================================================================
+# Target rules for targets named flight_test_scene_script
+
+# Build rule for target.
+flight_test_scene_script: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 flight_test_scene_script
+.PHONY : flight_test_scene_script
+
+# fast build rule for target.
+flight_test_scene_script/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/flight_test_scene_script.dir/build.make CMakeFiles/flight_test_scene_script.dir/build
+.PHONY : flight_test_scene_script/fast
+
+#=============================================================================
+# Target rules for targets named scene_selector_scene_script
+
+# Build rule for target.
+scene_selector_scene_script: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 scene_selector_scene_script
+.PHONY : scene_selector_scene_script
+
+# fast build rule for target.
+scene_selector_scene_script/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_selector_scene_script.dir/build.make CMakeFiles/scene_selector_scene_script.dir/build
+.PHONY : scene_selector_scene_script/fast
+
+#=============================================================================
+# Target rules for targets named scene_script
+
+# Build rule for target.
+scene_script: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 scene_script
+.PHONY : scene_script
+
+# fast build rule for target.
+scene_script/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_script.dir/build.make CMakeFiles/scene_script.dir/build
+.PHONY : scene_script/fast
+
+#=============================================================================
+# Target rules for targets named graphics_api
+
+# Build rule for target.
+graphics_api: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 graphics_api
+.PHONY : graphics_api
+
+# fast build rule for target.
+graphics_api/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/graphics_api.dir/build.make CMakeFiles/graphics_api.dir/build
+.PHONY : graphics_api/fast
 
 #=============================================================================
 # Target rules for targets named render_camera
@@ -341,43 +575,17 @@ render_lighting/fast:
 .PHONY : render_lighting/fast
 
 #=============================================================================
-# Target rules for targets named gpu_resources
+# Target rules for targets named render_3d
 
 # Build rule for target.
-gpu_resources: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 gpu_resources
-.PHONY : gpu_resources
+render_3d: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 render_3d
+.PHONY : render_3d
 
 # fast build rule for target.
-gpu_resources/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/gpu_resources.dir/build.make CMakeFiles/gpu_resources.dir/build
-.PHONY : gpu_resources/fast
-
-#=============================================================================
-# Target rules for targets named graphics_api
-
-# Build rule for target.
-graphics_api: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 graphics_api
-.PHONY : graphics_api
-
-# fast build rule for target.
-graphics_api/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/graphics_api.dir/build.make CMakeFiles/graphics_api.dir/build
-.PHONY : graphics_api/fast
-
-#=============================================================================
-# Target rules for targets named ui
-
-# Build rule for target.
-ui: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ui
-.PHONY : ui
-
-# fast build rule for target.
-ui/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui.dir/build.make CMakeFiles/ui.dir/build
-.PHONY : ui/fast
+render_3d/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_3d.dir/build.make CMakeFiles/render_3d.dir/build
+.PHONY : render_3d/fast
 
 #=============================================================================
 # Target rules for targets named ui_api
@@ -393,19 +601,6 @@ ui_api/fast:
 .PHONY : ui_api/fast
 
 #=============================================================================
-# Target rules for targets named ui_scene
-
-# Build rule for target.
-ui_scene: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ui_scene
-.PHONY : ui_scene
-
-# fast build rule for target.
-ui_scene/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_scene.dir/build.make CMakeFiles/ui_scene.dir/build
-.PHONY : ui_scene/fast
-
-#=============================================================================
 # Target rules for targets named ui_components
 
 # Build rule for target.
@@ -419,17 +614,43 @@ ui_components/fast:
 .PHONY : ui_components/fast
 
 #=============================================================================
-# Target rules for targets named assets
+# Target rules for targets named ui_scene
 
 # Build rule for target.
-assets: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 assets
-.PHONY : assets
+ui_scene: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ui_scene
+.PHONY : ui_scene
 
 # fast build rule for target.
-assets/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/assets.dir/build.make CMakeFiles/assets.dir/build
-.PHONY : assets/fast
+ui_scene/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_scene.dir/build.make CMakeFiles/ui_scene.dir/build
+.PHONY : ui_scene/fast
+
+#=============================================================================
+# Target rules for targets named ui
+
+# Build rule for target.
+ui: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ui
+.PHONY : ui
+
+# fast build rule for target.
+ui/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui.dir/build.make CMakeFiles/ui.dir/build
+.PHONY : ui/fast
+
+#=============================================================================
+# Target rules for targets named compile_assets
+
+# Build rule for target.
+compile_assets: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 compile_assets
+.PHONY : compile_assets
+
+# fast build rule for target.
+compile_assets/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/compile_assets.dir/build.make CMakeFiles/compile_assets.dir/build
+.PHONY : compile_assets/fast
 
 #=============================================================================
 # Target rules for targets named run
@@ -561,12 +782,131 @@ run-ctest/fast:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/run-ctest.dir/build.make tests/CMakeFiles/run-ctest.dir/build
 .PHONY : run-ctest/fast
 
+src/asset_loader/asset_loader_index.o: src/asset_loader/asset_loader_index.c.o
+.PHONY : src/asset_loader/asset_loader_index.o
+
+# target to build an object file
+src/asset_loader/asset_loader_index.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_index.c.o
+.PHONY : src/asset_loader/asset_loader_index.c.o
+
+src/asset_loader/asset_loader_index.i: src/asset_loader/asset_loader_index.c.i
+.PHONY : src/asset_loader/asset_loader_index.i
+
+# target to preprocess a source file
+src/asset_loader/asset_loader_index.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_index.c.i
+.PHONY : src/asset_loader/asset_loader_index.c.i
+
+src/asset_loader/asset_loader_index.s: src/asset_loader/asset_loader_index.c.s
+.PHONY : src/asset_loader/asset_loader_index.s
+
+# target to generate assembly for a file
+src/asset_loader/asset_loader_index.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_index.c.s
+.PHONY : src/asset_loader/asset_loader_index.c.s
+
+src/asset_loader/asset_loader_material.o: src/asset_loader/asset_loader_material.c.o
+.PHONY : src/asset_loader/asset_loader_material.o
+
+# target to build an object file
+src/asset_loader/asset_loader_material.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_material.c.o
+.PHONY : src/asset_loader/asset_loader_material.c.o
+
+src/asset_loader/asset_loader_material.i: src/asset_loader/asset_loader_material.c.i
+.PHONY : src/asset_loader/asset_loader_material.i
+
+# target to preprocess a source file
+src/asset_loader/asset_loader_material.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_material.c.i
+.PHONY : src/asset_loader/asset_loader_material.c.i
+
+src/asset_loader/asset_loader_material.s: src/asset_loader/asset_loader_material.c.s
+.PHONY : src/asset_loader/asset_loader_material.s
+
+# target to generate assembly for a file
+src/asset_loader/asset_loader_material.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_material.c.s
+.PHONY : src/asset_loader/asset_loader_material.c.s
+
+src/asset_loader/asset_loader_mesh.o: src/asset_loader/asset_loader_mesh.c.o
+.PHONY : src/asset_loader/asset_loader_mesh.o
+
+# target to build an object file
+src/asset_loader/asset_loader_mesh.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_mesh.c.o
+.PHONY : src/asset_loader/asset_loader_mesh.c.o
+
+src/asset_loader/asset_loader_mesh.i: src/asset_loader/asset_loader_mesh.c.i
+.PHONY : src/asset_loader/asset_loader_mesh.i
+
+# target to preprocess a source file
+src/asset_loader/asset_loader_mesh.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_mesh.c.i
+.PHONY : src/asset_loader/asset_loader_mesh.c.i
+
+src/asset_loader/asset_loader_mesh.s: src/asset_loader/asset_loader_mesh.c.s
+.PHONY : src/asset_loader/asset_loader_mesh.s
+
+# target to generate assembly for a file
+src/asset_loader/asset_loader_mesh.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/asset_loader.dir/build.make CMakeFiles/asset_loader.dir/src/asset_loader/asset_loader_mesh.c.s
+.PHONY : src/asset_loader/asset_loader_mesh.c.s
+
+src/assets.o: src/assets.c.o
+.PHONY : src/assets.o
+
+# target to build an object file
+src/assets.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assets.dir/build.make CMakeFiles/assets.dir/src/assets.c.o
+.PHONY : src/assets.c.o
+
+src/assets.i: src/assets.c.i
+.PHONY : src/assets.i
+
+# target to preprocess a source file
+src/assets.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assets.dir/build.make CMakeFiles/assets.dir/src/assets.c.i
+.PHONY : src/assets.c.i
+
+src/assets.s: src/assets.c.s
+.PHONY : src/assets.s
+
+# target to generate assembly for a file
+src/assets.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/assets.dir/build.make CMakeFiles/assets.dir/src/assets.c.s
+.PHONY : src/assets.c.s
+
+src/config.o: src/config.c.o
+.PHONY : src/config.o
+
+# target to build an object file
+src/config.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/config.dir/build.make CMakeFiles/config.dir/src/config.c.o
+.PHONY : src/config.c.o
+
+src/config.i: src/config.c.i
+.PHONY : src/config.i
+
+# target to preprocess a source file
+src/config.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/config.dir/build.make CMakeFiles/config.dir/src/config.c.i
+.PHONY : src/config.c.i
+
+src/config.s: src/config.c.s
+.PHONY : src/config.s
+
+# target to generate assembly for a file
+src/config.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/config.dir/build.make CMakeFiles/config.dir/src/config.c.s
+.PHONY : src/config.c.s
+
 src/core.o: src/core.c.o
 .PHONY : src/core.o
 
 # target to build an object file
 src/core.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/core.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core.dir/build.make CMakeFiles/core.dir/src/core.c.o
 .PHONY : src/core.c.o
 
@@ -575,7 +915,6 @@ src/core.i: src/core.c.i
 
 # target to preprocess a source file
 src/core.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/core.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core.dir/build.make CMakeFiles/core.dir/src/core.c.i
 .PHONY : src/core.c.i
 
@@ -584,7 +923,6 @@ src/core.s: src/core.c.s
 
 # target to generate assembly for a file
 src/core.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/core.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/core.dir/build.make CMakeFiles/core.dir/src/core.c.s
 .PHONY : src/core.c.s
 
@@ -593,7 +931,7 @@ src/data.o: src/data.c.o
 
 # target to build an object file
 src/data.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/data.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data.dir/build.make CMakeFiles/data.dir/src/data.c.o
 .PHONY : src/data.c.o
 
 src/data.i: src/data.c.i
@@ -601,7 +939,7 @@ src/data.i: src/data.c.i
 
 # target to preprocess a source file
 src/data.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/data.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data.dir/build.make CMakeFiles/data.dir/src/data.c.i
 .PHONY : src/data.c.i
 
 src/data.s: src/data.c.s
@@ -609,7 +947,7 @@ src/data.s: src/data.c.s
 
 # target to generate assembly for a file
 src/data.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/data.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/data.dir/build.make CMakeFiles/data.dir/src/data.c.s
 .PHONY : src/data.c.s
 
 src/gpu_resources.o: src/gpu_resources.c.o
@@ -617,7 +955,6 @@ src/gpu_resources.o: src/gpu_resources.c.o
 
 # target to build an object file
 src/gpu_resources.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/gpu_resources.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gpu_resources.dir/build.make CMakeFiles/gpu_resources.dir/src/gpu_resources.c.o
 .PHONY : src/gpu_resources.c.o
 
@@ -626,7 +963,6 @@ src/gpu_resources.i: src/gpu_resources.c.i
 
 # target to preprocess a source file
 src/gpu_resources.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/gpu_resources.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gpu_resources.dir/build.make CMakeFiles/gpu_resources.dir/src/gpu_resources.c.i
 .PHONY : src/gpu_resources.c.i
 
@@ -635,7 +971,6 @@ src/gpu_resources.s: src/gpu_resources.c.s
 
 # target to generate assembly for a file
 src/gpu_resources.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/gpu_resources.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/gpu_resources.dir/build.make CMakeFiles/gpu_resources.dir/src/gpu_resources.c.s
 .PHONY : src/gpu_resources.c.s
 
@@ -644,7 +979,6 @@ src/graphics_api.o: src/graphics_api.c.o
 
 # target to build an object file
 src/graphics_api.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/graphics_api.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graphics_api.dir/build.make CMakeFiles/graphics_api.dir/src/graphics_api.c.o
 .PHONY : src/graphics_api.c.o
 
@@ -653,7 +987,6 @@ src/graphics_api.i: src/graphics_api.c.i
 
 # target to preprocess a source file
 src/graphics_api.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/graphics_api.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graphics_api.dir/build.make CMakeFiles/graphics_api.dir/src/graphics_api.c.i
 .PHONY : src/graphics_api.c.i
 
@@ -662,7 +995,6 @@ src/graphics_api.s: src/graphics_api.c.s
 
 # target to generate assembly for a file
 src/graphics_api.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/graphics_api.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graphics_api.dir/build.make CMakeFiles/graphics_api.dir/src/graphics_api.c.s
 .PHONY : src/graphics_api.c.s
 
@@ -695,7 +1027,6 @@ src/render_3d.o: src/render_3d.c.o
 
 # target to build an object file
 src/render_3d.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_3d.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_3d.dir/build.make CMakeFiles/render_3d.dir/src/render_3d.c.o
 .PHONY : src/render_3d.c.o
 
@@ -704,7 +1035,6 @@ src/render_3d.i: src/render_3d.c.i
 
 # target to preprocess a source file
 src/render_3d.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_3d.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_3d.dir/build.make CMakeFiles/render_3d.dir/src/render_3d.c.i
 .PHONY : src/render_3d.c.i
 
@@ -713,7 +1043,6 @@ src/render_3d.s: src/render_3d.c.s
 
 # target to generate assembly for a file
 src/render_3d.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_3d.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_3d.dir/build.make CMakeFiles/render_3d.dir/src/render_3d.c.s
 .PHONY : src/render_3d.c.s
 
@@ -722,7 +1051,6 @@ src/render_camera.o: src/render_camera.c.o
 
 # target to build an object file
 src/render_camera.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_camera.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_camera.dir/build.make CMakeFiles/render_camera.dir/src/render_camera.c.o
 .PHONY : src/render_camera.c.o
 
@@ -731,7 +1059,6 @@ src/render_camera.i: src/render_camera.c.i
 
 # target to preprocess a source file
 src/render_camera.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_camera.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_camera.dir/build.make CMakeFiles/render_camera.dir/src/render_camera.c.i
 .PHONY : src/render_camera.c.i
 
@@ -740,7 +1067,6 @@ src/render_camera.s: src/render_camera.c.s
 
 # target to generate assembly for a file
 src/render_camera.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_camera.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_camera.dir/build.make CMakeFiles/render_camera.dir/src/render_camera.c.s
 .PHONY : src/render_camera.c.s
 
@@ -749,7 +1075,6 @@ src/render_lighting.o: src/render_lighting.c.o
 
 # target to build an object file
 src/render_lighting.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_lighting.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_lighting.dir/build.make CMakeFiles/render_lighting.dir/src/render_lighting.c.o
 .PHONY : src/render_lighting.c.o
 
@@ -758,7 +1083,6 @@ src/render_lighting.i: src/render_lighting.c.i
 
 # target to preprocess a source file
 src/render_lighting.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_lighting.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_lighting.dir/build.make CMakeFiles/render_lighting.dir/src/render_lighting.c.i
 .PHONY : src/render_lighting.c.i
 
@@ -767,7 +1091,6 @@ src/render_lighting.s: src/render_lighting.c.s
 
 # target to generate assembly for a file
 src/render_lighting.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_lighting.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_lighting.dir/build.make CMakeFiles/render_lighting.dir/src/render_lighting.c.s
 .PHONY : src/render_lighting.c.s
 
@@ -776,7 +1099,6 @@ src/render_mesh.o: src/render_mesh.c.o
 
 # target to build an object file
 src/render_mesh.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_mesh.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_mesh.dir/build.make CMakeFiles/render_mesh.dir/src/render_mesh.c.o
 .PHONY : src/render_mesh.c.o
 
@@ -785,7 +1107,6 @@ src/render_mesh.i: src/render_mesh.c.i
 
 # target to preprocess a source file
 src/render_mesh.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_mesh.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_mesh.dir/build.make CMakeFiles/render_mesh.dir/src/render_mesh.c.i
 .PHONY : src/render_mesh.c.i
 
@@ -794,7 +1115,6 @@ src/render_mesh.s: src/render_mesh.c.s
 
 # target to generate assembly for a file
 src/render_mesh.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/render_mesh.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/render_mesh.dir/build.make CMakeFiles/render_mesh.dir/src/render_mesh.c.s
 .PHONY : src/render_mesh.c.s
 
@@ -803,7 +1123,7 @@ src/scene_script.o: src/scene_script.c.o
 
 # target to build an object file
 src/scene_script.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/scene_script.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_script.dir/build.make CMakeFiles/scene_script.dir/src/scene_script.c.o
 .PHONY : src/scene_script.c.o
 
 src/scene_script.i: src/scene_script.c.i
@@ -811,7 +1131,7 @@ src/scene_script.i: src/scene_script.c.i
 
 # target to preprocess a source file
 src/scene_script.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/scene_script.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_script.dir/build.make CMakeFiles/scene_script.dir/src/scene_script.c.i
 .PHONY : src/scene_script.c.i
 
 src/scene_script.s: src/scene_script.c.s
@@ -819,7 +1139,7 @@ src/scene_script.s: src/scene_script.c.s
 
 # target to generate assembly for a file
 src/scene_script.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/scene_script.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_script.dir/build.make CMakeFiles/scene_script.dir/src/scene_script.c.s
 .PHONY : src/scene_script.c.s
 
 src/scene_state.o: src/scene_state.c.o
@@ -827,7 +1147,7 @@ src/scene_state.o: src/scene_state.c.o
 
 # target to build an object file
 src/scene_state.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/scene_state.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_state.dir/build.make CMakeFiles/scene_state.dir/src/scene_state.c.o
 .PHONY : src/scene_state.c.o
 
 src/scene_state.i: src/scene_state.c.i
@@ -835,7 +1155,7 @@ src/scene_state.i: src/scene_state.c.i
 
 # target to preprocess a source file
 src/scene_state.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/scene_state.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_state.dir/build.make CMakeFiles/scene_state.dir/src/scene_state.c.i
 .PHONY : src/scene_state.c.i
 
 src/scene_state.s: src/scene_state.c.s
@@ -843,15 +1163,135 @@ src/scene_state.s: src/scene_state.c.s
 
 # target to generate assembly for a file
 src/scene_state.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/scene_state.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_state.dir/build.make CMakeFiles/scene_state.dir/src/scene_state.c.s
 .PHONY : src/scene_state.c.s
+
+src/scripts/derelict_navigation_scene.o: src/scripts/derelict_navigation_scene.c.o
+.PHONY : src/scripts/derelict_navigation_scene.o
+
+# target to build an object file
+src/scripts/derelict_navigation_scene.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/derelict_navigation_scene_script.dir/build.make CMakeFiles/derelict_navigation_scene_script.dir/src/scripts/derelict_navigation_scene.c.o
+.PHONY : src/scripts/derelict_navigation_scene.c.o
+
+src/scripts/derelict_navigation_scene.i: src/scripts/derelict_navigation_scene.c.i
+.PHONY : src/scripts/derelict_navigation_scene.i
+
+# target to preprocess a source file
+src/scripts/derelict_navigation_scene.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/derelict_navigation_scene_script.dir/build.make CMakeFiles/derelict_navigation_scene_script.dir/src/scripts/derelict_navigation_scene.c.i
+.PHONY : src/scripts/derelict_navigation_scene.c.i
+
+src/scripts/derelict_navigation_scene.s: src/scripts/derelict_navigation_scene.c.s
+.PHONY : src/scripts/derelict_navigation_scene.s
+
+# target to generate assembly for a file
+src/scripts/derelict_navigation_scene.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/derelict_navigation_scene_script.dir/build.make CMakeFiles/derelict_navigation_scene_script.dir/src/scripts/derelict_navigation_scene.c.s
+.PHONY : src/scripts/derelict_navigation_scene.c.s
+
+src/scripts/flight_test_scene.o: src/scripts/flight_test_scene.c.o
+.PHONY : src/scripts/flight_test_scene.o
+
+# target to build an object file
+src/scripts/flight_test_scene.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/flight_test_scene_script.dir/build.make CMakeFiles/flight_test_scene_script.dir/src/scripts/flight_test_scene.c.o
+.PHONY : src/scripts/flight_test_scene.c.o
+
+src/scripts/flight_test_scene.i: src/scripts/flight_test_scene.c.i
+.PHONY : src/scripts/flight_test_scene.i
+
+# target to preprocess a source file
+src/scripts/flight_test_scene.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/flight_test_scene_script.dir/build.make CMakeFiles/flight_test_scene_script.dir/src/scripts/flight_test_scene.c.i
+.PHONY : src/scripts/flight_test_scene.c.i
+
+src/scripts/flight_test_scene.s: src/scripts/flight_test_scene.c.s
+.PHONY : src/scripts/flight_test_scene.s
+
+# target to generate assembly for a file
+src/scripts/flight_test_scene.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/flight_test_scene_script.dir/build.make CMakeFiles/flight_test_scene_script.dir/src/scripts/flight_test_scene.c.s
+.PHONY : src/scripts/flight_test_scene.c.s
+
+src/scripts/logo_scene.o: src/scripts/logo_scene.c.o
+.PHONY : src/scripts/logo_scene.o
+
+# target to build an object file
+src/scripts/logo_scene.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logo_scene_script.dir/build.make CMakeFiles/logo_scene_script.dir/src/scripts/logo_scene.c.o
+.PHONY : src/scripts/logo_scene.c.o
+
+src/scripts/logo_scene.i: src/scripts/logo_scene.c.i
+.PHONY : src/scripts/logo_scene.i
+
+# target to preprocess a source file
+src/scripts/logo_scene.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logo_scene_script.dir/build.make CMakeFiles/logo_scene_script.dir/src/scripts/logo_scene.c.i
+.PHONY : src/scripts/logo_scene.c.i
+
+src/scripts/logo_scene.s: src/scripts/logo_scene.c.s
+.PHONY : src/scripts/logo_scene.s
+
+# target to generate assembly for a file
+src/scripts/logo_scene.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logo_scene_script.dir/build.make CMakeFiles/logo_scene_script.dir/src/scripts/logo_scene.c.s
+.PHONY : src/scripts/logo_scene.c.s
+
+src/scripts/scene_selector_scene.o: src/scripts/scene_selector_scene.c.o
+.PHONY : src/scripts/scene_selector_scene.o
+
+# target to build an object file
+src/scripts/scene_selector_scene.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_selector_scene_script.dir/build.make CMakeFiles/scene_selector_scene_script.dir/src/scripts/scene_selector_scene.c.o
+.PHONY : src/scripts/scene_selector_scene.c.o
+
+src/scripts/scene_selector_scene.i: src/scripts/scene_selector_scene.c.i
+.PHONY : src/scripts/scene_selector_scene.i
+
+# target to preprocess a source file
+src/scripts/scene_selector_scene.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_selector_scene_script.dir/build.make CMakeFiles/scene_selector_scene_script.dir/src/scripts/scene_selector_scene.c.i
+.PHONY : src/scripts/scene_selector_scene.c.i
+
+src/scripts/scene_selector_scene.s: src/scripts/scene_selector_scene.c.s
+.PHONY : src/scripts/scene_selector_scene.s
+
+# target to generate assembly for a file
+src/scripts/scene_selector_scene.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_selector_scene_script.dir/build.make CMakeFiles/scene_selector_scene_script.dir/src/scripts/scene_selector_scene.c.s
+.PHONY : src/scripts/scene_selector_scene.c.s
+
+src/system/ai.o: src/system/ai.c.o
+.PHONY : src/system/ai.o
+
+# target to build an object file
+src/system/ai.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ai.dir/build.make CMakeFiles/ai.dir/src/system/ai.c.o
+.PHONY : src/system/ai.c.o
+
+src/system/ai.i: src/system/ai.c.i
+.PHONY : src/system/ai.i
+
+# target to preprocess a source file
+src/system/ai.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ai.dir/build.make CMakeFiles/ai.dir/src/system/ai.c.i
+.PHONY : src/system/ai.c.i
+
+src/system/ai.s: src/system/ai.c.s
+.PHONY : src/system/ai.s
+
+# target to generate assembly for a file
+src/system/ai.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ai.dir/build.make CMakeFiles/ai.dir/src/system/ai.c.s
+.PHONY : src/system/ai.c.s
 
 src/system/camera.o: src/system/camera.c.o
 .PHONY : src/system/camera.o
 
 # target to build an object file
 src/system/camera.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera.dir/build.make CMakeFiles/camera.dir/src/system/camera.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera_system.dir/build.make CMakeFiles/camera_system.dir/src/system/camera.c.o
 .PHONY : src/system/camera.c.o
 
 src/system/camera.i: src/system/camera.c.i
@@ -859,7 +1299,7 @@ src/system/camera.i: src/system/camera.c.i
 
 # target to preprocess a source file
 src/system/camera.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera.dir/build.make CMakeFiles/camera.dir/src/system/camera.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera_system.dir/build.make CMakeFiles/camera_system.dir/src/system/camera.c.i
 .PHONY : src/system/camera.c.i
 
 src/system/camera.s: src/system/camera.c.s
@@ -867,8 +1307,32 @@ src/system/camera.s: src/system/camera.c.s
 
 # target to generate assembly for a file
 src/system/camera.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera.dir/build.make CMakeFiles/camera.dir/src/system/camera.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/camera_system.dir/build.make CMakeFiles/camera_system.dir/src/system/camera.c.s
 .PHONY : src/system/camera.c.s
+
+src/system/collision.o: src/system/collision.c.o
+.PHONY : src/system/collision.o
+
+# target to build an object file
+src/system/collision.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/collision.dir/build.make CMakeFiles/collision.dir/src/system/collision.c.o
+.PHONY : src/system/collision.c.o
+
+src/system/collision.i: src/system/collision.c.i
+.PHONY : src/system/collision.i
+
+# target to preprocess a source file
+src/system/collision.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/collision.dir/build.make CMakeFiles/collision.dir/src/system/collision.c.i
+.PHONY : src/system/collision.c.i
+
+src/system/collision.s: src/system/collision.c.s
+.PHONY : src/system/collision.s
+
+# target to generate assembly for a file
+src/system/collision.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/collision.dir/build.make CMakeFiles/collision.dir/src/system/collision.c.s
+.PHONY : src/system/collision.c.s
 
 src/system/control.o: src/system/control.c.o
 .PHONY : src/system/control.o
@@ -894,6 +1358,30 @@ src/system/control.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/control.dir/build.make CMakeFiles/control.dir/src/system/control.c.s
 .PHONY : src/system/control.c.s
 
+src/system/gamepad.o: src/system/gamepad.c.o
+.PHONY : src/system/gamepad.o
+
+# target to build an object file
+src/system/gamepad.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gamepad.dir/build.make CMakeFiles/gamepad.dir/src/system/gamepad.c.o
+.PHONY : src/system/gamepad.c.o
+
+src/system/gamepad.i: src/system/gamepad.c.i
+.PHONY : src/system/gamepad.i
+
+# target to preprocess a source file
+src/system/gamepad.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gamepad.dir/build.make CMakeFiles/gamepad.dir/src/system/gamepad.c.i
+.PHONY : src/system/gamepad.c.i
+
+src/system/gamepad.s: src/system/gamepad.c.s
+.PHONY : src/system/gamepad.s
+
+# target to generate assembly for a file
+src/system/gamepad.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/gamepad.dir/build.make CMakeFiles/gamepad.dir/src/system/gamepad.c.s
+.PHONY : src/system/gamepad.c.s
+
 src/system/input.o: src/system/input.c.o
 .PHONY : src/system/input.o
 
@@ -917,6 +1405,78 @@ src/system/input.s: src/system/input.c.s
 src/system/input.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/input.dir/build.make CMakeFiles/input.dir/src/system/input.c.s
 .PHONY : src/system/input.c.s
+
+src/system/lod.o: src/system/lod.c.o
+.PHONY : src/system/lod.o
+
+# target to build an object file
+src/system/lod.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lod.dir/build.make CMakeFiles/lod.dir/src/system/lod.c.o
+.PHONY : src/system/lod.c.o
+
+src/system/lod.i: src/system/lod.c.i
+.PHONY : src/system/lod.i
+
+# target to preprocess a source file
+src/system/lod.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lod.dir/build.make CMakeFiles/lod.dir/src/system/lod.c.i
+.PHONY : src/system/lod.c.i
+
+src/system/lod.s: src/system/lod.c.s
+.PHONY : src/system/lod.s
+
+# target to generate assembly for a file
+src/system/lod.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/lod.dir/build.make CMakeFiles/lod.dir/src/system/lod.c.s
+.PHONY : src/system/lod.c.s
+
+src/system/material.o: src/system/material.c.o
+.PHONY : src/system/material.o
+
+# target to build an object file
+src/system/material.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/material.dir/build.make CMakeFiles/material.dir/src/system/material.c.o
+.PHONY : src/system/material.c.o
+
+src/system/material.i: src/system/material.c.i
+.PHONY : src/system/material.i
+
+# target to preprocess a source file
+src/system/material.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/material.dir/build.make CMakeFiles/material.dir/src/system/material.c.i
+.PHONY : src/system/material.c.i
+
+src/system/material.s: src/system/material.c.s
+.PHONY : src/system/material.s
+
+# target to generate assembly for a file
+src/system/material.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/material.dir/build.make CMakeFiles/material.dir/src/system/material.c.s
+.PHONY : src/system/material.c.s
+
+src/system/memory.o: src/system/memory.c.o
+.PHONY : src/system/memory.o
+
+# target to build an object file
+src/system/memory.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/memory.dir/build.make CMakeFiles/memory.dir/src/system/memory.c.o
+.PHONY : src/system/memory.c.o
+
+src/system/memory.i: src/system/memory.c.i
+.PHONY : src/system/memory.i
+
+# target to preprocess a source file
+src/system/memory.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/memory.dir/build.make CMakeFiles/memory.dir/src/system/memory.c.i
+.PHONY : src/system/memory.c.i
+
+src/system/memory.s: src/system/memory.c.s
+.PHONY : src/system/memory.s
+
+# target to generate assembly for a file
+src/system/memory.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/memory.dir/build.make CMakeFiles/memory.dir/src/system/memory.c.s
+.PHONY : src/system/memory.c.s
 
 src/system/performance.o: src/system/performance.c.o
 .PHONY : src/system/performance.o
@@ -995,7 +1555,6 @@ src/systems.o: src/systems.c.o
 
 # target to build an object file
 src/systems.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/systems.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/systems.dir/build.make CMakeFiles/systems.dir/src/systems.c.o
 .PHONY : src/systems.c.o
 
@@ -1004,7 +1563,6 @@ src/systems.i: src/systems.c.i
 
 # target to preprocess a source file
 src/systems.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/systems.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/systems.dir/build.make CMakeFiles/systems.dir/src/systems.c.i
 .PHONY : src/systems.c.i
 
@@ -1013,7 +1571,6 @@ src/systems.s: src/systems.c.s
 
 # target to generate assembly for a file
 src/systems.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/systems.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/systems.dir/build.make CMakeFiles/systems.dir/src/systems.c.s
 .PHONY : src/systems.c.s
 
@@ -1022,7 +1579,6 @@ src/ui.o: src/ui.c.o
 
 # target to build an object file
 src/ui.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui.dir/build.make CMakeFiles/ui.dir/src/ui.c.o
 .PHONY : src/ui.c.o
 
@@ -1031,7 +1587,6 @@ src/ui.i: src/ui.c.i
 
 # target to preprocess a source file
 src/ui.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui.dir/build.make CMakeFiles/ui.dir/src/ui.c.i
 .PHONY : src/ui.c.i
 
@@ -1040,7 +1595,6 @@ src/ui.s: src/ui.c.s
 
 # target to generate assembly for a file
 src/ui.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui.dir/build.make CMakeFiles/ui.dir/src/ui.c.s
 .PHONY : src/ui.c.s
 
@@ -1049,7 +1603,6 @@ src/ui_api.o: src/ui_api.c.o
 
 # target to build an object file
 src/ui_api.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_api.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_api.dir/build.make CMakeFiles/ui_api.dir/src/ui_api.c.o
 .PHONY : src/ui_api.c.o
 
@@ -1058,7 +1611,6 @@ src/ui_api.i: src/ui_api.c.i
 
 # target to preprocess a source file
 src/ui_api.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_api.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_api.dir/build.make CMakeFiles/ui_api.dir/src/ui_api.c.i
 .PHONY : src/ui_api.c.i
 
@@ -1067,7 +1619,6 @@ src/ui_api.s: src/ui_api.c.s
 
 # target to generate assembly for a file
 src/ui_api.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_api.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_api.dir/build.make CMakeFiles/ui_api.dir/src/ui_api.c.s
 .PHONY : src/ui_api.c.s
 
@@ -1076,7 +1627,6 @@ src/ui_components.o: src/ui_components.c.o
 
 # target to build an object file
 src/ui_components.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_components.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_components.dir/build.make CMakeFiles/ui_components.dir/src/ui_components.c.o
 .PHONY : src/ui_components.c.o
 
@@ -1085,7 +1635,6 @@ src/ui_components.i: src/ui_components.c.i
 
 # target to preprocess a source file
 src/ui_components.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_components.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_components.dir/build.make CMakeFiles/ui_components.dir/src/ui_components.c.i
 .PHONY : src/ui_components.c.i
 
@@ -1094,7 +1643,6 @@ src/ui_components.s: src/ui_components.c.s
 
 # target to generate assembly for a file
 src/ui_components.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_components.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_components.dir/build.make CMakeFiles/ui_components.dir/src/ui_components.c.s
 .PHONY : src/ui_components.c.s
 
@@ -1103,7 +1651,6 @@ src/ui_scene.o: src/ui_scene.c.o
 
 # target to build an object file
 src/ui_scene.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_scene.c.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_scene.dir/build.make CMakeFiles/ui_scene.dir/src/ui_scene.c.o
 .PHONY : src/ui_scene.c.o
 
@@ -1112,7 +1659,6 @@ src/ui_scene.i: src/ui_scene.c.i
 
 # target to preprocess a source file
 src/ui_scene.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_scene.c.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_scene.dir/build.make CMakeFiles/ui_scene.dir/src/ui_scene.c.i
 .PHONY : src/ui_scene.c.i
 
@@ -1121,7 +1667,6 @@ src/ui_scene.s: src/ui_scene.c.s
 
 # target to generate assembly for a file
 src/ui_scene.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/ui_scene.c.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ui_scene.dir/build.make CMakeFiles/ui_scene.dir/src/ui_scene.c.s
 .PHONY : src/ui_scene.c.s
 
@@ -1130,7 +1675,7 @@ third_party/hidapi/mac/hid.o: third_party/hidapi/mac/hid.c.o
 
 # target to build an object file
 third_party/hidapi/mac/hid.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/third_party/hidapi/mac/hid.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hidapi.dir/build.make CMakeFiles/hidapi.dir/third_party/hidapi/mac/hid.c.o
 .PHONY : third_party/hidapi/mac/hid.c.o
 
 third_party/hidapi/mac/hid.i: third_party/hidapi/mac/hid.c.i
@@ -1138,7 +1683,7 @@ third_party/hidapi/mac/hid.i: third_party/hidapi/mac/hid.c.i
 
 # target to preprocess a source file
 third_party/hidapi/mac/hid.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/third_party/hidapi/mac/hid.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hidapi.dir/build.make CMakeFiles/hidapi.dir/third_party/hidapi/mac/hid.c.i
 .PHONY : third_party/hidapi/mac/hid.c.i
 
 third_party/hidapi/mac/hid.s: third_party/hidapi/mac/hid.c.s
@@ -1146,7 +1691,7 @@ third_party/hidapi/mac/hid.s: third_party/hidapi/mac/hid.c.s
 
 # target to generate assembly for a file
 third_party/hidapi/mac/hid.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/third_party/hidapi/mac/hid.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hidapi.dir/build.make CMakeFiles/hidapi.dir/third_party/hidapi/mac/hid.c.s
 .PHONY : third_party/hidapi/mac/hid.c.s
 
 # Help Target
@@ -1162,25 +1707,42 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... assets"
 	@echo "... clean-assets"
+	@echo "... compile_assets"
 	@echo "... docs"
 	@echo "... profile"
 	@echo "... run"
 	@echo "... run-ctest"
-	@echo "... camera"
+	@echo "... ai"
+	@echo "... asset_loader"
+	@echo "... assets"
+	@echo "... camera_system"
 	@echo "... cgame"
+	@echo "... collision"
+	@echo "... config"
 	@echo "... control"
 	@echo "... core"
+	@echo "... data"
+	@echo "... derelict_navigation_scene_script"
+	@echo "... flight_test_scene_script"
+	@echo "... gamepad"
 	@echo "... gpu_resources"
 	@echo "... graphics_api"
+	@echo "... hidapi"
 	@echo "... input"
+	@echo "... lod"
+	@echo "... logo_scene_script"
+	@echo "... material"
+	@echo "... memory"
 	@echo "... performance"
 	@echo "... physics"
 	@echo "... render_3d"
 	@echo "... render_camera"
 	@echo "... render_lighting"
 	@echo "... render_mesh"
+	@echo "... scene_script"
+	@echo "... scene_selector_scene_script"
+	@echo "... scene_state"
 	@echo "... systems"
 	@echo "... test_cmake-core"
 	@echo "... test_cmake-integration"
@@ -1192,6 +1754,21 @@ help:
 	@echo "... ui_api"
 	@echo "... ui_components"
 	@echo "... ui_scene"
+	@echo "... src/asset_loader/asset_loader_index.o"
+	@echo "... src/asset_loader/asset_loader_index.i"
+	@echo "... src/asset_loader/asset_loader_index.s"
+	@echo "... src/asset_loader/asset_loader_material.o"
+	@echo "... src/asset_loader/asset_loader_material.i"
+	@echo "... src/asset_loader/asset_loader_material.s"
+	@echo "... src/asset_loader/asset_loader_mesh.o"
+	@echo "... src/asset_loader/asset_loader_mesh.i"
+	@echo "... src/asset_loader/asset_loader_mesh.s"
+	@echo "... src/assets.o"
+	@echo "... src/assets.i"
+	@echo "... src/assets.s"
+	@echo "... src/config.o"
+	@echo "... src/config.i"
+	@echo "... src/config.s"
 	@echo "... src/core.o"
 	@echo "... src/core.i"
 	@echo "... src/core.s"
@@ -1225,15 +1802,45 @@ help:
 	@echo "... src/scene_state.o"
 	@echo "... src/scene_state.i"
 	@echo "... src/scene_state.s"
+	@echo "... src/scripts/derelict_navigation_scene.o"
+	@echo "... src/scripts/derelict_navigation_scene.i"
+	@echo "... src/scripts/derelict_navigation_scene.s"
+	@echo "... src/scripts/flight_test_scene.o"
+	@echo "... src/scripts/flight_test_scene.i"
+	@echo "... src/scripts/flight_test_scene.s"
+	@echo "... src/scripts/logo_scene.o"
+	@echo "... src/scripts/logo_scene.i"
+	@echo "... src/scripts/logo_scene.s"
+	@echo "... src/scripts/scene_selector_scene.o"
+	@echo "... src/scripts/scene_selector_scene.i"
+	@echo "... src/scripts/scene_selector_scene.s"
+	@echo "... src/system/ai.o"
+	@echo "... src/system/ai.i"
+	@echo "... src/system/ai.s"
 	@echo "... src/system/camera.o"
 	@echo "... src/system/camera.i"
 	@echo "... src/system/camera.s"
+	@echo "... src/system/collision.o"
+	@echo "... src/system/collision.i"
+	@echo "... src/system/collision.s"
 	@echo "... src/system/control.o"
 	@echo "... src/system/control.i"
 	@echo "... src/system/control.s"
+	@echo "... src/system/gamepad.o"
+	@echo "... src/system/gamepad.i"
+	@echo "... src/system/gamepad.s"
 	@echo "... src/system/input.o"
 	@echo "... src/system/input.i"
 	@echo "... src/system/input.s"
+	@echo "... src/system/lod.o"
+	@echo "... src/system/lod.i"
+	@echo "... src/system/lod.s"
+	@echo "... src/system/material.o"
+	@echo "... src/system/material.i"
+	@echo "... src/system/material.s"
+	@echo "... src/system/memory.o"
+	@echo "... src/system/memory.i"
+	@echo "... src/system/memory.s"
 	@echo "... src/system/performance.o"
 	@echo "... src/system/performance.i"
 	@echo "... src/system/performance.s"

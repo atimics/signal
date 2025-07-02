@@ -107,28 +107,10 @@ list(APPEND CGAME_SYSTEM_LIBS ${CGAME_PLATFORM_LIBS})
 # ============================================================================
 
 # Define source files for the main game engine library
-set(CGAME_SOURCES
-    src/main.c
-    src/core.c
-    src/systems.c
-    src/render_3d.c
-    src/render_camera.c
-    src/render_mesh.c
-    src/render_lighting.c
-    src/gpu_resources.c
-    src/graphics_api.c
-    src/ui.c
-    src/ui_api.c
-    src/ui_scene.c
-    src/ui_components.c
-    src/data.c
-    src/scene_state.c
-    src/scene_script.c
-    ${CMAKE_SOURCE_DIR}/third_party/hidapi/mac/hid.c
-)
+# This is now handled by modular libraries below
 
-# Add the main executable
-add_executable(cgame ${CGAME_SOURCES})
+# Add the main executable, which only contains the main entry point
+add_executable(cgame src/main.c)
 
 # Suppress warnings for third-party code included in main.c and ui.c
 set_source_files_properties(
@@ -144,40 +126,81 @@ add_dependencies(cgame assets)
 # ENGINE LIBRARY DEFINITIONS
 # ============================================================================
 
+# HIDAPI Library (for input)
+add_library(hidapi STATIC ${CMAKE_SOURCE_DIR}/third_party/hidapi/mac/hid.c)
+target_include_directories(hidapi PUBLIC ${CMAKE_SOURCE_DIR}/third_party/hidapi)
+
 # Core Engine Library
 add_library(core src/core.c)
 target_include_directories(core PUBLIC src)
 
-# Systems Library
-add_library(systems src/systems.c)
+# Individual System Libraries
 add_library(physics src/system/physics.c)
-add_library(control src/system/control.c)
-add_library(thrusters src/system/thrusters.c)
-add_library(input src/system/input.c)
-add_library(camera src/system/camera.c)
+add_library(collision src/system/collision.c)
+add_library(ai src/system/ai.c)
+add_library(camera_system src/system/camera.c)
+add_library(lod src/system/lod.c)
 add_library(performance src/system/performance.c)
-target_link_libraries(systems PRIVATE core physics control thrusters input camera performance)
+add_library(memory src/system/memory.c)
+add_library(material src/system/material.c)
+add_library(gamepad src/system/gamepad.c)
+add_library(input src/system/input.c)
+add_library(thrusters src/system/thrusters.c)
+add_library(control src/system/control.c)
+
+# Systems Library (aggregator)
+add_library(systems src/systems.c)
+target_link_libraries(systems PRIVATE core physics collision ai camera_system lod performance memory material gamepad input thrusters control)
+
+# Data and Scene Management
+add_library(gpu_resources src/gpu_resources.c)
+add_library(asset_loader src/asset_loader/asset_loader_index.c src/asset_loader/asset_loader_mesh.c src/asset_loader/asset_loader_material.c)
+add_library(assets src/assets.c)
+target_link_libraries(assets PRIVATE core gpu_resources asset_loader)
+add_library(data src/data.c)
+target_link_libraries(data PRIVATE core assets)
+add_library(scene_state src/scene_state.c)
+add_library(config src/config.c)
+
+# Scene Scripts
+add_library(logo_scene_script src/scripts/logo_scene.c)
+add_library(derelict_navigation_scene_script src/scripts/derelict_navigation_scene.c)
+add_library(flight_test_scene_script src/scripts/flight_test_scene.c)
+add_library(scene_selector_scene_script src/scripts/scene_selector_scene.c)
+
+add_library(scene_script src/scene_script.c)
+target_link_libraries(scene_script PRIVATE core data logo_scene_script derelict_navigation_scene_script flight_test_scene_script scene_selector_scene_script)
+
 
 # Rendering Libraries
-add_library(render_3d src/render_3d.c)
+add_library(graphics_api src/graphics_api.c)
 add_library(render_camera src/render_camera.c)
 add_library(render_mesh src/render_mesh.c)
 add_library(render_lighting src/render_lighting.c)
-add_library(gpu_resources src/gpu_resources.c)
-add_library(graphics_api src/graphics_api.c)
+add_library(render_3d src/render_3d.c)
+target_link_libraries(render_3d PRIVATE core graphics_api render_camera render_mesh render_lighting gpu_resources material)
 
 # UI Libraries
-add_library(ui src/ui.c)
 add_library(ui_api src/ui_api.c)
-add_library(ui_scene src/ui_scene.c)
 add_library(ui_components src/ui_components.c)
-
-# Link rendering and UI libraries
-target_link_libraries(render_3d PRIVATE core graphics_api)
-target_link_libraries(ui PRIVATE core graphics_api)
+add_library(ui_scene src/ui_scene.c)
+add_library(ui src/ui.c)
+target_link_libraries(ui PRIVATE core graphics_api ui_api ui_components ui_scene config)
 
 # Link main executable against all libraries
-target_link_libraries(cgame PRIVATE core systems render_3d ui ${CGAME_SYSTEM_LIBS})
+target_link_libraries(cgame PRIVATE 
+    core 
+    systems 
+    render_3d 
+    ui 
+    data 
+    scene_state 
+    scene_script 
+    config 
+    assets
+    hidapi
+    ${CGAME_SYSTEM_LIBS}
+)
 
 # ============================================================================
 # PLATFORM-SPECIFIC CONFIGURATION
@@ -214,11 +237,12 @@ if(PYTHON_EXECUTABLE)
     set(BUILD_ASSETS_DIR "${CMAKE_BINARY_DIR}/assets")
     
     # Custom target for asset compilation
-    add_custom_target(assets
+    add_custom_target(compile_assets
         COMMAND ${PYTHON_EXECUTABLE} ${ASSET_COMPILER}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Compiling game assets..."
     )
+    add_dependencies(cgame compile_assets)
 else()
     message(WARNING "Python not found, skipping asset pipeline.")
 endif()

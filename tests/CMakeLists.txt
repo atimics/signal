@@ -21,7 +21,7 @@ cgame_add_test_suite(
         core/test_components.c
         core/test_math.c
         core/test_world.c
-    LIBS core
+    LIBS core physics
 )
 
 # Rendering Tests

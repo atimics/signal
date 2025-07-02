@@ -73,9 +73,9 @@ EntityID test_create_basic_entity(struct World* world) {
         physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
         physics->angular_velocity = (Vector3){0.0f, 0.0f, 0.0f};
         physics->mass = 1.0f;
-        physics->drag = 0.1f;
-        physics->angular_drag = 0.1f;
-        physics->enable_6dof = false;
+        physics->drag_linear = 0.1f;
+        physics->drag_angular = 0.1f;
+        physics->has_6dof = false;
     }
     
     return entity;
@@ -308,9 +308,9 @@ void test_populate_component(void* component, ComponentType type) {
             p->velocity = (Vector3){0.0f, 0.0f, 0.0f};
             p->angular_velocity = (Vector3){0.0f, 0.0f, 0.0f};
             p->mass = 1.0f;
-            p->drag = 0.1f;
-            p->angular_drag = 0.1f;
-            p->enable_6dof = false;
+            p->drag_linear = 0.1f;
+            p->drag_angular = 0.1f;
+            p->has_6dof = false;
             break;
         }
         default:
@@ -377,7 +377,8 @@ void test_create_integration_scene(struct World* world) {
     
     // Create a player ship
     EntityID player = test_create_entity_with_components(world, 
-        COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CONTROL | COMPONENT_THRUSTERS);
+        COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CONTROL_AUTHORITY | COMPONENT_THRUSTER_SYSTEM);
+    (void)player; // Suppress unused warning
     
     // Create some debris
     for (int i = 0; i < 5; i++) {
@@ -398,6 +399,7 @@ void test_create_integration_scene(struct World* world) {
     // Create a camera
     EntityID camera = test_create_entity_with_components(world,
         COMPONENT_TRANSFORM | COMPONENT_CAMERA);
+    (void)camera; // Suppress unused warning
 }
 
 void test_run_system_sequence(struct World* world, float delta_time, int iterations) {
@@ -405,7 +407,7 @@ void test_run_system_sequence(struct World* world, float delta_time, int iterati
     
     for (int i = 0; i < iterations; i++) {
         // Run core systems in typical order
-        physics_system_update(world, delta_time);
+        physics_system_update(world, NULL, delta_time);
         // Add more systems as needed
     }
 }
