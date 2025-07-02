@@ -64,7 +64,7 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     // Store previous button states for edge detection
     memcpy(gamepad->buttons_previous, gamepad->buttons, sizeof(gamepad->buttons));
     
-    // Debug: Log raw HID report data periodically
+    // Debug: Log raw HID report data periodically with more detail
     static int debug_counter = 0;
     if (++debug_counter % 60 == 0) {  // Once per second at 60fps
         printf("🎮 HID Report (size=%d): ", size);
@@ -72,16 +72,46 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
             printf("%02X ", data[i]);
         }
         printf("\n");
+        
+        // Log interpreted values
+        if (size >= 14) {
+            printf("   Triggers: LT=%d RT=%d (raw bytes 4,5)\n", data[4], data[5]);
+            printf("   Sticks: LX=%d LY=%d RX=%d RY=%d (bytes 6-13)\n",
+                   *((int16_t*)(data + 6)), *((int16_t*)(data + 8)),
+                   *((int16_t*)(data + 10)), *((int16_t*)(data + 12)));
+        }
     }
     
-    // Xbox controller report format (simplified)
-    // This may need adjustment based on actual controller reports
+    // Xbox controller report format
+    // Common Xbox One controller on macOS format:
+    // Byte 0: Report ID (usually 0x01)
+    // Byte 1: D-pad and some buttons
+    // Byte 2-3: More buttons
+    // Byte 4: Left trigger (0-255)
+    // Byte 5: Right trigger (0-255)
+    // Byte 6-7: Left stick X (16-bit signed)
+    // Byte 8-9: Left stick Y (16-bit signed)
+    // Byte 10-11: Right stick X (16-bit signed)
+    // Byte 12-13: Right stick Y (16-bit signed)
     
-    // Analog sticks (bytes vary by controller, this is a common layout)
-    int16_t left_x = *((int16_t*)(data + 6));
-    int16_t left_y = *((int16_t*)(data + 8));
-    int16_t right_x = *((int16_t*)(data + 10));
-    int16_t right_y = *((int16_t*)(data + 12));
+    // Try alternate mapping for Xbox controllers on macOS
+    int16_t left_x, left_y, right_x, right_y;
+    
+    if (size >= 14) {
+        // Standard mapping
+        left_x = *((int16_t*)(data + 6));
+        left_y = *((int16_t*)(data + 8));
+        right_x = *((int16_t*)(data + 10));
+        right_y = *((int16_t*)(data + 12));
+    } else if (size >= 13) {
+        // Some controllers have 13-byte reports
+        left_x = *((int16_t*)(data + 5));
+        left_y = *((int16_t*)(data + 7));
+        right_x = *((int16_t*)(data + 9));
+        right_y = *((int16_t*)(data + 11));
+    } else {
+        return; // Report too small
+    }
     
     // Apply deadzone and normalize
     gamepad->left_stick_x = apply_deadzone(normalize_axis(left_x), axis_deadzone);
@@ -89,9 +119,15 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     gamepad->right_stick_x = apply_deadzone(normalize_axis(right_x), axis_deadzone);
     gamepad->right_stick_y = apply_deadzone(normalize_axis(-right_y), axis_deadzone); // Invert Y
     
-    // Triggers
-    gamepad->left_trigger = data[4] / 255.0f;
-    gamepad->right_trigger = data[5] / 255.0f;
+    // Triggers - check if bytes 4 and 5 look like triggers (0-255 range)
+    if (data[4] <= 255 && data[5] <= 255) {
+        gamepad->left_trigger = data[4] / 255.0f;
+        gamepad->right_trigger = data[5] / 255.0f;
+    } else {
+        // Alternate trigger locations for some controllers
+        gamepad->left_trigger = 0.0f;
+        gamepad->right_trigger = 0.0f;
+    }
     
     // Buttons (byte layout may vary)
     uint8_t buttons1 = data[2];

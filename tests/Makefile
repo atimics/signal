@@ -634,6 +634,30 @@ stubs/graphics_api_test_stub.c.s:
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/graphics_api_test_stub.c.s
 .PHONY : stubs/graphics_api_test_stub.c.s
 
+stubs/nuklear_test_stubs.o: stubs/nuklear_test_stubs.c.o
+.PHONY : stubs/nuklear_test_stubs.o
+
+# target to build an object file
+stubs/nuklear_test_stubs.c.o:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/nuklear_test_stubs.c.o
+.PHONY : stubs/nuklear_test_stubs.c.o
+
+stubs/nuklear_test_stubs.i: stubs/nuklear_test_stubs.c.i
+.PHONY : stubs/nuklear_test_stubs.i
+
+# target to preprocess a source file
+stubs/nuklear_test_stubs.c.i:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/nuklear_test_stubs.c.i
+.PHONY : stubs/nuklear_test_stubs.c.i
+
+stubs/nuklear_test_stubs.s: stubs/nuklear_test_stubs.c.s
+.PHONY : stubs/nuklear_test_stubs.s
+
+# target to generate assembly for a file
+stubs/nuklear_test_stubs.c.s:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-ui.dir/build.make tests/CMakeFiles/test_cmake-ui.dir/stubs/nuklear_test_stubs.c.s
+.PHONY : stubs/nuklear_test_stubs.c.s
+
 support/test_utilities.o: support/test_utilities.c.o
 .PHONY : support/test_utilities.o
 
@@ -817,6 +841,9 @@ help:
 	@echo "... stubs/graphics_api_test_stub.o"
 	@echo "... stubs/graphics_api_test_stub.i"
 	@echo "... stubs/graphics_api_test_stub.s"
+	@echo "... stubs/nuklear_test_stubs.o"
+	@echo "... stubs/nuklear_test_stubs.i"
+	@echo "... stubs/nuklear_test_stubs.s"
 	@echo "... support/test_utilities.o"
 	@echo "... support/test_utilities.i"
 	@echo "... support/test_utilities.s"

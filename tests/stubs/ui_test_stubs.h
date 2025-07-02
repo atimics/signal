@@ -42,7 +42,6 @@ struct nk_rect {
 // Mock nuklear function declarations
 struct nk_rect nk_rect(float x, float y, float w, float h);
 bool nk_begin(struct nk_context* ctx, const char* title, struct nk_rect bounds, uint32_t flags);
-void nk_end(struct nk_context* ctx);
 
 static inline void nk_end(struct nk_context* ctx) {
     (void)ctx;
@@ -51,12 +50,12 @@ static inline void nk_end(struct nk_context* ctx) {
 // Nuklear function declarations (implemented in nuklear_test_stubs.c)
 void nk_layout_row_dynamic(struct nk_context* ctx, float height, int cols);
 bool nk_button_label(struct nk_context* ctx, const char* title);
-void nk_label(struct nk_context* ctx, const char* text, int align);
-void nk_labelf(struct nk_context* ctx, int align, const char* fmt, ...);
+void nk_label(struct nk_context* ctx, const char* str, int flags);
+void nk_labelf(struct nk_context* ctx, int flags, const char* fmt, ...);
 bool nk_checkbox_label(struct nk_context* ctx, const char* label, bool* active);
 bool nk_group_begin(struct nk_context* ctx, const char* title, uint32_t flags);
 void nk_group_end(struct nk_context* ctx);
-bool nk_selectable_label(struct nk_context* ctx, const char* str, int align, bool* value);
+bool nk_selectable_label(struct nk_context* ctx, const char* str, int flags, bool* value);
 void nk_spacing(struct nk_context* ctx, int cols);
 int nk_strlen(const char* str);
 bool nk_tree_push_hashed(struct nk_context* ctx, int type, const char* title, int state, const char* hash, int len, int line);

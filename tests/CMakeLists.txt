@@ -46,7 +46,7 @@ cgame_add_test_suite(
     NAME cmake-ui
     SOURCES ui/test_ui_system.c
     LIBS core ui ui_api ui_scene ui_components
-    STUBS graphics_api_test_stub
+    STUBS graphics_api_test_stub nuklear_test_stubs
 )
 
 # Integration Tests

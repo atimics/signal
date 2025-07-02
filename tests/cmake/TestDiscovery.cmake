@@ -29,6 +29,7 @@ set(TEST_SUPPORT_SOURCES
 set(TEST_STUB_SOURCES
     ${TEST_STUBS_DIR}/graphics_api_test_stub.c
     ${TEST_STUBS_DIR}/engine_test_stubs.c
+    ${TEST_STUBS_DIR}/nuklear_test_stubs.c
 )
 
 # ============================================================================
@@ -390,7 +391,7 @@ function(cgame_add_test_suite)
     # Add specific stub sources if provided
     if(SUITE_STUBS)
         foreach(stub_file ${SUITE_STUBS})
-            list(APPEND TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/stubs/${stub_file}.c")
+            list(APPEND TEST_SOURCES "${CMAKE_SOURCE_DIR}/tests/stubs/${stub_file}.c")
         endforeach()
     endif()
 

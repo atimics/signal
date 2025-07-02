@@ -87,7 +87,7 @@ void input_update(void) {
         if (fabsf(gamepad->left_stick_x) > deadzone) {
             float value = gamepad->left_stick_x;
             value = value * value * (value > 0 ? 1.0f : -1.0f) * 1.5f; // Amplify for responsiveness
-            current_input.yaw += value; // Right stick = turn right
+            current_input.yaw += value; // Left stick X = turn
         }
         
         // Right stick for banking and vertical thrust (canyon racer style)
@@ -106,19 +106,25 @@ void input_update(void) {
             current_input.thrust -= gamepad->left_trigger; // Left trigger = reverse
         }
         
-        // Debug: Log significant gamepad inputs
+        // Debug: Log significant gamepad inputs - more frequent for debugging
         static int input_debug_counter = 0;
-        if (++input_debug_counter % 30 == 0) {  // Every 0.5 seconds at 60fps
+        if (++input_debug_counter % 10 == 0) {  // Every ~0.16 seconds at 60fps
             if (fabsf(gamepad->left_stick_x) > deadzone || fabsf(gamepad->left_stick_y) > deadzone ||
                 fabsf(gamepad->right_stick_x) > deadzone || fabsf(gamepad->right_stick_y) > deadzone ||
                 gamepad->left_trigger > deadzone || gamepad->right_trigger > deadzone) {
-                printf("🕹️ Input: LS(%.2f,%.2f) RS(%.2f,%.2f) LT:%.2f RT:%.2f\n",
+                printf("🕹️ RAW: LS(%.3f,%.3f) RS(%.3f,%.3f) LT:%.3f RT:%.3f\n",
                        gamepad->left_stick_x, gamepad->left_stick_y,
                        gamepad->right_stick_x, gamepad->right_stick_y,
                        gamepad->left_trigger, gamepad->right_trigger);
-                printf("   Mapped: thrust=%.2f pitch=%.2f yaw=%.2f roll=%.2f strafe=%.2f\n",
+                printf("   MAPPED: thrust=%.3f pitch=%.3f yaw=%.3f roll=%.3f strafe=%.3f\n",
                        current_input.thrust, current_input.pitch, current_input.yaw, 
                        current_input.roll, current_input.strafe);
+                
+                // Extra debug for trigger issue
+                if (gamepad->right_trigger > deadzone) {
+                    printf("   ⚠️ RT pressed: %.3f -> thrust: %.3f (yaw should be: %.3f)\n",
+                           gamepad->right_trigger, current_input.thrust, current_input.yaw);
+                }
             }
         }
         
