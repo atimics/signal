@@ -623,6 +623,46 @@ float vector3_distance(Vector3 a, Vector3 b)
 }
 
 // ============================================================================
+// QUATERNION UTILITY FUNCTIONS
+// ============================================================================
+
+Vector3 quaternion_rotate_vector(Quaternion q, Vector3 v)
+{
+    // Using the formula: v' = q * v * q^-1
+    // Optimized version: v' = v + 2 * q.xyz × (q.xyz × v + q.w * v)
+    
+    // First cross product: q.xyz × v
+    Vector3 qv_cross = {
+        q.y * v.z - q.z * v.y,
+        q.z * v.x - q.x * v.z,
+        q.x * v.y - q.y * v.x
+    };
+    
+    // Scale v by q.w and add to cross product
+    Vector3 temp = {
+        qv_cross.x + q.w * v.x,
+        qv_cross.y + q.w * v.y,
+        qv_cross.z + q.w * v.z
+    };
+    
+    // Second cross product: q.xyz × temp
+    Vector3 qtemp_cross = {
+        q.y * temp.z - q.z * temp.y,
+        q.z * temp.x - q.x * temp.z,
+        q.x * temp.y - q.y * temp.x
+    };
+    
+    // Final result: v + 2 * qtemp_cross
+    Vector3 result = {
+        v.x + 2.0f * qtemp_cross.x,
+        v.y + 2.0f * qtemp_cross.y,
+        v.z + 2.0f * qtemp_cross.z
+    };
+    
+    return result;
+}
+
+// ============================================================================
 // MATRIX UTILITY FUNCTIONS
 // ============================================================================
 

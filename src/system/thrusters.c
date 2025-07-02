@@ -1,5 +1,6 @@
 #include "thrusters.h"
 #include "physics.h"
+#include "../core.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -56,25 +57,29 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
         struct Entity* entity = &world->entities[i];
 
         if (!(entity->component_mask & COMPONENT_THRUSTER_SYSTEM) ||
-            !(entity->component_mask & COMPONENT_PHYSICS))
+            !(entity->component_mask & COMPONENT_PHYSICS) ||
+            !(entity->component_mask & COMPONENT_TRANSFORM))
         {
             continue;
         }
 
         struct ThrusterSystem* thrusters = entity->thruster_system;
         struct Physics* physics = entity->physics;
+        struct Transform* transform = entity->transform;
         
-        if (!thrusters || !physics) continue;
+        if (!thrusters || !physics || !transform) continue;
 
         thruster_updates++;
 
         // Calculate environmental efficiency
         float efficiency = thruster_calculate_efficiency(thrusters, physics->environment);
         
-        // Calculate linear forces
+        // Calculate linear forces in ship-local space
         Vector3 linear_force = calculate_linear_force(thrusters, physics, efficiency);
         if (linear_force.x != 0.0f || linear_force.y != 0.0f || linear_force.z != 0.0f) {
-            physics_add_force(physics, linear_force);
+            // Transform force from ship-local space to world space
+            Vector3 world_force = quaternion_rotate_vector(transform->rotation, linear_force);
+            physics_add_force(physics, world_force);
             force_applications++;
         }
         

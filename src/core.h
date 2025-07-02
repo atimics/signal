@@ -428,6 +428,9 @@ Vector3 vector3_normalize(Vector3 v);
 float vector3_length(Vector3 v);
 float vector3_distance(Vector3 a, Vector3 b);
 
+// Quaternion utility functions
+Vector3 quaternion_rotate_vector(Quaternion q, Vector3 v);
+
 // Matrix utility functions
 void mat4_identity(float* m);
 void mat4_perspective(float* m, float fov, float aspect, float near, float far);

@@ -1,11 +1,14 @@
 # Sprint 21: Ship Flight Mechanics Overhaul
 
+[← Back to Sprint Backlog](../README.md) | [Findings →](SPRINT_21_FINDINGS_AND_FIXES.md) | [Implementation Guide →](SPRINT_21_IMPLEMENTATION_GUIDE.md)
+
 **Sprint**: 21 - Core Flight Physics & Controls  
-**Focus**: Entity-agnostic flight mechanics with 6DOF physics  
+**Focus**: Control Plane Improvement - Entity-agnostic flight mechanics with 6DOF physics  
 **Date**: July 2, 2025  
 **Priority**: High - Essential gameplay foundation  
-**Status**: ✅ APPROVED - ARCHITECTURE REVIEWED AND ACCEPTED  
-**📋 Implementation**: Entity-agnostic capability composition architecture confirmed
+**Status**: ⚠️ CRITICAL BUG - Thrust direction transformation needed  
+**📋 Implementation**: Entity-agnostic capability composition architecture confirmed  
+**🎯 Definition of Done**: Subjective human approval of flight mechanics feel
 
 ---
 ## ✅ **ARCHITECTURAL REVIEW COMPLETE**
@@ -19,9 +22,11 @@
 
 ---
 
-## 🎯 **Sprint Goals** ✅ APPROVED
+## 🎯 **Sprint Goals** ⚠️ PENDING THRUST FIX
 
-Transform SIGNAL's basic movement system into authentic, compelling spaceflight mechanics with proper 6DOF (six degrees of freedom) physics using entity-agnostic capability composition architecture.
+**PRIMARY OBJECTIVE**: Control Plane Improvement - Transform SIGNAL's basic movement system into authentic, compelling spaceflight mechanics with proper 6DOF (six degrees of freedom) physics using entity-agnostic capability composition architecture.
+
+**DEFINITION OF DONE**: Subjective human approval of flight mechanics feel - realistic, responsive, and fun spaceflight controls that pass human tester validation.
 
 **Core Principle**: ANY entity can have flight capabilities through component composition:
 - **Physics Component**: Universal 6DOF physics for any entity
@@ -38,13 +43,19 @@ Transform SIGNAL's basic movement system into authentic, compelling spaceflight 
 - Unified input system with keyboard + gamepad support
 - Multiple flight scenes with camera systems
 
-### **Current Flight Mechanics Issues** 🚨
-**Based on**: `docs/FLIGHT_MECHANICS_ANALYSIS.md`
-1. **Over-Simplified Physics**: Basic velocity/acceleration only, no proper 6DOF
-2. **No Rotation Controls**: Ships can't pitch, yaw, or roll naturally  
-3. **Camera-Dependent Feel**: Flight excitement comes from camera tricks, not physics
-4. **Disabled Ground Effects**: Physics features commented out due to bugs
-5. **Inconsistent Implementation**: Different flight behavior across scenes
+### **CRITICAL BUG - SPRINT BLOCKER** 🚨
+**Thrust Direction Issue**: Forces applied in world space instead of ship-relative space
+- **Location**: `src/system/thrusters.c:77` - `physics_add_force(physics, linear_force);`
+- **Problem**: Thrust forces calculated in local ship space but never transformed by ship rotation
+- **Impact**: Ship can only move forward relative to camera, cannot change course
+- **Solution Needed**: Transform forces from local to world space using ship's rotation quaternion
+
+### **Previously Resolved Issues** ✅
+1. ✅ **Over-Simplified Physics**: Enhanced to proper 6DOF with angular dynamics
+2. ✅ **No Rotation Controls**: Full pitch/yaw/roll implemented and working
+3. ✅ **Camera-Dependent Feel**: Physics-based flight mechanics implemented
+4. ✅ **Performance**: 60+ FPS maintained with enhanced physics
+5. ✅ **Consistent Implementation**: Universal component-based architecture
 
 ## 🏗️ **Architecture Design**
 

@@ -1,6 +1,6 @@
-// tests/test_core_math.c
-#include "core_math.h"
-#include "vendor/unity.h"
+// tests/core/test_math.c
+#include "../support/test_utilities.h"
+#include "../../src/core.h"
 
 // Test function for vector addition
 void test_vector_addition(void)
