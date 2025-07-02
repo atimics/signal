@@ -4,6 +4,9 @@
 #include "core.h"
 #include "systems.h"
 
+// Forward declarations
+struct nk_context;
+
 // ============================================================================
 // CORE UI SYSTEM
 // ============================================================================
@@ -18,5 +21,8 @@ void ui_set_visible(bool visible);
 void ui_set_debug_visible(bool visible);
 bool ui_is_visible(void);
 bool ui_is_debug_visible(void);
+
+// Flight HUD system
+void ui_render_flight_hud(struct nk_context* ctx, struct World* world);
 
 #endif  // UI_H

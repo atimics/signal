@@ -119,17 +119,23 @@ void input_update(void) {
     // Process gamepad input
     GamepadState* gamepad = gamepad_get_state(0);
     if (gamepad && gamepad->connected) {
-        // Left stick for pitch/yaw (ship control)
+        // CANYON RACING CONTROLS:
+        // Left stick: Banking and fine targeting adjustments (ship orientation)
         float left_x = apply_deadzone(gamepad->left_stick_x, GAMEPAD_DEADZONE);
         float left_y = apply_deadzone(gamepad->left_stick_y, GAMEPAD_DEADZONE);
         
         if (left_x != 0.0f || left_y != 0.0f) {
-            canyon_input.current_state.yaw += left_x * PITCH_YAW_SENSITIVITY;
-            canyon_input.current_state.pitch -= left_y * PITCH_YAW_SENSITIVITY; // Invert Y
+            // Left stick X = banking (roll + coordinated yaw for racing-style turns)
+            float bank_input = left_x * PITCH_YAW_SENSITIVITY;
+            canyon_input.current_state.roll += bank_input * 1.5f;     // Primary roll
+            canyon_input.current_state.yaw += bank_input * 0.3f;      // Coordinated turn
+            
+            // Left stick Y = fine pitch adjustments
+            canyon_input.current_state.pitch -= left_y * PITCH_YAW_SENSITIVITY * 0.5f; // Reduced sensitivity for fine control
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Right stick for camera/look target control
+        // Right stick: Targeting reticle control (where you want to fly)
         float right_x = apply_deadzone(gamepad->right_stick_x, GAMEPAD_DEADZONE);
         float right_y = apply_deadzone(gamepad->right_stick_y, GAMEPAD_DEADZONE);
         
