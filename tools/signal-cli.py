@@ -4,9 +4,18 @@ SIGNAL Classified Document Interface (signal-cli)
 Interactive CLI minigame for the Aethelian Network encryption protocol.
 
 Usage: python tools/signal-cli.py
-Command: signal
-
-A classified document management and decryption interface for SIGNAL operatives.
+Command: si        else:
+            # Document is locked
+            self.print_colored("🔒 DOCUMENT LOCKED", 'red', 'bold')
+            self.print_colored("Enter password to unlock:", 'yellow')
+            
+            password = input(f"{self.colors['white']}Password: {self.colors['reset']}").strip()
+            
+            if self.try_password(doc, password):
+                self.print_colored("✅ Access granted!", 'green')
+                self.show_unlocked_document(doc)
+            else:
+                self.print_colored("❌ Access denied.", 'red')sified document management and decryption interface for SIGNAL operatives.
 """
 
 import os
@@ -103,16 +112,6 @@ class SIGNALInterface:
         
         if not self.classified_dir.exists():
             return documents
-            
-        # Load encryption metadata
-        metadata_file = self.classified_dir / "encryption_metadata.json"
-        metadata = {}
-        if metadata_file.exists():
-            try:
-                with open(metadata_file, 'r') as f:
-                    metadata = json.load(f)
-            except:
-                pass
         
         # Scan for encrypted documents
         for file_path in self.classified_dir.glob("*_ENCRYPTED.md"):
@@ -128,16 +127,17 @@ class SIGNALInterface:
                 curve = None
                 passwords_count = None
                 
-                for line in content.split('\n')[:10]:
-                    if "SEED-" in line and "CURVE-" in line:
+                for line in content.split('\n')[:15]:  # Check first 15 lines
+                    if 'SEED-' in line and 'CURVE-' in line:
+                        # Extract from format: SEED-1234 CURVE-5678 PASSWORDS-3
                         parts = line.split()
                         for part in parts:
-                            if part.startswith("SEED-"):
-                                seed = part.split("-")[1]
-                            elif part.startswith("CURVE-"):
-                                curve = part.split("-")[1]
-                            elif part.startswith("PASSWORDS-"):
-                                passwords_count = int(part.split("-")[1])
+                            if part.startswith('SEED-'):
+                                seed = part.split('-')[1]
+                            elif part.startswith('CURVE-'):
+                                curve = part.split('-')[1]
+                            elif part.startswith('PASSWORDS-'):
+                                passwords_count = int(part.split('-')[1])
                 
                 if seed and curve and passwords_count is not None:
                     documents.append({
@@ -150,8 +150,11 @@ class SIGNALInterface:
                     })
                     
             except Exception as e:
+                print(f"Error loading document {file_path}: {e}")
                 continue
-                
+        
+        # Sort documents by name for consistent ordering
+        documents.sort(key=lambda x: x['name'])
         return documents
 
     def show_document_list(self):
@@ -174,7 +177,7 @@ class SIGNALInterface:
             # Calculate readability percentage
             readability = (progress / total * 100) if total > 0 else 0
             
-            color = 'red' if readability == 0 'yellow' if readability < 100 else 'green'
+            color = 'red' if readability == 0 else 'yellow' if readability < 100 else 'green'
             
             self.print_colored(f"{i:2d}. {status_icon} {doc['name']}", color, 'bold')
             self.print_colored(f"     Classification: VOID BLACK", 'gray')
@@ -219,12 +222,17 @@ class SIGNALInterface:
         # Known passwords for each document
         known_passwords = {
             'AETHELIAN_NETWORK': ['aethelia'],
-            'BLACK_ARMADA': ['aethelia', 'shadowhands', 'voidcrown']
+            'BLACK_ARMADA': ['aethelia', 'shadowhands', 'voidcrown'],
+            'NOVA_HEGEMONY': ['stellarfire'],
+            'CRIMSON_SYNDICATE': ['bloodmoney', 'crimsoncode'],
+            'GHOST_PROTOCOLS': ['whisper'],
+            'MONUMENT_ARCHAEOLOGY': ['ancientstone', 'archaeology'],
+            'FTL_RESEARCH': ['lightspeed', 'prometheus', 'warpcore']
         }
         
         if doc['name'] in known_passwords:
             if password in known_passwords[doc['name']]:
-                # Store the password(s) needed for this document
+                # Store all passwords for this document (simplified approach)
                 self.session_data['discovered_passwords'][doc['name']] = known_passwords[doc['name']]
                 return True
         
