@@ -2,44 +2,46 @@
 
 ## Current Sprint Status
 
-### 🚨 ACTIVE: Sprint 21 - Ship Flight Mechanics Overhaul
-**Status**: 98% Complete - All physics bugs fixed, controls polished  
-**Priority**: HIGH - Essential gameplay foundation  
-**Fixed**: ✅ Thrust direction, ✅ Drag, ✅ Stability, ✅ Controls, ✅ Overflow  
-**Pending**: Visual thruster rendering only
+### 🚨 ACTIVE: Sprint 22 - Advanced Input Processing
+**Status**: Phase 1 Complete (40% Overall) - Statistical foundation implemented  
+**Priority**: HIGH - Enhanced control precision  
+**Phase 1**: ✅ Calibration, ✅ Kalman filtering, ✅ Neural-ready architecture  
+**Phase 2**: 🚧 Neural network implementation in progress
 
 #### Quick Links
-- [Sprint 21 Design Document](active/SPRINT_21_DESIGN.md)
-- [Sprint 21 Findings & Fixes](active/SPRINT_21_FINDINGS_AND_FIXES.md)
-- [Sprint 21 Implementation Guide](active/SPRINT_21_IMPLEMENTATION_GUIDE.md)
-- [Sprint 21 Implementation Plan](active/SPRINT_21_IMPLEMENTATION_PLAN.md)
-- [Best Practices Report](active/THRUST_AND_GAMEPAD_NAVIGATION_BEST_PRACTICES_REPORT.md)
+- [Sprint 22 Consolidated Guide](active/SPRINT_22_CONSOLIDATED_GUIDE.md)
+- [Sprint 22 Implementation Guide](active/SPRINT_22_IMPLEMENTATION_GUIDE.md)
+- [Neural Network Playbook](active/SPRINT_22_NEURAL_IMPLEMENTATION_PLAYBOOK.md)
+- [Phase 1 Completion Report](active/SPRINT_22_PHASE_1_COMPLETE.md)
 
-#### Recent Fixes (July 2, 2025)
-1. **Thrust Direction**: ✅ Implemented `quaternion_rotate_vector()` - forces now correctly transformed
-2. **Drag Calculation**: ✅ Fixed formula from `vel * drag` to `vel * (1 - drag)`
-3. **Angular Stability**: ✅ Added velocity clamping and proper damping
-4. **Next Steps**: Fix visual thrusters, conduct human validation testing
+#### Current Focus (July 2, 2025)
+1. **Neural Network Structure**: Implementing C inference engine
+2. **Weight Loading**: Creating system to load Python-trained models
+3. **Training Pipeline**: Building data collection and training scripts
+4. **Next Steps**: Complete NN implementation, collect training data
 
 ## Sprint Overview
 
-### What is Sprint 21?
-Sprint 21 implements a complete overhaul of the ship flight mechanics system using an entity-agnostic component architecture. This allows ANY entity in the game to have flight capabilities through component composition.
+### What is Sprint 22?
+Sprint 22 implements an advanced 3-layer input processing system that enhances gamepad controls through statistical analysis and optional neural network compensation. This builds on Sprint 21's flight mechanics to provide unprecedented control precision.
 
-### Core Components
-1. **Physics Component** - Universal 6DOF physics for any entity
-2. **ThrusterSystem Component** - Propulsion capability 
-3. **ControlAuthority Component** - Input processing for controlled entities
-4. **Transform Component** - Position and orientation
+### Input Processing Layers
+1. **Calibration Layer** - Per-device calibration and dead zone compensation
+2. **Kalman Filter Layer** - Statistical noise reduction and prediction
+3. **Neural Network Layer** - ML-based control refinement (optional)
 
 ### Definition of Done
-Subjective human approval of flight mechanics "feel" with target rating of 4.0+/5.0 across:
-- Responsiveness
-- Realism
-- Fun Factor
-- Precision
+- All three processing layers operational
+- Total processing overhead < 0.5ms
+- Measurable improvement in control precision
+- Positive player feedback on control feel
 
 ## Completed Sprints
+
+### Sprint 21 - Ship Flight Mechanics Overhaul
+**Status**: ✅ COMPLETE (98%)  
+**Achievement**: Implemented 6DOF physics with intuitive controls and fixed all major bugs  
+[View Sprint 21 Summary](completed/sprint_21/SPRINT_21_COMPLETION_SUMMARY.md)
 
 ### Sprint 20 - Entity Component System (ECS) Architecture
 **Status**: ✅ COMPLETE  
@@ -114,11 +116,16 @@ Subjective human approval of flight mechanics "feel" with target rating of 4.0+/
 - **Code Style**: Clean, modular components with single responsibility
 - **Documentation**: Sprint docs track design, implementation, and findings
 
-## How to Fix the Current Blocker
+## Current Development Focus
 
-1. Implement `quaternion_rotate_vector()` in `src/core/core.c`
-2. Update `src/system/thrusters.c:77` to transform forces
-3. Run thrust direction tests
-4. Validate fix with human testing
+### Sprint 22 Phase 2: Neural Network Implementation
+1. Create neural network inference engine in C
+2. Implement weight loading from Python-trained models
+3. Integrate with existing input pipeline
+4. Collect diverse training data from multiple controllers
 
-See [Sprint 21 Implementation Guide](active/SPRINT_21_IMPLEMENTATION_GUIDE.md) for detailed fix instructions.
+See [Sprint 22 Consolidated Guide](active/SPRINT_22_CONSOLIDATED_GUIDE.md) for implementation details.
+
+### Upcoming: Sprint 23 - Technical Debt Remediation
+After Sprint 22, we'll address the 60% test failure rate and technical debt before new features.
+See [Sprint 23 Technical Debt Plan](backlog/SPRINT_23_TECHNICAL_DEBT.md) for details.

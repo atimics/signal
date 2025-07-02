@@ -169,8 +169,12 @@ void test_asset_memory_tracking_performance(void) {
         void* asset_data = memory_pool_alloc(test_pool_id, asset_size);
         TEST_ASSERT_NOT_NULL(asset_data);
         
+        // Create unique asset name for each asset
+        char asset_name[32];
+        snprintf(asset_name, sizeof(asset_name), "TestAsset_%d", i);
+        
         // Simulate tracking this asset
-        memory_track_asset_allocation(asset_data, asset_size, "TestAsset");
+        memory_track_asset_allocation(asset_data, asset_size, asset_name);
         
         // Simulate some processing
         memset(asset_data, i % 256, asset_size);

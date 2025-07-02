@@ -142,7 +142,9 @@ void test_entity_removal(void) {
 void test_world_capacity_management(void) {
     TEST_LOG_PROGRESS("Testing world capacity management");
     
-    uint32_t initial_count = test_world->entity_count;
+    // Ensure we start with a clean world
+    TEST_ASSERT_EQUAL(0, test_world->entity_count);
+    
     uint32_t entities_to_create = 100;  // Use smaller number for more reliable test
     EntityID created_entities[100];  // Store the created entity IDs
     
@@ -153,22 +155,24 @@ void test_world_capacity_management(void) {
     }
     
     // Verify entities were created
-    TEST_ASSERT_EQUAL(initial_count + entities_to_create, test_world->entity_count);
+    TEST_ASSERT_EQUAL(entities_to_create, test_world->entity_count);
     
     // Remove some entities
     uint32_t entities_to_remove = 5;
     for (uint32_t i = 0; i < entities_to_remove; i++) {
-        entity_destroy(test_world, created_entities[i]);
+        bool destroyed = entity_destroy(test_world, created_entities[i]);
+        TEST_ASSERT_TRUE(destroyed);
     }
     
-    TEST_ASSERT_EQUAL(initial_count + entities_to_create - entities_to_remove, test_world->entity_count);
+    uint32_t expected_count = entities_to_create - entities_to_remove;
+    TEST_ASSERT_EQUAL(expected_count, test_world->entity_count);
     
     // Should be able to create new entities now
     EntityID new_entity = entity_create(test_world);
     TEST_ASSERT_NOT_EQUAL(INVALID_ENTITY_ID, new_entity);
     
     // Verify final count includes the new entity
-    TEST_ASSERT_EQUAL(initial_count + entities_to_create - entities_to_remove + 1, test_world->entity_count);
+    TEST_ASSERT_EQUAL(expected_count + 1, test_world->entity_count);
     
     TEST_LOG_SUCCESS("World capacity managed correctly");
 }
