@@ -13,6 +13,8 @@
 
 static Vector3 calculate_linear_force(struct ThrusterSystem* thrusters, struct Physics* physics, float efficiency)
 {
+    (void)physics; // Unused parameter - auto-deceleration disabled
+    
     if (!thrusters->thrusters_enabled) {
         return (Vector3){ 0.0f, 0.0f, 0.0f };
     }
@@ -23,25 +25,9 @@ static Vector3 calculate_linear_force(struct ThrusterSystem* thrusters, struct P
         thrusters->current_linear_thrust.z * thrusters->max_linear_force.z * efficiency
     };
     
-    // Add automatic deceleration when no thrust commanded
-    if (physics && thrusters->auto_deceleration) {
-        const float decel_strength = 0.05f; // 5% of max thrust for gentle deceleration
-        const float velocity_threshold = 2.0f; // Only decelerate above this speed
-        
-        // If no thrust commanded and velocity exists, apply counter-thrust
-        if (fabsf(thrusters->current_linear_thrust.x) < 0.1f && fabsf(physics->velocity.x) > velocity_threshold) {
-            float decel_factor = fminf(fabsf(physics->velocity.x) / 50.0f, 1.0f); // Scale with velocity
-            thrust_force.x -= physics->velocity.x * thrusters->max_linear_force.x * decel_strength * decel_factor;
-        }
-        if (fabsf(thrusters->current_linear_thrust.y) < 0.1f && fabsf(physics->velocity.y) > velocity_threshold) {
-            float decel_factor = fminf(fabsf(physics->velocity.y) / 50.0f, 1.0f);
-            thrust_force.y -= physics->velocity.y * thrusters->max_linear_force.y * decel_strength * decel_factor;
-        }
-        if (fabsf(thrusters->current_linear_thrust.z) < 0.1f && fabsf(physics->velocity.z) > velocity_threshold) {
-            float decel_factor = fminf(fabsf(physics->velocity.z) / 50.0f, 1.0f);
-            thrust_force.z -= physics->velocity.z * thrusters->max_linear_force.z * decel_strength * decel_factor;
-        }
-    }
+    // DISABLED: Auto-deceleration conflicts with user control
+    // Pure manual control - user controls all thrust and braking
+    // No automatic velocity compensation
     
     return thrust_force;
 }
@@ -102,6 +88,15 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
             Vector3 world_force = quaternion_rotate_vector(transform->rotation, linear_force);
             physics_add_force(physics, world_force);
             force_applications++;
+            
+            // Debug thrust direction (reduced frequency)
+            static uint32_t thrust_debug_counter = 0;
+            if (++thrust_debug_counter % 60 == 0 && (fabsf(linear_force.z) > 0.1f)) {  // Every second when thrusting
+                printf("🚀 THRUST: Local:[%.1f,%.1f,%.1f] World:[%.1f,%.1f,%.1f] Ship-Rot:(%.2f,%.2f,%.2f,%.2f)\n",
+                       linear_force.x, linear_force.y, linear_force.z,
+                       world_force.x, world_force.y, world_force.z,
+                       transform->rotation.x, transform->rotation.y, transform->rotation.z, transform->rotation.w);
+            }
         }
         
         // Calculate angular torques (6DOF)

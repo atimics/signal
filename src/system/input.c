@@ -104,10 +104,9 @@ void input_update(void) {
     if (keyboard_state[INPUT_ACTION_ROLL_LEFT]) canyon_input.current_state.roll -= 1.0f;
     if (keyboard_state[INPUT_ACTION_ROLL_RIGHT]) canyon_input.current_state.roll += 1.0f;
     
-    // Space for thrust towards look target
+    // Space for forward thrust (simplified - no look-based complexity)
     if (keyboard_state[INPUT_ACTION_THRUST_FORWARD]) {
         canyon_input.current_state.thrust = 1.0f;
-        canyon_input.current_state.look_based_thrust = true;
     }
     
     // Modifiers
@@ -143,20 +142,18 @@ void input_update(void) {
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Right trigger for thrust towards look target
+        // Right trigger for forward thrust (simplified)
         float right_trigger = apply_deadzone(gamepad->right_trigger, GAMEPAD_DEADZONE);
         if (right_trigger > 0.0f) {
             canyon_input.current_state.thrust = right_trigger;
-            canyon_input.current_state.look_based_thrust = true;
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Left trigger for decelerate and auto-level
+        // Left trigger for brake/reverse thrust
         float left_trigger = apply_deadzone(gamepad->left_trigger, GAMEPAD_DEADZONE);
         if (left_trigger > 0.0f) {
             canyon_input.current_state.brake = true;
-            canyon_input.auto_leveling = true;
-            canyon_input.auto_level_timer = 1.0f; // Keep auto-leveling for 1 second
+            // Note: Auto-leveling removed to prevent control conflicts
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
@@ -198,16 +195,8 @@ void input_update(void) {
         canyon_input.mouse_delta_y = 0.0f;
     }
     
-    // Update auto-leveling
-    if (canyon_input.auto_leveling) {
-        canyon_input.current_state.auto_level = AUTO_LEVEL_STRENGTH;
-        
-        // Decay auto-level timer
-        canyon_input.auto_level_timer -= 0.016f; // Assume 60 FPS
-        if (canyon_input.auto_level_timer <= 0.0f) {
-            canyon_input.auto_leveling = false;
-        }
-    }
+    // Auto-leveling removed to prevent control system conflicts
+    // User has full manual control
     
     // Store look target in input state
     canyon_input.current_state.look_target = canyon_input.look_target;
@@ -232,12 +221,7 @@ void input_update(void) {
                    canyon_input.current_state.yaw,
                    canyon_input.current_state.roll);
             
-            if (canyon_input.current_state.look_based_thrust) {
-                printf("LOOK-THRUST ");
-            }
-            if (canyon_input.current_state.auto_level > 0.0f) {
-                printf("AUTO-LEVEL ");
-            }
+            // Simplified - no complex auto-assist systems
             
             printf("Look: Az:%.2f El:%.2f Dist:%.1f\n",
                    canyon_input.look_target.azimuth,

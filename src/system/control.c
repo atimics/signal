@@ -12,98 +12,28 @@ static EntityID g_player_entity = INVALID_ENTITY;
 // CANYON RACING CONTROL FUNCTIONS
 // ============================================================================
 
-// Calculate thrust direction based on look target
-static Vector3 calculate_look_based_thrust(const LookTarget* look_target, 
-                                         const Vector3* ship_position,
-                                         float thrust_magnitude) {
-    if (!look_target || !ship_position) {
-        return (Vector3){0, 0, thrust_magnitude}; // Default forward (positive Z)
-    }
-    
-    // Get direction from ship to look target
-    Vector3 to_target = look_target_get_direction(look_target, ship_position);
-    
-    // Scale by thrust magnitude
-    return vector3_multiply_scalar(to_target, thrust_magnitude);
-}
-
-// Calculate torque to turn ship towards look direction
-static Vector3 calculate_look_alignment_torque(const LookTarget* look_target,
-                                             const Vector3* ship_position,
-                                             const Quaternion* ship_orientation,
-                                             float alignment_strength) {
-    if (!look_target || !ship_position || !ship_orientation) {
-        return (Vector3){0, 0, 0};
-    }
-    
-    // Get desired forward direction
-    Vector3 desired_forward = look_target_get_direction(look_target, ship_position);
-    
-    // Get current forward direction
-    Vector3 current_forward = quaternion_rotate_vector(*ship_orientation, (Vector3){0, 0, 1});
-    
-    // Calculate rotation axis and angle
-    Vector3 rotation_axis = vector3_cross(current_forward, desired_forward);
-    float dot = vector3_dot(current_forward, desired_forward);
-    dot = fmaxf(-1.0f, fminf(1.0f, dot)); // Clamp to avoid NaN from acos
-    float angle = acosf(dot);
-    
-    // If vectors are nearly aligned, no torque needed
-    if (angle < 0.01f) {
-        return (Vector3){0, 0, 0};
-    }
-    
-    // Normalize rotation axis
-    rotation_axis = vector3_normalize(rotation_axis);
-    
-    // Apply proportional torque
-    return vector3_multiply_scalar(rotation_axis, angle * alignment_strength);
-}
-
-// Apply auto-leveling to keep ship upright
-static Vector3 apply_auto_level_torque(const Quaternion* ship_orientation, float strength) {
-    if (!ship_orientation || strength <= 0.0f) {
-        return (Vector3){0, 0, 0};
-    }
-    
-    // Get ship's current up vector
-    Vector3 current_up = quaternion_rotate_vector(*ship_orientation, (Vector3){0, 1, 0});
-    
-    // World up
-    Vector3 world_up = {0, 1, 0};
-    
-    // Calculate correction torque
-    Vector3 torque = vector3_cross(current_up, world_up);
-    
-    // Scale by strength
-    return vector3_multiply_scalar(torque, strength);
-}
+// REMOVED: Competing control system functions that caused conflicts
+// - calculate_look_based_thrust: Part of look-based thrust system
+// - calculate_look_alignment_torque: Part of auto-alignment system  
+// - apply_auto_level_torque: Part of auto-leveling system
+// All disabled for direct manual control only
 
 // Process linear input for canyon racing
 static Vector3 process_canyon_racing_linear(const InputState* input, 
                                           struct ControlAuthority* control,
                                           const Vector3* ship_position) {
+    (void)ship_position; // Unused parameter - look-based thrust disabled
     if (!input || !control) return (Vector3){0, 0, 0};
     
     Vector3 linear_commands = {0, 0, 0};
     
-    // Check if we're using look-based thrust
-    if (input->look_based_thrust && input->thrust > 0.0f) {
-        // Update player position for look target
-        input_update_player_position(ship_position);
-        
-        // Calculate thrust direction based on look target
-        linear_commands = calculate_look_based_thrust(&input->look_target, 
-                                                    ship_position, 
-                                                    input->thrust);
-    } else {
-        // Traditional thrust (for reverse, vertical, etc.)
-        linear_commands = (Vector3){
-            0.0f,                // No strafe in canyon racing mode
-            input->vertical,     // Up/down
-            input->thrust        // Forward/backward (positive Z = forward)
-        };
-    }
+    // SIMPLIFIED: Direct thrust control only - no look-based complexity
+    // Pure ship-relative thrust: forward/back, up/down, left/right
+    linear_commands = (Vector3){
+        0.0f,                // X: No strafe for now (simplify)
+        input->vertical,     // Y: Up/down
+        input->thrust        // Z: Forward/backward (positive Z = forward)
+    };
     
     // Apply boost
     if (input->boost > 0.0f) {
@@ -124,6 +54,8 @@ static Vector3 process_canyon_racing_angular(const InputState* input,
                                            struct ControlAuthority* control,
                                            const Vector3* ship_position,
                                            const Quaternion* ship_orientation) {
+    (void)ship_position; // Unused parameter - look-alignment disabled
+    (void)ship_orientation; // Unused parameter - auto-leveling disabled
     if (!input || !control) return (Vector3){0, 0, 0};
     
     Vector3 angular_commands = {0, 0, 0};
@@ -134,20 +66,11 @@ static Vector3 process_canyon_racing_angular(const InputState* input,
     angular_commands.y = input->yaw * sensitivity;
     angular_commands.z = input->roll * sensitivity;
     
-    // Add look-direction alignment when thrusting
-    if (input->look_based_thrust && input->thrust > 0.0f) {
-        Vector3 look_torque = calculate_look_alignment_torque(&input->look_target,
-                                                            ship_position,
-                                                            ship_orientation,
-                                                            0.5f); // Reduced alignment strength for smoother control
-        angular_commands = vector3_add(angular_commands, look_torque);
-    }
+    // DISABLED: Competing auto-assist systems cause conflicts
+    // Only allow direct user control for clean, predictable behavior
     
-    // Add auto-leveling
-    if (input->auto_level > 0.0f) {
-        Vector3 level_torque = apply_auto_level_torque(ship_orientation, input->auto_level);
-        angular_commands = vector3_add(angular_commands, level_torque);
-    }
+    // Look-alignment and auto-leveling disabled to prevent control conflicts
+    // User has full manual control via left stick
     
     // Clamp to reasonable values
     angular_commands.x = fmaxf(-1.0f, fminf(1.0f, angular_commands.x));

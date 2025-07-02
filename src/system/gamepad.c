@@ -107,32 +107,52 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
             // Right stick: bytes 8-9 (X,Y) with center at ~127  
             // Triggers: bytes 11-12 (RT,LT) with 0=off, 255=full
             
-            // Xbox Bluetooth controller mapping - experimental approach
-            // Observation: byte 9 stays at 0, suggesting it's not right stick Y
-            // Let's try: Left stick at 6-7, Right stick might be at 10-11 or elsewhere
+            // Xbox Bluetooth controller - corrected mapping
+            // Issue: The raw data showing 232 suggests the user isn't actually holding the stick
+            // This means our byte mapping is wrong. Let's check if we're reading the wrong bytes.
+            // Standard Xbox BT HID report format should be:
+            // Bytes 6-9: Left stick X, Left stick Y, Right stick X, Right stick Y
+            // But our debug shows byte 7 = 232 when it should be ~127 (center)
             
-            left_x = (int16_t)((data[6] - 127) * 256);
-            left_y = (int16_t)((data[7] - 127) * 256);
-            right_x = (int16_t)((data[8] - 127) * 256);
+            // Let's try the correct Xbox Bluetooth HID mapping:
+            // The issue might be endianness or we're reading 8-bit values as 16-bit
             
-            // For now, disable right stick Y to test if this fixes the diving
-            right_y = 0; // Disable until we figure out the correct mapping
+            // Since triggers work but sticks don't, let's go back to 8-bit parsing with better center/scaling
+            // The issue might be that 232 was a valid reading, just with wrong center point or scaling
             
-            // Parse triggers (0-255 range)
+            // Xbox BT controllers typically use 8-bit stick values (0-255) with center at 127 or 128
+            // Let's try center at 127 with proper scaling to int16_t range
+            left_x = (int16_t)((data[6] - 127) * 258);   // Scale (0-255) -> (-32767 to +32767)
+            left_y = (int16_t)((data[7] - 127) * 258);   // 258 = 32767/127 for proper scaling
+            right_x = (int16_t)((data[8] - 127) * 258);
+            right_y = (int16_t)((data[9] - 127) * 258);
+            
+            // Parse triggers (0-255 range) - back to original positions since we're using 8-bit sticks
             right_trigger = data[11] / 255.0f;
             left_trigger = data[12] / 255.0f;
             
-            // Debug output with raw data analysis
+            // ALWAYS show debug output for first few reads to diagnose the mapping issue
             static int xbox_debug = 0;
-            if (++xbox_debug % 60 == 0) {
-                printf("🎮 XBOX BT: Raw[6-9]=%d,%d,%d,%d Triggers[11-12]=%d,%d\n",
-                       data[6], data[7], data[8], data[9], data[11], data[12]);
-                printf("   Centered: LS_X=%d LS_Y=%d RS_X=%d RS_Y=%d\n",
-                       data[6]-127, data[7]-127, data[8]-127, data[9]-127);
-                printf("   Final: LS(%.2f,%.2f) RS(%.2f,%.2f) LT=%.2f RT=%.2f\n",
+            xbox_debug++;
+            if (xbox_debug <= 50 || xbox_debug % 60 == 0) {  // First 50 readings + every second after
+                printf("🎮 XBOX RAW #%d: LS_X=%d LS_Y=%d RS_X=%d RS_Y=%d LT=%d RT=%d\n", 
+                       xbox_debug, data[6], data[7], data[8], data[9], data[12], data[11]);
+                printf("   Final: LS(%.3f,%.3f) RS(%.3f,%.3f) LT=%.3f RT=%.3f\n",
                        normalize_axis(left_x), normalize_axis(left_y),
                        normalize_axis(right_x), normalize_axis(right_y),
                        left_trigger, right_trigger);
+                
+                // Check for issues
+                if (fabsf(normalize_axis(left_x)) > 0.1f || fabsf(normalize_axis(left_y)) > 0.1f) {
+                    printf("   ⚠️  LEFT STICK ACTIVE: X=%.3f Y=%.3f\n", 
+                           normalize_axis(left_x), normalize_axis(left_y));
+                }
+                if (fabsf(normalize_axis(right_x)) > 0.1f || fabsf(normalize_axis(right_y)) > 0.1f) {
+                    printf("   ⚠️  RIGHT STICK ACTIVE: X=%.3f Y=%.3f\n", 
+                           normalize_axis(right_x), normalize_axis(right_y));
+                }
+                
+                printf("\n");
             }
         } else {
             // Standard USB Xbox controller layout
@@ -289,6 +309,12 @@ void gamepad_poll(void) {
         return;
     }
     
+    // Debug: Show that polling is actually being called
+    static int poll_call_counter = 0;
+    if (++poll_call_counter <= 5 || poll_call_counter % 1000 == 0) {
+        printf("🎮 gamepad_poll() called #%d\n", poll_call_counter);
+    }
+    
     unsigned char buffer[64];
     
     // Poll each connected gamepad
@@ -302,6 +328,19 @@ void gamepad_poll(void) {
         
         // Read input report
         int bytes_read = hid_read(devices[i], buffer, sizeof(buffer));
+        
+        // Debug: Show polling status for first few polls (ALWAYS for first 20 reads)
+        static int poll_debug_counter = 0;
+        bool should_debug = (++poll_debug_counter <= 20 || poll_debug_counter % 300 == 0);
+        
+        if (should_debug) {
+            printf("🎮 POLL #%d: gamepad[%d] bytes_read=%d connected=%s\n", 
+                   poll_debug_counter, i, bytes_read, gamepad->connected ? "YES" : "NO");
+            
+            if (bytes_read == 0) {
+                printf("🎮 Zero-byte read - controller may be idle or not sending data\n");
+            }
+        }
         
         if (bytes_read > 0) {
             parse_xbox_report(gamepad, buffer, bytes_read);

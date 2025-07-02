@@ -225,10 +225,15 @@ static void camera_update_behavior(struct World* world, RenderConfig* render_con
                 if (target_transform)
                 {
                     Vector3 target_pos = target_transform->position;
+                    
+                    // Rotate the camera offset by the target's orientation
+                    // This makes the camera stay behind the ship as it rotates
+                    Vector3 rotated_offset = quaternion_rotate_vector(target_transform->rotation, camera->follow_offset);
+                    
                     Vector3 desired_pos = {
-                        target_pos.x + camera->follow_offset.x,
-                        target_pos.y + camera->follow_offset.y,
-                        target_pos.z + camera->follow_offset.z
+                        target_pos.x + rotated_offset.x,
+                        target_pos.y + rotated_offset.y,
+                        target_pos.z + rotated_offset.z
                     };
 
                     // Smooth camera movement with better elasticity
