@@ -1,14 +1,31 @@
 # Sprint 21: Ship Flight Mechanics Overhaul
 
 **Sprint**: 21 - Core Flight Physics & Controls  
-**Focus**: Authentic spaceflight mechanics implementation  
+**Focus**: Entity-agnostic flight mechanics with 6DOF physics  
 **Date**: July 2, 2025  
 **Priority**: High - Essential gameplay foundation  
-**Status**: DESIGN PHASE
+**Status**: ARCHITECTURAL REVIEW - REQUIRES SCOPE ADJUSTMENT  
+**⚠️ CRITICAL**: See `docs/ARCHITECTURE_ANALYSIS_FLIGHT_MECHANICS.md` for architectural concerns
 
-## 🎯 **Sprint Goals**
+---
+## ⚠️ **ARCHITECTURAL REVIEW REQUIRED**
+
+**CRITICAL FINDINGS**: Architectural analysis reveals scope and design issues requiring immediate attention:
+- **Over-Scoping**: Current sprint attempts too many systems simultaneously
+- **Entity-Agnostic Design Missing**: Architecture should work for ANY entity, not just ships
+- **Component Separation**: Need to separate physics capability from control authority
+
+**📋 RECOMMENDED ACTION**: Review `ARCHITECTURE_ANALYSIS_FLIGHT_MECHANICS.md` before implementation
+
+**🔧 PROPOSED SOLUTION**: Split into 4 focused sub-sprints (21A-21D) with capability composition architecture
+
+---
+
+## 🎯 **Sprint Goals** (UNDER REVIEW)
 
 Transform SIGNAL's basic movement system into authentic, compelling spaceflight mechanics with proper 6DOF (six degrees of freedom) physics. This sprint focuses on implementing realistic ship control, proper physics dynamics, and creating the visceral flight experience that defines space exploration gameplay.
+
+**⚠️ NOTE**: Goals and implementation approach subject to architectural review findings.
 
 ## 📋 **Sprint Foundation**
 
