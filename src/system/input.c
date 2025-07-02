@@ -3,6 +3,7 @@
 
 #include "input.h"
 #include "gamepad.h"
+#include "gamepad_hotplug.h"
 #include "../sokol_app.h"
 #include <stdio.h>
 #include <string.h>
@@ -44,6 +45,9 @@ void input_shutdown(void) {
 
 void input_update(void) {
     if (!input_initialized) return;
+    
+    // Update hot-plug detection
+    gamepad_update_hotplug(0.016f); // Assume 60 FPS for now
     
     // Poll gamepad
     gamepad_poll();
@@ -104,6 +108,14 @@ void input_update(void) {
         }
         if (gamepad->left_trigger > deadzone) {
             current_input.thrust -= gamepad->left_trigger; // Left trigger = reverse
+        }
+        
+        // Track that gamepad was used
+        if (fabsf(gamepad->left_stick_x) > deadzone || fabsf(gamepad->left_stick_y) > deadzone ||
+            fabsf(gamepad->right_stick_x) > deadzone || fabsf(gamepad->right_stick_y) > deadzone ||
+            gamepad->left_trigger > deadzone || gamepad->right_trigger > deadzone ||
+            gamepad->buttons[GAMEPAD_BUTTON_A] || gamepad->buttons[GAMEPAD_BUTTON_B]) {
+            input_set_last_device_type(INPUT_DEVICE_GAMEPAD);
         }
         
         // Debug: Log significant gamepad inputs - more frequent for debugging
@@ -223,6 +235,12 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
     
     if (action < INPUT_ACTION_COUNT) {
         keyboard_state[action] = is_pressed;
+        
+        // Track that keyboard was used
+        if (is_pressed) {
+            input_set_last_device_type(INPUT_DEVICE_KEYBOARD);
+        }
+        
         return true;
     }
     

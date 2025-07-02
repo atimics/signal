@@ -3,6 +3,7 @@
 // Cross-platform support with emphasis on macOS Bluetooth Xbox controllers
 
 #include "gamepad.h"
+#include "gamepad_hotplug.h"
 #include "../hidapi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,6 +17,19 @@ static float axis_deadzone = 0.20f;  // Increased to handle stick drift
 
 // hidapi device handles
 static hid_device* devices[MAX_GAMEPADS];
+
+// Hot-plug detection state
+static GamepadHotplugState hotplug_state = {
+    .enabled = true,
+    .check_interval = 1.0f,  // Check every second
+    .time_since_check = 0.0f,
+    .last_connected_count = 0,
+    .on_connected = NULL,
+    .on_disconnected = NULL
+};
+
+// Input device tracking
+static InputDeviceType last_input_device = INPUT_DEVICE_KEYBOARD;
 
 // Utility function to normalize axis values
 static float normalize_axis(int16_t raw_value) {
@@ -324,6 +338,11 @@ void gamepad_poll(void) {
             devices[i] = NULL;
             gamepad->connected = false;
             gamepad->hid_device = NULL;
+            
+            // Call disconnected callback
+            if (hotplug_state.on_disconnected) {
+                hotplug_state.on_disconnected(i);
+            }
         }
     }
 }
@@ -429,4 +448,256 @@ void gamepad_set_deadzone(float deadzone) {
         axis_deadzone = deadzone;
         printf("🎮 Gamepad deadzone set to %.2f\n", deadzone);
     }
+}
+
+// ============================================================================
+// HOT-PLUG DETECTION
+// ============================================================================
+
+// Internal function to scan for new controllers
+static void scan_for_new_controllers(void) {
+    struct hid_device_info* device_list = hid_enumerate(0x0, 0x0);
+    struct hid_device_info* current_device = device_list;
+    
+    while (current_device) {
+        if (is_supported_gamepad(current_device)) {
+            // Check if this device is already connected
+            bool already_connected = false;
+            for (int i = 0; i < MAX_GAMEPADS; i++) {
+                if (gamepads[i].connected && 
+                    gamepads[i].vendor_id == current_device->vendor_id &&
+                    gamepads[i].product_id == current_device->product_id) {
+                    // Simple check - could be improved with serial number
+                    already_connected = true;
+                    break;
+                }
+            }
+            
+            if (!already_connected) {
+                // Find empty slot
+                for (int i = 0; i < MAX_GAMEPADS; i++) {
+                    if (!devices[i]) {
+                        hid_device* handle = hid_open_path(current_device->path);
+                        if (handle) {
+                            devices[i] = handle;
+                            GamepadState* gamepad = &gamepads[i];
+                            
+                            gamepad->connected = true;
+                            gamepad->hid_device = handle;
+                            gamepad->vendor_id = current_device->vendor_id;
+                            gamepad->product_id = current_device->product_id;
+                            
+                            // Get product string
+                            if (current_device->product_string) {
+                                wcstombs(gamepad->product_string, current_device->product_string, 
+                                        sizeof(gamepad->product_string) - 1);
+                                gamepad->product_string[sizeof(gamepad->product_string) - 1] = '\0';
+                            } else {
+                                snprintf(gamepad->product_string, sizeof(gamepad->product_string), 
+                                        "Gamepad %d", i);
+                            }
+                            
+                            // Set non-blocking mode
+                            hid_set_nonblocking(handle, 1);
+                            
+                            printf("🎮 Hot-plugged gamepad %d: %s (VID:0x%04X PID:0x%04X)\n", 
+                                   i, gamepad->product_string, 
+                                   gamepad->vendor_id, gamepad->product_id);
+                            
+                            // Call connected callback
+                            if (hotplug_state.on_connected) {
+                                hotplug_state.on_connected(i);
+                            }
+                            
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        current_device = current_device->next;
+    }
+    
+    hid_free_enumeration(device_list);
+}
+
+void gamepad_enable_hotplug(bool enable) {
+    hotplug_state.enabled = enable;
+    if (enable) {
+        printf("🎮 Gamepad hot-plug detection enabled (interval: %.1fs)\n", 
+               hotplug_state.check_interval);
+    } else {
+        printf("🎮 Gamepad hot-plug detection disabled\n");
+    }
+}
+
+void gamepad_set_hotplug_interval(float seconds) {
+    if (seconds >= 0.1f && seconds <= 10.0f) {
+        hotplug_state.check_interval = seconds;
+        printf("🎮 Gamepad hot-plug check interval set to %.1fs\n", seconds);
+    }
+}
+
+void gamepad_check_connections(void) {
+    if (!gamepad_system_initialized) {
+        return;
+    }
+    
+    scan_for_new_controllers();
+    
+    // Update connected count
+    int connected_count = 0;
+    for (int i = 0; i < MAX_GAMEPADS; i++) {
+        if (gamepads[i].connected) {
+            connected_count++;
+        }
+    }
+    
+    if (connected_count != hotplug_state.last_connected_count) {
+        printf("🎮 Connected gamepads: %d\n", connected_count);
+        hotplug_state.last_connected_count = connected_count;
+    }
+}
+
+void gamepad_update_hotplug(float delta_time) {
+    if (!gamepad_system_initialized || !hotplug_state.enabled) {
+        return;
+    }
+    
+    hotplug_state.time_since_check += delta_time;
+    
+    if (hotplug_state.time_since_check >= hotplug_state.check_interval) {
+        hotplug_state.time_since_check = 0.0f;
+        gamepad_check_connections();
+    }
+}
+
+void gamepad_set_connected_callback(void (*callback)(int)) {
+    hotplug_state.on_connected = callback;
+}
+
+void gamepad_set_disconnected_callback(void (*callback)(int)) {
+    hotplug_state.on_disconnected = callback;
+}
+
+// ============================================================================
+// INPUT DEVICE TRACKING
+// ============================================================================
+
+InputDeviceType input_get_last_device_type(void) {
+    return last_input_device;
+}
+
+void input_set_last_device_type(InputDeviceType device) {
+    if (last_input_device != device) {
+        last_input_device = device;
+        
+        const char* device_names[] = {
+            "None", "Keyboard", "Gamepad", "Mouse"
+        };
+        
+        if (device < sizeof(device_names) / sizeof(device_names[0])) {
+            printf("🎮 Input device switched to: %s\n", device_names[device]);
+        }
+    }
+}
+
+bool input_was_gamepad_used_last(void) {
+    return last_input_device == INPUT_DEVICE_GAMEPAD;
+}
+
+// ============================================================================
+// UI HELPER FUNCTIONS
+// ============================================================================
+
+const char* gamepad_get_button_icon(GamepadButton button) {
+    // Return Unicode symbols or icon names for buttons
+    switch (button) {
+        case GAMEPAD_BUTTON_A: return "Ⓐ";
+        case GAMEPAD_BUTTON_B: return "Ⓑ";
+        case GAMEPAD_BUTTON_X: return "Ⓧ";
+        case GAMEPAD_BUTTON_Y: return "Ⓨ";
+        case GAMEPAD_BUTTON_LB: return "LB";
+        case GAMEPAD_BUTTON_RB: return "RB";
+        case GAMEPAD_BUTTON_BACK: return "⧉";
+        case GAMEPAD_BUTTON_START: return "☰";
+        case GAMEPAD_BUTTON_LS: return "LS";
+        case GAMEPAD_BUTTON_RS: return "RS";
+        case GAMEPAD_BUTTON_DPAD_UP: return "↑";
+        case GAMEPAD_BUTTON_DPAD_DOWN: return "↓";
+        case GAMEPAD_BUTTON_DPAD_LEFT: return "←";
+        case GAMEPAD_BUTTON_DPAD_RIGHT: return "→";
+        default: return "?";
+    }
+}
+
+const char* gamepad_get_axis_icon(const char* axis_name) {
+    if (!axis_name) return "?";
+    
+    if (strcmp(axis_name, "left_x") == 0) return "LS→";
+    if (strcmp(axis_name, "left_y") == 0) return "LS↑";
+    if (strcmp(axis_name, "right_x") == 0) return "RS→";
+    if (strcmp(axis_name, "right_y") == 0) return "RS↑";
+    if (strcmp(axis_name, "left_trigger") == 0) return "LT";
+    if (strcmp(axis_name, "right_trigger") == 0) return "RT";
+    
+    return "?";
+}
+
+bool gamepad_navigate_menu(int* selected_index, int menu_item_count) {
+    if (!selected_index || menu_item_count <= 0) {
+        return false;
+    }
+    
+    GamepadState* gamepad = gamepad_get_primary();
+    if (!gamepad || !gamepad->connected) {
+        return false;
+    }
+    
+    bool changed = false;
+    static float nav_cooldown = 0.0f;
+    
+    // Simple cooldown to prevent too-fast navigation
+    if (nav_cooldown > 0.0f) {
+        nav_cooldown -= 0.016f; // Assume 60 FPS
+        return false;
+    }
+    
+    // D-pad navigation
+    if (gamepad->buttons[GAMEPAD_BUTTON_DPAD_UP] || gamepad->left_stick_y > 0.5f) {
+        (*selected_index)--;
+        if (*selected_index < 0) {
+            *selected_index = menu_item_count - 1;
+        }
+        changed = true;
+        nav_cooldown = 0.2f;
+    } else if (gamepad->buttons[GAMEPAD_BUTTON_DPAD_DOWN] || gamepad->left_stick_y < -0.5f) {
+        (*selected_index)++;
+        if (*selected_index >= menu_item_count) {
+            *selected_index = 0;
+        }
+        changed = true;
+        nav_cooldown = 0.2f;
+    }
+    
+    return changed;
+}
+
+GamepadState* gamepad_get_primary(void) {
+    for (int i = 0; i < MAX_GAMEPADS; i++) {
+        if (gamepads[i].connected) {
+            return &gamepads[i];
+        }
+    }
+    return NULL;
+}
+
+int gamepad_get_primary_index(void) {
+    for (int i = 0; i < MAX_GAMEPADS; i++) {
+        if (gamepads[i].connected) {
+            return i;
+        }
+    }
+    return -1;
 }

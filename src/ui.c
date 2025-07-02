@@ -7,6 +7,7 @@
 #include "ui_api.h"
 #include "ui_scene.h"
 #include "ui_components.h"
+#include "ui_adaptive_controls.h"
 #include "graphics_api.h"
 #include "sokol_app.h"
 #include <stdio.h>
@@ -30,6 +31,9 @@ void ui_init(void)
     // Initialize scene UI system
     scene_ui_init();
     
+    // Initialize adaptive controls
+    ui_adaptive_controls_init();
+    
     printf("✅ Core UI system initialized\n");
 }
 
@@ -46,6 +50,9 @@ void ui_shutdown(void)
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
 {
+    // Update adaptive controls
+    ui_adaptive_controls_update(delta_time);
+    
     // Early exit if UI is not visible
     if (!g_ui_visible) return;
     
