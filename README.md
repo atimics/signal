@@ -7,6 +7,15 @@
 
 **SIGNAL** is a high-performance, data-oriented 3D game engine and the foundation for a single-player space exploration game. It is written in C99, features a pure Entity-Component-System (ECS) architecture, and uses the modern, cross-platform **Sokol** graphics API for rendering.
 
+### 🎮 Current Features
+
+- **6DOF Flight Mechanics**: Full six degrees of freedom spaceflight with realistic physics
+- **Entity Component System**: Pure ECS architecture supporting 10,000+ entities at 60 FPS
+- **Banking Flight Controls**: Intuitive control scheme with coordinated turns
+- **Multiple Ship Types**: Fighter, Interceptor, Cargo, and Explorer configurations
+- **Auto-Deceleration**: Optional flight assistance for arcade-style gameplay
+- **Performance Optimized**: Maintains 60+ FPS with complex physics simulations
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -25,9 +34,36 @@ The project uses a simple Makefile. The first build will automatically compile t
 # Clean, build, and run the engine
 make clean && make && make run
 
-# Run the automated test suite
+# Run the automated test suite (375+ tests)
 make test
+
+# Run specific test suites
+make test-physics
+make test-thrusters
+
+# Run with flight test scene
+./build/cgame --test-flight
 ```
+
+### 🎮 Flight Controls
+
+**Keyboard:**
+- W/S - Pitch control (dive/climb)
+- A/D - Banking turns (coordinated yaw + roll)
+- Space/X - Forward/backward thrust
+- R/F - Vertical thrust (up/down)
+- Q/E - Pure roll (barrel roll)
+- Shift - Boost (50% extra thrust)
+- Alt - Brake + Auto-deceleration
+- Tab - Cycle camera modes
+
+**Xbox Controller:**
+- Left Stick - Pitch/Yaw control
+- Right Stick X - Banking turns
+- Right Stick Y - Vertical thrust
+- Right Trigger - Forward thrust
+- Left Trigger - Reverse thrust
+- Bumpers - Roll control
 
 ## 📚 Documentation
 

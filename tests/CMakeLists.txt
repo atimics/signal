@@ -37,7 +37,7 @@ cgame_add_test_suite(
 cgame_add_test_suite(
     NAME cmake-rendering
     SOURCES rendering/test_rendering.c
-    LIBS core gpu_resources assets physics
+    LIBS core gpu_resources assets physics memory
     STUBS graphics_api_test_stub
 )
 
