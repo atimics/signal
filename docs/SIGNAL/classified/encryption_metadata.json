@@ -1,0 +1,11 @@
+{
+  "seed": "5724",
+  "curve": "1359",
+  "passwords": 3,
+  "word_count": 759,
+  "encryption_stats": {
+    "level_0": 43,
+    "level_1": 126,
+    "level_2": 590
+  }
+}

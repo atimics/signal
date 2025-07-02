@@ -16,6 +16,16 @@
 - **Auto-Deceleration**: Optional flight assistance for arcade-style gameplay
 - **Performance Optimized**: Maintains 60+ FPS with complex physics simulations
 
+## 🕵️ SIGNAL CLI Minigame
+
+Explore the game's lore through an interactive classified document interface:
+
+```bash
+./signal
+```
+
+The SIGNAL CLI provides an immersive terminal experience for discovering and decrypting classified intelligence documents hidden in the repository. Use passwords discovered during gameplay to progressively unlock secret lore about the Black Armada and the Aethelian Network.
+
 ## 🚀 Getting Started
 
 ### Prerequisites

@@ -1,4 +1,4 @@
-# SIGNAL: Near Roadmap - Gravitational Resonance Navigation
+# SIGNAL: Near Roadmap - Aethelian Network Archaeology
 
 **Project**: SIGNAL Engine & "The Ghost Signal" Game  
 **Priority**: 2 of 3 - Post-Input System  
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Implement the revolutionary **Gravitational Resonance Navigation** system that transforms SIGNAL from a tech demo into a scientifically-grounded space exploration experience. This system enables FTL travel by tuning to gravitational field harmonics between celestial bodies, where navigation accuracy depends on the pilot's knowledge of cosmic gravitational interactions.
+Implement the revolutionary **Aethelian Network Archaeology** system that transforms SIGNAL from a tech demo into a scientifically-grounded archaeological exploration experience. This system enables players to discover and reconstruct the lost interstellar infrastructure that once connected dozens of star systems through gravitational field manipulation.
 
 ---
 
@@ -274,66 +274,86 @@ Create meaningful skill-based challenges that reward understanding over memoriza
 
 ## Quality Assurance
 
-### Testing Framework
-- **Pattern Validation**: Automated testing of all lock/Echo combinations
-- **Difficulty Curve**: Statistical analysis of player progression
-- **Performance Testing**: Interaction system performance under load
-- **Accessibility Testing**: Support for different input methods and abilities
+### Scientific Accuracy Validation
+Ensure gravitational navigation system reflects realistic physics principles.
+
+#### Physics Simulation Testing
+- **Gravitational Field Accuracy**: Validate field calculations against known physics equations
+- **Orbital Mechanics**: Verify celestial body motion follows realistic gravitational dynamics
+- **Harmonic Analysis**: Confirm gravitational wave harmonics behave according to theoretical models
+- **Stability Modeling**: Test that field stability predictions match expected gravitational behavior
+
+#### Educational Value Assessment
+- **Physics Comprehension**: Ensure gameplay teaches real gravitational physics concepts
+- **Scientific Method**: Validate that discovery mechanics reflect actual scientific research processes
+- **Conceptual Accuracy**: Confirm that simplified game mechanics maintain scientific integrity
+- **Knowledge Transfer**: Test that players gain genuine understanding of gravitational phenomena
 
 ### User Experience Validation
-- **Frustration Detection**: Identify overly difficult or unclear patterns
-- **Engagement Metrics**: Track player investment in puzzle-solving
-- **Learning Curve Analysis**: Measure skill acquisition over time
-- **Narrative Integration**: Ensure gameplay supports story delivery
+Ensure the navigation system provides engaging and rewarding gameplay.
+
+#### Navigation Challenge Testing
+- **Skill Progression**: Validate that navigation difficulty scales appropriately with player knowledge
+- **Discovery Satisfaction**: Ensure scientific discoveries feel meaningful and rewarding
+- **Challenge Balance**: Confirm that navigation challenges are difficult but fair
+- **Knowledge Application**: Test that learned concepts effectively improve navigation ability
+
+#### Accessibility and Clarity
+- **Physics Visualization**: Ensure gravitational field displays are clear and informative
+- **Learning Curve**: Validate that complex concepts are introduced gradually and clearly
+- **Interface Design**: Test that navigation tools are intuitive and responsive
+- **Error Recovery**: Ensure failed navigation attempts provide useful learning feedback
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Core Mechanics (Weeks 1-2)
-- Implement basic Resonance Attenuator functionality
-- Create simple lock patterns and Echo collection
-- Develop fundamental interaction systems
-- Establish save/load for progression state
+### Phase 1: Gravitational Simulation Core (Weeks 1-2)
+- Implement realistic gravitational field calculation engine
+- Create basic two-body gravitational resonance detection
+- Develop fundamental navigation calibration mechanics
+- Establish knowledge discovery and storage systems
 
-### Phase 2: Content Systems (Weeks 3-4)
-- Build Echo database and management systems
-- Create lock design tools and pattern editor
-- Implement progression tracking and metrics
-- Add visual and audio feedback systems
+### Phase 2: Navigation Challenge System (Weeks 3-4)
+- Build multi-body gravitational field interactions
+- Create progressive navigation difficulty scaling
+- Implement knowledge-based navigation improvement
+- Add visual and audio feedback for gravitational field navigation
 
-### Phase 3: Polish and Integration (Weeks 5-6)
-- Optimize performance and user experience
-- Implement advanced lock types and combinations
-- Add accessibility features and options
-- Complete integration with narrative systems
+### Phase 3: Discovery and Integration (Weeks 5-6)
+- Implement scientific discovery mechanics and content
+- Create historical navigation data and environmental storytelling
+- Add advanced gravitational phenomena and exotic field navigation
+- Complete integration with Ghost Signal mystery narrative
 
 ---
 
 ## Success Criteria
 
-### Gameplay Validation
-- ✅ Core loop (explore → find → unlock → progress) functions smoothly
-- ✅ Puzzle difficulty provides satisfying challenge without frustration
-- ✅ Echo collection feels rewarding and narratively meaningful
-- ✅ Player progression creates sense of growing mastery
+### Scientific and Educational Validation
+- ✅ Gravitational field simulation accurately reflects real physics principles
+- ✅ Navigation challenges teach genuine understanding of gravitational mechanics
+- ✅ Discovery system encourages scientific thinking and experimentation
+- ✅ Player knowledge acquisition translates to improved navigation ability
 
-### Technical Validation
-- ✅ Interaction system performs at 60+ FPS consistently
-- ✅ Save/load maintains perfect state preservation
-- ✅ Pattern recognition achieves < 100ms response time
-- ✅ Memory usage remains within established engine budgets
+### Gameplay Experience Validation
+- ✅ Navigation system provides satisfying skill-based progression
+- ✅ Discovery mechanics feel rewarding and narratively meaningful
+- ✅ Challenge difficulty scales appropriately with player understanding
+- ✅ System integration supports exploration and story development
 
-### Integration Validation
-- ✅ Neural input system provides precision required for complex patterns
-- ✅ A-Drive mechanics complement exploration and discovery
-- ✅ Audio system enhances pattern recognition and feedback
-- ✅ Scene system supports dynamic content loading and state management
+### Technical Performance Validation
+- ✅ Gravitational simulation performs efficiently with complex multi-body systems
+- ✅ Navigation interface achieves < 100ms response time for field analysis
+- ✅ Knowledge system maintains perfect state preservation across save/load cycles
+- ✅ Memory usage remains within established engine performance budgets
 
 ---
 
-**Impact**: The Resonance Cascade system transforms SIGNAL from a technical demonstration into a complete game experience, providing the core interaction loop that drives exploration, progression, and narrative discovery.
+**Revolutionary Impact**: The Gravitational Resonance Navigation system transforms SIGNAL from a conventional space game into a scientifically-grounded exploration experience where understanding real physics principles directly improves gameplay ability and unlocks new areas of the universe.
 
-**Dependencies**: Cannot begin implementation until neural input processing is complete and build system is stable. Audio system development can proceed in parallel.
+**Educational Value**: Players gain genuine understanding of gravitational physics, orbital mechanics, and celestial navigation while experiencing an engaging space exploration adventure.
 
-**Next Steps**: Finalize technical specifications, create development timeline, and prepare asset requirements for implementation phase.
+**Technical Innovation**: This system demonstrates how complex physics simulation can be integrated into game mechanics to create both educational value and compelling gameplay challenges.
+
+**Next Steps**: Implement gravitational field simulation engine, develop knowledge discovery mechanics, and create progressive navigation challenges that reward scientific understanding over memorization.

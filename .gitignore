@@ -116,3 +116,8 @@ assets/**/*.temp
 
 # Keep mesh source files (.obj) - these are assets, not compiled objects
 !assets/**/*.obj
+
+# Encryption tools and sensitive data
+tools/signal_wordlist.txt
+tools/*wordlist*
+*.wordlist

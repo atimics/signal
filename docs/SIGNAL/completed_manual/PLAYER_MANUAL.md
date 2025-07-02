@@ -144,7 +144,7 @@ Access the debug interface with the **~** key:
 - **Debug Tools**: Comprehensive development and troubleshooting interface
 
 ### Coming Soon 🔄
-- **Resonance Cascade System**: Core puzzle and progression mechanics
+- **Aethelian Network Archaeology**: Core puzzle and progression mechanics
 - **Echo Collection**: Narrative fragments and functional upgrades
 - **A-Drive Navigation**: High-speed surface skimming mechanics
 - **Audio Integration**: Atmospheric soundscapes and functional audio feedback
@@ -232,6 +232,6 @@ SIGNAL welcomes community contributions:
 
 ---
 
-**Current Status**: SIGNAL's foundation is solid and production-ready. The core flight mechanics, advanced input processing, and rendering systems are complete and validated. Major gameplay features (Resonance Cascade, A-Drive mechanics, audio integration) are planned for upcoming releases.
+**Current Status**: SIGNAL's foundation is solid and production-ready. The core flight mechanics, advanced input processing, and rendering systems are complete and validated. Major gameplay features (Aethelian Network Archaeology, A-Drive mechanics, audio integration) are planned for upcoming releases.
 
 **Welcome to the Graveyard, Drifter. Your ship awaits.**

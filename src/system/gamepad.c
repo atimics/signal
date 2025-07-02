@@ -48,6 +48,7 @@ static float apply_deadzone(float value, float deadzone) {
     return sign * ((abs_value - deadzone) / (1.0f - deadzone));
 }
 
+
 // Check if device is a supported gamepad
 static bool is_supported_gamepad(struct hid_device_info* device_info) {
     // Xbox controllers
@@ -79,98 +80,63 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     // Store previous button states for edge detection
     memcpy(gamepad->buttons_previous, gamepad->buttons, sizeof(gamepad->buttons));
     
-    // Debug: Log raw HID report data periodically with more detail
+    // Debug: Log raw HID report data periodically (reduced frequency)
     static int debug_counter = 0;
-    if (++debug_counter % 3 == 0) {  // 20 times per second at 60fps
+    if (++debug_counter % 20 == 0) {  // Reduced frequency
         printf("🎮 HID Report (size=%d): ", size);
-        for (int i = 0; i < (size < 20 ? size : 20); i++) {
+        for (int i = 0; i < (size < 14 ? size : 14); i++) {
             printf("%02X ", data[i]);
         }
         printf("\n");
-        
-        // Compact byte display for easier reading
-        printf("   Bytes: ");
-        for (int i = 0; i < (size < 20 ? size : 20); i++) {
-            printf("[%d]=%d ", i, data[i]);
-        }
-        printf("\n");
-        
-        // Show interpretation
-        printf("   Interpreted: LT=%.2f RT=%.2f LS(%.2f,%.2f) RS(%.2f,%.2f)\n",
-               gamepad->left_trigger, gamepad->right_trigger,
-               gamepad->left_stick_x, gamepad->left_stick_y,
-               gamepad->right_stick_x, gamepad->right_stick_y);
-        
-        // Check for unusual values that might indicate wrong mapping
-        if (fabsf(gamepad->left_stick_x) > 0.9f || fabsf(gamepad->left_stick_y) > 0.9f ||
-            fabsf(gamepad->right_stick_x) > 0.9f || fabsf(gamepad->right_stick_y) > 0.9f) {
-            printf("   ⚠️ WARNING: Stick at extreme value - might be reading trigger as stick!\n");
-        }
     }
     
-    // Xbox controller report format
-    // Common Xbox One controller on macOS format:
-    // Byte 0: Report ID (usually 0x01)
-    // Byte 1: D-pad and some buttons
-    // Byte 2-3: More buttons
-    // Byte 4: Left trigger (0-255)
-    // Byte 5: Right trigger (0-255)
-    // Byte 6-7: Left stick X (16-bit signed)
-    // Byte 8-9: Left stick Y (16-bit signed)
-    // Byte 10-11: Right stick X (16-bit signed)
-    // Byte 12-13: Right stick Y (16-bit signed)
-    
-    // Xbox Wireless Controller on macOS typical layout
-    // After analyzing many controllers, the most common layout is:
-    // Bytes 0-1: Report ID and buttons
-    // Bytes 2-3: More buttons
-    // Bytes 4-11: Sticks (16-bit signed integers)
-    // Bytes 12-13: Triggers (8-bit unsigned)
+    // Standard Xbox Bluetooth controller HID report format (verified)
+    // Based on analysis of the user's debug output:
+    // Bytes 0-1: Report ID and buttons/dpad
+    // Bytes 2-5: Buttons and triggers
+    // Bytes 6-13: Stick data (but layout varies by controller)
     
     int16_t left_x = 0, left_y = 0, right_x = 0, right_y = 0;
     float left_trigger = 0.0f, right_trigger = 0.0f;
     
     if (size >= 14) {
-        // Standard Xbox controller layout on macOS
-        // Note: Some Xbox controllers have different layouts
-        // Try the most common layout first
-        left_x = *((int16_t*)(data + 6));
-        left_y = *((int16_t*)(data + 8));
-        right_x = *((int16_t*)(data + 10));
-        right_y = *((int16_t*)(data + 12));
-        
-        // Raw trigger values (often at bytes 4-5)
-        uint8_t lt_raw = data[4];
-        uint8_t rt_raw = data[5];
-        
-        // Xbox controllers often have a resting position around 127-128
-        // We need to calibrate for this
-        const uint8_t trigger_center = 127;
-        const uint8_t trigger_deadzone = 20;
-        
-        // Process left trigger
-        if (lt_raw > trigger_center + trigger_deadzone) {
-            left_trigger = (lt_raw - trigger_center) / 128.0f;
+        // Xbox Bluetooth controller (most common case)
+        if (gamepad->product_id == 0x0B13 || size >= 17) {
+            // From user's actual HID data, the correct mapping is:
+            // Left stick: bytes 6-7 (X,Y) with center at ~127
+            // Right stick: bytes 8-9 (X,Y) with center at ~127  
+            // Triggers: bytes 11-12 (RT,LT) with 0=off, 255=full
+            
+            // Parse stick data with proper centering
+            left_x = (int16_t)((data[6] - 127) * 256); // Scale 8-bit to 16-bit range
+            left_y = (int16_t)((data[7] - 127) * 256);
+            right_x = (int16_t)((data[8] - 127) * 256);
+            right_y = (int16_t)((data[9] - 127) * 256);
+            
+            // Parse triggers (0-255 range)
+            right_trigger = data[11] / 255.0f;
+            left_trigger = data[12] / 255.0f;
+            
+            // Debug output with proper values
+            static int xbox_debug = 0;
+            if (++xbox_debug % 60 == 0) {
+                printf("🎮 XBOX BT: Sticks[6-9]=%d,%d,%d,%d Triggers[11-12]=%d,%d\n",
+                       data[6], data[7], data[8], data[9], data[11], data[12]);
+                printf("   Mapped: LS(%.2f,%.2f) RS(%.2f,%.2f) LT=%.2f RT=%.2f\n",
+                       normalize_axis(left_x), normalize_axis(left_y),
+                       normalize_axis(right_x), normalize_axis(right_y),
+                       left_trigger, right_trigger);
+            }
         } else {
-            left_trigger = 0.0f;
-        }
-        
-        // Process right trigger
-        if (rt_raw > trigger_center + trigger_deadzone) {
-            right_trigger = (rt_raw - trigger_center) / 128.0f;
-        } else {
-            right_trigger = 0.0f;
-        }
-        
-        // Clamp to 0-1 range
-        left_trigger = fminf(fmaxf(left_trigger, 0.0f), 1.0f);
-        right_trigger = fminf(fmaxf(right_trigger, 0.0f), 1.0f);
-        
-        // Debug specific for trigger issue
-        static int trigger_debug = 0;
-        if (++trigger_debug % 30 == 0 && (lt_raw != trigger_center || rt_raw != trigger_center)) {
-            printf("🎮 TRIGGER DEBUG: LT_raw=%d RT_raw=%d → LT=%.2f RT=%.2f\n",
-                   lt_raw, rt_raw, left_trigger, right_trigger);
+            // Standard USB Xbox controller layout
+            left_x = *((int16_t*)(data + 6));
+            left_y = *((int16_t*)(data + 8));
+            right_x = *((int16_t*)(data + 10));
+            right_y = *((int16_t*)(data + 12));
+            
+            // Triggers at bytes 4-5
+            left_trigger = data[4] / 255.0f;
+            right_trigger = data[5] / 255.0f;
         }
     } else {
         return; // Report too small

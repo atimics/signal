@@ -9,7 +9,7 @@
 
 ## Overview
 
-Implement a comprehensive audio system that serves both atmospheric immersion and functional gameplay purposes. The audio system will provide critical feedback for the Resonance Cascade mechanics while creating the haunting, mysterious atmosphere essential to SIGNAL's experience.
+Implement a comprehensive audio system that serves both atmospheric immersion and functional gameplay purposes. The audio system will provide critical feedback for the Aethelian Network Archaeology mechanics while creating the haunting, mysterious atmosphere essential to SIGNAL's experience.
 
 ---
 
@@ -18,11 +18,11 @@ Implement a comprehensive audio system that serves both atmospheric immersion an
 ### Prerequisites
 - ✅ **Engine Foundation**: ECS and core systems operational
 - 🔄 **Neural Input System**: Haptic feedback integration points
-- 🔄 **Resonance Cascade**: Pattern recognition audio feedback requirements
+- 🔄 **Aethelian Network Archaeology**: Pattern recognition audio feedback requirements
 - ⏳ **Asset Pipeline**: Audio asset loading and management
 
 ### Development Priority
-- Can be developed in parallel with Resonance Cascade implementation
+- Can be developed in parallel with Aethelian Network Archaeology implementation
 - Core audio infrastructure needed before gameplay system integration
 - Atmospheric audio can be implemented independently of gameplay mechanics
 - Cross-platform audio API integration required early in development
@@ -73,7 +73,7 @@ typedef struct {
 
 ## Functional Audio (Gameplay Integration)
 
-### Resonance Cascade Audio Feedback
+### Aethelian Network Archaeology Audio Feedback
 Essential for gameplay mechanics and user experience.
 
 #### Pattern Recognition System
@@ -198,7 +198,7 @@ typedef struct {
 - Add volume control and basic mixing capabilities
 
 ### Phase 2: Functional Audio (Weeks 3-4)
-- Implement Resonance Cascade audio feedback systems
+- Implement Aethelian Network Archaeology audio feedback systems
 - Create spatial audio for A-Drive navigation
 - Develop Ghost Signal audio generation
 - Add haptic feedback integration for gamepads
@@ -259,7 +259,7 @@ typedef struct {
 - ✅ Performance overhead stays below 5% of total CPU usage
 
 ### Gameplay Integration
-- ✅ Resonance Cascade mechanics receive clear, intuitive audio feedback
+- ✅ Aethelian Network Archaeology mechanics receive clear, intuitive audio feedback
 - ✅ Spatial audio effectively supports A-Drive navigation and exploration
 - ✅ Ghost Signal audio patterns provide meaningful gameplay information
 - ✅ Atmospheric audio creates immersive experience without distraction
@@ -274,6 +274,6 @@ typedef struct {
 
 **Impact**: The audio system transforms SIGNAL from a visual experience into a truly immersive sensory environment, providing essential gameplay feedback while creating the atmospheric foundation for the game's mysterious, haunting setting.
 
-**Development Strategy**: Begin with core infrastructure and functional audio to support Resonance Cascade implementation, then expand to full atmospheric and musical systems.
+**Development Strategy**: Begin with core infrastructure and functional audio to support Aethelian Network Archaeology implementation, then expand to full atmospheric and musical systems.
 
-**Next Steps**: Finalize audio API selection, create detailed asset specification, and coordinate timeline with Resonance Cascade development for integrated testing.
+**Next Steps**: Finalize audio API selection, create detailed asset specification, and coordinate timeline with Aethelian Network Archaeology development for integrated testing.

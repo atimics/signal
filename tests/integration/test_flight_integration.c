@@ -60,8 +60,8 @@ EntityID create_ship_entity(struct World* world, bool enable_6dof)
     // Configure physics
     struct Physics* physics = entity_get_physics(world, entity);
     physics->mass = 100.0f;
-    physics->drag_linear = 0.95f;
-    physics->drag_angular = 0.9f;
+    physics->drag_linear = 0.02f;  // 2% drag per frame
+    physics->drag_angular = 0.05f;  // 5% angular drag
     physics_set_6dof_enabled(physics, enable_6dof);
     
     if (enable_6dof) {
@@ -112,7 +112,7 @@ EntityID create_guided_missile_entity(struct World* world)
     
     struct Physics* physics = entity_get_physics(world, entity);
     physics->mass = 10.0f;
-    physics->drag_linear = 0.98f;
+    physics->drag_linear = 0.01f;  // 1% drag for missiles
     physics_set_6dof_enabled(physics, true);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(world, entity);
@@ -182,11 +182,13 @@ void test_thrust_to_movement_pipeline(void)
     // Set initial position
     transform->position = (Vector3){ 0.0f, 0.0f, 0.0f };
     
+    // Clear all physics state
+    physics->velocity = (Vector3){ 0.0f, 0.0f, 0.0f };
+    physics->acceleration = (Vector3){ 0.0f, 0.0f, 0.0f };
+    physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
+    
     // Apply forward thrust
     thruster_set_linear_command(thrusters, (Vector3){ 1.0f, 0.0f, 0.0f });
-    
-    // Clear forces from previous frames
-    physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     
     // Update thruster system (applies forces)
     thruster_system_update(&test_world, NULL, 0.016f);

@@ -23,7 +23,7 @@ High-level game design, world-building, and long-term strategic direction. These
 Immediate next steps and priorities. These are the concrete, actionable items that bridge vision to implementation.
 
 - **[Phase 2: Neural Input Processing](near_roadmap/NEURAL_INPUT_PROCESSING.md)** - ML-enhanced gamepad controls
-- **[Gameplay Systems Implementation](near_roadmap/RESONANCE_CASCADE_MECHANICS.md)** - Core game loop mechanics
+- **[Gravitational Resonance Navigation](near_roadmap/RESONANCE_CASCADE_MECHANICS.md)** - Physics-based FTL travel system
 - **[Audio Integration](near_roadmap/AUDIO_SYSTEM.md)** - Sound effects and atmospheric audio
 
 ### ⚡ [Active Sprint](active_sprint/)
@@ -74,7 +74,7 @@ Implemented features, stable APIs, and production-ready documentation. These rep
 ### Current Priorities
 1. **Fix Build Issues**: Resolve enum conflicts and deprecated code
 2. **Neural Input Processing**: Complete Phase 2 ML implementation
-3. **Gameplay Mechanics**: Implement Resonance Cascade core loop
+3. **Gravitational Navigation**: Implement physics-based FTL travel system
 
 ## 🎯 Design Philosophy
 
