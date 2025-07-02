@@ -82,11 +82,29 @@ struct Transform
 /** @brief Defines an entity's physical properties for simulation. */
 struct Physics
 {
+    // Linear dynamics
     Vector3 velocity;
     Vector3 acceleration;
+    Vector3 force_accumulator;    // Sum forces per frame
     float mass;
-    float drag;
-    bool kinematic;  // Not affected by forces
+    
+    // Angular dynamics (6DOF)
+    Vector3 angular_velocity;     // Rotation rates (rad/s)
+    Vector3 angular_acceleration; // Angular acceleration (rad/s²)
+    Vector3 torque_accumulator;   // Sum torques per frame
+    Vector3 moment_of_inertia;    // Per-axis resistance to rotation
+    
+    // Configuration
+    float drag_linear;            // Linear drag coefficient
+    float drag_angular;           // Angular drag coefficient
+    bool kinematic;               // Not affected by forces
+    bool has_6dof;               // Enable angular dynamics
+    
+    // Environment
+    enum {
+        PHYSICS_SPACE,
+        PHYSICS_ATMOSPHERE
+    } environment;
 };
 
 /** @brief Defines an entity's collision shape and properties. */
