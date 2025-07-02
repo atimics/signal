@@ -15,4 +15,8 @@ void thruster_set_enabled(struct ThrusterSystem* thrusters, bool enabled);
 // Calculate effective thrust based on environment
 float thruster_calculate_efficiency(struct ThrusterSystem* thrusters, int environment);
 
+// Sprint 21: Ship type configuration
+void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType ship_type, float base_thrust);
+void thruster_apply_ship_characteristics(struct ThrusterSystem* thrusters, struct Physics* physics);
+
 #endif // SYSTEM_THRUSTERS_H

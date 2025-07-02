@@ -148,3 +148,116 @@ float thruster_calculate_efficiency(struct ThrusterSystem* thrusters, int enviro
             return 1.0f;
     }
 }
+
+// ============================================================================
+// SPRINT 21: SHIP TYPE CONFIGURATION
+// ============================================================================
+
+void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType ship_type, float base_thrust)
+{
+    if (!thrusters) return;
+    
+    thrusters->ship_type = ship_type;
+    
+    // Configure ship characteristics based on type
+    switch (ship_type) {
+        case SHIP_TYPE_FIGHTER:
+            // Fast, agile, balanced
+            thrusters->max_linear_force = (Vector3){
+                base_thrust * 1.2f,  // Forward/back: slightly above average
+                base_thrust * 1.5f,  // Up/down: excellent maneuverability
+                base_thrust * 1.3f   // Left/right: good strafing
+            };
+            thrusters->max_angular_torque = (Vector3){ 25.0f, 25.0f, 20.0f };
+            thrusters->thrust_response_time = 0.05f;  // Very responsive
+            thrusters->power_efficiency = 0.9f;       // Good efficiency
+            thrusters->heat_generation = 0.7f;        // Moderate heat
+            break;
+            
+        case SHIP_TYPE_INTERCEPTOR:
+            // Very fast forward, minimal lateral
+            thrusters->max_linear_force = (Vector3){
+                base_thrust * 2.0f,  // Forward/back: exceptional speed
+                base_thrust * 0.8f,  // Up/down: limited maneuverability
+                base_thrust * 0.6f   // Left/right: poor strafing
+            };
+            thrusters->max_angular_torque = (Vector3){ 35.0f, 20.0f, 15.0f };
+            thrusters->thrust_response_time = 0.03f;  // Extremely responsive
+            thrusters->power_efficiency = 0.8f;       // Less efficient at full power
+            thrusters->heat_generation = 1.2f;        // High heat generation
+            break;
+            
+        case SHIP_TYPE_CARGO:
+            // Slow but powerful, heavy
+            thrusters->max_linear_force = (Vector3){
+                base_thrust * 1.5f,  // Forward/back: good for mass
+                base_thrust * 1.8f,  // Up/down: overcome heavy mass
+                base_thrust * 1.0f   // Left/right: standard
+            };
+            thrusters->max_angular_torque = (Vector3){ 12.0f, 12.0f, 8.0f };
+            thrusters->thrust_response_time = 0.15f;  // Slow response
+            thrusters->power_efficiency = 1.1f;       // Very efficient
+            thrusters->heat_generation = 0.4f;        // Low heat (efficient)
+            break;
+            
+        case SHIP_TYPE_EXPLORER:
+            // Balanced, efficient
+            thrusters->max_linear_force = (Vector3){
+                base_thrust * 1.0f,  // Forward/back: standard
+                base_thrust * 1.0f,  // Up/down: standard
+                base_thrust * 1.0f   // Left/right: standard
+            };
+            thrusters->max_angular_torque = (Vector3){ 18.0f, 18.0f, 15.0f };
+            thrusters->thrust_response_time = 0.08f;  // Good response
+            thrusters->power_efficiency = 1.2f;       // Excellent efficiency
+            thrusters->heat_generation = 0.5f;        // Low heat
+            break;
+            
+        case SHIP_TYPE_CUSTOM:
+        default:
+            // Keep existing configuration
+            thrusters->power_efficiency = 1.0f;
+            thrusters->heat_generation = 0.6f;
+            break;
+    }
+    
+    // Common settings
+    thrusters->atmosphere_efficiency = 1.0f;
+    thrusters->vacuum_efficiency = 1.0f;
+    thrusters->thrusters_enabled = true;
+}
+
+void thruster_apply_ship_characteristics(struct ThrusterSystem* thrusters, struct Physics* physics)
+{
+    if (!thrusters || !physics) return;
+    
+    // Apply ship type effects to physics
+    switch (thrusters->ship_type) {
+        case SHIP_TYPE_FIGHTER:
+            // Fighters have lower drag for agility
+            physics->drag_linear = fmaxf(physics->drag_linear * 0.98f, 0.95f);
+            physics->drag_angular = fmaxf(physics->drag_angular * 0.95f, 0.85f);
+            break;
+            
+        case SHIP_TYPE_INTERCEPTOR:
+            // Interceptors have very low linear drag, higher angular drag
+            physics->drag_linear = fmaxf(physics->drag_linear * 0.96f, 0.90f);
+            physics->drag_angular = fminf(physics->drag_angular * 1.1f, 0.95f);
+            break;
+            
+        case SHIP_TYPE_CARGO:
+            // Cargo ships have higher drag due to mass and design
+            physics->drag_linear = fminf(physics->drag_linear * 1.02f, 0.99f);
+            physics->drag_angular = fminf(physics->drag_angular * 1.05f, 0.95f);
+            break;
+            
+        case SHIP_TYPE_EXPLORER:
+            // Explorers maintain standard drag
+            break;
+            
+        case SHIP_TYPE_CUSTOM:
+        default:
+            // No modifications for custom ships
+            break;
+    }
+}

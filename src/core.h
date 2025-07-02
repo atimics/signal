@@ -235,6 +235,15 @@ struct SceneNode
 };
 
 /** @brief Defines a universal propulsion system for any entity. */
+/** @brief Ship type enumeration for different handling characteristics. */
+typedef enum {
+    SHIP_TYPE_FIGHTER,      /**< Fast, agile, light */
+    SHIP_TYPE_INTERCEPTOR,  /**< Very fast, minimal cargo */
+    SHIP_TYPE_CARGO,        /**< Slow, heavy, lots of thrust */
+    SHIP_TYPE_EXPLORER,     /**< Balanced, efficient */
+    SHIP_TYPE_CUSTOM        /**< Custom configuration */
+} ShipType;
+
 struct ThrusterSystem
 {
     // Thruster capabilities
@@ -250,6 +259,11 @@ struct ThrusterSystem
     float atmosphere_efficiency;    /**< Efficiency in atmosphere (0-1) */
     float vacuum_efficiency;        /**< Efficiency in vacuum (0-1) */
     bool thrusters_enabled;         /**< Master thruster enable/disable */
+    
+    // Ship type and characteristics (Sprint 21 enhancement)
+    ShipType ship_type;            /**< Ship type for handling characteristics */
+    float power_efficiency;        /**< Overall power efficiency (0-1) */
+    float heat_generation;         /**< Heat generated per thrust unit */
 };
 
 /** @brief Defines input processing and control authority for an entity. */

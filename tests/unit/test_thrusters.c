@@ -9,10 +9,12 @@
 #include "../vendor/unity.h"
 #include "../../src/core.h"
 #include "../../src/system/thrusters.h"
+#include "../../src/system/physics.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 // Test world
 static struct World test_world;

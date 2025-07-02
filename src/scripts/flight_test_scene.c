@@ -8,6 +8,7 @@
 #include "../system/material.h"
 #include "../system/input.h"
 #include "../system/control.h"
+#include "../system/thrusters.h"
 #include "../hidapi.h"
 #include "../sokol_app.h"
 #include <stdio.h>
@@ -26,8 +27,7 @@ typedef enum {
     CAMERA_MODE_COCKPIT = 0,
     CAMERA_MODE_CHASE_NEAR = 1,
     CAMERA_MODE_CHASE_FAR = 2,
-    CAMERA_MODE_OVERHEAD = 3,
-    CAMERA_MODE_COUNT = 4
+    CAMERA_MODE_COUNT = 3
 } FlightCameraMode;
 
 static FlightCameraMode current_camera_mode = CAMERA_MODE_CHASE_NEAR;
@@ -57,6 +57,22 @@ static FlightObstacle obstacles[OBSTACLE_COUNT];
 // Forward declarations
 void diagnose_gamepad_issues(void);  // Defined in derelict_navigation_scene.c
 
+// Visual thruster system
+typedef struct {
+    EntityID main_engines[2];    // Left and right main engines
+    EntityID rcs_thrusters[4];   // RCS thrusters: forward, back, left, right
+    EntityID vertical_thrusters[2]; // Up and down thrusters
+    bool initialized;
+} VisualThrusterSystem;
+
+static VisualThrusterSystem visual_thrusters = {0};
+
+// Create visual thruster entities
+EntityID create_visual_thruster(struct World* world, Vector3 local_pos, Vector3 size, Vector3 glow_color);
+void update_thruster_glow_intensity(struct World* world, EntityID thruster_id, float intensity);
+void setup_visual_thrusters(struct World* world, EntityID ship_id);
+void update_visual_thrusters(struct World* world, float delta_time);
+
 void flight_test_init(struct World* world, SceneStateManager* state) {
     (void)state;
     
@@ -85,19 +101,23 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         if (entity_add_component(world, player_ship_id, COMPONENT_THRUSTER_SYSTEM)) {
             struct ThrusterSystem* thrusters = entity_get_thruster_system(world, player_ship_id);
             if (thrusters) {
-                // Configure thruster capabilities for responsive flight
-                // Need much stronger forces to overcome gravity (784.8N) and provide acceleration
-                thrusters->max_linear_force = (Vector3){ 
-                    FLIGHT_THRUST_FORCE * 30.0f,     // Forward/back: 1050N 
-                    FLIGHT_MANEUVER_FORCE * 50.0f,   // Up/down: 900N (can overcome gravity + accelerate)
-                    FLIGHT_MANEUVER_FORCE * 30.0f    // Left/right: 540N
-                };
-                thrusters->max_angular_torque = (Vector3){ 150.0f, 150.0f, 100.0f }; // Much stronger rotation
-                thrusters->thrust_response_time = 0.05f; // Very responsive
-                thrusters->atmosphere_efficiency = 1.0f; // Full power in atmosphere
-                thrusters->vacuum_efficiency = 1.0f;     // Full power in vacuum
-                thrusters->thrusters_enabled = true;
-                printf("   ✅ ThrusterSystem configured\n");
+                // Sprint 21: Configure as Fighter-class ship with proper characteristics
+                float base_thrust = FLIGHT_THRUST_FORCE * 500.0f;  // Strong base thrust for testing
+                thruster_configure_ship_type(thrusters, SHIP_TYPE_FIGHTER, base_thrust);
+                
+                // Apply ship characteristics to physics
+                struct Physics* physics = entity_get_physics(world, player_ship_id);
+                if (physics) {
+                    thruster_apply_ship_characteristics(thrusters, physics);
+                }
+                
+                printf("   ✅ ThrusterSystem configured as FIGHTER class\n");
+                printf("   📊 Max thrust: Forward=%.0fN, Maneuver=%.0fN, Strafe=%.0fN\n",
+                       thrusters->max_linear_force.x, thrusters->max_linear_force.y, thrusters->max_linear_force.z);
+                printf("   🔄 Max torque: [%.1f, %.1f, %.1f] N⋅m\n",
+                       thrusters->max_angular_torque.x, thrusters->max_angular_torque.y, thrusters->max_angular_torque.z);
+                printf("   ⚡ Response time: %.3fs, Efficiency: %.1f\n",
+                       thrusters->thrust_response_time, thrusters->power_efficiency);
             }
         }
         
@@ -196,7 +216,7 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     printf("     Left Trigger - Reverse thrust\n");
     printf("     Bumpers - Roll left/right\n");
     printf("     A Button - Boost, B Button - Brake\n");
-    printf("📷 Camera Modes: COCKPIT → CHASE_NEAR → CHASE_FAR → OVERHEAD\n");
+    printf("📷 Camera Modes: COCKPIT → CHASE_NEAR → CHASE_FAR\n");
     printf("🎯 Physics: 6DOF enabled with flight assistance\n");
 }
 
@@ -212,29 +232,8 @@ void update_flight_camera_system(struct World* world, float delta_time) {
     struct Camera* camera = entity_get_camera(world, active_camera_id);
     if (!camera) return;
     
-    // Get player data
-    struct Entity* player_entity = NULL;
-    for (uint32_t i = 0; i < world->entity_count; i++) {
-        if (world->entities[i].id == player_ship_id) {
-            player_entity = &world->entities[i];
-            break;
-        }
-    }
-    
-    Vector3 player_velocity = {0, 0, 0};
-    Vector3 player_acceleration = {0, 0, 0};
-    if (player_entity && player_entity->physics) {
-        player_velocity = player_entity->physics->velocity;
-        player_acceleration = player_entity->physics->acceleration;
-    }
-    
-    float player_speed = sqrtf(player_velocity.x * player_velocity.x + 
-                              player_velocity.y * player_velocity.y + 
-                              player_velocity.z * player_velocity.z);
-    
-    float acceleration_magnitude = sqrtf(player_acceleration.x * player_acceleration.x + 
-                                        player_acceleration.y * player_acceleration.y + 
-                                        player_acceleration.z * player_acceleration.z);
+    // Velocity tracking removed for camera stability
+    // TODO: Re-add when implementing subtle velocity-based effects
     
     // Ensure camera follows player
     if (camera->follow_target != player_ship_id) {
@@ -249,126 +248,51 @@ void update_flight_camera_system(struct World* world, float delta_time) {
     switch (current_camera_mode) {
         case CAMERA_MODE_COCKPIT:
             camera->behavior = CAMERA_BEHAVIOR_FIRST_PERSON;
-            base_offset = (Vector3){0, 1.0f, 0};    // Slightly higher in cockpit
-            new_smoothing = 12.0f;                  // Very responsive
-            camera->fov = 90.0f;                    // Standard cockpit FOV
+            base_offset = (Vector3){0, 0.5f, 0.5f}; // Inside cockpit, slightly forward and up
+            new_smoothing = 15.0f;                   // Very responsive for cockpit
+            camera->fov = 85.0f;                     // Narrower for cockpit realism
             break;
             
         case CAMERA_MODE_CHASE_NEAR:
             camera->behavior = CAMERA_BEHAVIOR_CHASE;
-            base_offset = (Vector3){0, 15, 30};     // Higher and further back
-            new_smoothing = 3.0f;                   // Moderate lag for dynamic feel
-            camera->fov = 100.0f;                   // Wide FOV for visibility
+            base_offset = (Vector3){0, 8, 20};       // Closer, stable position
+            new_smoothing = 10.0f;                   // Smooth but responsive
+            camera->fov = 95.0f;                     // Good visibility
             break;
             
         case CAMERA_MODE_CHASE_FAR:
             camera->behavior = CAMERA_BEHAVIOR_CHASE;
-            base_offset = (Vector3){10, 25, 65};    // Much further back, offset to side
-            new_smoothing = 1.5f;                   // Slow for cinematic effect
-            camera->fov = 110.0f;                   // Very wide for cinematic shots
+            base_offset = (Vector3){0, 15, 40};      // Further back, higher up
+            new_smoothing = 8.0f;                    // Smooth cinematic feel
+            camera->fov = 105.0f;                    // Wide for overview
             break;
             
-        case CAMERA_MODE_OVERHEAD:
-            camera->behavior = CAMERA_BEHAVIOR_CHASE;
-            base_offset = (Vector3){0, 80, 15};     // High overhead, slightly behind
-            new_smoothing = 2.0f;                   // Moderate for overview
-            camera->fov = 85.0f;                    // Narrower for tactical view
-            break;
             
         case CAMERA_MODE_COUNT:
         default:
             current_camera_mode = CAMERA_MODE_CHASE_NEAR;
             camera->behavior = CAMERA_BEHAVIOR_CHASE;
-            base_offset = (Vector3){0, 15, 30};
-            new_smoothing = 3.0f;
-            camera->fov = 100.0f;
+            base_offset = (Vector3){0, 8, 20};
+            new_smoothing = 10.0f;
+            camera->fov = 95.0f;
             break;
     }
     
-    // Enhanced dynamic offset calculation
+    // Simple static offset - no velocity-based effects for now
     Vector3 dynamic_offset = base_offset;
-    if (camera->behavior == CAMERA_BEHAVIOR_CHASE) {
-        // Velocity-based lag (more pronounced than derelict scene)
-        float velocity_factor = 0.0f;
-        switch (current_camera_mode) {
-            case CAMERA_MODE_CHASE_NEAR:
-                velocity_factor = 0.2f;   // More velocity lag for visceral feel
-                break;
-            case CAMERA_MODE_CHASE_FAR:
-                velocity_factor = 0.35f;  // Heavy lag for cinematic effect
-                break;
-            case CAMERA_MODE_OVERHEAD:
-                velocity_factor = 0.1f;   // Less lag for tactical view
-                break;
-            default:
-                velocity_factor = 0.15f;
-                break;
-        }
-        
-        // Add velocity lag
-        dynamic_offset.x += player_velocity.x * velocity_factor;
-        dynamic_offset.y += player_velocity.y * velocity_factor * 0.3f; // Less vertical
-        dynamic_offset.z += player_velocity.z * velocity_factor;
-        
-        // Speed-based distance (more dramatic pullback)
-        float speed_factor = fminf(player_speed / FLIGHT_MAX_VELOCITY, 1.0f);
-        switch (current_camera_mode) {
-            case CAMERA_MODE_CHASE_NEAR:
-                dynamic_offset.z += speed_factor * 12.0f;  // Pull back up to 12 units
-                dynamic_offset.y += speed_factor * 6.0f;   // Raise up to 6 units
-                break;
-            case CAMERA_MODE_CHASE_FAR:
-                dynamic_offset.z += speed_factor * 25.0f;  // Dramatic pullback
-                dynamic_offset.y += speed_factor * 12.0f;  // Higher for speed
-                break;
-            case CAMERA_MODE_OVERHEAD:
-                dynamic_offset.y += speed_factor * 20.0f;  // Go higher when fast
-                break;
-            default:
-                break;
-        }
-    }
     
     // Apply settings
     camera->follow_offset = dynamic_offset;
     camera->follow_smoothing = new_smoothing;
     camera->matrices_dirty = true;
     
-    // Enhanced camera shake for flight (more intense than derelict)
-    if (camera->behavior == CAMERA_BEHAVIOR_CHASE && 
-        (player_speed > 3.0f || acceleration_magnitude > 1.5f)) {
-        
-        float shake_intensity = fminf((player_speed / 80.0f) + (acceleration_magnitude / 30.0f), 0.6f);
-        float shake_freq = flight_time * 30.0f;  // Higher frequency for more intense feel
-        
-        Vector3 shake_offset = {
-            sinf(shake_freq * 1.2f) * shake_intensity * 0.8f,
-            sinf(shake_freq * 1.6f) * shake_intensity * 0.6f,
-            sinf(shake_freq * 1.4f) * shake_intensity * 0.4f
-        };
-        
-        // Apply shake
-        camera->follow_offset.x += shake_offset.x;
-        camera->follow_offset.y += shake_offset.y;
-        camera->follow_offset.z += shake_offset.z;
-        
-        // Dynamic FOV for warp effect (more dramatic)
-        if (acceleration_magnitude > 8.0f) {
-            float fov_boost = fminf(acceleration_magnitude / 80.0f, 0.25f);
-            camera->fov += fov_boost * 30.0f;  // Up to 30 degrees FOV increase
-        }
-        
-        // Speed-based FOV increase for sensation of speed
-        if (player_speed > 40.0f) {
-            float speed_fov_boost = fminf((player_speed - 40.0f) / 40.0f, 0.2f);
-            camera->fov += speed_fov_boost * 15.0f;  // Up to 15 degrees for high speed
-        }
-    }
+    // Camera shake and FOV effects disabled for stability
+    // TODO: Re-enable with more conservative settings once basic camera is stable
     
     // Reduced camera debug output
     static float last_cam_log = 0.0f;
     if (flight_time - last_cam_log > 30.0f) {  // Reduced frequency from 3s to 30s
-        const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR", "OVERHEAD"};
+        const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
         printf("📷 Camera: %s mode\n", mode_names[current_camera_mode]);
         last_cam_log = flight_time;
     }
@@ -460,7 +384,7 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
         if (ev->key_code == SAPP_KEYCODE_TAB) {
             // Cycle camera modes - moved from C to TAB to avoid conflict with roll control
             current_camera_mode = (FlightCameraMode)((current_camera_mode + 1) % CAMERA_MODE_COUNT);
-            const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR", "OVERHEAD"};
+            const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
             printf("📷 Flight camera mode: %s\n", mode_names[current_camera_mode]);
             
             // Apply immediately

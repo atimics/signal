@@ -62,7 +62,7 @@ help:
 	@echo "  wasm             - Build WebAssembly version"
 	@echo ""
 	@echo "🧪 TEST TARGETS:"
-	@echo "  test             - Run all tests (math, UI, performance)"
+	@echo "  test             - Run comprehensive test suite (math, UI, performance, physics, thrusters, control, camera, input, flight integration)"
 	@echo ""
 	@echo "🎨 ASSET TARGETS:"
 	@echo "  assets           - Compile assets to binary format"
@@ -262,12 +262,19 @@ TEST_INPUT_TARGET = $(BUILD_DIR)/test_input_system
 TEST_FLIGHT_INTEGRATION_TARGET = $(BUILD_DIR)/test_flight_integration
 
 # Test source files for new systems
-TEST_PHYSICS_SRC = tests/unit/test_physics_6dof.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
-TEST_THRUSTERS_SRC = tests/unit/test_thrusters.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
-TEST_CONTROL_SRC = tests/unit/test_control.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
-TEST_CAMERA_SRC = tests/unit/test_camera_system.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
-TEST_INPUT_SRC = tests/unit/test_input_system.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
-TEST_FLIGHT_INTEGRATION_SRC = tests/integration/test_flight_integration.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
+TEST_PHYSICS_SRC = tests/unit/test_physics_6dof.c tests/vendor/unity.c
+TEST_THRUSTERS_SRC = tests/unit/test_thrusters.c tests/vendor/unity.c
+TEST_CONTROL_SRC = tests/unit/test_control.c tests/vendor/unity.c
+TEST_CAMERA_SRC = tests/unit/test_camera_system.c tests/vendor/unity.c
+TEST_INPUT_SRC = tests/unit/test_input_system.c tests/vendor/unity.c
+TEST_FLIGHT_INTEGRATION_SRC = tests/integration/test_flight_integration.c tests/vendor/unity.c
+
+# Critical physics tests for Sprint 21 velocity integration bug
+PHYSICS_TEST_SOURCES = src/core.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
+build/test_physics_critical: tests/unit/test_physics_critical.c $(PHYSICS_TEST_SOURCES)
+	@echo "🔧 Building critical physics tests..."
+	$(CC) $(TEST_CFLAGS) \
+		-o $@ tests/unit/test_physics_critical.c $(PHYSICS_TEST_SOURCES) $(LDFLAGS)
 
 # Main test target - runs all essential tests including new comprehensive tests
 test: $(TEST_MATH_TARGET) $(TEST_UI_TARGET) $(TEST_PERFORMANCE_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET)
@@ -329,7 +336,7 @@ $(TEST_PHYSICS_TARGET): $(TEST_PHYSICS_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_PHYSICS_SRC) -lm
+		-o $@ $(TEST_PHYSICS_SRC) src/core.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build thruster system tests  
 $(TEST_THRUSTERS_TARGET): $(TEST_THRUSTERS_SRC) | $(BUILD_DIR)
@@ -337,7 +344,7 @@ $(TEST_THRUSTERS_TARGET): $(TEST_THRUSTERS_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_THRUSTERS_SRC) -lm
+		-o $@ $(TEST_THRUSTERS_SRC) src/core.c src/system/thrusters.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build control authority tests
 $(TEST_CONTROL_TARGET): $(TEST_CONTROL_SRC) | $(BUILD_DIR)
@@ -345,7 +352,7 @@ $(TEST_CONTROL_TARGET): $(TEST_CONTROL_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CONTROL_SRC) -lm
+		-o $@ $(TEST_CONTROL_SRC) src/core.c src/system/control.c src/system/thrusters.c src/system/physics.c src/system/input.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build camera system tests
 $(TEST_CAMERA_TARGET): $(TEST_CAMERA_SRC) | $(BUILD_DIR)
@@ -353,7 +360,7 @@ $(TEST_CAMERA_TARGET): $(TEST_CAMERA_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CAMERA_SRC) -lm
+		-o $@ $(TEST_CAMERA_SRC) src/core.c src/system/camera.c src/render_camera.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build input system tests
 $(TEST_INPUT_TARGET): $(TEST_INPUT_SRC) | $(BUILD_DIR)
@@ -361,7 +368,7 @@ $(TEST_INPUT_TARGET): $(TEST_INPUT_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_INPUT_SRC) -lm
+		-o $@ $(TEST_INPUT_SRC) src/core.c src/system/input.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build flight integration tests
 $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
@@ -369,6 +376,6 @@ $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) -lm
+		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 .PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test help docs

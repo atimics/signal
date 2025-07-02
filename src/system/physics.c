@@ -126,21 +126,25 @@ static void physics_apply_torques(struct Physics* physics, float delta_time)
 // INTEGRATION FUNCTIONS
 // ============================================================================
 
-static void physics_integrate_linear(struct Physics* physics, struct Transform* transform, float delta_time)
+void physics_integrate_linear(struct Physics* physics, struct Transform* transform, float delta_time)
 {
     // Store old position for debug
     Vector3 old_pos = transform->position;
     
-    // DEBUG: Track velocity at each step
+    // DEBUG: Track velocity at each step with more detailed info
     static uint32_t debug_counter = 0;
     bool should_debug = (++debug_counter % 60 == 0);
     
     Vector3 vel_before = physics->velocity;
     
+    // Enhanced debug: track mass and delta_time
+    if (should_debug) {
+        printf("🔬 PHYSICS DEBUG: mass=%.1f, drag=%.4f, dt=%.5f\n", 
+               physics->mass, physics->drag_linear, delta_time);
+    }
+    
     // Apply acceleration to velocity
     physics->velocity = vector3_add(physics->velocity, vector3_multiply(physics->acceleration, delta_time));
-    
-    Vector3 vel_after_accel = physics->velocity;
     
     // Apply drag
     physics->velocity = vector3_multiply(physics->velocity, physics->drag_linear);
@@ -150,29 +154,29 @@ static void physics_integrate_linear(struct Physics* physics, struct Transform* 
     // Apply velocity to position
     transform->position = vector3_add(transform->position, vector3_multiply(physics->velocity, delta_time));
     
-    // DEBUG: Show velocity changes step by step
+    // DEBUG: Show velocity changes step by step (reduced frequency)
     if (should_debug && (physics->acceleration.x != 0.0f || physics->acceleration.y != 0.0f || physics->acceleration.z != 0.0f)) {
-        printf("🔍 VEL DEBUG: Before:[%.3f,%.3f,%.3f] +Accel:[%.3f,%.3f,%.3f] +Drag:[%.3f,%.3f,%.3f]\n",
+        printf("🔍 VEL: Before:[%.2f,%.2f,%.2f] After:[%.2f,%.2f,%.2f]\n",
                vel_before.x, vel_before.y, vel_before.z,
-               vel_after_accel.x, vel_after_accel.y, vel_after_accel.z,
                vel_after_drag.x, vel_after_drag.y, vel_after_drag.z);
     }
     
-    // Debug position changes
+    // Debug position changes - track any movement
     static uint32_t pos_log_counter = 0;
-    float vel_mag = sqrtf(physics->velocity.x * physics->velocity.x + 
-                         physics->velocity.y * physics->velocity.y + 
-                         physics->velocity.z * physics->velocity.z);
-    if (vel_mag > 0.1f && ++pos_log_counter % 60 == 0) {
-        Vector3 pos_change = vector3_subtract(transform->position, old_pos);
-        printf("📍 POSITION: Vel:[%.2f,%.2f,%.2f] PosChange:[%.3f,%.3f,%.3f] NewPos:[%.1f,%.1f,%.1f]\n",
-               physics->velocity.x, physics->velocity.y, physics->velocity.z,
-               pos_change.x, pos_change.y, pos_change.z,
-               transform->position.x, transform->position.y, transform->position.z);
+    Vector3 pos_change = vector3_subtract(transform->position, old_pos);
+    float pos_change_mag = sqrtf(pos_change.x * pos_change.x + pos_change.y * pos_change.y + pos_change.z * pos_change.z);
+    
+    if (pos_change_mag > 0.001f && ++pos_log_counter % 60 == 0) {
+        printf("📍 POSITION: OldPos:[%.3f,%.3f,%.3f] NewPos:[%.3f,%.3f,%.3f] Change:[%.4f,%.4f,%.4f]\n",
+               old_pos.x, old_pos.y, old_pos.z,
+               transform->position.x, transform->position.y, transform->position.z,
+               pos_change.x, pos_change.y, pos_change.z);
+        printf("📍 VELOCITY: [%.4f,%.4f,%.4f] dt=%.5f\n",
+               physics->velocity.x, physics->velocity.y, physics->velocity.z, delta_time);
     }
 }
 
-static void physics_integrate_angular(struct Physics* physics, struct Transform* transform, float delta_time)
+void physics_integrate_angular(struct Physics* physics, struct Transform* transform, float delta_time)
 {
     if (!physics->has_6dof) return;
     
@@ -205,13 +209,19 @@ static void physics_apply_environmental_effects(struct Physics* physics, struct 
             break;
             
         case PHYSICS_ATMOSPHERE:
-            // Apply atmospheric drag (stronger than space)
-            physics->drag_linear *= 0.98f;  // Additional atmospheric drag
-            
-            // Apply reduced gravity for better flight feel (space station or low gravity)
-            Vector3 gravity = { 0.0f, -3.0f * physics->mass, 0.0f };  // Much lighter gravity
-            physics->force_accumulator = vector3_add(physics->force_accumulator, gravity);
-            break;
+            {
+                // Apply reduced gravity for better flight feel (space station or low gravity)
+                Vector3 gravity = { 0.0f, -3.0f * physics->mass, 0.0f };  // Much lighter gravity
+                physics->force_accumulator = vector3_add(physics->force_accumulator, gravity);
+                
+                // Debug gravity application
+                static uint32_t gravity_debug_counter = 0;
+                if (++gravity_debug_counter % 300 == 0) {  // Every 5 seconds
+                    printf("🌍 GRAVITY: Applied %.1fN to %.1fkg entity\n", 
+                           -3.0f * physics->mass, physics->mass);
+                }
+                break;
+            }
     }
 }
 

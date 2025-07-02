@@ -15,4 +15,10 @@ void physics_add_force_at_point(struct Physics* physics, Vector3 force, Vector3 
 // 6DOF control
 void physics_set_6dof_enabled(struct Physics* physics, bool enabled);
 
+// Testing functions (exposed for unit tests)
+#ifdef UNITY_TESTING
+void physics_integrate_linear(struct Physics* physics, struct Transform* transform, float delta_time);
+void physics_integrate_angular(struct Physics* physics, struct Transform* transform, float delta_time);
+#endif
+
 #endif // SYSTEM_PHYSICS_H

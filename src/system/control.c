@@ -16,9 +16,9 @@ static Vector3 process_linear_input(const InputState* input, struct ControlAutho
     if (!input || !control) return (Vector3){ 0.0f, 0.0f, 0.0f };
     
     Vector3 linear_commands = {
-        input->thrust,   // Forward/backward
-        input->strafe,   // Left/right
-        input->vertical  // Up/down
+        input->strafe,   // Left/right -> X-axis
+        input->vertical, // Up/down -> Y-axis
+        -input->thrust   // Forward/backward -> Z-axis (negative Z = forward away from camera)
     };
     
     // Apply sensitivity

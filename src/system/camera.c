@@ -87,12 +87,10 @@ void camera_system_update(struct World* world, RenderConfig* render_config, floa
     // Update render config with camera data
     if (camera->matrices_dirty)
     {
-        printf("🎥 DEBUG: Updating camera matrices for Entity %d\n", active_camera_id);
         // Recalculate the camera matrices when dirty
         camera_update_matrices(camera);
         camera->matrices_dirty = false;
         update_legacy_render_config(render_config, camera);
-        printf("🎥 DEBUG: Camera matrices updated and render config synced\n");
     }
 }
 

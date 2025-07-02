@@ -14,26 +14,27 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
 // Test world
 static struct World test_world;
 
 void setUp(void)
 {
-    // Initialize test world
-    memset(&test_world, 0, sizeof(struct World));
+    // Initialize test world properly using world_init
+    if (!world_init(&test_world)) {
+        printf("❌ Failed to initialize test world\n");
+        return;
+    }
+    
+    // Override max entities for test efficiency
     test_world.max_entities = 100;
-    test_world.entities = malloc(sizeof(struct Entity) * 100);
-    test_world.entity_count = 0;
-    test_world.next_entity_id = 1;
 }
 
 void tearDown(void)
 {
-    if (test_world.entities) {
-        free(test_world.entities);
-        test_world.entities = NULL;
-    }
+    // Properly destroy the world
+    world_destroy(&test_world);
 }
 
 // ============================================================================
@@ -42,11 +43,35 @@ void tearDown(void)
 
 void test_physics_6dof_enabled_flag(void)
 {
+    printf("DEBUG: Starting basic component test...\n");
+    
     // Create physics entity
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    printf("DEBUG: Created entity ID: %d\n", entity);
     
+    if (entity == INVALID_ENTITY) {
+        printf("DEBUG: Failed to create entity!\n");
+        TEST_FAIL_MESSAGE("Failed to create entity");
+        return;
+    }
+    
+    printf("DEBUG: Adding transform component...\n");
+    bool add_transform = entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    printf("DEBUG: Add transform result: %s\n", add_transform ? "SUCCESS" : "FAILED");
+    
+    printf("DEBUG: Adding physics component...\n");
+    bool add_physics = entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    printf("DEBUG: Add physics result: %s\n", add_physics ? "SUCCESS" : "FAILED");
+    
+    if (!add_transform || !add_physics) {
+        TEST_FAIL_MESSAGE("Failed to add components");
+        return;
+    }
+    
+    printf("DEBUG: Getting physics component...\n");
     struct Physics* physics = entity_get_physics(&test_world, entity);
+    printf("DEBUG: Physics pointer: %p\n", (void*)physics);
+    
     TEST_ASSERT_NOT_NULL(physics);
     
     // 6DOF should be disabled by default
@@ -357,6 +382,506 @@ void test_physics_multiple_entities_6dof_performance(void)
 }
 
 // ============================================================================
+// CRITICAL BUG ISOLATION TESTS
+// ============================================================================
+
+void test_physics_velocity_integration_basic(void)
+{
+    printf("🔍 Testing basic velocity integration with known values...\n");
+    
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    // Set up known test conditions
+    physics->mass = 100.0f;  // 100kg mass
+    physics->drag_linear = 1.0f;  // NO drag to isolate issue
+    physics->kinematic = false;
+    physics->has_6dof = true;
+    
+    // Clear initial state
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    physics->acceleration = (Vector3){0.0f, 0.0f, 0.0f};
+    physics->force_accumulator = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    transform->position = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    printf("Initial state: velocity=[%.3f,%.3f,%.3f] position=[%.3f,%.3f,%.3f]\n",
+           physics->velocity.x, physics->velocity.y, physics->velocity.z,
+           transform->position.x, transform->position.y, transform->position.z);
+    
+    // Apply a known force: 1000N forward
+    physics_add_force(physics, (Vector3){1000.0f, 0.0f, 0.0f});
+    
+    printf("Applied 1000N force. Force accumulator=[%.1f,%.1f,%.1f]\n",
+           physics->force_accumulator.x, physics->force_accumulator.y, physics->force_accumulator.z);
+    
+    // Expected: 1000N / 100kg = 10 m/s² acceleration
+    // With dt=0.016s (60 FPS): velocity change = 10 * 0.016 = 0.16 m/s
+    float delta_time = 0.016f;  // 60 FPS
+    
+    // Create a minimal render config for the physics update
+    RenderConfig dummy_render_config = {0};
+    
+    // Run one physics update
+    physics_system_update(&test_world, &dummy_render_config, delta_time);
+    
+    printf("After 1 update (dt=%.3f): velocity=[%.3f,%.3f,%.3f] position=[%.3f,%.3f,%.3f]\n",
+           delta_time,
+           physics->velocity.x, physics->velocity.y, physics->velocity.z,
+           transform->position.x, transform->position.y, transform->position.z);
+    
+    // Test that velocity changed
+    TEST_ASSERT_GREATER_THAN_FLOAT(0.1f, physics->velocity.x);  // Should be ~0.16 m/s
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, physics->velocity.y);  // No Y force applied
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, physics->velocity.z);  // No Z force applied
+    
+    // Test that position changed (velocity * dt)
+    TEST_ASSERT_GREATER_THAN_FLOAT(0.001f, transform->position.x);  // Should be ~0.0026m
+    
+    printf("✅ Basic integration test passed - velocity accumulation working\n");
+}
+
+void test_physics_force_accumulator_timing(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    TEST_ASSERT_NOT_NULL(physics);
+    
+    physics->mass = 100.0f;
+    physics->drag_linear = 1.0f;  // No drag
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    // Add force and verify it's in accumulator
+    physics_add_force(physics, (Vector3){1000.0f, 0.0f, 0.0f});
+    TEST_ASSERT_EQUAL_FLOAT(1000.0f, physics->force_accumulator.x);
+    
+    // Run physics update
+    RenderConfig dummy_render_config = {0};
+    physics_system_update(&test_world, &dummy_render_config, 0.016f);
+    
+    // Force accumulator should be cleared after update
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, physics->force_accumulator.x);
+    
+    // But velocity should have changed
+    TEST_ASSERT_GREATER_THAN_FLOAT(0.1f, physics->velocity.x);
+}
+
+void test_physics_multiple_force_accumulation(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    TEST_ASSERT_NOT_NULL(physics);
+    
+    physics->mass = 100.0f;
+    physics->drag_linear = 1.0f;  // No drag
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    // Apply multiple forces in the same frame
+    physics_add_force(physics, (Vector3){500.0f, 0.0f, 0.0f});
+    physics_add_force(physics, (Vector3){300.0f, 200.0f, 0.0f});
+    physics_add_force(physics, (Vector3){200.0f, -200.0f, 100.0f});
+    
+    // Total force should be [1000, 0, 100]
+    TEST_ASSERT_EQUAL_FLOAT(1000.0f, physics->force_accumulator.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, physics->force_accumulator.y);
+    TEST_ASSERT_EQUAL_FLOAT(100.0f, physics->force_accumulator.z);
+    
+    // Run physics update
+    RenderConfig dummy_render_config = {0};
+    physics_system_update(&test_world, &dummy_render_config, 0.016f);
+    
+    // Check resulting velocity (F/m * dt)
+    // X: 1000N / 100kg * 0.016s = 0.16 m/s
+    // Y: 0N / 100kg * 0.016s = 0.0 m/s  
+    // Z: 100N / 100kg * 0.016s = 0.016 m/s
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.16f, physics->velocity.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->velocity.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.005f, 0.016f, physics->velocity.z);
+}
+
+void test_physics_zero_mass_safety(void)
+{
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    TEST_ASSERT_NOT_NULL(physics);
+    
+    // Test with zero mass (should be handled safely)
+    physics->mass = 0.0f;
+    physics->drag_linear = 1.0f;
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    physics_add_force(physics, (Vector3){1000.0f, 0.0f, 0.0f});
+    
+    RenderConfig dummy_render_config = {0};
+    physics_system_update(&test_world, &dummy_render_config, 0.016f);
+    
+    // With zero mass, velocity should remain zero (no infinite acceleration)
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, physics->velocity.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, physics->velocity.y);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, physics->velocity.z);
+}
+
+// ============================================================================
+// ADDITIONAL CRITICAL TESTS FOR SPRINT 21
+// ============================================================================
+
+/**
+ * @brief Critical Test: Consecutive Frame Integration
+ * 
+ * Tests velocity accumulation across multiple frames to ensure
+ * integration works consistently over time.
+ */
+void test_physics_consecutive_frame_integration(void)
+{
+    printf("🔍 Testing consecutive frame integration...\n");
+    
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    physics->mass = 100.0f;
+    physics->drag_linear = 1.0f;  // No drag
+    physics->kinematic = false;
+    physics->has_6dof = true;
+    
+    // Clear initial state
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    transform->position = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    float delta_time = 0.016f;
+    RenderConfig dummy_render_config = {0};
+    
+    // Apply constant force for 5 frames
+    for (int frame = 0; frame < 5; frame++) {
+        physics_add_force(physics, (Vector3){100.0f, 0.0f, 0.0f});
+        physics_system_update(&test_world, &dummy_render_config, delta_time);
+        
+        printf("Frame %d: vel=[%.3f,%.3f,%.3f] pos=[%.6f,%.6f,%.6f]\n", 
+               frame + 1,
+               physics->velocity.x, physics->velocity.y, physics->velocity.z,
+               transform->position.x, transform->position.y, transform->position.z);
+    }
+    
+    // Expected velocity after 5 frames: 5 * (100N/100kg * 0.016s) = 5 * 0.016 = 0.08 m/s
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.08f, physics->velocity.x);
+    
+    // Position should show accumulated movement
+    TEST_ASSERT_GREATER_THAN_FLOAT(0.001f, transform->position.x);
+    
+    printf("✅ Consecutive frame integration working correctly\n");
+}
+
+/**
+ * @brief Critical Test: High Frequency Updates
+ * 
+ * Tests physics at different timestep frequencies to ensure
+ * numerical stability and consistency.
+ */
+void test_physics_high_frequency_updates(void)
+{
+    printf("🔍 Testing high frequency physics updates...\n");
+    
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    physics->mass = 100.0f;
+    physics->drag_linear = 1.0f;  // No drag
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    transform->position = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    RenderConfig dummy_render_config = {0};
+    
+    // Apply force and run many small timesteps (simulate 120 FPS vs 60 FPS)
+    float total_time = 0.1f;  // 100ms total
+    float small_dt = 0.008333f;  // 120 FPS timestep
+    int steps = (int)(total_time / small_dt);
+    
+    for (int i = 0; i < steps; i++) {
+        physics_add_force(physics, (Vector3){1000.0f, 0.0f, 0.0f});
+        physics_system_update(&test_world, &dummy_render_config, small_dt);
+    }
+    
+    float final_velocity = physics->velocity.x;
+    float final_position = transform->position.x;
+    
+    // Reset and test with larger timesteps (60 FPS)
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    transform->position = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    float large_dt = 0.016667f;  // 60 FPS timestep
+    int large_steps = (int)(total_time / large_dt);
+    
+    for (int i = 0; i < large_steps; i++) {
+        physics_add_force(physics, (Vector3){1000.0f, 0.0f, 0.0f});
+        physics_system_update(&test_world, &dummy_render_config, large_dt);
+    }
+    
+    // Results should be similar (within 5% tolerance)
+    TEST_ASSERT_FLOAT_WITHIN(0.05f * final_velocity, final_velocity, physics->velocity.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.05f * final_position, final_position, transform->position.x);
+    
+    printf("✅ High frequency update stability verified\n");
+}
+
+/**
+ * @brief Critical Test: Component State Persistence
+ * 
+ * Tests that physics component state persists correctly
+ * across multiple updates without corruption.
+ */
+void test_physics_component_state_persistence(void)
+{
+    printf("🔍 Testing component state persistence...\n");
+    
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    TEST_ASSERT_NOT_NULL(physics);
+    
+    // Set specific state values
+    physics->mass = 42.5f;
+    physics->drag_linear = 0.95f;
+    physics->drag_angular = 0.88f;
+    physics->has_6dof = true;
+    physics->kinematic = false;
+    physics->environment = PHYSICS_SPACE;
+    physics->moment_of_inertia = (Vector3){2.5f, 1.8f, 3.2f};
+    
+    RenderConfig dummy_render_config = {0};
+    
+    // Run multiple physics updates
+    for (int i = 0; i < 10; i++) {
+        physics_add_force(physics, (Vector3){10.0f, 5.0f, -2.0f});
+        physics_system_update(&test_world, &dummy_render_config, 0.016f);
+        
+        // Verify state values haven't been corrupted
+        TEST_ASSERT_EQUAL_FLOAT(42.5f, physics->mass);
+        TEST_ASSERT_EQUAL_FLOAT(0.95f, physics->drag_linear);
+        TEST_ASSERT_EQUAL_FLOAT(0.88f, physics->drag_angular);
+        TEST_ASSERT_TRUE(physics->has_6dof);
+        TEST_ASSERT_FALSE(physics->kinematic);
+        TEST_ASSERT_EQUAL_INT(PHYSICS_SPACE, physics->environment);
+        TEST_ASSERT_EQUAL_FLOAT(2.5f, physics->moment_of_inertia.x);
+        TEST_ASSERT_EQUAL_FLOAT(1.8f, physics->moment_of_inertia.y);
+        TEST_ASSERT_EQUAL_FLOAT(3.2f, physics->moment_of_inertia.z);
+    }
+    
+    printf("✅ Component state persistence verified\n");
+}
+
+/**
+ * @brief Critical Test: Entity Component Pointer Stability
+ * 
+ * Tests that entity component pointers remain valid and
+ * don't get corrupted during physics operations.
+ */
+void test_physics_entity_pointer_stability(void)
+{
+    printf("🔍 Testing entity component pointer stability...\n");
+    
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    
+    // Get initial pointers
+    struct Physics* initial_physics = entity_get_physics(&test_world, entity);
+    struct Transform* initial_transform = entity_get_transform(&test_world, entity);
+    
+    TEST_ASSERT_NOT_NULL(initial_physics);
+    TEST_ASSERT_NOT_NULL(initial_transform);
+    
+    // Store original values
+    uintptr_t initial_physics_addr = (uintptr_t)initial_physics;
+    uintptr_t initial_transform_addr = (uintptr_t)initial_transform;
+    
+    RenderConfig dummy_render_config = {0};
+    
+    // Run physics updates and verify pointers don't change
+    for (int i = 0; i < 50; i++) {
+        physics_add_force(initial_physics, (Vector3){100.0f, 0.0f, 0.0f});
+        physics_system_update(&test_world, &dummy_render_config, 0.016f);
+        
+        // Re-get pointers and verify they're the same
+        struct Physics* current_physics = entity_get_physics(&test_world, entity);
+        struct Transform* current_transform = entity_get_transform(&test_world, entity);
+        
+        TEST_ASSERT_EQUAL_PTR(initial_physics, current_physics);
+        TEST_ASSERT_EQUAL_PTR(initial_transform, current_transform);
+        
+        // Verify addresses haven't changed
+        TEST_ASSERT_EQUAL_UINT64(initial_physics_addr, (uintptr_t)current_physics);
+        TEST_ASSERT_EQUAL_UINT64(initial_transform_addr, (uintptr_t)current_transform);
+    }
+    
+    printf("✅ Entity component pointer stability verified\n");
+}
+
+/**
+ * @brief Critical Test: Drag Effect Precision
+ * 
+ * Tests that drag calculations work precisely and
+ * don't introduce numerical errors that could cause
+ * velocity to become zero prematurely.
+ */
+void test_physics_drag_precision(void)
+{
+    printf("🔍 Testing drag effect precision...\n");
+    
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    physics->mass = 100.0f;
+    physics->drag_linear = 0.99f;  // 1% drag per frame (typical game value)
+    
+    // Set initial velocity
+    physics->velocity = (Vector3){10.0f, 0.0f, 0.0f};
+    
+    RenderConfig dummy_render_config = {0};
+    
+    // Run many frames to see drag effect
+    float initial_velocity = physics->velocity.x;
+    
+    for (int frame = 0; frame < 100; frame++) {
+        physics_system_update(&test_world, &dummy_render_config, 0.016f);
+        
+        // Velocity should decrease but never become exactly zero due to drag
+        TEST_ASSERT_GREATER_THAN_FLOAT(0.0f, physics->velocity.x);
+        
+        // Should follow exponential decay: v(t) = v0 * drag^t
+        if (frame == 50) {
+            float expected_velocity = initial_velocity * pow(0.99f, 51.0f);  // +1 for initial update
+            TEST_ASSERT_FLOAT_WITHIN(0.1f, expected_velocity, physics->velocity.x);
+        }
+    }
+    
+    printf("Final velocity after 100 frames: %.6f m/s\n", physics->velocity.x);
+    TEST_ASSERT_GREATER_THAN_FLOAT(0.001f, physics->velocity.x);  // Should still be moving
+    
+    printf("✅ Drag precision verified\n");
+}
+
+/**
+ * @brief Critical Test: Zero Velocity Edge Case
+ * 
+ * Tests the specific case where velocity might be getting
+ * incorrectly zeroed out in certain conditions.
+ */
+void test_physics_zero_velocity_edge_case(void)
+{
+    printf("🔍 Testing zero velocity edge case...\n");
+    
+    EntityID entity = entity_create(&test_world);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_PHYSICS);
+    
+    struct Physics* physics = entity_get_physics(&test_world, entity);
+    struct Transform* transform = entity_get_transform(&test_world, entity);
+    
+    physics->mass = 80.0f;  // Same as in Sprint 21 report
+    physics->drag_linear = 0.9999f;  // Very high drag (Sprint 21 condition)
+    physics->velocity = (Vector3){0.0f, 0.0f, 0.0f};
+    transform->position = (Vector3){0.0f, 0.0f, 0.0f};
+    
+    RenderConfig dummy_render_config = {0};
+    
+    // Apply exactly the force from Sprint 21 report
+    physics_add_force(physics, (Vector3){35000.0f, -240.0f, 0.0f});
+    
+    printf("Sprint 21 reproduction test:\n");
+    printf("Mass: %.1f kg, Drag: %.4f\n", physics->mass, physics->drag_linear);
+    printf("Applied force: [%.0f, %.0f, %.0f] N\n", 
+           physics->force_accumulator.x, physics->force_accumulator.y, physics->force_accumulator.z);
+    
+    // Expected acceleration: F/m = 35000N/80kg = 437.5 m/s²
+    float expected_accel = 35000.0f / 80.0f;
+    printf("Expected acceleration: %.2f m/s²\n", expected_accel);
+    
+    physics_system_update(&test_world, &dummy_render_config, 0.016f);
+    
+    printf("Actual velocity: [%.6f, %.6f, %.6f] m/s\n", 
+           physics->velocity.x, physics->velocity.y, physics->velocity.z);
+    
+    // With dt=0.016s: expected velocity = 437.5 * 0.016 = 7.0 m/s (before drag)
+    // After drag: 7.0 * 0.9999 = 6.9993 m/s
+    float expected_velocity = expected_accel * 0.016f * physics->drag_linear;
+    printf("Expected velocity (after drag): %.4f m/s\n", expected_velocity);
+    
+    // Critical test: velocity should NOT be zero!
+    TEST_ASSERT_GREATER_THAN_FLOAT(6.0f, physics->velocity.x);
+    TEST_ASSERT_NOT_EQUAL_FLOAT(0.0f, physics->velocity.x);
+    
+    printf("✅ Sprint 21 conditions reproduced - velocity integration working\n");
+}
+
+/**
+ * @brief Critical Test: System Update Order Independence
+ * 
+ * Tests that physics results are consistent regardless
+ * of when physics_system_update is called.
+ */
+void test_physics_update_order_independence(void)
+{
+    printf("🔍 Testing physics update order independence...\n");
+    
+    // Create two identical entities
+    EntityID entity1 = entity_create(&test_world);
+    EntityID entity2 = entity_create(&test_world);
+    
+    entity_add_component(&test_world, entity1, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity1, COMPONENT_PHYSICS);
+    entity_add_component(&test_world, entity2, COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity2, COMPONENT_PHYSICS);
+    
+    struct Physics* physics1 = entity_get_physics(&test_world, entity1);
+    struct Physics* physics2 = entity_get_physics(&test_world, entity2);
+    
+    // Set identical initial conditions
+    physics1->mass = 100.0f;
+    physics2->mass = 100.0f;
+    physics1->drag_linear = 0.95f;
+    physics2->drag_linear = 0.95f;
+    physics1->velocity = (Vector3){1.0f, 2.0f, 3.0f};
+    physics2->velocity = (Vector3){1.0f, 2.0f, 3.0f};
+    
+    RenderConfig dummy_render_config = {0};
+    
+    // Apply identical forces
+    physics_add_force(physics1, (Vector3){500.0f, -100.0f, 200.0f});
+    physics_add_force(physics2, (Vector3){500.0f, -100.0f, 200.0f});
+    
+    // Update physics system (both entities updated together)
+    physics_system_update(&test_world, &dummy_render_config, 0.016f);
+    
+    // Results should be identical
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, physics1->velocity.x, physics2->velocity.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, physics1->velocity.y, physics2->velocity.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.0001f, physics1->velocity.z, physics2->velocity.z);
+    
+    printf("✅ Physics update order independence verified\n");
+}
+
+// ============================================================================
 // TEST SUITE REGISTRATION
 // ============================================================================
 
@@ -387,6 +912,21 @@ void suite_physics_6dof(void)
     RUN_TEST(test_physics_null_pointer_safety);
     RUN_TEST(test_physics_large_force_stability);
     RUN_TEST(test_physics_multiple_entities_6dof_performance);
+    
+    printf("🔧 Testing Critical Integration Bug...\n");
+    RUN_TEST(test_physics_velocity_integration_basic);
+    RUN_TEST(test_physics_force_accumulator_timing);
+    RUN_TEST(test_physics_multiple_force_accumulation);
+    RUN_TEST(test_physics_zero_mass_safety);
+    
+    printf("🧪 Testing Advanced Critical Scenarios...\n");
+    RUN_TEST(test_physics_consecutive_frame_integration);
+    RUN_TEST(test_physics_high_frequency_updates);
+    RUN_TEST(test_physics_component_state_persistence);
+    RUN_TEST(test_physics_entity_pointer_stability);
+    RUN_TEST(test_physics_drag_precision);
+    RUN_TEST(test_physics_zero_velocity_edge_case);
+    RUN_TEST(test_physics_update_order_independence);
     
     printf("✅ 6DOF Physics Tests Complete\n");
 }

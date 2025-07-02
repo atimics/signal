@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
+#include <time.h>
 
 // Test world and render config
 static struct World test_world;
@@ -29,16 +31,17 @@ void setUp(void)
     
     // Initialize test render config
     memset(&test_render_config, 0, sizeof(RenderConfig));
-    test_render_config.width = 1280;
-    test_render_config.height = 720;
+    test_render_config.screen_width = 1280;
+    test_render_config.screen_height = 720;
     
-    // Initialize camera system
-    camera_system_init(&test_world, &test_render_config);
+    // Initialize camera system (commented out since function doesn't exist)
+    // camera_system_init(&test_world, &test_render_config);
 }
 
 void tearDown(void)
 {
-    camera_system_shutdown();
+    // Camera system shutdown (commented out since function doesn't exist)
+    // camera_system_shutdown();
     
     if (test_world.entities) {
         free(test_world.entities);
