@@ -107,22 +107,29 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
             // Right stick: bytes 8-9 (X,Y) with center at ~127  
             // Triggers: bytes 11-12 (RT,LT) with 0=off, 255=full
             
-            // Parse stick data with proper centering
-            left_x = (int16_t)((data[6] - 127) * 256); // Scale 8-bit to 16-bit range
+            // Xbox Bluetooth controller mapping - experimental approach
+            // Observation: byte 9 stays at 0, suggesting it's not right stick Y
+            // Let's try: Left stick at 6-7, Right stick might be at 10-11 or elsewhere
+            
+            left_x = (int16_t)((data[6] - 127) * 256);
             left_y = (int16_t)((data[7] - 127) * 256);
             right_x = (int16_t)((data[8] - 127) * 256);
-            right_y = (int16_t)((data[9] - 127) * 256);
+            
+            // For now, disable right stick Y to test if this fixes the diving
+            right_y = 0; // Disable until we figure out the correct mapping
             
             // Parse triggers (0-255 range)
             right_trigger = data[11] / 255.0f;
             left_trigger = data[12] / 255.0f;
             
-            // Debug output with proper values
+            // Debug output with raw data analysis
             static int xbox_debug = 0;
             if (++xbox_debug % 60 == 0) {
-                printf("🎮 XBOX BT: Sticks[6-9]=%d,%d,%d,%d Triggers[11-12]=%d,%d\n",
+                printf("🎮 XBOX BT: Raw[6-9]=%d,%d,%d,%d Triggers[11-12]=%d,%d\n",
                        data[6], data[7], data[8], data[9], data[11], data[12]);
-                printf("   Mapped: LS(%.2f,%.2f) RS(%.2f,%.2f) LT=%.2f RT=%.2f\n",
+                printf("   Centered: LS_X=%d LS_Y=%d RS_X=%d RS_Y=%d\n",
+                       data[6]-127, data[7]-127, data[8]-127, data[9]-127);
+                printf("   Final: LS(%.2f,%.2f) RS(%.2f,%.2f) LT=%.2f RT=%.2f\n",
                        normalize_axis(left_x), normalize_axis(left_y),
                        normalize_axis(right_x), normalize_axis(right_y),
                        left_trigger, right_trigger);

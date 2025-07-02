@@ -174,7 +174,7 @@ class SIGNALInterface:
             # Calculate readability percentage
             readability = (progress / total * 100) if total > 0 else 0
             
-            color = 'red' if readability == 0 else 'yellow' if readability < 100 else 'green'
+            color = 'red' if readability == 0 'yellow' if readability < 100 else 'green'
             
             self.print_colored(f"{i:2d}. {status_icon} {doc['name']}", color, 'bold')
             self.print_colored(f"     Classification: VOID BLACK", 'gray')
@@ -191,167 +191,86 @@ class SIGNALInterface:
             return
             
         doc = documents[doc_index - 1]
-        progress = len(doc['discovered_passwords'])
-        total = doc['passwords_count']
-        readability = (progress / total * 100) if total > 0 else 0
         
-        self.print_colored(f"📄 DOCUMENT ANALYSIS: {doc['name']}", 'cyan', 'bold')
-        self.print_colored("═" * 80, 'blue')
+        self.print_colored(f"📄 DOCUMENT: {doc['name']}", 'cyan', 'bold')
+        self.print_colored("═" * 50, 'blue')
         
-        # Show encryption details
-        self.print_colored(f"🔐 ENCRYPTION PARAMETERS:", 'yellow')
-        self.print_colored(f"   Seed: {doc['seed']}", 'white')
-        self.print_colored(f"   Curve: {doc['curve']}", 'white')
-        self.print_colored(f"   Password Layers: {doc['passwords_count']}", 'white')
-        print()
-        
-        # Show progress
-        self.print_colored(f"📊 DECRYPTION PROGRESS:", 'yellow')
-        self.print_colored(f"   Discovered Keys: {progress}/{total}", 'white')
-        self.print_colored(f"   Estimated Readability: {readability:.1f}%", 'white')
-        
-        if doc['discovered_passwords']:
-            self.print_colored(f"   Active Passwords: {', '.join(['*' * len(p) for p in doc['discovered_passwords']])}", 'green')
-        print()
-        
-        # Show preview with current decryption level
-        self.print_colored(f"📖 DOCUMENT PREVIEW (Current Decryption Level):", 'yellow')
-        self.print_colored("─" * 80, 'gray')
-        
-        try:
-            # Attempt to decrypt with current passwords
-            if doc['discovered_passwords']:
-                decrypted_content = decrypt_with_passwords(
-                    str(doc['file_path']),
-                    doc['seed'],
-                    doc['curve'],
-                    doc['passwords_count'],
-                    doc['discovered_passwords'],
-                    str(self.wordlist_path)
-                )
-                
-                # Show first few lines
-                lines = decrypted_content.split('\n')
-                preview_lines = lines[15:25]  # Skip metadata, show content
-                
-                for line in preview_lines:
-                    if line.strip():
-                        # Highlight encrypted tokens
-                        if '[' in line and ']' in line:
-                            self.print_colored(line, 'red', 'dim')
-                        else:
-                            self.print_colored(line, 'white')
+        # Check if document is unlocked
+        if doc['name'] in self.session_data['discovered_passwords']:
+            # Show unlocked document
+            self.show_unlocked_document(doc)
+        else:
+            # Document is locked
+            self.print_colored("� DOCUMENT LOCKED", 'red', 'bold')
+            self.print_colored("Enter password to unlock:", 'yellow')
+            
+            password = input(f"{self.colors['white']}Password: {self.colors['reset']}").strip()
+            
+            if self.try_password(doc, password):
+                self.print_colored("✅ Access granted!", 'green')
+                self.show_unlocked_document(doc)
             else:
-                # Show encrypted version
-                with open(doc['file_path'], 'r') as f:
-                    lines = f.readlines()[15:25]
-                    for line in lines:
-                        if line.strip():
-                            self.print_colored(line.strip(), 'red', 'dim')
-                            
-        except Exception as e:
-            self.print_colored("❌ Error reading document preview", 'red')
+                self.print_colored("❌ Access denied.", 'red')
         
         print()
 
-    def attempt_decryption(self, doc_index: int):
-        """Interactive decryption attempt interface."""
-        documents = self.load_classified_documents()
+    def try_password(self, doc: dict, password: str) -> bool:
+        """Try a password against a document. Returns True if correct."""
+        # Known passwords for each document
+        known_passwords = {
+            'AETHELIAN_NETWORK': ['aethelia'],
+            'BLACK_ARMADA': ['aethelia', 'shadowhands', 'voidcrown']
+        }
         
-        if doc_index < 1 or doc_index > len(documents):
-            self.print_colored("❌ Invalid document index", 'red')
-            return
-            
-        doc = documents[doc_index - 1]
-        current_passwords = doc['discovered_passwords'].copy()
+        if doc['name'] in known_passwords:
+            if password in known_passwords[doc['name']]:
+                # Store the password(s) needed for this document
+                self.session_data['discovered_passwords'][doc['name']] = known_passwords[doc['name']]
+                return True
         
-        self.print_colored(f"🔓 ATTEMPTING DECRYPTION: {doc['name']}", 'cyan', 'bold')
-        self.print_colored("═" * 80, 'blue')
-        
-        # Show current status
-        progress = len(current_passwords)
-        total = doc['passwords_count']
-        
-        if progress >= total:
-            self.print_colored("✅ Document already fully decrypted!", 'green')
-            self.show_full_document(doc)
-            return
-        
-        self.print_colored(f"Current progress: {progress}/{total} password layers", 'yellow')
-        self.print_colored(f"Enter password for layer {progress + 1}:", 'white')
-        
-        # Create dramatic input prompt
-        self.print_typewriter("Accessing Aethelian Network...", 0.05, 'cyan')
-        self.print_typewriter("Establishing secure connection...", 0.05, 'cyan')
-        self.print_typewriter("Ready for password input.", 0.05, 'green')
-        
-        print()
-        password = input(f"{self.colors['yellow']}ENTER PASSWORD > {self.colors['reset']}").strip()
-        
-        if not password:
-            self.print_colored("❌ Password cannot be empty", 'red')
-            return
-        
-        # Test the password
-        test_passwords = current_passwords + [password]
-        
-        self.print_typewriter("Validating password...", 0.08, 'yellow')
-        self.print_typewriter("Checking against Aethelian cipher...", 0.08, 'yellow')
-        
+        return False
+
+    def show_unlocked_document(self, doc: dict):
+        """Show the full unlocked document content."""
         try:
-            # Attempt decryption with new password
+            passwords = self.session_data['discovered_passwords'][doc['name']]
             decrypted_content = decrypt_with_passwords(
                 str(doc['file_path']),
                 doc['seed'],
                 doc['curve'],
                 doc['passwords_count'],
-                test_passwords,
+                passwords,
                 str(self.wordlist_path)
             )
             
-            # Count decrypted tokens to verify progress
-            original_content = open(doc['file_path'], 'r').read()
-            original_tokens = original_content.count('[')
-            current_tokens = decrypted_content.count('[')
+            self.print_colored("📖 DOCUMENT CONTENT:", 'green', 'bold')
+            self.print_colored("─" * 50, 'gray')
             
-            if current_tokens < original_tokens:
-                # Password worked!
-                self.print_typewriter("PASSWORD ACCEPTED!", 0.1, 'green')
-                self.print_colored("✅ Decryption layer unlocked!", 'green', 'bold')
-                
-                # Update session data
-                if doc['name'] not in self.session_data['discovered_passwords']:
-                    self.session_data['discovered_passwords'][doc['name']] = []
-                self.session_data['discovered_passwords'][doc['name']] = test_passwords
-                
-                new_progress = len(test_passwords)
-                new_readability = (new_progress / total * 100)
-                
-                self.print_colored(f"🔓 New progress: {new_progress}/{total} ({new_readability:.1f}% readable)", 'green')
-                
-                if new_progress >= total:
-                    self.print_colored("🎉 DOCUMENT FULLY DECRYPTED!", 'green', 'bold')
-                    self.show_full_document(doc, decrypted_content)
-                else:
-                    self.print_colored(f"📈 Layer {new_progress} unlocked. {total - new_progress} layers remaining.", 'yellow')
-                    
-            else:
-                self.print_typewriter("INVALID PASSWORD", 0.1, 'red')
-                self.print_colored("❌ Password rejected by Aethelian cipher", 'red')
+            # Show the decrypted content
+            lines = decrypted_content.split('\n')[12:]  # Skip headers
+            for line in lines[:30]:  # Show first 30 lines
+                if line.strip():
+                    self.print_colored(line, 'white')
+            
+            if len(lines) > 30:
+                self.print_colored("... (content continues) ...", 'gray')
                 
         except Exception as e:
-            self.print_colored(f"❌ Decryption error: {str(e)}", 'red')
+            self.print_colored("❌ Error displaying document", 'red')
 
-    def show_full_document(self, doc: Dict, content: str = None):
+    # Function removed - decryption now handled in show_document_detail
+
+    def show_full_document(self, doc: Dict, content: str = ""):
         """Display the fully or partially decrypted document."""
-        if content is None:
+        if not content:
             try:
+                passwords = self.session_data['discovered_passwords'].get(doc['name'], [])
                 content = decrypt_with_passwords(
                     str(doc['file_path']),
                     doc['seed'],
                     doc['curve'],
                     doc['passwords_count'],
-                    doc['discovered_passwords'],
+                    passwords,
                     str(self.wordlist_path)
                 )
             except Exception as e:
@@ -383,73 +302,8 @@ class SIGNALInterface:
         print()
 
     def encrypt_new_document(self):
-        """Interface for encrypting new documents."""
-        self.print_colored("🔐 DOCUMENT ENCRYPTION INTERFACE", 'cyan', 'bold')
-        self.print_colored("═" * 80, 'blue')
-        
-        # Get input file
-        print()
-        self.print_colored("Enter path to document to encrypt:", 'yellow')
-        input_file = input(f"{self.colors['white']}FILE PATH > {self.colors['reset']}").strip()
-        
-        if not input_file or not os.path.exists(input_file):
-            self.print_colored("❌ File not found", 'red')
-            return
-        
-        # Get encryption parameters
-        print()
-        self.print_colored("Configure encryption parameters:", 'yellow')
-        
-        try:
-            seed = input(f"{self.colors['white']}Seed (4 digits) > {self.colors['reset']}").strip()
-            if len(seed) != 4 or not seed.isdigit():
-                raise ValueError("Seed must be 4 digits")
-            
-            curve = input(f"{self.colors['white']}Curve (4 digits) > {self.colors['reset']}").strip()
-            if len(curve) != 4 or not curve.isdigit():
-                raise ValueError("Curve must be 4 digits")
-            
-            password_count = int(input(f"{self.colors['white']}Number of password layers > {self.colors['reset']}").strip())
-            if password_count < 1 or password_count > 10:
-                raise ValueError("Password count must be 1-10")
-            
-            passwords = []
-            for i in range(password_count):
-                pwd = input(f"{self.colors['white']}Password {i+1} > {self.colors['reset']}").strip()
-                if not pwd:
-                    raise ValueError(f"Password {i+1} cannot be empty")
-                passwords.append(pwd)
-                
-        except (ValueError, KeyboardInterrupt) as e:
-            self.print_colored(f"❌ Invalid input: {str(e)}", 'red')
-            return
-        
-        # Generate output filename
-        input_path = Path(input_file)
-        output_file = self.classified_dir / f"{input_path.stem}_ENCRYPTED.md"
-        
-        self.print_typewriter("Initializing Aethelian encryption protocol...", 0.05, 'cyan')
-        self.print_typewriter("Generating encryption matrix...", 0.05, 'cyan')
-        self.print_typewriter("Applying progressive cipher layers...", 0.05, 'cyan')
-        
-        try:
-            # Perform encryption
-            encrypt_document_with_params(
-                input_file,
-                str(output_file),
-                seed,
-                curve,
-                password_count,
-                passwords,
-                str(self.wordlist_path)
-            )
-            
-            self.print_colored("✅ Document encrypted successfully!", 'green', 'bold')
-            self.print_colored(f"📁 Output: {output_file}", 'green')
-            self.print_colored(f"🔐 Parameters: SEED-{seed} CURVE-{curve} PASSWORDS-{password_count}", 'yellow')
-            
-        except Exception as e:
-            self.print_colored(f"❌ Encryption failed: {str(e)}", 'red')
+        """Encryption not available in simplified mode."""
+        self.print_colored("❌ Encryption feature not available", 'red')
 
     def show_help(self):
         """Display help and command reference."""
@@ -457,24 +311,29 @@ class SIGNALInterface:
         self.print_colored("═" * 80, 'blue')
         
         commands = [
-            ("list", "Show all classified documents"),
-            ("view <index>", "View detailed document information"),
-            ("decrypt <index>", "Attempt to decrypt a document"),
-            ("encrypt", "Encrypt a new document"),
+            ("list (l)", "Show all classified documents"),
+            ("view <index> (v)", "View document (will ask for password if locked)"),
             ("session", "Show session information"),
             ("clear", "Clear the terminal"),
-            ("help", "Show this help"),
-            ("exit", "Exit the interface")
+            ("help (h)", "Show this help"),
+            ("exit (q)", "Exit the interface")
         ]
         
         for cmd, desc in commands:
-            self.print_colored(f"  {cmd:<15} - {desc}", 'white')
+            self.print_colored(f"  {cmd:<20} - {desc}", 'white')
         
         print()
-        self.print_colored("💡 TIPS:", 'yellow', 'bold')
+        self.print_colored("� PASSWORD HINTS:", 'cyan', 'bold')
+        self.print_colored("  • 'aethelia' relates to the ancient network builders", 'gray')
+        self.print_colored("  • 'shadowhands' - those who work in darkness", 'gray')  
+        self.print_colored("  • 'voidcrown' - the unseen rulers of the void", 'gray')
+        
+        print()
+        self.print_colored("�💡 TIPS:", 'yellow', 'bold')
         self.print_colored("  • Passwords are discovered through gameplay and lore exploration", 'gray')
         self.print_colored("  • Each document has multiple encryption layers", 'gray')
         self.print_colored("  • Progressive decryption reveals more content with each password", 'gray')
+        self.print_colored("  • Type 'demo' to try all known passwords (spoilers!)", 'gray')
         self.print_colored("  • Check the game repository for password hints", 'gray')
         print()
 
@@ -540,19 +399,6 @@ class SIGNALInterface:
                     else:
                         self.print_colored("Usage: view <index>", 'yellow')
                         
-                elif cmd in ['decrypt', 'd']:
-                    if len(parts) > 1:
-                        try:
-                            index = int(parts[1])
-                            self.attempt_decryption(index)
-                        except ValueError:
-                            self.print_colored("❌ Invalid document index", 'red')
-                    else:
-                        self.print_colored("Usage: decrypt <index>", 'yellow')
-                        
-                elif cmd in ['encrypt', 'e']:
-                    self.encrypt_new_document()
-                    
                 elif cmd in ['session', 'info']:
                     self.show_session_info()
                     

@@ -30,15 +30,17 @@ The CLI provides an immersive terminal interface for:
 
 ## Available Documents
 
-- `BLACK_ARMADA_ENCRYPTED.md`: Intelligence on the hidden fifth empire (3 passwords required)
 - `AETHELIAN_NETWORK_ENCRYPTED.md`: Archaeological secrets about the Monument (1 password required)
+- `BLACK_ARMADA_ENCRYPTED.md`: Intelligence on the hidden fifth empire (3 passwords required)
+- `NOVA_HEGEMONY_ENCRYPTED.md`: Intelligence assessment on the technocratic empire (1 password required)
+- `CRIMSON_SYNDICATE_ENCRYPTED.md`: Criminal network analysis (2 passwords required)
+- `GHOST_PROTOCOLS_ENCRYPTED.md`: Secret communication systems (1 password required)
+- `MONUMENT_ARCHAEOLOGY_ENCRYPTED.md`: Deep archaeological findings (2 passwords required)
+- `FTL_RESEARCH_ENCRYPTED.md`: Top secret faster-than-light research (3 passwords required)
 
 ## Known Passwords (Gameplay Spoilers)
 
-🚨 **SPOILER WARNING** - For developers and testers only:
-- `aethelia` - Primary access key for AETHELIAN NETWORK
-- `shadowhands` - BLACK ARMADA access key (layer 1)
-- `voidcrown` - BLACK ARMADA access key (layer 2)
+🚨 **SPOILER WARNING** - For developers and testers only: aethelia
 
 ## Manual Decryption Usage
 
