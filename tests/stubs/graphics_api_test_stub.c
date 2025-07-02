@@ -9,13 +9,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Define minimum required types for nuklear in test mode
-struct nk_context;
-typedef struct nk_context nk_context;
+// Include the test nuklear definitions
+#include "ui_test_stubs.h"
 
 // Stub implementation for get_nuklear_context
-nk_context* get_nuklear_context(void) {
-    static nk_context dummy_ctx;
+struct nk_context* get_nuklear_context(void) {
+    static struct nk_context dummy_ctx;
     return &dummy_ctx;
 }
 

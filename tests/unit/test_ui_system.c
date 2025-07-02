@@ -287,3 +287,13 @@ void suite_ui_system(void)
     
     printf("✅ UI System Tests Complete\n");
 }
+
+int main(void)
+{
+    UNITY_BEGIN();
+    
+    // Run UI system test suite
+    suite_ui_system();
+    
+    return UNITY_END();
+}

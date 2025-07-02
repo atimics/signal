@@ -328,10 +328,18 @@ void entity_browser_widget_render(struct nk_context* ctx, EntityBrowserWidget* w
 bool ui_push_button_style(struct nk_context* ctx, bool is_current, bool is_special)
 {
     if (is_current) {
+#ifdef TEST_MODE
+        nk_style_push_color(ctx, NK_STYLE_COLOR_PTR(ctx, selectable.normal.data.color), nk_rgb(70, 120, 200));
+#else
         nk_style_push_color(ctx, &ctx->style.selectable.normal.data.color, nk_rgb(70, 120, 200));
+#endif
         return true;
     } else if (is_special) {
+#ifdef TEST_MODE
+        nk_style_push_color(ctx, NK_STYLE_COLOR_PTR(ctx, selectable.normal.data.color), nk_rgb(120, 120, 70));
+#else
         nk_style_push_color(ctx, &ctx->style.selectable.normal.data.color, nk_rgb(120, 120, 70));
+#endif
         return true;
     }
     return false;

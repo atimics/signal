@@ -97,11 +97,6 @@ view-meshes:
 	@echo "🎨 Launching mesh viewer..."
 	$(PYTHON) $(TOOLS_DIR)/launch_mesh_viewer.py
 
-# Run performance test
-test-performance:
-	@echo "⚡ Running asset performance test..."
-	$(PYTHON) $(TOOLS_DIR)/test_asset_performance.py
-
 # Link executable
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)
 	$(CC) $(OBJECTS) -o $@ $(LIBS)
@@ -198,303 +193,61 @@ docs: Doxyfile
 	@echo "✅ API documentation generated in docs/api_docs/html"
 
 # ============================================================================
-# TEST TARGETS - Sprint 15: Unity Testing Framework Integration
+# UNIFIED TEST SYSTEM
 # ============================================================================
 
-# Phase 1: Core Math Tests (No dependencies)
+# Core test sources
 TEST_MATH_SRC = tests/test_main_simple.c tests/test_core_math.c tests/core_math.c tests/vendor/unity.c
-TEST_MATH_TARGET = $(BUILD_DIR)/cgame_tests_math
+TEST_UI_SRC = tests/unit/test_ui_system.c tests/vendor/unity.c
+TEST_SYSTEMS_SRC = tests/unit/test_systems.c tests/vendor/unity.c
+TEST_PERFORMANCE_SRC = tests/performance/test_performance_critical.c tests/vendor/unity.c
 
-# Phase 2 & 3: Full Integration Tests (With Sokol and engine dependencies)
-TEST_FULL_SRC = tests/test_runner.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/vendor/unity.c
-ENGINE_SRC_FOR_TEST = src/assets.c src/asset_loader/asset_loader_index.c src/asset_loader/asset_loader_mesh.c src/asset_loader/asset_loader_material.c src/gpu_resources.c src/core.c
-TEST_FULL_TARGET = $(BUILD_DIR)/cgame_tests_full
+# Test executables
+TEST_MATH_TARGET = $(BUILD_DIR)/test_math
+TEST_UI_TARGET = $(BUILD_DIR)/test_ui_system
+TEST_SYSTEMS_TARGET = $(BUILD_DIR)/test_systems
+TEST_PERFORMANCE_TARGET = $(BUILD_DIR)/test_performance
 
-# Default test target - run Phase 1 (stable math tests)
-test: test-math
+# Engine sources for testing (minimal dependencies)
+ENGINE_TEST_SRC = src/ui_api.c src/ui_scene.c src/ui_components.c src/core.c \
+                  tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
 
-# Phase 1: Math tests only (stable and fast)
-test-math: $(TEST_MATH_TARGET)
-	@echo "🧪 Running Phase 1: Core Math Tests..."
+# Main test target - runs all essential tests
+test: $(TEST_MATH_TARGET) $(TEST_UI_TARGET)
+	@echo "🧪 Running CGame Test Suite"
+	@echo "=============================="
+	@echo "📐 Core Math Tests..."
 	./$(TEST_MATH_TARGET)
-	@echo "✅ Phase 1 tests completed"
+	@echo ""
+	@echo "🎨 UI System Tests..."
+	./$(TEST_UI_TARGET)
+	@echo ""
+	@echo "✅ All tests completed successfully!"
 
-# Phase 2 & 3: Full integration tests (experimental)
-test-full: $(TEST_FULL_TARGET)
-	@echo "🧪 Running Full Test Suite (Phases 1-3)..."
-	./$(TEST_FULL_TARGET)
-	@echo "✅ All tests completed"
-
-# Build Phase 1 test executable (math only)
+# Build math tests (no dependencies)
 $(TEST_MATH_TARGET): $(TEST_MATH_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building Phase 1 test suite (math only)..."
+	@echo "🔨 Building math tests..."
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Itests -Itests/vendor -DUNITY_TESTING -o $@ $(TEST_MATH_SRC) -lm
 
-# Build full test executable (all phases)
-$(TEST_FULL_TARGET): $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) | $(BUILD_DIR)
-	@echo "🔨 Building full test suite (experimental)..."
-ifeq ($(OS),Darwin)
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm
-else
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -D_POSIX_C_SOURCE=199309L -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm -lGL -lX11 -lXi -lXcursor -lXrandr
-endif
-
-# Sprint 10.5 Task 1: Test index.json path resolution
-test_sprint_10_5_task_1: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 1 test (standalone)..."
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_1_standalone tests/sprint_10_5/test_task_1_standalone.c
-	./$(BUILD_DIR)/test_task_1_standalone
-	@echo "✅ Sprint 10.5 Task 1 test complete"
-
-# Sprint 10.5 Task 1: Integration test with actual assets.c (requires Objective-C)
-test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 1 integration test..."
-	$(CC) $(CFLAGS) -x objective-c -o $(BUILD_DIR)/test_task_1_integration tests/sprint_10_5/test_task_1.c src/assets.c src/render_gpu.c src/graphics_api.c $(LIBS)
-	./$(BUILD_DIR)/test_task_1_integration
-	@echo "✅ Sprint 10.5 Task 1 integration test complete"
-
-.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm \
-	test test-math test-full test-performance \
-	test-red test-green test-refactor test-tdd test-tdd-unit test-tdd-perf \
-	test-coverage test-report test_memory \
-	test-comprehensive test-ui test-scene test-systems test-performance-critical
-
-# Sprint 10.5 Task 2: Test dynamic memory allocation in mesh parser
-test_sprint_10_5_task_2: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 2 test (standalone)..."
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_2_standalone tests/sprint_10_5/test_task_2_standalone.c
-	./$(BUILD_DIR)/test_task_2_standalone
-	@echo "✅ Sprint 10.5 Task 2 test complete"
-
-.PHONY: test_sprint_10_5_task_2
-
-# Sprint 10.5 Task 3: Test GPU resource validation
-test_sprint_10_5_task_3: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 3 test (standalone)..."
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_3_standalone tests/sprint_10_5/test_task_3_standalone.c
-	./$(BUILD_DIR)/test_task_3_standalone
-	@echo "✅ Sprint 10.5 Task 3 test complete"
-
-.PHONY: test_sprint_10_5_task_3
-
-# Sprint 19 Task 1: Test LOD system
-test_lod: | $(BUILD_DIR)
-	@echo "🧪 Building and running LOD system tests..."
-	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_lod \
-		tests/test_performance_lod_simple.c tests/vendor/unity.c \
-		src/system/lod.c src/core.c \
-		-lm
-	./$(BUILD_DIR)/test_lod
-	@echo "✅ LOD system tests complete"
-
-.PHONY: test_lod
-
-# Sprint 19 Task 2.2: Test Memory Management system
-test_memory: | $(BUILD_DIR)
-	@echo "🧪 Building and running Memory Management system tests..."
-	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_memory \
-		tests/test_memory_management.c tests/vendor/unity.c \
-		src/system/memory.c src/system/performance.c src/core.c \
-		-lm
-	./$(BUILD_DIR)/test_memory
-	@echo "✅ Memory Management system tests complete"
-
-.PHONY: test_memory
-
-# ============================================================================
-# TDD TEST TARGETS - Sprint 19: Test-Driven Development
-# ============================================================================
-
-# Test directories
-UNIT_TEST_DIR = tests/unit
-INTEGRATION_TEST_DIR = tests/integration
-PERFORMANCE_TEST_DIR = tests/performance
-
-# TDD Unit Tests (RED/GREEN/REFACTOR phases)
-TDD_UNIT_TESTS = tests/unit/test_ecs_core.c tests/vendor/unity.c
-TDD_UNIT_ENGINE_SRC = src/core.c
-TDD_UNIT_TARGET = $(BUILD_DIR)/cgame_tdd_unit_tests
-
-# TDD Performance Tests (isolated memory tests)
-TDD_PERF_TESTS = tests/performance/test_memory_isolated.c tests/vendor/unity.c
-TDD_PERF_ENGINE_SRC = src/system/memory.c src/core.c tests/stubs/memory_test_stubs.c
-TDD_PERF_TARGET = $(BUILD_DIR)/cgame_tdd_perf_tests
-
-# TDD Integration Tests (future)
-TDD_INTEGRATION_TESTS = tests/integration/test_full_pipeline.c tests/vendor/unity.c
-TDD_INTEGRATION_TARGET = $(BUILD_DIR)/cgame_tdd_integration_tests
-
-# ============================================================================
-# TDD WORKFLOW TARGETS
-# ============================================================================
-
-# RED Phase: Run tests that should fail initially
-test-red: test-tdd-unit test-tdd-perf
-	@echo "🔴 RED Phase: Tests run (some should fail - this is expected in TDD)"
-
-# GREEN Phase: Run tests after implementation
-test-green: test-tdd-unit test-tdd-perf
-	@echo "🟢 GREEN Phase: Tests should now pass after implementation"
-
-# REFACTOR Phase: Run tests during optimization
-test-refactor: test-tdd-unit test-tdd-perf
-	@echo "🔄 REFACTOR Phase: Tests validate optimizations don't break functionality"
-
-# Complete TDD cycle
-test-tdd: test-tdd-unit test-tdd-perf
-	@echo "🧪 Complete TDD test suite executed"
-
-# ============================================================================
-# INDIVIDUAL TDD TEST TARGETS
-# ============================================================================
-
-# Unit tests for ECS core (no external dependencies)
-test-tdd-unit: $(TDD_UNIT_TARGET)
-	@echo "🧪 Running TDD Unit Tests (ECS Core)..."
-	./$(TDD_UNIT_TARGET) || echo "⚠️  Some unit tests failed (expected in RED phase)"
-	@echo "✅ Unit tests completed"
-
-# Performance tests for memory management
-test-tdd-perf: $(TDD_PERF_TARGET)
-	@echo "🚀 Running TDD Performance Tests (Memory Management)..."
-	./$(TDD_PERF_TARGET) || echo "⚠️  Some performance tests failed (expected in RED phase)"
-	@echo "✅ Performance tests completed"
-
-# Build TDD unit test executable
-$(TDD_UNIT_TARGET): $(TDD_UNIT_TESTS) $(TDD_UNIT_ENGINE_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building TDD unit test suite..."
-	@mkdir -p $(BUILD_DIR)
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
-		-DUNITY_TESTING -DTDD_TESTING \
-		-o $@ $(TDD_UNIT_TESTS) $(TDD_UNIT_ENGINE_SRC) -lm
-
-# Build TDD performance test executable
-$(TDD_PERF_TARGET): $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building TDD performance test suite..."
-	@mkdir -p $(BUILD_DIR)
-	@mkdir -p tests/stubs
-ifeq ($(OS),Darwin)
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
-		-DUNITY_TESTING -DTDD_TESTING \
-		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) -lm
-else
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
-		-DUNITY_TESTING -DTDD_TESTING \
-		-D_POSIX_C_SOURCE=199309L \
-		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TDD_PERF_TESTS) $(TDD_PERF_ENGINE_SRC) -lm -lrt
-endif
-
-# ============================================================================
-# TEST COVERAGE AND REPORTING
-# ============================================================================
-
-# Generate test coverage report (requires gcov)
-test-coverage: CFLAGS += --coverage
-test-coverage: clean $(TDD_UNIT_TARGET) $(TDD_PERF_TARGET)
-	@echo "📊 Generating test coverage report..."
-	./$(TDD_UNIT_TARGET) || true
-	./$(TDD_PERF_TARGET) || true
-	@echo "Coverage files generated - use gcov to analyze"
-
-# Generate test report summary
-test-report:
-	@echo "📋 CGame Test Report Summary"
-	@echo "==========================="
-	@echo "Unit Tests: $(TDD_UNIT_TARGET)"
-	@echo "Performance Tests: $(TDD_PERF_TARGET)"
-	@echo "Math Tests: $(TEST_MATH_TARGET)"
-	@echo ""
-	@echo "TDD Workflow:"
-	@echo "  make test-red     # RED phase (tests may fail)"
-	@echo "  make test-green   # GREEN phase (after implementation)"
-	@echo "  make test-refactor # REFACTOR phase (during optimization)"
-	@echo ""
-	@echo "Coverage:"
-	@echo "  make test-coverage # Generate coverage report"
-
-# ============================================================================
-# COMPREHENSIVE TEST SUITE - Sprint 20+ Modular Tests
-# ============================================================================
-
-# New modular test sources
-TEST_UI_SRC = tests/unit/test_ui_system.c tests/vendor/unity.c
-TEST_SCENE_SRC = tests/unit/test_scene_system.c tests/vendor/unity.c
-TEST_SYSTEMS_SRC = tests/unit/test_systems.c tests/vendor/unity.c
-TEST_PERFORMANCE_CRITICAL_SRC = tests/performance/test_performance_critical.c tests/vendor/unity.c
-
-# Engine sources needed for comprehensive tests (excluding sokol implementations)
-ENGINE_COMPREHENSIVE_SRC = src/core.c src/systems.c src/ui_api.c src/ui_scene.c src/ui_components.c \
-                          src/scene_state.c src/scene_script.c src/system/physics.c src/system/camera.c \
-                          src/system/performance.c src/system/memory.c src/system/input.c src/data.c \
-                          tests/mocks/mock_graphics.c tests/stubs/memory_test_stubs.c tests/stubs/graphics_api_test_stub.c
-
-# Test targets
-TEST_UI_TARGET = $(BUILD_DIR)/test_ui_system
-TEST_SCENE_TARGET = $(BUILD_DIR)/test_scene_system  
-TEST_SYSTEMS_TARGET = $(BUILD_DIR)/test_systems
-TEST_PERFORMANCE_CRITICAL_TARGET = $(BUILD_DIR)/test_performance_critical
-
-# Comprehensive test suite (all new tests)
-test-comprehensive: $(TEST_UI_TARGET) $(TEST_SCENE_TARGET) $(TEST_SYSTEMS_TARGET) $(TEST_PERFORMANCE_CRITICAL_TARGET)
-	@echo "🧪 Running Comprehensive Test Suite..."
-	@echo "  UI System Tests..."
-	./$(TEST_UI_TARGET)
-	@echo "  Scene System Tests..."
-	./$(TEST_SCENE_TARGET)
-	@echo "  ECS & Systems Tests..."
-	./$(TEST_SYSTEMS_TARGET)
-	@echo "  Performance Critical Tests..."
-	./$(TEST_PERFORMANCE_CRITICAL_TARGET)
-	@echo "✅ All comprehensive tests completed"
-
-# Individual test targets
-test-ui: $(TEST_UI_TARGET)
-	@echo "🧪 Running UI System Tests..."
-	./$(TEST_UI_TARGET)
-	@echo "✅ UI tests completed"
-
-test-scene: $(TEST_SCENE_TARGET)
-	@echo "🧪 Running Scene System Tests..."
-	./$(TEST_SCENE_TARGET)
-	@echo "✅ Scene tests completed"
-
-test-systems: $(TEST_SYSTEMS_TARGET)
-	@echo "🧪 Running ECS & Systems Tests..."
-	./$(TEST_SYSTEMS_TARGET)
-	@echo "✅ Systems tests completed"
-
-test-performance-critical: $(TEST_PERFORMANCE_CRITICAL_TARGET)
-	@echo "🧪 Running Performance Critical Tests..."
-	./$(TEST_PERFORMANCE_CRITICAL_TARGET)
-	@echo "✅ Performance tests completed"
-
-# Build targets for individual tests
+# Build UI tests (with test stubs)
 $(TEST_UI_TARGET): $(TEST_UI_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building UI system tests..."
+	@echo "🔨 Building UI tests..."
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_UI_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
+		-o $@ $(TEST_UI_SRC) $(ENGINE_TEST_SRC) -lm
 
-$(TEST_SCENE_TARGET): $(TEST_SCENE_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building scene system tests..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
-		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
-		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_SCENE_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
+# Optional: Performance testing (can be resource intensive)
+test-performance: $(TEST_PERFORMANCE_TARGET)
+	@echo "🚀 Running performance tests..."
+	./$(TEST_PERFORMANCE_TARGET)
+	@echo "✅ Performance tests completed"
 
-$(TEST_SYSTEMS_TARGET): $(TEST_SYSTEMS_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building ECS & systems tests..."
+$(TEST_PERFORMANCE_TARGET): $(TEST_PERFORMANCE_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building performance tests..."
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_SYSTEMS_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
+		-o $@ $(TEST_PERFORMANCE_SRC) $(ENGINE_TEST_SRC) -lm
 
-$(TEST_PERFORMANCE_CRITICAL_TARGET): $(TEST_PERFORMANCE_CRITICAL_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building performance critical tests..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
-		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
-		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_PERFORMANCE_CRITICAL_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
+.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test
