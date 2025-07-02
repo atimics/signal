@@ -74,13 +74,11 @@ sg_resource_state sg_query_buffer_state(sg_buffer buffer) {
 }
 
 // ============================================================================
-// PERFORMANCE SYSTEM STUBS
+// PERFORMANCE SYSTEM STUBS (only for tests that don't link performance lib)
 // ============================================================================
 
-void performance_record_memory_usage(size_t bytes_allocated, size_t bytes_freed) {
-    (void)bytes_allocated;
-    (void)bytes_freed;
-}
+// NOTE: performance_record_memory_usage is NOT included here since some tests
+// will link with the real performance library
 
 // ============================================================================
 // CONFIG STUBS
@@ -148,10 +146,16 @@ void gamepad_set_deadzone(float deadzone) {
 // ASSETS SYSTEM STUBS
 // ============================================================================
 
-bool assets_init(void) { return true; }
-void assets_cleanup(void) {}
-void assets_list_loaded(void) {}
-void assets_load_all_in_directory(const char* dir) { (void)dir; }
+bool assets_init(AssetRegistry* registry, const char* asset_root) { 
+    (void)registry; (void)asset_root; 
+    return true; 
+}
+void assets_cleanup(AssetRegistry* registry) { (void)registry; }
+void assets_list_loaded(AssetRegistry* registry) { (void)registry; }
+bool assets_load_all_in_directory(AssetRegistry* registry) { 
+    (void)registry; 
+    return true; 
+}
 
 // ============================================================================
 // DATA REGISTRY STUBS  

@@ -150,4 +150,14 @@ void physics_system_update(struct World* world, float delta_time) {
     (void)delta_time;
 }
 
+// ============================================================================
+// UI PERFORMANCE WIDGET STUBS (only for tests that don't link ui_components)
+// ============================================================================
+
+// NOTE: performance_widget_* functions are NOT included here since some tests
+// will link with the real ui_components library
+
+// NOTE: physics_system_update is NOT included here since integration tests
+// will link with the real physics library
+
 #endif // TEST_MODE

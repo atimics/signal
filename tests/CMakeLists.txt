@@ -83,7 +83,7 @@ cgame_add_test_suite(
     NAME cmake-performance_test_performance_simple
     SOURCES performance/test_performance_simple.c
     LIBS core performance memory
-    STUBS graphics_api_test_stub engine_test_stubs
+    STUBS graphics_api_test_stub engine_test_stubs performance_test_stubs
 )
 
 # ============================================================================

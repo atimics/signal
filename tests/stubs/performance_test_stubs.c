@@ -21,3 +21,7 @@ void init_test_render_config(RenderConfig* config) {
     config->screen_height = 1080;
     config->mode = RENDER_MODE_SOLID;  // Use valid render mode
 }
+
+// Performance widget stubs for tests that don't link ui_components
+void performance_widget_init(void) {}
+void performance_widget_update(void) {}

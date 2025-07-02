@@ -682,6 +682,30 @@ stubs/nuklear_test_stubs.c.s:
 	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_critical.dir/stubs/nuklear_test_stubs.c.s
 .PHONY : stubs/nuklear_test_stubs.c.s
 
+stubs/performance_test_stubs.o: stubs/performance_test_stubs.c.o
+.PHONY : stubs/performance_test_stubs.o
+
+# target to build an object file
+stubs/performance_test_stubs.c.o:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/performance_test_stubs.c.o
+.PHONY : stubs/performance_test_stubs.c.o
+
+stubs/performance_test_stubs.i: stubs/performance_test_stubs.c.i
+.PHONY : stubs/performance_test_stubs.i
+
+# target to preprocess a source file
+stubs/performance_test_stubs.c.i:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/performance_test_stubs.c.i
+.PHONY : stubs/performance_test_stubs.c.i
+
+stubs/performance_test_stubs.s: stubs/performance_test_stubs.c.s
+.PHONY : stubs/performance_test_stubs.s
+
+# target to generate assembly for a file
+stubs/performance_test_stubs.c.s:
+	cd /Users/ratimics/develop/cgame && $(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/build.make tests/CMakeFiles/test_cmake-performance_test_performance_simple.dir/stubs/performance_test_stubs.c.s
+.PHONY : stubs/performance_test_stubs.c.s
+
 support/test_utilities.o: support/test_utilities.c.o
 .PHONY : support/test_utilities.o
 
@@ -871,6 +895,9 @@ help:
 	@echo "... stubs/nuklear_test_stubs.o"
 	@echo "... stubs/nuklear_test_stubs.i"
 	@echo "... stubs/nuklear_test_stubs.s"
+	@echo "... stubs/performance_test_stubs.o"
+	@echo "... stubs/performance_test_stubs.i"
+	@echo "... stubs/performance_test_stubs.s"
 	@echo "... support/test_utilities.o"
 	@echo "... support/test_utilities.i"
 	@echo "... support/test_utilities.s"
