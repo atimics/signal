@@ -13,6 +13,7 @@
 #include "../vendor/unity.h"
 #include "../../src/core.h"
 #include "../../src/systems.h"
+#include "../../src/system/physics.h"
 #include "../../src/render.h"
 #include "../../src/ui_api.h"
 #include "../../src/ui_scene.h"
@@ -45,8 +46,8 @@ void setUp(void)
     
     // Initialize render config
     memset(&perf_render_config, 0, sizeof(RenderConfig));
-    perf_render_config.width = 1920;
-    perf_render_config.height = 1080;
+    perf_render_config.screen_width = 1920;
+    perf_render_config.screen_height = 1080;
 }
 
 void tearDown(void)
@@ -169,7 +170,7 @@ void test_ecs_system_update_performance(void)
     // Update physics system multiple times
     float delta_time = 1.0f / PERFORMANCE_TARGET_FPS;
     for (int frame = 0; frame < PERFORMANCE_FRAME_COUNT; frame++) {
-        physics_system_update(perf_world, delta_time);
+        physics_system_update(perf_world, &perf_render_config, delta_time);
     }
     
     clock_t end_time = clock();

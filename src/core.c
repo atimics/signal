@@ -207,8 +207,16 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             if (world->components.physics_count >= MAX_ENTITIES) return false;
             entity->physics = &world->components.physics[world->components.physics_count++];
             memset(entity->physics, 0, sizeof(struct Physics));
+            
+            // Initialize linear dynamics
             entity->physics->mass = 1.0f;
-            entity->physics->drag = 0.99f;
+            entity->physics->drag_linear = 0.99f;
+            
+            // Initialize angular dynamics
+            entity->physics->drag_angular = 0.95f;
+            entity->physics->moment_of_inertia = (Vector3){ 1.0f, 1.0f, 1.0f };
+            entity->physics->has_6dof = false;  // Disabled by default
+            entity->physics->environment = PHYSICS_SPACE;
             break;
 
         case COMPONENT_COLLISION:
