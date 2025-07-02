@@ -10,7 +10,7 @@
 #include <math.h>
 
 // Input configuration
-#define GAMEPAD_DEADZONE 0.15f          // 15% deadzone
+#define GAMEPAD_DEADZONE 0.25f          // 25% deadzone (increased for Xbox drift)
 #define LOOK_SENSITIVITY 2.0f           // Camera rotation speed
 #define PITCH_YAW_SENSITIVITY 1.0f      // Ship rotation speed
 #define MOUSE_SENSITIVITY 0.005f         // Mouse look sensitivity

@@ -190,6 +190,9 @@ void test_world_entity_creation_performance(void) {
         for (int i = 0; i < NUM_ENTITIES; i++) {
             EntityID entity = entity_create(test_world);
             TEST_ASSERT_NOT_EQUAL(INVALID_ENTITY_ID, entity);
+            
+            // Add some components to make the test more realistic
+            entity_add_components(test_world, entity, COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
         }
     }
     

@@ -96,7 +96,7 @@ EntityID create_debris_entity(struct World* world)
     
     struct Physics* physics = entity_get_physics(world, entity);
     physics->mass = 50.0f;
-    physics->drag_linear = 0.99f;
+    physics->drag_linear = 0.02f;  // 2% drag per frame, more realistic
     physics_set_6dof_enabled(physics, true); // Realistic spinning debris
     
     return entity;

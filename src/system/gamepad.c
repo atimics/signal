@@ -132,14 +132,16 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     
     if (size >= 14) {
         // Standard Xbox controller layout on macOS
-        left_x = *((int16_t*)(data + 4));
-        left_y = *((int16_t*)(data + 6));
-        right_x = *((int16_t*)(data + 8));
-        right_y = *((int16_t*)(data + 10));
+        // Note: Some Xbox controllers have different layouts
+        // Try the most common layout first
+        left_x = *((int16_t*)(data + 6));
+        left_y = *((int16_t*)(data + 8));
+        right_x = *((int16_t*)(data + 10));
+        right_y = *((int16_t*)(data + 12));
         
-        // Raw trigger values
-        uint8_t lt_raw = data[12];
-        uint8_t rt_raw = data[13];
+        // Raw trigger values (often at bytes 4-5)
+        uint8_t lt_raw = data[4];
+        uint8_t rt_raw = data[5];
         
         // Xbox controllers often have a resting position around 127-128
         // We need to calibrate for this

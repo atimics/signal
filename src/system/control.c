@@ -17,7 +17,7 @@ static Vector3 calculate_look_based_thrust(const LookTarget* look_target,
                                          const Vector3* ship_position,
                                          float thrust_magnitude) {
     if (!look_target || !ship_position) {
-        return (Vector3){0, 0, -thrust_magnitude}; // Default forward
+        return (Vector3){0, 0, thrust_magnitude}; // Default forward (positive Z)
     }
     
     // Get direction from ship to look target
@@ -40,7 +40,7 @@ static Vector3 calculate_look_alignment_torque(const LookTarget* look_target,
     Vector3 desired_forward = look_target_get_direction(look_target, ship_position);
     
     // Get current forward direction
-    Vector3 current_forward = quaternion_rotate_vector(*ship_orientation, (Vector3){0, 0, -1});
+    Vector3 current_forward = quaternion_rotate_vector(*ship_orientation, (Vector3){0, 0, 1});
     
     // Calculate rotation axis and angle
     Vector3 rotation_axis = vector3_cross(current_forward, desired_forward);
@@ -101,7 +101,7 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
         linear_commands = (Vector3){
             0.0f,                // No strafe in canyon racing mode
             input->vertical,     // Up/down
-            -input->thrust       // Forward/backward (negative Z = forward)
+            input->thrust        // Forward/backward (positive Z = forward)
         };
     }
     
