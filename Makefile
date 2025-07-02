@@ -253,10 +253,26 @@ ENGINE_TEST_SRC = src/ui_api.c src/ui_scene.c src/ui_components.c src/core.c \
 PERF_ENGINE_SRC = src/core.c src/ui_components.c \
                   tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
 
-# Main test target - runs all essential tests
-test: $(TEST_MATH_TARGET) $(TEST_UI_TARGET) $(TEST_PERFORMANCE_TARGET)
-	@echo "🧪 Running CGame Test Suite"
-	@echo "=============================="
+# New comprehensive test targets
+TEST_PHYSICS_TARGET = $(BUILD_DIR)/test_physics_6dof
+TEST_THRUSTERS_TARGET = $(BUILD_DIR)/test_thrusters  
+TEST_CONTROL_TARGET = $(BUILD_DIR)/test_control
+TEST_CAMERA_TARGET = $(BUILD_DIR)/test_camera_system
+TEST_INPUT_TARGET = $(BUILD_DIR)/test_input_system
+TEST_FLIGHT_INTEGRATION_TARGET = $(BUILD_DIR)/test_flight_integration
+
+# Test source files for new systems
+TEST_PHYSICS_SRC = tests/unit/test_physics_6dof.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
+TEST_THRUSTERS_SRC = tests/unit/test_thrusters.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
+TEST_CONTROL_SRC = tests/unit/test_control.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
+TEST_CAMERA_SRC = tests/unit/test_camera_system.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
+TEST_INPUT_SRC = tests/unit/test_input_system.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
+TEST_FLIGHT_INTEGRATION_SRC = tests/integration/test_flight_integration.c tests/vendor/unity.c $(CORE_ENGINE_SRC)
+
+# Main test target - runs all essential tests including new comprehensive tests
+test: $(TEST_MATH_TARGET) $(TEST_UI_TARGET) $(TEST_PERFORMANCE_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET)
+	@echo "🧪 Running Comprehensive CGame Test Suite"
+	@echo "=========================================="
 	@echo "📐 Core Math Tests..."
 	./$(TEST_MATH_TARGET)
 	@echo ""
@@ -265,6 +281,24 @@ test: $(TEST_MATH_TARGET) $(TEST_UI_TARGET) $(TEST_PERFORMANCE_TARGET)
 	@echo ""
 	@echo "🚀 Performance Tests..."
 	./$(TEST_PERFORMANCE_TARGET)
+	@echo ""
+	@echo "🚀 6DOF Physics Tests..."
+	./$(TEST_PHYSICS_TARGET)
+	@echo ""
+	@echo "🚀 Thruster System Tests..."
+	./$(TEST_THRUSTERS_TARGET)
+	@echo ""
+	@echo "🎮 Control Authority Tests..."
+	./$(TEST_CONTROL_TARGET)
+	@echo ""
+	@echo "📷 Camera System Tests..."
+	./$(TEST_CAMERA_TARGET)
+	@echo ""
+	@echo "🎮 Input System Tests..."
+	./$(TEST_INPUT_TARGET)
+	@echo ""
+	@echo "✈️  Flight Integration Tests..."
+	./$(TEST_FLIGHT_INTEGRATION_TARGET)
 	@echo ""
 	@echo "✅ All tests completed successfully!"
 
@@ -288,5 +322,53 @@ $(TEST_PERFORMANCE_TARGET): $(TEST_PERFORMANCE_SRC) | $(BUILD_DIR)
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TEST_PERFORMANCE_SRC) $(PERF_ENGINE_SRC) -lm
+
+# Build physics 6DOF tests
+$(TEST_PHYSICS_TARGET): $(TEST_PHYSICS_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building 6DOF physics tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_PHYSICS_SRC) -lm
+
+# Build thruster system tests  
+$(TEST_THRUSTERS_TARGET): $(TEST_THRUSTERS_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building thruster system tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_THRUSTERS_SRC) -lm
+
+# Build control authority tests
+$(TEST_CONTROL_TARGET): $(TEST_CONTROL_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building control authority tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_CONTROL_SRC) -lm
+
+# Build camera system tests
+$(TEST_CAMERA_TARGET): $(TEST_CAMERA_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building camera system tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_CAMERA_SRC) -lm
+
+# Build input system tests
+$(TEST_INPUT_TARGET): $(TEST_INPUT_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building input system tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_INPUT_SRC) -lm
+
+# Build flight integration tests
+$(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building flight integration tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) -lm
 
 .PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test help docs

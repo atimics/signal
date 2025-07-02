@@ -82,10 +82,10 @@ static void physics_apply_forces(struct Physics* physics, float delta_time)
                           physics->force_accumulator.y * physics->force_accumulator.y + 
                           physics->force_accumulator.z * physics->force_accumulator.z);
     if (force_mag > 0.1f && ++force_log_counter % 60 == 0) {  // Every second at 60 FPS
-        printf("⚡ Force: [%.2f,%.2f,%.2f] Mass: %.2f -> Accel: [%.2f,%.2f,%.2f]\n",
+        printf("⚡ LINEAR: Force:[%.0f,%.0f,%.0f] -> Accel:[%.2f,%.2f,%.2f] -> Vel:[%.2f,%.2f,%.2f]\n",
                physics->force_accumulator.x, physics->force_accumulator.y, physics->force_accumulator.z,
-               physics->mass,
-               linear_acceleration.x, linear_acceleration.y, linear_acceleration.z);
+               linear_acceleration.x, linear_acceleration.y, linear_acceleration.z,
+               physics->velocity.x, physics->velocity.y, physics->velocity.z);
     }
     
     // Clear force accumulator for next frame
@@ -106,6 +106,18 @@ static void physics_apply_torques(struct Physics* physics, float delta_time)
     
     physics->angular_acceleration = angular_accel;
     
+    // Debug angular forces
+    static uint32_t torque_log_counter = 0;
+    float torque_mag = sqrtf(physics->torque_accumulator.x * physics->torque_accumulator.x + 
+                           physics->torque_accumulator.y * physics->torque_accumulator.y + 
+                           physics->torque_accumulator.z * physics->torque_accumulator.z);
+    if (torque_mag > 0.1f && ++torque_log_counter % 60 == 0) {  // Every second at 60 FPS
+        printf("🌀 ANGULAR: Torque:[%.0f,%.0f,%.0f] -> AngAccel:[%.2f,%.2f,%.2f] -> AngVel:[%.2f,%.2f,%.2f]\n",
+               physics->torque_accumulator.x, physics->torque_accumulator.y, physics->torque_accumulator.z,
+               angular_accel.x, angular_accel.y, angular_accel.z,
+               physics->angular_velocity.x, physics->angular_velocity.y, physics->angular_velocity.z);
+    }
+    
     // Clear torque accumulator for next frame
     physics->torque_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
 }
@@ -116,14 +128,48 @@ static void physics_apply_torques(struct Physics* physics, float delta_time)
 
 static void physics_integrate_linear(struct Physics* physics, struct Transform* transform, float delta_time)
 {
+    // Store old position for debug
+    Vector3 old_pos = transform->position;
+    
+    // DEBUG: Track velocity at each step
+    static uint32_t debug_counter = 0;
+    bool should_debug = (++debug_counter % 60 == 0);
+    
+    Vector3 vel_before = physics->velocity;
+    
     // Apply acceleration to velocity
     physics->velocity = vector3_add(physics->velocity, vector3_multiply(physics->acceleration, delta_time));
+    
+    Vector3 vel_after_accel = physics->velocity;
     
     // Apply drag
     physics->velocity = vector3_multiply(physics->velocity, physics->drag_linear);
     
+    Vector3 vel_after_drag = physics->velocity;
+    
     // Apply velocity to position
     transform->position = vector3_add(transform->position, vector3_multiply(physics->velocity, delta_time));
+    
+    // DEBUG: Show velocity changes step by step
+    if (should_debug && (physics->acceleration.x != 0.0f || physics->acceleration.y != 0.0f || physics->acceleration.z != 0.0f)) {
+        printf("🔍 VEL DEBUG: Before:[%.3f,%.3f,%.3f] +Accel:[%.3f,%.3f,%.3f] +Drag:[%.3f,%.3f,%.3f]\n",
+               vel_before.x, vel_before.y, vel_before.z,
+               vel_after_accel.x, vel_after_accel.y, vel_after_accel.z,
+               vel_after_drag.x, vel_after_drag.y, vel_after_drag.z);
+    }
+    
+    // Debug position changes
+    static uint32_t pos_log_counter = 0;
+    float vel_mag = sqrtf(physics->velocity.x * physics->velocity.x + 
+                         physics->velocity.y * physics->velocity.y + 
+                         physics->velocity.z * physics->velocity.z);
+    if (vel_mag > 0.1f && ++pos_log_counter % 60 == 0) {
+        Vector3 pos_change = vector3_subtract(transform->position, old_pos);
+        printf("📍 POSITION: Vel:[%.2f,%.2f,%.2f] PosChange:[%.3f,%.3f,%.3f] NewPos:[%.1f,%.1f,%.1f]\n",
+               physics->velocity.x, physics->velocity.y, physics->velocity.z,
+               pos_change.x, pos_change.y, pos_change.z,
+               transform->position.x, transform->position.y, transform->position.z);
+    }
 }
 
 static void physics_integrate_angular(struct Physics* physics, struct Transform* transform, float delta_time)

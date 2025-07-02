@@ -123,9 +123,10 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         if (physics) {
             physics->has_6dof = true;
             physics->moment_of_inertia = (Vector3){ 2.0f, 2.0f, 1.5f }; // Ship-like inertia
-            physics->drag_angular = 0.85f; // Some angular drag for stability
+            physics->drag_linear = 0.9999f;  // Minimal drag for space flight
+            physics->drag_angular = 0.90f;   // Moderate angular drag for stability
             physics->environment = PHYSICS_ATMOSPHERE; // Atmospheric flight
-            printf("   ✅ 6DOF Physics enabled\n");
+            printf("   ✅ 6DOF Physics enabled with reduced drag\n");
         }
         
         printf("🚀 Player ship upgrade complete - Enhanced 6DOF flight mechanics ready!\n");
@@ -364,19 +365,11 @@ void update_flight_camera_system(struct World* world, float delta_time) {
         }
     }
     
-    // Debug output
+    // Reduced camera debug output
     static float last_cam_log = 0.0f;
-    if (flight_time - last_cam_log > 3.0f) {
+    if (flight_time - last_cam_log > 30.0f) {  // Reduced frequency from 3s to 30s
         const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR", "OVERHEAD"};
-        struct Transform* player_transform = entity_get_transform(world, player_ship_id);
-        Vector3 player_pos = player_transform ? player_transform->position : (Vector3){0, 0, 0};
-        Vector3 cam_pos = camera->position;
-        float cam_distance = sqrtf((cam_pos.x - player_pos.x) * (cam_pos.x - player_pos.x) + 
-                                  (cam_pos.y - player_pos.y) * (cam_pos.y - player_pos.y) + 
-                                  (cam_pos.z - player_pos.z) * (cam_pos.z - player_pos.z));
-        printf("📷 [%s] Speed:%.1f Accel:%.1f FOV:%.1f Dist:%.1f\n",
-               mode_names[current_camera_mode], player_speed, acceleration_magnitude, 
-               camera->fov, cam_distance);
+        printf("📷 Camera: %s mode\n", mode_names[current_camera_mode]);
         last_cam_log = flight_time;
     }
 }

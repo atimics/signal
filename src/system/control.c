@@ -133,6 +133,11 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
             printf("🎮 Input: T:%.2f S:%.2f V:%.2f P:%.2f Y:%.2f R:%.2f\n",
                    input->thrust, input->strafe, input->vertical,
                    input->pitch, input->yaw, input->roll);
+            
+            // Debug roll specifically
+            if (input->roll != 0.0f) {
+                printf("🔄 Roll detected: %.2f (Q=LEFT=-1, E=RIGHT=+1)\n", input->roll);
+            }
         }
     }
 }
