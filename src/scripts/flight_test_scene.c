@@ -102,7 +102,7 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
             struct ThrusterSystem* thrusters = entity_get_thruster_system(world, player_ship_id);
             if (thrusters) {
                 // Sprint 21: Configure as Fighter-class ship with proper characteristics
-                float base_thrust = FLIGHT_THRUST_FORCE * 500.0f;  // Strong base thrust for testing
+                float base_thrust = FLIGHT_THRUST_FORCE * 300.0f;  // Zippy thrust for canyon racing
                 thruster_configure_ship_type(thrusters, SHIP_TYPE_FIGHTER, base_thrust);
                 
                 // Apply ship characteristics to physics
@@ -127,8 +127,8 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
             if (control) {
                 // Configure control settings for flight test
                 control->controlled_by = player_ship_id; // Self-controlled
-                control->control_sensitivity = 1.0f;
-                control->stability_assist = 0.3f; // Light assistance for flight test
+                control->control_sensitivity = 1.2f;     // High sensitivity for zippy canyon racing
+                control->stability_assist = 0.4f;        // Light assistance - let the pilot control the ship
                 control->flight_assist_enabled = true;
                 control->control_mode = CONTROL_ASSISTED;
                 printf("   ✅ ControlAuthority configured\n");
@@ -144,7 +144,7 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
             physics->has_6dof = true;
             physics->moment_of_inertia = (Vector3){ 2.0f, 2.0f, 1.5f }; // Ship-like inertia
             physics->drag_linear = 0.9999f;  // Minimal drag for space flight
-            physics->drag_angular = 0.90f;   // Moderate angular drag for stability
+            physics->drag_angular = 0.70f;   // Strong angular drag with quick stabilization
             physics->environment = PHYSICS_SPACE; // Zero gravity space flight
             printf("   ✅ 6DOF Physics enabled with reduced drag\n");
         }
@@ -202,23 +202,25 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     
     printf("🚀 Flight test initialized\n");
     printf("🌍 Plain size: %.0fx%.0f units\n", PLAIN_SIZE, PLAIN_SIZE);
-    printf("🎮 Modern 6DOF Flight Controls:\n");
-    printf("   KEYBOARD (Mouse + WASD):\n");
+    printf("🏎️ CANYON RACER Flight Controls:\n");
+    printf("   KEYBOARD (Banking Flight Model):\n");
     printf("     W/S - Forward/Backward thrust (%.0f force)\n", FLIGHT_THRUST_FORCE);
-    printf("     A/D - Strafe left/right (%.0f force)\n", FLIGHT_MANEUVER_FORCE);
+    printf("     A/D - BANKING TURNS (roll + yaw combined)\n");
     printf("     Space/Ctrl - Vertical up/down\n");
-    printf("     Q/E - Roll left/right\n");
-    printf("     Mouse - Pitch/Yaw (like FPS aiming)\n");
+    printf("     Q/E - Aerobatic roll (separate from banking)\n");
+    printf("     ARROW KEYS - Direct pitch/yaw for fine control\n");
     printf("     Shift - Boost (%.1fx multiplier)\n", FLIGHT_BOOST_MULTIPLIER);
     printf("     Alt - Brake\n");
     printf("     Tab - Cycle camera modes\n");
-    printf("   XBOX CONTROLLER (Modern Layout):\n");
+    printf("   XBOX CONTROLLER (Canyon Racer Layout):\n");
     printf("     Left Stick - Pitch/Yaw (primary flight control)\n");
-    printf("     Right Stick - Lateral/Vertical thrust\n");
+    printf("     Right Stick X - BANKING TURNS (zippy turning)\n");
+    printf("     Right Stick Y - Vertical thrust\n");
     printf("     Right Trigger - Forward thrust\n");
     printf("     Left Trigger - Reverse thrust\n");
-    printf("     Bumpers - Roll left/right\n");
+    printf("     Bumpers - Aerobatic roll\n");
     printf("     A Button - Boost, B Button - Brake\n");
+    printf("\n🏎️ CANYON RACING: Use A/D or Right Stick X for banking turns!\n");
     printf("📷 Camera Modes: COCKPIT → CHASE_NEAR → CHASE_FAR\n");
     printf("🎯 Physics: 6DOF enabled with flight assistance\n");
 }
@@ -251,22 +253,22 @@ void update_flight_camera_system(struct World* world, float delta_time) {
     switch (current_camera_mode) {
         case CAMERA_MODE_COCKPIT:
             camera->behavior = CAMERA_BEHAVIOR_FIRST_PERSON;
-            base_offset = (Vector3){0, 0.5f, 0.5f}; // Inside cockpit, slightly forward and up
+            base_offset = (Vector3){0, 0.5f, -0.5f}; // Inside cockpit, slightly back and up
             new_smoothing = 15.0f;                   // Very responsive for cockpit
             camera->fov = 85.0f;                     // Narrower for cockpit realism
             break;
             
         case CAMERA_MODE_CHASE_NEAR:
             camera->behavior = CAMERA_BEHAVIOR_CHASE;
-            base_offset = (Vector3){0, 8, 20};       // Closer, stable position
-            new_smoothing = 10.0f;                   // Smooth but responsive
+            base_offset = (Vector3){0, 5, -15};      // Try negative Z for behind ship
+            new_smoothing = 15.0f;                   // More responsive following
             camera->fov = 95.0f;                     // Good visibility
             break;
             
         case CAMERA_MODE_CHASE_FAR:
             camera->behavior = CAMERA_BEHAVIOR_CHASE;
-            base_offset = (Vector3){0, 15, 40};      // Further back, higher up
-            new_smoothing = 8.0f;                    // Smooth cinematic feel
+            base_offset = (Vector3){0, 10, -30};     // Further back, negative Z
+            new_smoothing = 12.0f;                   // Smooth cinematic feel
             camera->fov = 105.0f;                    // Wide for overview
             break;
             
@@ -292,11 +294,14 @@ void update_flight_camera_system(struct World* world, float delta_time) {
     // Camera shake and FOV effects disabled for stability
     // TODO: Re-enable with more conservative settings once basic camera is stable
     
-    // Reduced camera debug output
+    // Debug camera following
     static float last_cam_log = 0.0f;
-    if (flight_time - last_cam_log > 30.0f) {  // Reduced frequency from 3s to 30s
+    if (flight_time - last_cam_log > 5.0f) {  // Every 5 seconds
         const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
-        printf("📷 Camera: %s mode\n", mode_names[current_camera_mode]);
+        printf("📷 Camera: %s mode, target=%d, smoothing=%.1f\n", 
+               mode_names[current_camera_mode], camera->follow_target, new_smoothing);
+        printf("📷 Camera offset: [%.1f, %.1f, %.1f]\n", 
+               base_offset.x, base_offset.y, base_offset.z);
         last_cam_log = flight_time;
     }
 }

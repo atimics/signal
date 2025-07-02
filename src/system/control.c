@@ -11,14 +11,74 @@ static EntityID g_player_entity = INVALID_ENTITY;
 // CONTROL PROCESSING FUNCTIONS
 // ============================================================================
 
+// Enhanced sensitivity curve with velocity-adaptive response
+static float apply_adaptive_sensitivity(float input, float base_sensitivity, float current_velocity, float max_velocity) {
+    if (fabsf(input) < 0.001f) return 0.0f;
+    
+    // Velocity-based sensitivity scaling: higher sensitivity at low speeds for precision
+    float velocity_factor = 1.0f;
+    if (max_velocity > 0.0f) {
+        float velocity_ratio = fabsf(current_velocity) / max_velocity;
+        velocity_factor = 1.5f - (velocity_ratio * 0.5f); // 1.5x at standstill, 1.0x at max speed
+    }
+    
+    // Adaptive response curve: more linear for small inputs, more aggressive for large inputs
+    float abs_input = fabsf(input);
+    float sign = input > 0.0f ? 1.0f : -1.0f;
+    
+    float response;
+    if (abs_input < 0.3f) {
+        // Linear response for small inputs (precision zone)
+        response = abs_input * 1.8f;
+    } else {
+        // Smooth curve for larger inputs
+        float normalized = (abs_input - 0.3f) / 0.7f; // Map 0.3-1.0 to 0-1
+        response = 0.54f + (normalized * normalized * 0.46f); // Start at 0.54, curve to 1.0
+    }
+    
+    return sign * response * base_sensitivity * velocity_factor;
+}
+
+// Turn rate limiter to prevent over-rotation
+static Vector3 apply_turn_rate_limiting(Vector3 input, Vector3 previous_angular, float delta_limit) {
+    Vector3 limited = input;
+    
+    // Limit rate of change for each axis
+    limited.x = fmaxf(previous_angular.x - delta_limit, fminf(previous_angular.x + delta_limit, input.x));
+    limited.y = fmaxf(previous_angular.y - delta_limit, fminf(previous_angular.y + delta_limit, input.y));
+    limited.z = fmaxf(previous_angular.z - delta_limit, fminf(previous_angular.z + delta_limit, input.z));
+    
+    return limited;
+}
+
+// Gamepad-specific input processing with separate tuning
+static Vector3 process_gamepad_angular_input(const InputState* input, float sensitivity, Vector3 current_velocity) {
+    Vector3 result = { 0.0f, 0.0f, 0.0f };
+    
+    // Enhanced gamepad sensitivity for canyon racing
+    const float gamepad_pitch_sensitivity = sensitivity * 1.2f;
+    const float gamepad_yaw_sensitivity = sensitivity * 1.4f;  // Higher for quick turns
+    const float gamepad_roll_sensitivity = sensitivity * 1.6f;  // Highest for banking
+    
+    // Apply adaptive curves to each axis
+    result.x = apply_adaptive_sensitivity(input->pitch, gamepad_pitch_sensitivity, current_velocity.x, 5.0f);
+    result.y = apply_adaptive_sensitivity(input->yaw, gamepad_yaw_sensitivity, current_velocity.y, 5.0f);
+    result.z = apply_adaptive_sensitivity(input->roll, gamepad_roll_sensitivity, current_velocity.z, 5.0f);
+    
+    return result;
+}
+
 static Vector3 process_linear_input(const InputState* input, struct ControlAuthority* control)
 {
     if (!input || !control) return (Vector3){ 0.0f, 0.0f, 0.0f };
     
+    // Canyon racer flight model - banking creates natural turn forces
+    float banking_input = input->strafe;
+    
     Vector3 linear_commands = {
-        input->strafe,   // Left/right -> X-axis
-        input->vertical, // Up/down -> Y-axis
-        -input->thrust   // Forward/backward -> Z-axis (negative Z = forward away from camera)
+        banking_input * 0.2f, // Slight lateral force from banking (like centrifugal force)
+        input->vertical,      // Up/down -> Y-axis (vertical thrust)
+        -input->thrust        // Forward/backward -> Z-axis (negative Z = forward away from camera)
     };
     
     // Apply sensitivity
@@ -46,14 +106,47 @@ static Vector3 process_angular_input(const InputState* input, struct ControlAuth
 {
     if (!input || !control) return (Vector3){ 0.0f, 0.0f, 0.0f };
     
-    Vector3 angular_commands = {
-        input->pitch,  // Pitch (nose up/down)
-        input->yaw,    // Yaw (turn left/right)  
-        input->roll    // Roll (bank left/right)
-    };
+    static Vector3 previous_angular = { 0.0f, 0.0f, 0.0f };
     
-    // Apply sensitivity
-    angular_commands = apply_sensitivity_curve(angular_commands, control->control_sensitivity);
+    // Check if this is gamepad input (more sophisticated detection)
+    bool is_gamepad_input = (fabsf(input->pitch) < 1.0f && fabsf(input->pitch) > 0.0f) ||
+                           (fabsf(input->yaw) < 1.0f && fabsf(input->yaw) > 0.0f) ||
+                           (fabsf(input->roll) < 1.0f && fabsf(input->roll) > 0.0f);
+    
+    Vector3 angular_commands;
+    
+    if (is_gamepad_input) {
+        // Use enhanced gamepad processing
+        Vector3 current_angular_velocity = physics ? physics->angular_velocity : (Vector3){ 0.0f, 0.0f, 0.0f };
+        angular_commands = process_gamepad_angular_input(input, control->control_sensitivity, current_angular_velocity);
+        
+        // Apply turn rate limiting for smooth gamepad control
+        angular_commands = apply_turn_rate_limiting(angular_commands, previous_angular, 0.15f); // Limit to 15% change per frame
+    } else {
+        // Canyon racer banking flight model for keyboard
+        float banking_input = input->strafe;
+        float banking_strength = 1.5f;
+        
+        angular_commands = (Vector3){
+            input->pitch,                    // X = Pitch (nose up/down)
+            banking_input * banking_strength + input->yaw, // Y = Banking + direct yaw
+            banking_input * banking_strength + input->roll  // Z = Banking + direct roll
+        };
+        
+        // Apply standard sensitivity curve for keyboard
+        angular_commands = apply_sensitivity_curve(angular_commands, control->control_sensitivity);
+    }
+    
+    // Store for next frame's rate limiting
+    previous_angular = angular_commands;
+    
+    // Debug angular commands (less frequent)
+    static uint32_t angular_debug = 0;
+    if ((fabsf(angular_commands.x) > 0.01f || fabsf(angular_commands.y) > 0.01f || fabsf(angular_commands.z) > 0.01f) && ++angular_debug % 60 == 0) {
+        printf("🏎️ Angular [%s]: P:%.2f Y:%.2f R:%.2f\n", 
+               is_gamepad_input ? "GAMEPAD" : "KEYBOARD",
+               angular_commands.x, angular_commands.y, angular_commands.z);
+    }
     
     // Apply flight assistance if enabled
     if (control->flight_assist_enabled && physics) {
@@ -141,9 +234,20 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                        input->thrust, input->strafe, input->vertical);
             }
             
-            // Debug roll specifically
-            if (input->roll != 0.0f) {
-                printf("🔄 Roll detected: %.2f (Q=LEFT=-1, E=RIGHT=+1)\n", input->roll);
+            // Debug strafe specifically since left/right asymmetry reported
+            if (input->strafe != 0.0f) {
+                printf("↔️ STRAFE: %.2f (A=LEFT=-1, D=RIGHT=+1)\n", input->strafe);
+            }
+            
+            // Debug angular controls specifically
+            if (input->pitch != 0.0f || input->yaw != 0.0f || input->roll != 0.0f) {
+                printf("🔄 Angular input: P:%.2f Y:%.2f R:%.2f\n", 
+                       input->pitch, input->yaw, input->roll);
+            }
+            
+            // Debug yaw specifically since it's not working
+            if (input->yaw != 0.0f) {
+                printf("➡️ YAW: %.2f (LEFT=-1, RIGHT=+1)\n", input->yaw);
             }
         } else {
             printf("❌ Control: No input state available!\n");
@@ -213,13 +317,17 @@ Vector3 apply_stability_assist(Vector3 input, Vector3 current_angular_velocity, 
 
 Vector3 apply_sensitivity_curve(Vector3 input, float sensitivity)
 {
-    // Apply smooth response curve for better control feel
+    // Simplified sensitivity curve for keyboard input (less aggressive than before)
     Vector3 result;
     
-    // Use cubic curve for smooth response near center, more aggressive at extremes
-    result.x = input.x * input.x * input.x * (input.x > 0 ? 1.0f : -1.0f) * sensitivity;
-    result.y = input.y * input.y * input.y * (input.y > 0 ? 1.0f : -1.0f) * sensitivity;
-    result.z = input.z * input.z * input.z * (input.z > 0 ? 1.0f : -1.0f) * sensitivity;
+    // Use quadratic curve for smooth response - less aggressive than cubic
+    float sign_x = input.x > 0 ? 1.0f : -1.0f;
+    float sign_y = input.y > 0 ? 1.0f : -1.0f;
+    float sign_z = input.z > 0 ? 1.0f : -1.0f;
+    
+    result.x = input.x * fabsf(input.x) * sign_x * sensitivity * 0.8f; // Slightly reduced
+    result.y = input.y * fabsf(input.y) * sign_y * sensitivity * 0.8f;
+    result.z = input.z * fabsf(input.z) * sign_z * sensitivity * 0.8f;
     
     // Clamp to valid range
     result.x = fmaxf(-1.0f, fminf(1.0f, result.x));

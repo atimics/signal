@@ -75,24 +75,24 @@ void input_update(void) {
     // Add gamepad input (analog) - Modern 6DOF flight control scheme
     GamepadState* gamepad = gamepad_get_state(0);
     if (gamepad && gamepad->connected) {
-        const float deadzone = 0.12f;  // Slightly smaller deadzone for precision
+        const float deadzone = 0.08f;  // Smaller deadzone for better responsiveness
         
         // Left stick for pitch/yaw (primary flight control like flight sims)
         if (fabsf(gamepad->left_stick_y) > deadzone) {
             float value = gamepad->left_stick_y;
-            // Apply smooth curve for precision near center
-            value = value * value * value * (value > 0 ? 1.0f : -1.0f);
+            // Apply less aggressive curve for better responsiveness
+            value = value * value * (value > 0 ? 1.0f : -1.0f) * 1.5f; // Amplify for responsiveness
             current_input.pitch -= value; // Invert Y (up stick = nose up)
         }
         if (fabsf(gamepad->left_stick_x) > deadzone) {
             float value = gamepad->left_stick_x;
-            value = value * value * value * (value > 0 ? 1.0f : -1.0f);
+            value = value * value * (value > 0 ? 1.0f : -1.0f) * 1.5f; // Amplify for responsiveness
             current_input.yaw += value; // Right stick = turn right
         }
         
-        // Right stick for lateral/vertical thrust (strafing)
+        // Right stick for banking and vertical thrust (canyon racer style)
         if (fabsf(gamepad->right_stick_x) > deadzone) {
-            current_input.strafe += gamepad->right_stick_x;
+            current_input.strafe += gamepad->right_stick_x * 1.2f; // Amplified banking input
         }
         if (fabsf(gamepad->right_stick_y) > deadzone) {
             current_input.vertical -= gamepad->right_stick_y; // Invert Y (up stick = thrust up)

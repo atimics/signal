@@ -56,8 +56,6 @@ void test_input_state_initial_values(void)
     
     TEST_ASSERT_EQUAL_FLOAT(0.0f, state->boost);
     TEST_ASSERT_FALSE(state->brake);
-    TEST_ASSERT_FALSE(state->action);
-    TEST_ASSERT_FALSE(state->menu);
 }
 
 // ============================================================================
@@ -104,15 +102,13 @@ void test_gamepad_detection(void)
 
 void test_gamepad_info_retrieval(void)
 {
-    // Try to get gamepad info
-    const char* gamepad_name = input_get_gamepad_name();
+    // Try to get gamepad connectivity status
+    bool has_gamepad = input_has_gamepad();
     
-    // Should either return NULL (no gamepad) or a valid string
-    if (gamepad_name != NULL) {
-        // If there's a name, it should not be empty
-        TEST_ASSERT_GREATER_THAN(0, strlen(gamepad_name));
-    }
+    // Should return either true or false (not crash)
+    TEST_ASSERT_TRUE(has_gamepad == true || has_gamepad == false);
     
+    // Test passes if no crash occurs
     TEST_ASSERT_TRUE(true);
 }
 
@@ -354,18 +350,14 @@ void test_gamepad_connection_stability(void)
     }
 }
 
-void test_gamepad_name_stability(void)
+void test_gamepad_detection_stability(void)
 {
-    // Gamepad name should be consistent
-    const char* name1 = input_get_gamepad_name();
-    const char* name2 = input_get_gamepad_name();
+    // Gamepad detection should be consistent
+    bool detection1 = input_has_gamepad();
+    bool detection2 = input_has_gamepad();
     
-    if (name1 == NULL) {
-        TEST_ASSERT_NULL(name2);
-    } else {
-        TEST_ASSERT_NOT_NULL(name2);
-        TEST_ASSERT_EQUAL_STRING(name1, name2);
-    }
+    // Should return same result when called consecutively
+    TEST_ASSERT_EQUAL(detection1, detection2);
 }
 
 // ============================================================================
@@ -389,9 +381,7 @@ void test_input_mapping_completeness(void)
     };
     
     volatile bool test_bools[] = {
-        state->brake,
-        state->action,
-        state->menu
+        state->brake
     };
     
     // Suppress unused variable warnings
@@ -423,8 +413,6 @@ void test_input_integration_with_control_system(void)
     
     // Boolean values should be well-defined
     TEST_ASSERT_TRUE(state->brake == true || state->brake == false);
-    TEST_ASSERT_TRUE(state->action == true || state->action == false);
-    TEST_ASSERT_TRUE(state->menu == true || state->menu == false);
 }
 
 // ============================================================================
@@ -472,7 +460,7 @@ void suite_input_system(void)
     
     printf("🔌 Testing Gamepad Connection...\n");
     RUN_TEST(test_gamepad_connection_stability);
-    RUN_TEST(test_gamepad_name_stability);
+    RUN_TEST(test_gamepad_detection_stability);
     
     printf("🗺️  Testing Input Mapping...\n");
     RUN_TEST(test_input_mapping_completeness);

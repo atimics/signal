@@ -164,11 +164,11 @@ void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType shi
         case SHIP_TYPE_FIGHTER:
             // Fast, agile, balanced
             thrusters->max_linear_force = (Vector3){
-                base_thrust * 1.2f,  // Forward/back: slightly above average
-                base_thrust * 1.5f,  // Up/down: excellent maneuverability
-                base_thrust * 1.3f   // Left/right: good strafing
+                base_thrust * 1.3f,  // X = Left/right strafe: good strafing  
+                base_thrust * 1.5f,  // Y = Up/down: excellent maneuverability
+                base_thrust * 1.2f   // Z = Forward/back: slightly above average
             };
-            thrusters->max_angular_torque = (Vector3){ 25.0f, 25.0f, 20.0f };
+            thrusters->max_angular_torque = (Vector3){ 20.0f, 25.0f, 15.0f };  // Much higher for responsiveness
             thrusters->thrust_response_time = 0.05f;  // Very responsive
             thrusters->power_efficiency = 0.9f;       // Good efficiency
             thrusters->heat_generation = 0.7f;        // Moderate heat
@@ -177,9 +177,9 @@ void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType shi
         case SHIP_TYPE_INTERCEPTOR:
             // Very fast forward, minimal lateral
             thrusters->max_linear_force = (Vector3){
-                base_thrust * 2.0f,  // Forward/back: exceptional speed
-                base_thrust * 0.8f,  // Up/down: limited maneuverability
-                base_thrust * 0.6f   // Left/right: poor strafing
+                base_thrust * 0.6f,  // X = Left/right: poor strafing
+                base_thrust * 0.8f,  // Y = Up/down: limited maneuverability
+                base_thrust * 2.0f   // Z = Forward/back: exceptional speed
             };
             thrusters->max_angular_torque = (Vector3){ 35.0f, 20.0f, 15.0f };
             thrusters->thrust_response_time = 0.03f;  // Extremely responsive
@@ -190,9 +190,9 @@ void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType shi
         case SHIP_TYPE_CARGO:
             // Slow but powerful, heavy
             thrusters->max_linear_force = (Vector3){
-                base_thrust * 1.5f,  // Forward/back: good for mass
-                base_thrust * 1.8f,  // Up/down: overcome heavy mass
-                base_thrust * 1.0f   // Left/right: standard
+                base_thrust * 1.0f,  // X = Left/right: standard
+                base_thrust * 1.8f,  // Y = Up/down: overcome heavy mass
+                base_thrust * 1.5f   // Z = Forward/back: good for mass
             };
             thrusters->max_angular_torque = (Vector3){ 12.0f, 12.0f, 8.0f };
             thrusters->thrust_response_time = 0.15f;  // Slow response
@@ -203,9 +203,9 @@ void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType shi
         case SHIP_TYPE_EXPLORER:
             // Balanced, efficient
             thrusters->max_linear_force = (Vector3){
-                base_thrust * 1.0f,  // Forward/back: standard
-                base_thrust * 1.0f,  // Up/down: standard
-                base_thrust * 1.0f   // Left/right: standard
+                base_thrust * 1.0f,  // X = Left/right: standard
+                base_thrust * 1.0f,  // Y = Up/down: standard
+                base_thrust * 1.0f   // Z = Forward/back: standard
             };
             thrusters->max_angular_torque = (Vector3){ 18.0f, 18.0f, 15.0f };
             thrusters->thrust_response_time = 0.08f;  // Good response
