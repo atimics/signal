@@ -7,6 +7,7 @@
 #include "../render.h"
 #include "../system/material.h"
 #include "../system/input.h"
+#include "../system/control.h"
 #include "../hidapi.h"
 #include "../sokol_app.h"
 #include <stdio.h>
@@ -76,6 +77,53 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     
     if (player_ship_id == INVALID_ENTITY) {
         printf("⚠️  No player ship found - controls will be disabled\n");
+    } else {
+        // Add new flight mechanics components to the player ship
+        printf("🚀 Upgrading player ship with 6DOF flight mechanics...\n");
+        
+        // Add ThrusterSystem component
+        if (entity_add_component(world, player_ship_id, COMPONENT_THRUSTER_SYSTEM)) {
+            struct ThrusterSystem* thrusters = entity_get_thruster_system(world, player_ship_id);
+            if (thrusters) {
+                // Configure thruster capabilities for responsive flight
+                thrusters->max_linear_force = (Vector3){ FLIGHT_THRUST_FORCE, FLIGHT_MANEUVER_FORCE, FLIGHT_MANEUVER_FORCE };
+                thrusters->max_angular_torque = (Vector3){ 25.0f, 25.0f, 20.0f }; // Pitch, Yaw, Roll
+                thrusters->thrust_response_time = 0.05f; // Very responsive
+                thrusters->atmosphere_efficiency = 1.0f; // Full power in atmosphere
+                thrusters->vacuum_efficiency = 1.0f;     // Full power in vacuum
+                thrusters->thrusters_enabled = true;
+                printf("   ✅ ThrusterSystem configured\n");
+            }
+        }
+        
+        // Add ControlAuthority component  
+        if (entity_add_component(world, player_ship_id, COMPONENT_CONTROL_AUTHORITY)) {
+            struct ControlAuthority* control = entity_get_control_authority(world, player_ship_id);
+            if (control) {
+                // Configure control settings for flight test
+                control->controlled_by = player_ship_id; // Self-controlled
+                control->control_sensitivity = 1.0f;
+                control->stability_assist = 0.3f; // Light assistance for flight test
+                control->flight_assist_enabled = true;
+                control->control_mode = CONTROL_ASSISTED;
+                printf("   ✅ ControlAuthority configured\n");
+                
+                // Set this as the player entity for the control system
+                control_set_player_entity(world, player_ship_id);
+            }
+        }
+        
+        // Enable 6DOF physics on the player ship
+        struct Physics* physics = entity_get_physics(world, player_ship_id);
+        if (physics) {
+            physics->has_6dof = true;
+            physics->moment_of_inertia = (Vector3){ 2.0f, 2.0f, 1.5f }; // Ship-like inertia
+            physics->drag_angular = 0.85f; // Some angular drag for stability
+            physics->environment = PHYSICS_ATMOSPHERE; // Atmospheric flight
+            printf("   ✅ 6DOF Physics enabled\n");
+        }
+        
+        printf("🚀 Player ship upgrade complete - Enhanced 6DOF flight mechanics ready!\n");
     }
     
     // Initialize input system
@@ -125,19 +173,26 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     
     printf("🚀 Flight test initialized\n");
     printf("🌍 Plain size: %.0fx%.0f units\n", PLAIN_SIZE, PLAIN_SIZE);
-    printf("🎮 Enhanced Flight Controls:\n");
-    printf("   Keyboard: W/S - Forward/Backward thrust (%.0f force)\n", FLIGHT_THRUST_FORCE);
-    printf("             A/D - Strafe left/right (%.0f force)\n", FLIGHT_MANEUVER_FORCE);
-    printf("             Q/E - Vertical maneuver\n");
-    printf("             Shift - Boost (%.1fx multiplier)\n", FLIGHT_BOOST_MULTIPLIER);
-    printf("             Ctrl - Brake (%.0f%% power)\n", (1.0f - FLIGHT_BRAKE_FACTOR) * 100.0f);
-    printf("             C - Cycle camera modes\n");
-    printf("   Gamepad:  Left Stick - Thrust/Strafe\n");
-    printf("             Right Stick Y - Vertical\n");
-    printf("             Right Trigger - Boost\n");
-    printf("             Left Trigger - Brake\n");
+    printf("🎮 Enhanced 6DOF Flight Controls:\n");
+    printf("   LINEAR MOVEMENT:\n");
+    printf("     W/S - Forward/Backward thrust (%.0f force)\n", FLIGHT_THRUST_FORCE);
+    printf("     A/D - Strafe left/right (%.0f force)\n", FLIGHT_MANEUVER_FORCE);
+    printf("     Q/E - Vertical up/down\n");
+    printf("   ANGULAR MOVEMENT (6DOF):\n");
+    printf("     Arrow Keys - Pitch (Up/Down) and Yaw (Left/Right)\n");
+    printf("     Z/C - Roll left/right\n");
+    printf("   MODIFIERS:\n");
+    printf("     Shift - Boost (%.1fx multiplier)\n", FLIGHT_BOOST_MULTIPLIER);
+    printf("     Ctrl - Brake\n");
+    printf("     C - Cycle camera modes\n");
+    printf("   GAMEPAD:\n");
+    printf("     Left Stick - Thrust/Strafe\n");
+    printf("     Right Stick - Pitch/Yaw\n");
+    printf("     Triggers - Vertical movement\n");
+    printf("     Bumpers - Roll\n");
+    printf("     A Button - Boost\n");
     printf("📷 Camera Modes: COCKPIT → CHASE_NEAR → CHASE_FAR → OVERHEAD\n");
-    printf("🎯 Max velocity: %.0f units/sec\n", FLIGHT_MAX_VELOCITY);
+    printf("🎯 Physics: 6DOF enabled with flight assistance\n");
 }
 
 // Enhanced camera system for flight testing with even more dynamic behavior
@@ -322,75 +377,9 @@ void update_flight_camera_system(struct World* world, float delta_time) {
     }
 }
 
-void apply_flight_controls(struct World* world, float delta_time) {
-    if (player_ship_id == INVALID_ENTITY) return;
-    
-    struct Entity* player_entity = NULL;
-    for (uint32_t i = 0; i < world->entity_count; i++) {
-        if (world->entities[i].id == player_ship_id) {
-            player_entity = &world->entities[i];
-            break;
-        }
-    }
-    
-    if (!player_entity || !(player_entity->component_mask & (COMPONENT_PHYSICS | COMPONENT_TRANSFORM))) {
-        return;
-    }
-    
-    struct Physics* physics = player_entity->physics;
-    if (!physics) return;
-    
-    const InputState* input = input_get_state();
-    if (!input) return;
-    
-    float thrust_force = FLIGHT_THRUST_FORCE;
-    float maneuver_force = FLIGHT_MANEUVER_FORCE;
-    
-    // Apply boost
-    float effective_boost = 1.0f + (FLIGHT_BOOST_MULTIPLIER - 1.0f) * input->boost;
-    thrust_force *= effective_boost;
-    maneuver_force *= effective_boost;
-    
-    // Apply forces
-    static float last_input_log = 0.0f;
-    bool has_input = (fabsf(input->thrust) > 0.01f || fabsf(input->strafe) > 0.01f || 
-                     fabsf(input->vertical) > 0.01f);
-    
-    if (has_input) {
-        physics->acceleration.z -= input->thrust * thrust_force * delta_time;     // Forward
-        physics->acceleration.x += input->strafe * maneuver_force * delta_time;   // Strafe
-        physics->acceleration.y += input->vertical * maneuver_force * delta_time; // Vertical
-        
-        if (flight_time - last_input_log > 3.0f && effective_boost > 1.1f) {
-            printf("🚀 Boost active! Force multiplier: %.1fx\n", effective_boost);
-            last_input_log = flight_time;
-        }
-    }
-    
-    // Apply braking
-    if (input->brake) {
-        physics->velocity.x *= FLIGHT_BRAKE_FACTOR;
-        physics->velocity.y *= FLIGHT_BRAKE_FACTOR;
-        physics->velocity.z *= FLIGHT_BRAKE_FACTOR;
-    }
-    
-    // Enhanced velocity limiting
-    float velocity_magnitude = sqrtf(physics->velocity.x * physics->velocity.x + 
-                                   physics->velocity.y * physics->velocity.y + 
-                                   physics->velocity.z * physics->velocity.z);
-    if (velocity_magnitude > FLIGHT_MAX_VELOCITY) {
-        float scale = FLIGHT_MAX_VELOCITY / velocity_magnitude;
-        physics->velocity.x *= scale;
-        physics->velocity.y *= scale;
-        physics->velocity.z *= scale;
-    }
-    
-    // Atmospheric drag for realistic feel
-    float drag_factor = 0.98f; // Less drag than derelict scene for better flight feel
-    physics->velocity.x *= drag_factor;
-    physics->velocity.y *= drag_factor;
-    physics->velocity.z *= drag_factor;
-}
+// NOTE: Flight controls are now handled by the Control and Thruster systems automatically
+// The input_update() call processes input and converts it to thruster commands
+// The systems framework handles the rest automatically
 
 void update_moving_obstacles(float delta_time) {
     for (int i = 0; i < OBSTACLE_COUNT; i++) {
@@ -421,11 +410,8 @@ void flight_test_update(struct World* world, SceneStateManager* state, float del
     
     flight_time += delta_time;
     
-    // Update input
+    // Update input system (the Control and Thruster systems handle the rest automatically)
     input_update();
-    
-    // Apply enhanced flight controls
-    apply_flight_controls(world, delta_time);
     
     // Update camera system
     update_flight_camera_system(world, delta_time);
@@ -433,7 +419,7 @@ void flight_test_update(struct World* world, SceneStateManager* state, float del
     // Update moving obstacles
     update_moving_obstacles(delta_time);
     
-    // Periodic status
+    // Periodic status reporting with enhanced 6DOF info
     static float last_status = 0.0f;
     if (flight_time - last_status > 10.0f) {
         if (player_ship_id != INVALID_ENTITY) {
@@ -449,8 +435,13 @@ void flight_test_update(struct World* world, SceneStateManager* state, float del
                 float speed = sqrtf(player->physics->velocity.x * player->physics->velocity.x + 
                                    player->physics->velocity.y * player->physics->velocity.y + 
                                    player->physics->velocity.z * player->physics->velocity.z);
-                printf("🚀 Flight Test: %.1fs - Speed: %.1f/%.0f units/sec\n", 
-                       flight_time, speed, FLIGHT_MAX_VELOCITY);
+                
+                float angular_speed = sqrtf(player->physics->angular_velocity.x * player->physics->angular_velocity.x + 
+                                          player->physics->angular_velocity.y * player->physics->angular_velocity.y + 
+                                          player->physics->angular_velocity.z * player->physics->angular_velocity.z);
+                
+                printf("🚀 Flight Test: %.1fs - Speed: %.1f u/s, Angular: %.2f rad/s, 6DOF: %s\n", 
+                       flight_time, speed, angular_speed, player->physics->has_6dof ? "ON" : "OFF");
             }
         }
         last_status = flight_time;
