@@ -13,6 +13,7 @@
 #include "../vendor/unity.h"
 #include "../../src/core.h"
 #include "../../src/systems.h"
+#include "../../src/render.h"
 #include "../../src/ui_api.h"
 #include "../../src/ui_scene.h"
 #include <stdio.h>
@@ -35,10 +36,12 @@ void setUp(void)
     // Initialize large world for performance testing
     perf_world = malloc(sizeof(struct World));
     memset(perf_world, 0, sizeof(struct World));
-    perf_world->max_entities = PERFORMANCE_ENTITY_COUNT * 2; // Extra capacity
-    perf_world->entities = malloc(sizeof(struct Entity) * perf_world->max_entities);
-    perf_world->entity_count = 0;
-    perf_world->next_entity_id = 1;
+    
+    // Use proper world initialization
+    if (!world_init(perf_world)) {
+        printf("Failed to initialize test world\n");
+        TEST_FAIL_MESSAGE("World initialization failed");
+    }
     
     // Initialize render config
     memset(&perf_render_config, 0, sizeof(RenderConfig));
@@ -49,9 +52,7 @@ void setUp(void)
 void tearDown(void)
 {
     if (perf_world) {
-        if (perf_world->entities) {
-            free(perf_world->entities);
-        }
+        world_destroy(perf_world);
         free(perf_world);
         perf_world = NULL;
     }

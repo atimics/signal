@@ -256,7 +256,8 @@ test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
 .PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm \
 	test test-math test-full test-performance \
 	test-red test-green test-refactor test-tdd test-tdd-unit test-tdd-perf \
-	test-coverage test-report test_memory
+	test-coverage test-report test_memory \
+	test-comprehensive test-ui test-scene test-systems test-performance-critical
 
 # Sprint 10.5 Task 2: Test dynamic memory allocation in mesh parser
 test_sprint_10_5_task_2: | $(BUILD_DIR)
@@ -412,3 +413,87 @@ test-report:
 	@echo ""
 	@echo "Coverage:"
 	@echo "  make test-coverage # Generate coverage report"
+
+# ============================================================================
+# COMPREHENSIVE TEST SUITE - Sprint 20+ Modular Tests
+# ============================================================================
+
+# New modular test sources
+TEST_UI_SRC = tests/unit/test_ui_system.c tests/vendor/unity.c
+TEST_SCENE_SRC = tests/unit/test_scene_system.c tests/vendor/unity.c
+TEST_SYSTEMS_SRC = tests/unit/test_systems.c tests/vendor/unity.c
+TEST_PERFORMANCE_CRITICAL_SRC = tests/performance/test_performance_critical.c tests/vendor/unity.c
+
+# Engine sources needed for comprehensive tests
+ENGINE_COMPREHENSIVE_SRC = src/core.c src/systems.c src/ui_api.c src/ui_scene.c src/ui_components.c \
+                          src/scene_state.c src/scene_script.c src/system/physics.c src/system/camera.c \
+                          src/system/performance.c src/system/memory.c src/system/input.c src/data.c
+
+# Test targets
+TEST_UI_TARGET = $(BUILD_DIR)/test_ui_system
+TEST_SCENE_TARGET = $(BUILD_DIR)/test_scene_system  
+TEST_SYSTEMS_TARGET = $(BUILD_DIR)/test_systems
+TEST_PERFORMANCE_CRITICAL_TARGET = $(BUILD_DIR)/test_performance_critical
+
+# Comprehensive test suite (all new tests)
+test-comprehensive: $(TEST_UI_TARGET) $(TEST_SCENE_TARGET) $(TEST_SYSTEMS_TARGET) $(TEST_PERFORMANCE_CRITICAL_TARGET)
+	@echo "🧪 Running Comprehensive Test Suite..."
+	@echo "  UI System Tests..."
+	./$(TEST_UI_TARGET)
+	@echo "  Scene System Tests..."
+	./$(TEST_SCENE_TARGET)
+	@echo "  ECS & Systems Tests..."
+	./$(TEST_SYSTEMS_TARGET)
+	@echo "  Performance Critical Tests..."
+	./$(TEST_PERFORMANCE_CRITICAL_TARGET)
+	@echo "✅ All comprehensive tests completed"
+
+# Individual test targets
+test-ui: $(TEST_UI_TARGET)
+	@echo "🧪 Running UI System Tests..."
+	./$(TEST_UI_TARGET)
+	@echo "✅ UI tests completed"
+
+test-scene: $(TEST_SCENE_TARGET)
+	@echo "🧪 Running Scene System Tests..."
+	./$(TEST_SCENE_TARGET)
+	@echo "✅ Scene tests completed"
+
+test-systems: $(TEST_SYSTEMS_TARGET)
+	@echo "🧪 Running ECS & Systems Tests..."
+	./$(TEST_SYSTEMS_TARGET)
+	@echo "✅ Systems tests completed"
+
+test-performance-critical: $(TEST_PERFORMANCE_CRITICAL_TARGET)
+	@echo "🧪 Running Performance Critical Tests..."
+	./$(TEST_PERFORMANCE_CRITICAL_TARGET)
+	@echo "✅ Performance tests completed"
+
+# Build targets for individual tests
+$(TEST_UI_TARGET): $(TEST_UI_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building UI system tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_UI_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
+
+$(TEST_SCENE_TARGET): $(TEST_SCENE_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building scene system tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_SCENE_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
+
+$(TEST_SYSTEMS_TARGET): $(TEST_SYSTEMS_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building ECS & systems tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_SYSTEMS_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
+
+$(TEST_PERFORMANCE_CRITICAL_TARGET): $(TEST_PERFORMANCE_CRITICAL_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building performance critical tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_PERFORMANCE_CRITICAL_SRC) $(ENGINE_COMPREHENSIVE_SRC) -lm
