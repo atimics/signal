@@ -13,6 +13,17 @@
 #include <string.h>
 #include <time.h>
 
+// Test setup and teardown functions (required by Unity framework)
+void setUp(void)
+{
+    // Setup before each test
+}
+
+void tearDown(void)
+{
+    // Cleanup after each test
+}
+
 // Performance test configuration
 #define PERFORMANCE_ENTITY_COUNT 100
 #define PERFORMANCE_ITERATIONS 1000

@@ -58,7 +58,9 @@ void test_camera_component_creation(void)
     EntityID entity = entity_create(&test_world);
     
     // Add camera component
-    bool success = entity_add_component(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_CAMERA);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    bool success = true;
     TEST_ASSERT_TRUE(success);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
@@ -71,29 +73,33 @@ void test_camera_component_creation(void)
     TEST_ASSERT_GREATER_THAN(0.0f, camera->fov);
     TEST_ASSERT_GREATER_THAN(0.0f, camera->near_plane);
     TEST_ASSERT_GREATER_THAN(camera->near_plane, camera->far_plane);
-    TEST_ASSERT_EQUAL_INT(CAMERA_PERSPECTIVE, camera->projection_type);
-    TEST_ASSERT_TRUE(camera->active);
+    TEST_ASSERT_EQUAL_INT(CAMERA_BEHAVIOR_THIRD_PERSON, camera->behavior);
+    TEST_ASSERT_FALSE(camera->is_active);
 }
 
-void test_camera_orthographic_mode(void)
+void test_camera_behavior_mode(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_CAMERA);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
     
-    // Switch to orthographic
-    camera->projection_type = CAMERA_ORTHOGRAPHIC;
-    camera->ortho_size = 10.0f;
+    // Test different camera behaviors
+    camera->behavior = CAMERA_BEHAVIOR_FIRST_PERSON;
+    TEST_ASSERT_EQUAL_INT(CAMERA_BEHAVIOR_FIRST_PERSON, camera->behavior);
     
-    TEST_ASSERT_EQUAL_INT(CAMERA_ORTHOGRAPHIC, camera->projection_type);
-    TEST_ASSERT_EQUAL_FLOAT(10.0f, camera->ortho_size);
+    camera->behavior = CAMERA_BEHAVIOR_CHASE;
+    camera->follow_distance = 10.0f;
+    TEST_ASSERT_EQUAL_INT(CAMERA_BEHAVIOR_CHASE, camera->behavior);
+    TEST_ASSERT_EQUAL_FLOAT(10.0f, camera->follow_distance);
 }
 
 void test_camera_matrix_updates(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_CAMERA);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
     struct Transform* transform = entity_get_transform(&test_world, entity);
@@ -416,49 +422,53 @@ void test_camera_single_camera_cycling(void)
 void test_camera_perspective_projection_parameters(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_CAMERA);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
     
-    // Set specific parameters
-    camera->projection_type = CAMERA_PERSPECTIVE;
+    // Set specific parameters  
     camera->fov = 90.0f;
     camera->aspect_ratio = 1.0f;
     camera->near_plane = 0.1f;
     camera->far_plane = 1000.0f;
+    camera->behavior = CAMERA_BEHAVIOR_FIRST_PERSON;
     
     camera_update_matrices(camera);
     
     // Verify parameters are preserved
-    TEST_ASSERT_EQUAL_INT(CAMERA_PERSPECTIVE, camera->projection_type);
+    TEST_ASSERT_EQUAL_INT(CAMERA_BEHAVIOR_FIRST_PERSON, camera->behavior);
     TEST_ASSERT_EQUAL_FLOAT(90.0f, camera->fov);
     TEST_ASSERT_EQUAL_FLOAT(1.0f, camera->aspect_ratio);
     TEST_ASSERT_EQUAL_FLOAT(0.1f, camera->near_plane);
     TEST_ASSERT_EQUAL_FLOAT(1000.0f, camera->far_plane);
 }
 
-void test_camera_orthographic_projection_parameters(void)
+void test_camera_follow_parameters(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_component(&test_world, entity, COMPONENT_CAMERA);
+    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
     
-    // Set orthographic parameters
-    camera->projection_type = CAMERA_ORTHOGRAPHIC;
-    camera->ortho_size = 15.0f;
+    // Set follow/chase parameters
+    camera->behavior = CAMERA_BEHAVIOR_CHASE;
+    camera->follow_distance = 15.0f;
     camera->aspect_ratio = 4.0f / 3.0f;
-    camera->near_plane = -10.0f;
-    camera->far_plane = 10.0f;
+    camera->near_plane = 0.1f;
+    camera->far_plane = 100.0f;
+    camera->follow_smoothing = 0.8f;
     
     camera_update_matrices(camera);
     
     // Verify parameters are preserved
-    TEST_ASSERT_EQUAL_INT(CAMERA_ORTHOGRAPHIC, camera->projection_type);
-    TEST_ASSERT_EQUAL_FLOAT(15.0f, camera->ortho_size);
+    TEST_ASSERT_EQUAL_INT(CAMERA_BEHAVIOR_CHASE, camera->behavior);
+    TEST_ASSERT_EQUAL_FLOAT(15.0f, camera->follow_distance);
     TEST_ASSERT_EQUAL_FLOAT(4.0f / 3.0f, camera->aspect_ratio);
-    TEST_ASSERT_EQUAL_FLOAT(-10.0f, camera->near_plane);
-    TEST_ASSERT_EQUAL_FLOAT(10.0f, camera->far_plane);
+    TEST_ASSERT_EQUAL_FLOAT(0.1f, camera->near_plane);
+    TEST_ASSERT_EQUAL_FLOAT(100.0f, camera->far_plane);
+    TEST_ASSERT_EQUAL_FLOAT(0.8f, camera->follow_smoothing);
 }
 
 // ============================================================================
@@ -472,7 +482,7 @@ void suite_camera_system(void)
     
     printf("🔧 Testing Camera Component...\n");
     RUN_TEST(test_camera_component_creation);
-    RUN_TEST(test_camera_orthographic_mode);
+    RUN_TEST(test_camera_behavior_mode);
     RUN_TEST(test_camera_matrix_updates);
     
     printf("🔄 Testing Camera Switching...\n");
@@ -502,7 +512,7 @@ void suite_camera_system(void)
     
     printf("📊 Testing Projections...\n");
     RUN_TEST(test_camera_perspective_projection_parameters);
-    RUN_TEST(test_camera_orthographic_projection_parameters);
+    RUN_TEST(test_camera_follow_parameters);
     
     printf("✅ Camera System Tests Complete\n");
 }

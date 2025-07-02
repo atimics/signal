@@ -123,21 +123,30 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
 
     // Debug logging (more frequent for troubleshooting)
     static uint32_t log_counter = 0;
-    if (++log_counter % 120 == 0)  // Every 2 seconds at 60 FPS
+    if (++log_counter % 60 == 0)  // Every second at 60 FPS for more frequent debugging
     {
         printf("🎮 Control: %d entities processed, Player: %d\n", 
                control_updates, g_player_entity);
         
         // Print input state for debugging
         if (input) {
-            printf("🎮 Input: T:%.2f S:%.2f V:%.2f P:%.2f Y:%.2f R:%.2f\n",
+            printf("🎮 Input: T:%.2f S:%.2f V:%.2f P:%.2f Y:%.2f R:%.2f B:%s Boost:%.2f\n",
                    input->thrust, input->strafe, input->vertical,
-                   input->pitch, input->yaw, input->roll);
+                   input->pitch, input->yaw, input->roll,
+                   input->brake ? "ON" : "OFF", input->boost);
+            
+            // Debug any non-zero input
+            if (input->thrust != 0.0f || input->strafe != 0.0f || input->vertical != 0.0f) {
+                printf("🚀 Movement input detected: T:%.2f S:%.2f V:%.2f\n", 
+                       input->thrust, input->strafe, input->vertical);
+            }
             
             // Debug roll specifically
             if (input->roll != 0.0f) {
                 printf("🔄 Roll detected: %.2f (Q=LEFT=-1, E=RIGHT=+1)\n", input->roll);
             }
+        } else {
+            printf("❌ Control: No input state available!\n");
         }
     }
 }

@@ -145,11 +145,14 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
             physics->moment_of_inertia = (Vector3){ 2.0f, 2.0f, 1.5f }; // Ship-like inertia
             physics->drag_linear = 0.9999f;  // Minimal drag for space flight
             physics->drag_angular = 0.90f;   // Moderate angular drag for stability
-            physics->environment = PHYSICS_ATMOSPHERE; // Atmospheric flight
+            physics->environment = PHYSICS_SPACE; // Zero gravity space flight
             printf("   ✅ 6DOF Physics enabled with reduced drag\n");
         }
         
         printf("🚀 Player ship upgrade complete - Enhanced 6DOF flight mechanics ready!\n");
+        
+        // Setup visual thrusters
+        setup_visual_thrusters(world, player_ship_id);
     }
     
     // Initialize input system
@@ -337,6 +340,9 @@ void flight_test_update(struct World* world, SceneStateManager* state, float del
     // Update camera system
     update_flight_camera_system(world, delta_time);
     
+    // Update visual thrusters
+    update_visual_thrusters(world, delta_time);
+    
     // Update moving obstacles
     update_moving_obstacles(delta_time);
     
@@ -418,6 +424,238 @@ void flight_test_cleanup(struct World* world, SceneStateManager* state) {
     
     printf("🚀 Flight test cleanup complete\n");
 }
+
+// ============================================================================
+// VISUAL THRUSTER IMPLEMENTATION
+// ============================================================================
+
+EntityID create_visual_thruster(struct World* world, Vector3 local_pos, Vector3 size, Vector3 glow_color) {
+    (void)glow_color;  // TODO: Use when material system supports emissive colors
+    
+    EntityID thruster_id = entity_create(world);
+    if (thruster_id == INVALID_ENTITY) {
+        printf("❌ Failed to create visual thruster entity\n");
+        return INVALID_ENTITY;
+    }
+    
+    // Add transform component
+    if (!entity_add_component(world, thruster_id, COMPONENT_TRANSFORM)) {
+        printf("❌ Failed to add transform to thruster\n");
+        return INVALID_ENTITY;
+    }
+    
+    struct Transform* transform = entity_get_transform(world, thruster_id);
+    if (transform) {
+        transform->position = local_pos;
+        transform->scale = size;
+        transform->rotation = (Quaternion){0.0f, 0.0f, 0.0f, 1.0f};
+        transform->dirty = true;
+    }
+    
+    // Add renderable component for visual representation
+    if (!entity_add_component(world, thruster_id, COMPONENT_RENDERABLE)) {
+        printf("❌ Failed to add renderable to thruster\n");
+        return INVALID_ENTITY;
+    }
+    
+    struct Renderable* renderable = entity_get_renderable(world, thruster_id);
+    if (renderable) {
+        // Set up basic renderable for thruster nozzle
+        renderable->visible = false;  // Start invisible
+        renderable->lod_level = LOD_HIGH;
+        renderable->material_id = 1;  // Use a basic material for now
+        renderable->index_count = 36; // Basic cube indices
+    }
+    
+    // Add scene node for hierarchy
+    if (!entity_add_component(world, thruster_id, COMPONENT_SCENENODE)) {
+        printf("❌ Failed to add scene node to thruster\n");
+        return INVALID_ENTITY;
+    }
+    
+    printf("✅ Created visual thruster at pos(%.1f,%.1f,%.1f) size(%.2f,%.2f,%.2f)\n",
+           local_pos.x, local_pos.y, local_pos.z, size.x, size.y, size.z);
+    
+    return thruster_id;
+}
+
+void update_thruster_glow_intensity(struct World* world, EntityID thruster_id, float intensity) {
+    if (thruster_id == INVALID_ENTITY) return;
+    
+    struct Renderable* renderable = entity_get_renderable(world, thruster_id);
+    if (!renderable) return;
+    
+    // Clamp intensity to 0-1 range
+    intensity = fmaxf(0.0f, fminf(1.0f, intensity));
+    
+    // Make thrusters visible when active, invisible when not
+    renderable->visible = (intensity > 0.01f);
+    
+    // Scale the thruster size based on intensity for visual effect
+    struct Transform* transform = entity_get_transform(world, thruster_id);
+    if (transform) {
+        float base_scale = 0.2f + intensity * 0.8f;  // Scale from 20% to 100%
+        transform->scale = (Vector3){base_scale, base_scale, base_scale * 1.5f}; // Elongated for nozzle
+        transform->dirty = true;
+    }
+    
+    // Debug thruster activity
+    static uint32_t thruster_debug_counter = 0;
+    if (intensity > 0.5f && ++thruster_debug_counter % 60 == 0) {
+        printf("🔥 Thruster %d: intensity=%.2f, visible=%s\n", 
+               thruster_id, intensity, renderable->visible ? "YES" : "NO");
+    }
+}
+
+void setup_visual_thrusters(struct World* world, EntityID ship_id) {
+    if (visual_thrusters.initialized) {
+        printf("🔥 Visual thrusters already initialized\n");
+        return;
+    }
+    
+    printf("🔥 Setting up visual thrusters for ship %d...\n", ship_id);
+    printf("🔥 World has %d entities\n", world->entity_count);
+    
+    // Main engines (rear of ship) - Blue/white exhaust
+    Vector3 blue_glow = {0.3f, 0.7f, 1.0f};
+    visual_thrusters.main_engines[0] = create_visual_thruster(world, 
+        (Vector3){-1.5f, -0.5f, 3.0f}, (Vector3){0.5f, 0.5f, 1.0f}, blue_glow);
+    visual_thrusters.main_engines[1] = create_visual_thruster(world, 
+        (Vector3){1.5f, -0.5f, 3.0f}, (Vector3){0.5f, 0.5f, 1.0f}, blue_glow);
+    
+    // RCS thrusters (smaller, orange glow)
+    Vector3 orange_glow = {1.0f, 0.6f, 0.2f};
+    visual_thrusters.rcs_thrusters[0] = create_visual_thruster(world, 
+        (Vector3){0.0f, 0.5f, -2.0f}, (Vector3){0.3f, 0.3f, 0.5f}, orange_glow); // Forward RCS
+    visual_thrusters.rcs_thrusters[1] = create_visual_thruster(world, 
+        (Vector3){0.0f, -0.5f, 3.5f}, (Vector3){0.3f, 0.3f, 0.5f}, orange_glow); // Rear RCS
+    visual_thrusters.rcs_thrusters[2] = create_visual_thruster(world, 
+        (Vector3){-2.0f, 0.0f, 0.0f}, (Vector3){0.5f, 0.3f, 0.3f}, orange_glow); // Left RCS
+    visual_thrusters.rcs_thrusters[3] = create_visual_thruster(world, 
+        (Vector3){2.0f, 0.0f, 0.0f}, (Vector3){0.5f, 0.3f, 0.3f}, orange_glow); // Right RCS
+    
+    // Vertical thrusters (green glow)
+    Vector3 green_glow = {0.2f, 1.0f, 0.4f};
+    visual_thrusters.vertical_thrusters[0] = create_visual_thruster(world, 
+        (Vector3){0.0f, -1.5f, 0.0f}, (Vector3){0.4f, 0.3f, 0.4f}, green_glow); // Down thruster
+    visual_thrusters.vertical_thrusters[1] = create_visual_thruster(world, 
+        (Vector3){0.0f, 1.5f, 0.0f}, (Vector3){0.4f, 0.3f, 0.4f}, green_glow); // Up thruster
+    
+    // For now, don't use scene hierarchy - just make thrusters visible for testing
+    // TODO: Implement proper scene node hierarchy once rendering supports it
+    
+    // Make all thrusters initially visible for debugging
+    for (int i = 0; i < 2; i++) {
+        if (visual_thrusters.main_engines[i] != INVALID_ENTITY) {
+            struct Renderable* renderable = entity_get_renderable(world, visual_thrusters.main_engines[i]);
+            if (renderable) {
+                renderable->visible = true;
+                printf("🔥 Main engine %d set to visible\n", i);
+            }
+        }
+        if (visual_thrusters.vertical_thrusters[i] != INVALID_ENTITY) {
+            struct Renderable* renderable = entity_get_renderable(world, visual_thrusters.vertical_thrusters[i]);
+            if (renderable) {
+                renderable->visible = true;
+                printf("🔥 Vertical thruster %d set to visible\n", i);
+            }
+        }
+    }
+    
+    for (int i = 0; i < 4; i++) {
+        if (visual_thrusters.rcs_thrusters[i] != INVALID_ENTITY) {
+            struct Renderable* renderable = entity_get_renderable(world, visual_thrusters.rcs_thrusters[i]);
+            if (renderable) {
+                renderable->visible = true;
+                printf("🔥 RCS thruster %d set to visible\n", i);
+            }
+        }
+    }
+    
+    visual_thrusters.initialized = true;
+    printf("🔥 Visual thrusters setup complete!\n");
+    printf("🔥 Created thruster IDs: Main[%d,%d] RCS[%d,%d,%d,%d] Vert[%d,%d]\n",
+           visual_thrusters.main_engines[0], visual_thrusters.main_engines[1],
+           visual_thrusters.rcs_thrusters[0], visual_thrusters.rcs_thrusters[1],
+           visual_thrusters.rcs_thrusters[2], visual_thrusters.rcs_thrusters[3],
+           visual_thrusters.vertical_thrusters[0], visual_thrusters.vertical_thrusters[1]);
+}
+
+void update_visual_thrusters(struct World* world, float delta_time) {
+    (void)delta_time;
+    if (!visual_thrusters.initialized || player_ship_id == INVALID_ENTITY) {
+        static uint32_t debug_counter = 0;
+        if (++debug_counter % 120 == 0) {
+            printf("🔥 Thruster update: initialized=%s, player_ship=%d\n", 
+                   visual_thrusters.initialized ? "YES" : "NO", player_ship_id);
+        }
+        return;
+    }
+    
+    // Get input state to determine thruster intensities
+    const InputState* input = input_get_state();
+    if (!input) {
+        static uint32_t input_debug_counter = 0;
+        if (++input_debug_counter % 120 == 0) {
+            printf("🔥 No input state available for thrusters\n");
+        }
+        return;
+    }
+    
+    // Get control authority to access processed input
+    struct ControlAuthority* control = entity_get_control_authority(world, player_ship_id);
+    if (!control) {
+        static uint32_t control_debug_counter = 0;
+        if (++control_debug_counter % 120 == 0) {
+            printf("🔥 No control authority for player ship %d\n", player_ship_id);
+        }
+        return;
+    }
+    
+    // Debug input values
+    static uint32_t thruster_input_debug = 0;
+    if (++thruster_input_debug % 60 == 0) {
+        printf("🔥 Input: linear[%.2f,%.2f,%.2f] angular[%.2f,%.2f,%.2f]\n",
+               control->input_linear.x, control->input_linear.y, control->input_linear.z,
+               control->input_angular.x, control->input_angular.y, control->input_angular.z);
+    }
+    
+    // Update main engines based on forward/backward thrust
+    float main_thrust_intensity = fabsf(control->input_linear.z);  // Z is forward/backward
+    
+    // Debug main thrust
+    static uint32_t main_debug = 0;
+    if (main_thrust_intensity > 0.01f && ++main_debug % 30 == 0) {
+        printf("🚀 Main thrust: %.2f\n", main_thrust_intensity);
+    }
+    
+    update_thruster_glow_intensity(world, visual_thrusters.main_engines[0], main_thrust_intensity);
+    update_thruster_glow_intensity(world, visual_thrusters.main_engines[1], main_thrust_intensity);
+    
+    // Update RCS thrusters based on strafe and directional movement
+    float strafe_intensity = fabsf(control->input_linear.x);
+    float vertical_intensity = fabsf(control->input_linear.y);
+    
+    // Left/Right RCS based on strafe
+    update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[2], 
+                                 control->input_linear.x < 0 ? strafe_intensity : 0.0f); // Left RCS
+    update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[3], 
+                                 control->input_linear.x > 0 ? strafe_intensity : 0.0f); // Right RCS
+    
+    // Forward/Backward RCS for maneuvering
+    update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[0], 
+                                 control->input_linear.z > 0 ? main_thrust_intensity * 0.3f : 0.0f); // Forward RCS
+    update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[1], 
+                                 control->input_linear.z < 0 ? main_thrust_intensity * 0.3f : 0.0f); // Rear RCS
+    
+    // Vertical thrusters
+    update_thruster_glow_intensity(world, visual_thrusters.vertical_thrusters[0], 
+                                 control->input_linear.y < 0 ? vertical_intensity : 0.0f); // Down thruster
+    update_thruster_glow_intensity(world, visual_thrusters.vertical_thrusters[1], 
+                                 control->input_linear.y > 0 ? vertical_intensity : 0.0f); // Up thruster
+}
+
+// ============================================================================
 
 // Scene script definition
 const SceneScript flight_test_script = {

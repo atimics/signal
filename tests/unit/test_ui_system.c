@@ -17,6 +17,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Test setup and teardown functions (required by Unity framework)
+void setUp(void)
+{
+    // Clear any UI state before each test
+    ui_clear_scene_change_request();
+}
+
+void tearDown(void)
+{
+    // Clean up after each test
+    ui_clear_scene_change_request();
+}
+
 // ============================================================================
 // UI API TESTS
 // ============================================================================
