@@ -12,7 +12,7 @@
 // Static gamepad state array
 static GamepadState gamepads[MAX_GAMEPADS];
 static bool gamepad_system_initialized = false;
-static float axis_deadzone = 0.15f;
+static float axis_deadzone = 0.20f;  // Increased to handle stick drift
 
 // hidapi device handles
 static hid_device* devices[MAX_GAMEPADS];
@@ -40,7 +40,8 @@ static bool is_supported_gamepad(struct hid_device_info* device_info) {
     if (device_info->vendor_id == 0x045e) {
         return (device_info->product_id == 0x02ea ||  // Xbox One
                 device_info->product_id == 0x028e ||  // Xbox 360
-                device_info->product_id == 0x02e3);   // Xbox Elite
+                device_info->product_id == 0x02e3 ||  // Xbox Elite
+                device_info->product_id == 0x0b13);   // Xbox Wireless Controller
     }
     
     // PlayStation controllers
@@ -121,16 +122,39 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
         left_y = *((int16_t*)(data + 6));
         right_x = *((int16_t*)(data + 8));
         right_y = *((int16_t*)(data + 10));
-        left_trigger = data[12] / 255.0f;
-        right_trigger = data[13] / 255.0f;
+        
+        // Raw trigger values
+        uint8_t lt_raw = data[12];
+        uint8_t rt_raw = data[13];
+        
+        // Xbox controllers often have a resting position around 127-128
+        // We need to calibrate for this
+        const uint8_t trigger_center = 127;
+        const uint8_t trigger_deadzone = 20;
+        
+        // Process left trigger
+        if (lt_raw > trigger_center + trigger_deadzone) {
+            left_trigger = (lt_raw - trigger_center) / 128.0f;
+        } else {
+            left_trigger = 0.0f;
+        }
+        
+        // Process right trigger
+        if (rt_raw > trigger_center + trigger_deadzone) {
+            right_trigger = (rt_raw - trigger_center) / 128.0f;
+        } else {
+            right_trigger = 0.0f;
+        }
+        
+        // Clamp to 0-1 range
+        left_trigger = fminf(fmaxf(left_trigger, 0.0f), 1.0f);
+        right_trigger = fminf(fmaxf(right_trigger, 0.0f), 1.0f);
         
         // Debug specific for trigger issue
         static int trigger_debug = 0;
-        if (++trigger_debug % 30 == 0 && (left_trigger > 0.1f || right_trigger > 0.1f)) {
-            printf("🎮 TRIGGER DEBUG: LT=%.2f (byte12=%d) RT=%.2f (byte13=%d)\n",
-                   left_trigger, data[12], right_trigger, data[13]);
-            printf("   Stick values: LX=%d LY=%d RX=%d RY=%d\n",
-                   left_x, left_y, right_x, right_y);
+        if (++trigger_debug % 30 == 0 && (lt_raw != trigger_center || rt_raw != trigger_center)) {
+            printf("🎮 TRIGGER DEBUG: LT_raw=%d RT_raw=%d → LT=%.2f RT=%.2f\n",
+                   lt_raw, rt_raw, left_trigger, right_trigger);
         }
     } else {
         return; // Report too small

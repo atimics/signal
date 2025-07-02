@@ -385,8 +385,12 @@ function(cgame_add_test_suite)
     list(APPEND TEST_SOURCES
         "${CMAKE_SOURCE_DIR}/tests/vendor/unity.c"
         "${CMAKE_SOURCE_DIR}/tests/support/test_utilities.c"
-        "${CMAKE_SOURCE_DIR}/tests/stubs/engine_test_stubs.c"
     )
+
+    # Add engine test stubs only if no specific stubs are provided
+    if(NOT SUITE_STUBS)
+        list(APPEND TEST_SOURCES "${CMAKE_SOURCE_DIR}/tests/stubs/engine_test_stubs.c")
+    endif()
 
     # Add specific stub sources if provided
     if(SUITE_STUBS)

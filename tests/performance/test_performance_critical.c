@@ -506,3 +506,9 @@ void suite_performance_critical(void)
     
     printf("✅ Critical Performance Tests Complete\n");
 }
+
+int main(void) {
+    UNITY_BEGIN();
+    suite_performance_critical();
+    return UNITY_END();
+}
