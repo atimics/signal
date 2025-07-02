@@ -1,13 +1,35 @@
 # CGame Project Guide for Claude
 
-## 🚧 UPDATE: Sprint 22 Phase 1 Complete!
+## 🏎️ UPDATE: Canyon Racing Control System Implemented!
+**New intuitive flight control scheme inspired by racing games**
+- **✅ Simplified Input**: Bypassed complex neural network processing
+- **✅ Look-Based Thrust**: Fly towards where you're looking
+- **✅ Camera Control**: Mouse (right-click) or gamepad right stick
+- **✅ Auto-Leveling**: Left trigger/brake for stability
+- **✅ Direct Controls**: WASD pitch/yaw, Space for thrust
+- **Status**: Fully implemented and ready for canyon racing!
+
+### Canyon Racing Controls
+- **Keyboard**: 
+  - WASD: Pitch/Yaw control
+  - Space: Thrust towards look target
+  - Q/E: Roll
+  - Right Mouse: Camera control (hold)
+  - Mouse Wheel: Zoom
+- **Gamepad**:
+  - Left Stick: Pitch/Yaw
+  - Right Stick: Camera/Look control
+  - Right Trigger: Thrust towards look target
+  - Left Trigger: Brake + Auto-level
+  - Bumpers: Roll
+
+## 🚧 Sprint 22 Phase 1 Complete!
 **Advanced Input Processing System - Statistical Foundation Ready**
 - **Phase 1 Complete**: Calibration system ✅
 - **Phase 1 Complete**: Kalman filtering (73% noise reduction) ✅
 - **Phase 1 Complete**: Neural-ready architecture ✅
 - **Phase 1 Complete**: Training data collection ✅
-- **Phase 2 In Progress**: Neural network implementation 🚧
-- **Phase 2 TODO**: Python training pipeline 📝
+- **Phase 2 Blocked**: Input system refactoring required
 - **Overall Status**: 40% complete, statistical filtering operational
 
 ## ✅ Sprint 21 Complete (98%)
