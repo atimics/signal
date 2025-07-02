@@ -8,10 +8,22 @@
 #include "render_mesh.h"
 #include "unity.h"
 
+// Forward declarations
+void setUpRendering(void);
+void tearDownRendering(void);
+
 // Mock objects and stubs
 static AssetRegistry registry;
 static struct World world;
 static RenderConfig config;
+
+void setUp(void) {
+    setUpRendering();
+}
+
+void tearDown(void) {
+    tearDownRendering();
+}
 
 void setUpRendering(void)
 {
@@ -105,3 +117,12 @@ void suite_rendering(void)
     RUN_TEST(test_frustum_culling);
     tearDownRendering();
 }
+
+// Stand-alone test runner
+#ifdef TEST_STANDALONE
+int main(void) {
+    UNITY_BEGIN();
+    suite_rendering();
+    return UNITY_END();
+}
+#endif
