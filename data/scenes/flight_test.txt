@@ -1,0 +1,70 @@
+# Flight Test Scene - Open Plain Flying
+# Pure visceral flight experience with obstacles
+
+entity_count=15
+
+# Player ship
+entity.0.template=player_ship
+entity.0.position=0,10,-50
+entity.0.scale=2,2,2
+
+# Chase camera
+entity.1.template=chase_camera
+entity.1.position=10,25,10
+entity.1.fov=100
+
+# Ground plane (large flat surface)
+entity.2.template=landing_pad
+entity.2.position=0,-5,0
+entity.2.scale=30,0.5,30
+
+# Static obstacles - towers and structures
+entity.3.template=control_tower
+entity.3.position=-40,0,60
+entity.3.scale=2,3,2
+
+entity.4.template=control_tower
+entity.4.position=80,0,-30
+entity.4.scale=1.5,2.5,1.5
+
+entity.5.template=control_tower
+entity.5.position=-70,0,-80
+entity.3.scale=2.5,4,2.5
+
+entity.6.template=control_tower
+entity.6.position=50,0,90
+entity.6.scale=1.8,3.2,1.8
+
+# Floating obstacles - cubes at various heights
+entity.7.template=logo_cube
+entity.7.position=-20,15,20
+entity.7.scale=3,3,3
+
+entity.8.template=logo_cube
+entity.8.position=30,25,-60
+entity.8.scale=4,4,4
+
+entity.9.template=logo_cube
+entity.9.position=-60,20,-20
+entity.9.scale=2.5,2.5,2.5
+
+entity.10.template=logo_cube
+entity.10.position=70,30,40
+entity.10.scale=3.5,3.5,3.5
+
+# More ground structures
+entity.11.template=landing_pad
+entity.11.position=-90,0,0
+entity.11.scale=8,1,8
+
+entity.12.template=landing_pad
+entity.12.position=90,0,0
+entity.12.scale=8,1,8
+
+entity.13.template=landing_pad
+entity.13.position=0,0,100
+entity.13.scale=8,1,8
+
+entity.14.template=landing_pad
+entity.14.position=0,0,-100
+entity.14.scale=8,1,8

@@ -56,6 +56,9 @@ typedef struct {
 
 static DerelictSection derelict_sections[DERELICT_SECTION_COUNT];
 
+// Forward declarations
+void diagnose_gamepad_issues(void);
+
 void derelict_navigation_init(struct World* world, SceneStateManager* state) {
     (void)state;
     
@@ -743,6 +746,7 @@ void diagnose_gamepad_issues(void) {
     printf("     - Xbox One: PID 0x02EA\n");
     printf("     - Xbox 360: PID 0x028E\n");
     printf("     - Xbox Elite: PID 0x02E3\n");
+    printf("     - Xbox Wireless: PID 0x0B13\n");
     printf("   PlayStation Controllers (VID: 0x054C):\n");
     printf("     - DualShock 4: PID 0x09CC\n");
     printf("     - DualSense: PID 0x0CE6\n");

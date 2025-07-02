@@ -40,7 +40,8 @@ static bool is_supported_gamepad(struct hid_device_info* device_info) {
     if (device_info->vendor_id == 0x045e) {
         return (device_info->product_id == 0x02ea ||  // Xbox One
                 device_info->product_id == 0x028e ||  // Xbox 360
-                device_info->product_id == 0x02e3);   // Xbox Elite
+                device_info->product_id == 0x02e3 ||  // Xbox Elite
+                device_info->product_id == 0x0b13);   // Xbox Wireless Controller
     }
     
     // PlayStation controllers

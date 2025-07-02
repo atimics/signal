@@ -665,6 +665,8 @@ static const char* get_scene_description(const char* scene_name)
         return "Derelict Alpha - Ancient station excavation site";
     } else if (strcmp(scene_name, "derelict_beta") == 0) {
         return "Derelict Beta - Deep-space archaeological exploration";
+    } else if (strcmp(scene_name, "flight_test") == 0) {
+        return "Flight Test - Open plain flight training ground";
     } else if (strcmp(scene_name, "navigation_menu") == 0) {
         return "Threadline Planner - Primary FTL navigation interface";
     } else {
