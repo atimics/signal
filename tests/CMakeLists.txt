@@ -33,11 +33,11 @@ cgame_add_test_suite(
     LIBS core physics
 )
 
-# Rendering Tests
+# Rendering Tests - Basic only (no graphics dependencies)
 cgame_add_test_suite(
     NAME cmake-rendering
     SOURCES rendering/test_rendering.c
-    LIBS core render_3d render_camera render_mesh render_lighting gpu_resources
+    LIBS core gpu_resources
     STUBS graphics_api_test_stub
 )
 
