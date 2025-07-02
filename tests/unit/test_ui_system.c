@@ -235,12 +235,16 @@ void test_performance_widget_update(void)
     // FPS should still be 0 until 1 second has passed
     TEST_ASSERT_EQUAL_FLOAT(0.0f, widget.fps);
     
-    // Update for a full second
-    for (int i = 0; i < 60; i++) {
+    // Update for more than a full second
+    // We already have 0.016f from the first update, so we need 61 more updates
+    // to get 0.016f + (61 * 0.016f) = 0.016f + 0.976f = 0.992f (still < 1.0f)
+    // So we need 62 more updates: 0.016f + (62 * 0.016f) = 0.016f + 0.992f = 1.008f (> 1.0f)
+    for (int i = 0; i < 62; i++) {
         performance_widget_update(&widget, 0.016f);
     }
     
     // Now FPS should be calculated (approximately 60)
+    // Total frames: 1 + 62 = 63, Total time: ~1.008f, FPS: 63/1.008 ≈ 62.5
     TEST_ASSERT_GREATER_THAN(50.0f, widget.fps);
     TEST_ASSERT_LESS_THAN(70.0f, widget.fps);
 }
