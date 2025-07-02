@@ -121,11 +121,54 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
             // The issue might be that 232 was a valid reading, just with wrong center point or scaling
             
             // Xbox BT controllers typically use 8-bit stick values (0-255) with center at 127 or 128
-            // Let's try center at 127 with proper scaling to int16_t range
-            left_x = (int16_t)((data[6] - 127) * 258);   // Scale (0-255) -> (-32767 to +32767)
-            left_y = (int16_t)((data[7] - 127) * 258);   // 258 = 32767/127 for proper scaling
-            right_x = (int16_t)((data[8] - 127) * 258);
-            right_y = (int16_t)((data[9] - 127) * 258);
+            // Apply dynamic center detection and deadzone compensation
+            
+            // Detect center points (should be around 127-128 for Xbox controllers)
+            uint8_t left_x_raw = data[6];
+            uint8_t left_y_raw = data[7]; 
+            uint8_t right_x_raw = data[8];
+            uint8_t right_y_raw = data[9];
+            
+            // Use adaptive centering - if values are consistently high, adjust center
+            static uint8_t left_x_center = 127;
+            static uint8_t left_y_center = 127;
+            static uint8_t right_x_center = 127;
+            static uint8_t right_y_center = 127;
+            static bool calibrated = false;
+            
+            // Auto-calibration on first few readings
+            if (!calibrated) {
+                static int calib_samples = 0;
+                static uint32_t x_sum = 0, y_sum = 0, rx_sum = 0, ry_sum = 0;
+                
+                x_sum += left_x_raw;
+                y_sum += left_y_raw;
+                rx_sum += right_x_raw;
+                ry_sum += right_y_raw;
+                calib_samples++;
+                
+                if (calib_samples >= 10) {
+                    left_x_center = x_sum / calib_samples;
+                    left_y_center = y_sum / calib_samples;
+                    right_x_center = rx_sum / calib_samples;
+                    right_y_center = ry_sum / calib_samples;
+                    calibrated = true;
+                    printf("🎮 CALIBRATED: Centers LX=%d LY=%d RX=%d RY=%d\n", 
+                           left_x_center, left_y_center, right_x_center, right_y_center);
+                }
+            }
+            
+            // Apply calibrated centers with deadzone
+            int16_t lx_offset = (int16_t)left_x_raw - (int16_t)left_x_center;
+            int16_t ly_offset = (int16_t)left_y_raw - (int16_t)left_y_center;
+            int16_t rx_offset = (int16_t)right_x_raw - (int16_t)right_x_center;
+            int16_t ry_offset = (int16_t)right_y_raw - (int16_t)right_y_center;
+            
+            // Scale to int16_t range with deadzone
+            left_x = lx_offset * 258;
+            left_y = ly_offset * 258; 
+            right_x = rx_offset * 258;
+            right_y = ry_offset * 258;
             
             // Parse triggers (0-255 range) - back to original positions since we're using 8-bit sticks
             right_trigger = data[11] / 255.0f;

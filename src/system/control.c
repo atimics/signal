@@ -21,17 +21,19 @@ static EntityID g_player_entity = INVALID_ENTITY;
 // Process linear input for canyon racing
 static Vector3 process_canyon_racing_linear(const InputState* input, 
                                           struct ControlAuthority* control,
-                                          const Vector3* ship_position) {
-    (void)ship_position; // Unused parameter - look-based thrust disabled
+                                          const Vector3* ship_position,
+                                          const Quaternion* ship_orientation) {
+    (void)ship_position; // Unused for now
+    (void)ship_orientation; // Unused for now
     if (!input || !control) return (Vector3){0, 0, 0};
     
     Vector3 linear_commands = {0, 0, 0};
     
-    // SIMPLIFIED: Direct thrust control only - no look-based complexity
-    // Pure ship-relative thrust: forward/back, up/down, left/right
+    // SIMPLIFIED: Direct thrust control only
+    // For now, stick with traditional forward thrust until we can implement proper target calculations
     linear_commands = (Vector3){
-        0.0f,                // X: No strafe for now (simplify)
-        input->vertical,     // Y: Up/down
+        0.0f,                // X: No strafe for now
+        input->vertical,     // Y: Up/down  
         input->thrust        // Z: Forward/backward (positive Z = forward)
     };
     
@@ -121,7 +123,8 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                                          (Quaternion){0, 0, 0, 1};
             
             // Process linear input (thrust)
-            Vector3 linear_commands = process_canyon_racing_linear(input, control, &ship_position);
+            Vector3 linear_commands = process_canyon_racing_linear(input, control, 
+                                                                 &ship_position, &ship_orientation);
             control->input_linear = linear_commands;
             thruster_set_linear_command(thrusters, linear_commands);
             
