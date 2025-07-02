@@ -1067,6 +1067,18 @@ bool entity_add_components(struct World* world, EntityID entity_id, ComponentTyp
         }
     }
     
+    if (components & COMPONENT_THRUSTER_SYSTEM && !(entity->component_mask & COMPONENT_THRUSTER_SYSTEM)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_THRUSTER_SYSTEM)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_CONTROL_AUTHORITY && !(entity->component_mask & COMPONENT_CONTROL_AUTHORITY)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_CONTROL_AUTHORITY)) {
+            all_success = false;
+        }
+    }
+    
     return all_success;
 }
 
