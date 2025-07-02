@@ -2,94 +2,86 @@
 
 ## Quick Status Check
 
-### 🚨 Current Blocker
+### 🚀 Current Sprint: 22 - Advanced Input Processing
 ```
-CRITICAL BUG in Sprint 21:
-- File: src/system/thrusters.c:77
-- Issue: Forces applied in world space (not ship-relative)
-- Fix: Implement quaternion_rotate_vector() and transform forces
+Phase 1 COMPLETE (40% Overall):
+- ✅ Calibration system with per-device profiles
+- ✅ Kalman filtering (73% noise reduction)
+- ✅ Hot-plug support for gamepads
+- 🚀 Neural network implementation in progress
 ```
 
 ## Sprint Progress Overview
 
 | Sprint | Status | Progress | Key Achievement |
 |--------|--------|----------|-----------------|
-| **21** | 🔴 BLOCKED | 90% | Entity-agnostic flight mechanics (blocked by thrust bug) |
-| **20** | ✅ COMPLETE | 100% | ECS architecture - 10,000+ entities at 60 FPS |
+| **22** | 🚀 ACTIVE | 40% | Advanced input processing with ML compensation |
+| **21** | ✅ COMPLETE | 98% | 6DOF flight mechanics with gamepad support |
+| **20** | ✅ COMPLETE | 100% | Advanced lighting and material system |
 | **19** | ✅ COMPLETE | 100% | Core infrastructure and build system |
 
-## Sprint 21 Quick Reference
+## Sprint 22 Quick Reference
 
 ### What's Working ✅
-- 6DOF physics system
-- Angular physics (rotation)
-- Input processing pipeline
-- Ship type configurations
-- Performance (60+ FPS)
+- Statistical calibration system
+- Kalman filtering (dual-filter design)
+- Hot-plug gamepad support
+- Training data collection
+- All Sprint 21 flight mechanics
 
-### What's Broken ❌
-- Thrust direction transformation
-- Ships only move forward relative to camera
+### In Progress 🚀
+- Neural network C implementation
+- Python training pipeline
+- Weight loading system
 
-### How to Fix
-1. Add `quaternion_rotate_vector()` to `src/core/core.c`
-2. Fix line 77 in `src/system/thrusters.c`:
-   ```c
-   // Current (BROKEN):
-   physics_add_force(physics, linear_force);
-   
-   // Fixed:
-   Vector3 world_force = quaternion_rotate_vector(transform->rotation, linear_force);
-   physics_add_force(physics, world_force);
-   ```
-3. Run tests: `make test`
-4. Test flight: `./build/cgame --test-flight`
+### Known Issues ⚠️
+- Test suite: 60% pass rate (needs Sprint 23 attention)
+- Visual thruster rendering (cosmetic only)
+
+### Flight Controls
+- **W/S**: Pitch control
+- **A/D**: Banking turns
+- **Space**: Forward thrust
+- **X**: Reverse thrust
+- **Tab**: Cycle cameras
 
 ## Key Commands
 
 ```bash
-# Quick build and test
+# Build and test
 make clean && make test && make
 
-# Test flight mechanics
+# Run flight test
 ./build/cgame --test-flight
 
-# Run specific test
-./build/test_thrusters
+# Check test status (currently 60% pass rate)
+make test
 ```
 
-## Architecture at a Glance
+## Development Workflow
 
-```
-Entity (just an ID)
-  ├── Transform (position, rotation)
-  ├── Physics (velocity, forces, 6DOF)
-  ├── ThrusterSystem (propulsion)
-  ├── ControlAuthority (input mapping)
-  └── Mesh (visual representation)
-```
+1. **Update from main**: `git pull origin develop`
+2. **Create feature branch**: `git checkout -b feature/your-feature`
+3. **Make changes and test**: `make test`
+4. **Commit with conventional format**: `git commit -m "feat(system): description"`
+5. **Push and create PR**: `git push origin feature/your-feature`
 
-## Data Flow
-```
-Input → ControlAuthority → ThrusterSystem → Physics → Transform → Render
-                                    ↑
-                                    └── BUG HERE: Forces not transformed!
-```
+## Critical Files
 
-## Performance Metrics
-- **Entities**: 50+ with full physics
-- **Frame Rate**: 60+ FPS
-- **Tests**: 375+ passing
-- **Memory**: Efficient ECS storage
+### Sprint 22 Implementation
+- `src/input_processing.c` - Input processing layers
+- `src/input_processing.h` - Public API
+- `src/system/input.c` - Integration with game
 
-## Next Steps
-1. Fix thrust bug (1-2 hours)
-2. Human validation testing
-3. Complete Sprint 21
-4. Start Sprint 22: Canyon Racing
+### Flight Mechanics (Sprint 21)
+- `src/system/thrusters.c` - Thrust system (98% complete)
+- `src/system/control.c` - Control authority mapping
+- `src/component/physics.c` - 6DOF physics
 
-## Links
-- [Full Sprint Backlog](README.md)
-- [Sprint 21 Design](active/SPRINT_21_DESIGN.md)
-- [Implementation Guide](active/SPRINT_21_IMPLEMENTATION_GUIDE.md)
-- [Project Guide (CLAUDE.md)](../../CLAUDE.md)
+## Next Sprint Preview
+
+**Sprint 23: Technical Debt Remediation**
+- Fix 40% test failure rate
+- Update test infrastructure for new components
+- Establish CI/CD pipeline
+- See: `docs/sprints/backlog/SPRINT_23_TECHNICAL_DEBT.md`

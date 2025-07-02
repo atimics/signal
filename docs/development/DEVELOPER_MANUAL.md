@@ -47,6 +47,8 @@ To ensure the engine's core logic is not tightly coupled to a specific graphics 
 
 The engine uses the **Unity Test Framework**. All new features or bug fixes should be accompanied by corresponding tests in the `/tests` directory. The test suite is run automatically by GitHub Actions on every commit and pull request.
 
+**Current Status**: The test suite has a 60% pass rate as of July 2, 2025. Sprint 23 will focus on remediating test failures and improving test coverage for new components (THRUSTER_SYSTEM, CONTROL_AUTHORITY).
+
 ---
 
 ## 4. Asset Pipeline

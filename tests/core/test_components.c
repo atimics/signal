@@ -44,7 +44,7 @@ void test_component_addition_multiple(void) {
     EntityID entity = entity_create(test_world);
     ComponentType components = COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CAMERA;
     
-    entity_add_component(test_world, entity, components);
+    entity_add_components(test_world, entity, components);
     
     struct Entity* entity_ptr = entity_get(test_world, entity);
     TEST_ASSERT_EQUAL(components, entity_ptr->component_mask);
@@ -85,7 +85,7 @@ void test_component_removal_single(void) {
     TEST_LOG_PROGRESS("Testing single component removal");
     
     EntityID entity = entity_create(test_world);
-    entity_add_component(test_world, entity, COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
+    entity_add_components(test_world, entity, COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
     
     struct Entity* entity_ptr = entity_get(test_world, entity);
     TEST_ASSERT_EQUAL(COMPONENT_TRANSFORM | COMPONENT_PHYSICS, entity_ptr->component_mask);
@@ -105,13 +105,14 @@ void test_component_removal_multiple(void) {
     
     EntityID entity = entity_create(test_world);
     ComponentType initial_components = COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_CAMERA | COMPONENT_CONTROL_AUTHORITY;
-    entity_add_component(test_world, entity, initial_components);
+    entity_add_components(test_world, entity, initial_components);
     
-    ComponentType components_to_remove = COMPONENT_PHYSICS | COMPONENT_CAMERA;
-    entity_remove_component(test_world, entity, components_to_remove);
+    // Remove components individually since entity_remove_component only handles single components
+    entity_remove_component(test_world, entity, COMPONENT_PHYSICS);
+    entity_remove_component(test_world, entity, COMPONENT_CAMERA);
     
     struct Entity* entity_ptr = entity_get(test_world, entity);
-    ComponentType expected_mask = initial_components & ~components_to_remove;
+    ComponentType expected_mask = COMPONENT_TRANSFORM | COMPONENT_CONTROL_AUTHORITY;
     TEST_ASSERT_EQUAL(expected_mask, entity_ptr->component_mask);
     
     // Verify correct components remain
@@ -131,7 +132,7 @@ void test_component_data_initialization(void) {
     TEST_LOG_PROGRESS("Testing component data initialization");
     
     EntityID entity = entity_create(test_world);
-    entity_add_component(test_world, entity, COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
+    entity_add_components(test_world, entity, COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
     
     struct Transform* transform = entity_get_transform(test_world, entity);
     struct Physics* physics = entity_get_physics(test_world, entity);
@@ -150,7 +151,7 @@ void test_component_data_modification(void) {
     TEST_LOG_PROGRESS("Testing component data modification");
     
     EntityID entity = entity_create(test_world);
-    entity_add_component(test_world, entity, COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
+    entity_add_components(test_world, entity, COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
     
     struct Transform* transform = entity_get_transform(test_world, entity);
     struct Physics* physics = entity_get_physics(test_world, entity);
@@ -253,7 +254,7 @@ void test_component_access_performance(void) {
     // Create entities with components
     for (int i = 0; i < NUM_ENTITIES; i++) {
         entities[i] = entity_create(test_world);
-        entity_add_component(test_world, entities[i], COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
+        entity_add_components(test_world, entities[i], COMPONENT_TRANSFORM | COMPONENT_PHYSICS);
     }
     
     // Time component access

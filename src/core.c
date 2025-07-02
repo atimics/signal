@@ -1014,7 +1014,8 @@ bool entity_add_components(struct World* world, EntityID entity_id, ComponentTyp
     const ComponentType VALID_COMPONENTS = 
         COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_COLLISION | 
         COMPONENT_AI | COMPONENT_RENDERABLE | COMPONENT_PLAYER | 
-        COMPONENT_CAMERA | COMPONENT_SCENENODE;
+        COMPONENT_CAMERA | COMPONENT_SCENENODE | COMPONENT_THRUSTER_SYSTEM |
+        COMPONENT_CONTROL_AUTHORITY;
     
     // Check if components contains any invalid bits
     if (components & ~VALID_COMPONENTS) {

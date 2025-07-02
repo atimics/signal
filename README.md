@@ -34,7 +34,7 @@ The project uses a simple Makefile. The first build will automatically compile t
 # Clean, build, and run the engine
 make clean && make && make run
 
-# Run the automated test suite (375+ tests)
+# Run the automated test suite (60% pass rate currently)
 make test
 
 # Run specific test suites
