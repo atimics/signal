@@ -318,7 +318,10 @@ void test_ui_module_registration_performance(void)
     
     scene_ui_init();
     
-    const int module_count = 50;
+    // Account for the 3 modules already registered by scene_ui_init() and the max limit of 32
+    const int max_modules = 32;
+    const int pre_registered = 3; // navigation_menu, debug, logo
+    const int module_count = max_modules - pre_registered; // 29 modules we can register
     SceneUIModule* modules[module_count];
     
     clock_t start_time = clock();

@@ -53,7 +53,7 @@ cgame_add_test_suite(
 cgame_add_test_suite(
     NAME cmake-integration
     SOURCES integration/test_flight_integration.c
-    LIBS core systems physics control thrusters input camera_system
+    LIBS core systems physics control thrusters input camera_system hidapi gamepad
     STUBS graphics_api_test_stub integration_test_stubs
 )
 
@@ -75,7 +75,7 @@ cgame_add_test_suite(
 cgame_add_test_suite(
     NAME cmake-performance_test_performance_critical
     SOURCES performance/test_performance_critical.c
-    LIBS core performance memory systems ui ui_api ui_scene
+    LIBS core performance memory systems ui ui_api ui_scene hidapi gamepad
     STUBS graphics_api_test_stub integration_test_stubs nuklear_test_stubs
 )
 

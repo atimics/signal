@@ -44,17 +44,12 @@ void setUp(void) {
     
     // Initialize test world
     perf_world = malloc(sizeof(struct World));
-    memset(perf_world, 0, sizeof(struct World));
-    perf_world->max_entities = PERF_MAX_ENTITIES;
-    perf_world->entities = malloc(sizeof(struct Entity) * PERF_MAX_ENTITIES);
-    memset(perf_world->entities, 0, sizeof(struct Entity) * PERF_MAX_ENTITIES);
+    world_init(perf_world);
 }
 
 void tearDown(void) {
     if (perf_world) {
-        if (perf_world->entities) {
-            free(perf_world->entities);
-        }
+        world_destroy(perf_world);
         free(perf_world);
         perf_world = NULL;
     }
@@ -164,8 +159,8 @@ void test_asset_memory_tracking_performance(void) {
     printf("🚀 Testing asset memory tracking performance...\n");
     
     // Simulate asset loading with memory tracking
-    const int num_assets = 100;
-    const size_t asset_size = 1024 * 1024; // 1MB per asset
+    const int num_assets = 10;  // Reduced to fit in 10MB pool
+    const size_t asset_size = 512 * 1024; // 512KB per asset (5MB total)
     
     double start_time = get_time_ms();
     

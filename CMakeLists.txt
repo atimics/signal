@@ -144,13 +144,15 @@ add_library(performance src/system/performance.c)
 add_library(memory src/system/memory.c)
 add_library(material src/system/material.c)
 add_library(gamepad src/system/gamepad.c)
+add_library(input_processing src/input_processing.c)
 add_library(input src/system/input.c)
+target_link_libraries(input PRIVATE input_processing core)
 add_library(thrusters src/system/thrusters.c)
 add_library(control src/system/control.c)
 
 # Systems Library (aggregator)
 add_library(systems src/systems.c)
-target_link_libraries(systems PRIVATE core physics collision ai camera_system lod performance memory material gamepad input thrusters control)
+target_link_libraries(systems PRIVATE core physics collision ai camera_system lod performance memory material gamepad input_processing input thrusters control)
 
 # Data and Scene Management
 add_library(gpu_resources src/gpu_resources.c)

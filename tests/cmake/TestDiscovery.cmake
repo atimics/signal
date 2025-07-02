@@ -420,6 +420,11 @@ function(cgame_add_test_suite)
 
     # Link libraries
     target_link_libraries(${TEST_EXECUTABLE} PRIVATE ${SUITE_LIBS})
+    
+    # Link platform-specific libraries if defined
+    if(DEFINED CGAME_PLATFORM_LIBS)
+        target_link_libraries(${TEST_EXECUTABLE} PRIVATE ${CGAME_PLATFORM_LIBS})
+    endif()
 
     # Add the test to CTest
     add_test(NAME ${SUITE_NAME} COMMAND ${TEST_EXECUTABLE})

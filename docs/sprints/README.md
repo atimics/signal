@@ -62,16 +62,26 @@ Subjective human approval of flight mechanics "feel" with target rating of 4.0+/
 - Add environmental hazards
 - Polish flight controls for racing gameplay
 
-### Sprint 23 - Advanced Flight Mechanics
-**Priority**: MEDIUM  
+### Sprint 23 - Technical Debt Remediation
+**Priority**: CRITICAL  
 **Dependencies**: Sprint 21 completion  
+**Goals**:
+- Fix 60% test failure rate
+- Remediate component system issues
+- Standardize APIs and memory management
+- Establish CI/CD pipeline
+[View Sprint 23 Design Document](backlog/SPRINT_23_TECHNICAL_DEBT.md)
+
+### Sprint 24 - Advanced Flight Mechanics
+**Priority**: MEDIUM  
+**Dependencies**: Sprint 23 completion  
 **Goals**:
 - A-Drive implementation (FTL travel)
 - Fusion Torch mechanics
 - Atmospheric flight physics
 - Gravity well interactions
 
-### Sprint 24 - Ship Systems & Customization
+### Sprint 25 - Ship Systems & Customization
 **Priority**: MEDIUM  
 **Goals**:
 - Power management system
@@ -79,7 +89,7 @@ Subjective human approval of flight mechanics "feel" with target rating of 4.0+/
 - Shield systems
 - Ship upgrade mechanics
 
-### Sprint 25 - Multiplayer Foundation
+### Sprint 26 - Multiplayer Foundation
 **Priority**: LOW  
 **Goals**:
 - Network architecture

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include "../input_processing.h"  // For ProductionInputProcessor type
 
 // Input actions (logical inputs independent of device)
 typedef enum {
@@ -61,3 +62,7 @@ bool input_has_gamepad(void);
 
 // Debug info
 void input_print_debug(void);
+
+// Enhanced input processing access (Sprint 22)
+ProductionInputProcessor* input_get_processor(void);
+void input_set_processing_config(bool enable_neural, bool enable_mrac, bool enable_kalman);

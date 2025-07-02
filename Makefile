@@ -328,6 +328,19 @@ gamepad/fast:
 .PHONY : gamepad/fast
 
 #=============================================================================
+# Target rules for targets named input_processing
+
+# Build rule for target.
+input_processing: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 input_processing
+.PHONY : input_processing
+
+# fast build rule for target.
+input_processing/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/input_processing.dir/build.make CMakeFiles/input_processing.dir/build
+.PHONY : input_processing/fast
+
+#=============================================================================
 # Target rules for targets named input
 
 # Build rule for target.
@@ -1088,6 +1101,30 @@ src/graphics_api.s: src/graphics_api.c.s
 src/graphics_api.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graphics_api.dir/build.make CMakeFiles/graphics_api.dir/src/graphics_api.c.s
 .PHONY : src/graphics_api.c.s
+
+src/input_processing.o: src/input_processing.c.o
+.PHONY : src/input_processing.o
+
+# target to build an object file
+src/input_processing.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/input_processing.dir/build.make CMakeFiles/input_processing.dir/src/input_processing.c.o
+.PHONY : src/input_processing.c.o
+
+src/input_processing.i: src/input_processing.c.i
+.PHONY : src/input_processing.i
+
+# target to preprocess a source file
+src/input_processing.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/input_processing.dir/build.make CMakeFiles/input_processing.dir/src/input_processing.c.i
+.PHONY : src/input_processing.c.i
+
+src/input_processing.s: src/input_processing.c.s
+.PHONY : src/input_processing.s
+
+# target to generate assembly for a file
+src/input_processing.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/input_processing.dir/build.make CMakeFiles/input_processing.dir/src/input_processing.c.s
+.PHONY : src/input_processing.c.s
 
 src/main.o: src/main.c.o
 .PHONY : src/main.o
@@ -1893,6 +1930,7 @@ help:
 	@echo "... graphics_api"
 	@echo "... hidapi"
 	@echo "... input"
+	@echo "... input_processing"
 	@echo "... lod"
 	@echo "... logo_scene_script"
 	@echo "... material"
@@ -1951,6 +1989,9 @@ help:
 	@echo "... src/graphics_api.o"
 	@echo "... src/graphics_api.i"
 	@echo "... src/graphics_api.s"
+	@echo "... src/input_processing.o"
+	@echo "... src/input_processing.i"
+	@echo "... src/input_processing.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
