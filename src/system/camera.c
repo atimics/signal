@@ -156,9 +156,9 @@ static void camera_initialize_from_transform(struct World* world, EntityID camer
     if (!camera) return;
     
     // Set default camera properties if not already set
-    if (camera->fov == 0.0f) camera->fov = 90.0f;  // Wide FOV for good view
-    if (camera->near_plane == 0.0f) camera->near_plane = 0.1f;
-    if (camera->far_plane == 0.0f) camera->far_plane = 1000.0f;
+    if (camera->fov == 0.0f) camera->fov = 95.0f;  // Wider FOV to prevent clipping
+    if (camera->near_plane == 0.0f) camera->near_plane = 0.5f;  // Further near plane for stability
+    if (camera->far_plane == 0.0f) camera->far_plane = 2000.0f;  // Further far plane for large scenes
     if (camera->aspect_ratio == 0.0f) camera->aspect_ratio = 16.0f / 9.0f;
 
     // Initialize position from transform if available and camera pos is zero
@@ -233,13 +233,9 @@ static void camera_update_behavior(struct World* world, RenderConfig* render_con
                         target_pos.z + camera->follow_offset.z
                     };
 
-                    // Smooth camera movement
-                    float lerp = camera->follow_smoothing * delta_time * 60.0f;
-                    if (lerp > 1.0f) lerp = 1.0f;
-
-                    // Make camera more responsive for better gameplay
-                    lerp *= 3.0f;
-                    if (lerp > 0.3f) lerp = 0.3f;
+                    // Smooth camera movement with better elasticity
+                    float lerp = camera->follow_smoothing * delta_time;
+                    if (lerp > 0.95f) lerp = 0.95f;  // Less aggressive capping for smoother movement
 
                     // Apply smooth interpolation
                     camera->position.x += (desired_pos.x - camera->position.x) * lerp;

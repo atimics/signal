@@ -7,11 +7,13 @@
 #include "../render.h"
 #include "../system/material.h"
 #include "../system/input.h"
+#include "../hidapi.h"
 #include "../sokol_app.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 // Derelict navigation state
 static bool derelict_nav_initialized = false;
@@ -38,11 +40,11 @@ static float camera_target_zoom = 1.0f;
 #define ORIENTATION_ADJUSTMENT_SPEED 0.05f // Much more reduced - was still too strong  
 #define DERELICT_SECTION_COUNT 8
 
-// Player control constants
-#define PLAYER_THRUST_FORCE 15.0f
-#define PLAYER_BOOST_MULTIPLIER 2.5f
-#define PLAYER_MANEUVER_FORCE 8.0f
-#define PLAYER_BRAKE_FACTOR 0.85f
+// Player control constants - increased for more visceral flight feel
+#define PLAYER_THRUST_FORCE 25.0f          // Increased from 15.0f
+#define PLAYER_BOOST_MULTIPLIER 3.5f       // Increased from 2.5f  
+#define PLAYER_MANEUVER_FORCE 12.0f        // Increased from 8.0f
+#define PLAYER_BRAKE_FACTOR 0.75f          // More aggressive braking (was 0.85f)
 
 // Derelict navigation zones
 typedef struct {
@@ -79,6 +81,9 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
     // Clear old input state and initialize new input system
     if (!input_init()) {
         printf("⚠️  Input initialization failed\n");
+    } else {
+        // Run gamepad diagnostics to help debug controller issues
+        diagnose_gamepad_issues();
     }
     
     // Initialize derelict sections as gravity/magnetic sources
@@ -95,16 +100,15 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
     navigation_active = true;
     derelict_nav_initialized = true;
     
-    // Initialize camera system
+    // Initialize camera system and use global camera chase behavior
     current_camera_mode = CAMERA_MODE_CHASE_NEAR;
     camera_velocity = (Vector3){0, 0, 0};
     camera_zoom_factor = 1.0f;
     camera_target_zoom = 1.0f;
     
-    // Create our own dynamic camera entity to override scene cameras
-    printf("🔍 DEBUG: Looking for cockpit camera instead of creating new one...\n");
+    // Find the cockpit camera and set it up to use global camera chase system
+    printf("🔍 DEBUG: Setting up cameras to use global chase behavior...\n");
     
-    // Find the cockpit camera (Entity 26 based on logs) and override its position
     EntityID cockpit_camera = INVALID_ENTITY;
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
@@ -118,22 +122,30 @@ void derelict_navigation_init(struct World* world, SceneStateManager* state) {
     }
     
     if (cockpit_camera != INVALID_ENTITY) {
-        printf("🔍 DEBUG: Found cockpit camera Entity %d, setting as active\n", cockpit_camera);
+        printf("🔍 DEBUG: Found cockpit camera Entity %d, configuring for chase behavior\n", cockpit_camera);
         world_set_active_camera(world, cockpit_camera);
         
-        // Adjust its position to be closer to the player ship
-        struct Transform* cam_transform = entity_get_transform(world, cockpit_camera);
         struct Camera* cam_camera = entity_get_camera(world, cockpit_camera);
-        
-        if (cam_transform && cam_camera) {
-            // Start the camera at a much closer chase position behind the player
-            cam_transform->position = (Vector3){5, -5, -108};   // Much closer to player start
+        if (cam_camera) {
+            // Configure the camera to use the global chase system
+            cam_camera->behavior = CAMERA_BEHAVIOR_CHASE;
+            cam_camera->follow_target = player_ship_id;
+            
+            // Set initial chase near offset
+            cam_camera->follow_offset = (Vector3){0, 8, 20};   // Behind and above player
+            cam_camera->follow_smoothing = 6.0f;  // Moderate smoothing
+            
+            // Position camera close to player initially
+            struct Transform* cam_transform = entity_get_transform(world, cockpit_camera);
+            if (cam_transform) {
+                cam_transform->position = (Vector3){5, -5, -108};   // Start position
+            }
             cam_camera->target = (Vector3){0, -8, -120};        // Look at player ship start position
             cam_camera->matrices_dirty = true;
-            printf("📷 Repositioned camera close to player ship for chase mode\n");
+            printf("📷 Configured camera to use global chase behavior\n");
         }
     } else {
-        printf("❌ Could not find suitable camera to override\n");
+        printf("❌ Could not find suitable camera to configure\n");
     }
     
     printf("🧲 Derelict navigation initialized - %d sections detected\n", DERELICT_SECTION_COUNT);
@@ -220,206 +232,172 @@ Vector3 calculate_dominant_mass_direction(Vector3 ship_pos, float* out_field_str
     return net_direction;
 }
 
-// Update dynamic camera system
+// Update camera mode and adjust global camera follow offset with velocity-based elasticity
 void update_camera_system(struct World* world, float delta_time) {
+    (void)delta_time;  // Currently unused but kept for future use
+    
     if (player_ship_id == INVALID_ENTITY) return;
     
-    // Find player entity
+    // Get the active camera and ensure it's following the player
+    EntityID active_camera_id = world_get_active_camera(world);
+    if (active_camera_id == INVALID_ENTITY) return;
+    
+    struct Camera* camera = entity_get_camera(world, active_camera_id);
+    if (!camera) return;
+    
+    // Get player velocity for dynamic camera offset
     struct Entity* player_entity = NULL;
     for (uint32_t i = 0; i < world->entity_count; i++) {
-        struct Entity* entity = &world->entities[i];
-        if (entity->id == player_ship_id && (entity->component_mask & COMPONENT_PLAYER)) {
-            player_entity = entity;
+        if (world->entities[i].id == player_ship_id) {
+            player_entity = &world->entities[i];
             break;
         }
     }
     
-    if (!player_entity || !player_entity->transform) return;
-    
-    // Get player position and velocity
-    Vector3 player_pos = player_entity->transform->position;
-    Vector3 player_vel = {0, 0, 0};
-    if (player_entity->physics) {
-        player_vel = player_entity->physics->velocity;
+    Vector3 player_velocity = {0, 0, 0};
+    Vector3 player_acceleration = {0, 0, 0};
+    if (player_entity && player_entity->physics) {
+        player_velocity = player_entity->physics->velocity;
+        player_acceleration = player_entity->physics->acceleration;
     }
     
-    // Calculate player speed for dynamic zoom
-    float player_speed = sqrtf(player_vel.x * player_vel.x + 
-                              player_vel.y * player_vel.y + 
-                              player_vel.z * player_vel.z);
+    // Calculate speed for dynamic effects
+    float player_speed = sqrtf(player_velocity.x * player_velocity.x + 
+                              player_velocity.y * player_velocity.y + 
+                              player_velocity.z * player_velocity.z);
     
-    // Get the active camera
-    EntityID active_camera_id = world_get_active_camera(world);
-    struct Entity* camera_entity = NULL;
+    // Calculate acceleration magnitude for additional effects
+    float acceleration_magnitude = sqrtf(player_acceleration.x * player_acceleration.x + 
+                                        player_acceleration.y * player_acceleration.y + 
+                                        player_acceleration.z * player_acceleration.z);
     
-    if (active_camera_id != INVALID_ENTITY) {
-        for (uint32_t i = 0; i < world->entity_count; i++) {
-            struct Entity* entity = &world->entities[i];
-            if (entity->id == active_camera_id) {
-                camera_entity = entity;
-                break;
-            }
-        }
+    // Ensure the camera is following the player ship
+    if (camera->follow_target != player_ship_id) {
+        camera->follow_target = player_ship_id;
+        camera->behavior = CAMERA_BEHAVIOR_CHASE;
     }
     
-    if (!camera_entity || !camera_entity->transform || !camera_entity->camera) return;
-    
-    Vector3 desired_pos = player_pos;
-    Vector3 desired_target = player_pos;
+    // Update camera follow offset based on current mode with velocity-based elasticity
+    Vector3 base_offset;
+    float new_smoothing;
     
     switch (current_camera_mode) {
-        case CAMERA_MODE_COCKPIT: {
-            // Cockpit view - camera inside/on the ship
-            desired_pos.x = player_pos.x;
-            desired_pos.y = player_pos.y + 0.5f;  // Just slightly above player center
-            desired_pos.z = player_pos.z + 1.0f;  // Just slightly forward
-            
-            // Look in direction of movement, or default forward
-            if (player_speed > 0.5f) {
-                Vector3 look_dir = {player_vel.x, player_vel.y, player_vel.z};
-                float vel_mag = sqrtf(look_dir.x * look_dir.x + look_dir.y * look_dir.y + look_dir.z * look_dir.z);
-                look_dir.x /= vel_mag;
-                look_dir.y /= vel_mag;
-                look_dir.z /= vel_mag;
-                desired_target.x = player_pos.x + look_dir.x * 5.0f;
-                desired_target.y = player_pos.y + look_dir.y * 5.0f;
-                desired_target.z = player_pos.z + look_dir.z * 5.0f;
-            } else {
-                // Default forward direction
-                desired_target.x = player_pos.x;
-                desired_target.y = player_pos.y;
-                desired_target.z = player_pos.z - 5.0f;
-            }
+        case CAMERA_MODE_COCKPIT:
+            // First-person cockpit view
+            camera->behavior = CAMERA_BEHAVIOR_FIRST_PERSON;
+            base_offset = (Vector3){0, 0.5f, 0};  // Inside the ship
+            new_smoothing = 8.0f;  // Fast for responsive first-person
+            camera->fov = 85.0f;  // Narrower FOV for cockpit immersion
             break;
-        }
-        
-        case CAMERA_MODE_CHASE_NEAR: {
-            // Dynamic chase camera with speed-based zoom
-            // Base distance varies with speed (zoom out on acceleration)
-            float base_distance = 15.0f;
-            float speed_factor = player_speed / 20.0f;  // Normalize speed
-            camera_target_zoom = 1.0f + speed_factor * 0.5f;  // Much less zoom out with speed
             
-            // Smooth zoom transition with elasticity
-            float zoom_spring = 5.0f;  // Reduced responsiveness
-            float zoom_damping = 0.5f;  // Reduced damping
-            float zoom_diff = camera_target_zoom - camera_zoom_factor;
-            camera_zoom_factor += zoom_diff * zoom_spring * delta_time;
-            
-            float distance = base_distance * camera_zoom_factor;
-            
-            // Camera position behind and above player (much closer)
-            Vector3 offset = {5.0f, 3.0f, 12.0f};  // Fixed offset instead of dynamic
-            
-            // Use actual player position, not predicted
-            desired_pos.x = player_pos.x + offset.x;
-            desired_pos.y = player_pos.y + offset.y;
-            desired_pos.z = player_pos.z + offset.z;
-            desired_target = player_pos;  // Always look at actual player position
+        case CAMERA_MODE_CHASE_NEAR:
+            // Medium chase camera with moderate elasticity
+            camera->behavior = CAMERA_BEHAVIOR_CHASE;
+            base_offset = (Vector3){0, 12, 25};    // Further back to prevent clipping
+            new_smoothing = 2.5f;  // Slower for elastic follow
+            camera->fov = 95.0f;  // Wide FOV to keep ship in view
             break;
-        }
-        
-        case CAMERA_MODE_CHASE_FAR: {
-            // Stable far chase camera with less elasticity
-            Vector3 offset = {20.0f, 10.0f, 25.0f};  // Fixed offset, closer than before
             
-            desired_pos.x = player_pos.x + offset.x;
-            desired_pos.y = player_pos.y + offset.y;
-            desired_pos.z = player_pos.z + offset.z;
-            desired_target = player_pos;
+        case CAMERA_MODE_CHASE_FAR:
+            // Cinematic chase camera with heavy elasticity
+            camera->behavior = CAMERA_BEHAVIOR_CHASE;
+            base_offset = (Vector3){8, 22, 55};   // Much further back for cinematic wide shots
+            new_smoothing = 1.2f;  // Very slow for cinematic lag
+            camera->fov = 105.0f;  // Very wide FOV for cinematic feel
             break;
-        }
-        
+            
         case CAMERA_MODE_COUNT:
         default:
             // Fallback to chase near
             current_camera_mode = CAMERA_MODE_CHASE_NEAR;
+            camera->behavior = CAMERA_BEHAVIOR_CHASE;
+            base_offset = (Vector3){0, 8, 20};
+            new_smoothing = 2.5f;
             break;
     }
     
-    // Apply camera movement with elasticity (much reduced to prevent overshoot)
-    float elasticity = 0.0f;
-    float damping = 0.0f;
-    
-    switch (current_camera_mode) {
-        case CAMERA_MODE_COCKPIT:
-            elasticity = 8.0f;   // Reduced from 15.0f
-            damping = 0.95f;     // Increased damping
-            break;
-        case CAMERA_MODE_CHASE_NEAR:
-            elasticity = 3.0f;   // Reduced from 6.0f
-            damping = 0.9f;      // Increased damping
-            break;
-        case CAMERA_MODE_CHASE_FAR:
-            elasticity = 2.0f;   // Reduced from 3.0f
-            damping = 0.85f;     // Increased damping
-            break;
-        case CAMERA_MODE_COUNT:
-        default:
-            elasticity = 3.0f;   // Default to chase near
-            damping = 0.9f;
-            break;
+    // Add velocity-based dynamic offset for natural camera lag
+    Vector3 dynamic_offset = base_offset;
+    if (camera->behavior == CAMERA_BEHAVIOR_CHASE) {
+        // Scale velocity effect based on camera mode
+        float velocity_factor = 0.0f;
+        switch (current_camera_mode) {
+            case CAMERA_MODE_CHASE_NEAR:
+                velocity_factor = 0.15f;  // Moderate velocity lag
+                break;
+            case CAMERA_MODE_CHASE_FAR:
+                velocity_factor = 0.25f;  // Strong velocity lag for cinematic effect
+                break;
+            default:
+                velocity_factor = 0.1f;
+                break;
+        }
+        
+        // Add velocity-based offset (camera lags behind when accelerating)
+        dynamic_offset.x += player_velocity.x * velocity_factor;
+        dynamic_offset.y += player_velocity.y * velocity_factor * 0.5f;  // Less vertical lag
+        dynamic_offset.z += player_velocity.z * velocity_factor;
+        
+        // Add speed-based distance adjustment (camera pulls back when going fast)
+        float speed_factor = fminf(player_speed / 50.0f, 1.0f);  // Normalize to 0-1
+        switch (current_camera_mode) {
+            case CAMERA_MODE_CHASE_NEAR:
+                dynamic_offset.z += speed_factor * 8.0f;   // Pull back up to 8 units (was 5)
+                dynamic_offset.y += speed_factor * 4.0f;   // Raise up to 4 units (was 2)
+                break;
+            case CAMERA_MODE_CHASE_FAR:
+                dynamic_offset.z += speed_factor * 15.0f;  // Pull back up to 15 units (was 10)
+                dynamic_offset.y += speed_factor * 8.0f;   // Raise up to 8 units (was 5)
+                break;
+            default:
+                break;
+        }
     }
     
-    // Calculate camera movement forces
-    Vector3 pos_diff = {
-        desired_pos.x - camera_entity->transform->position.x,
-        desired_pos.y - camera_entity->transform->position.y,
-        desired_pos.z - camera_entity->transform->position.z
-    };
+    // Apply the new camera settings
+    camera->follow_offset = dynamic_offset;
+    camera->follow_smoothing = new_smoothing;
+    camera->matrices_dirty = true;
     
-    // Apply spring forces to camera velocity
-    camera_velocity.x += pos_diff.x * elasticity * delta_time;
-    camera_velocity.y += pos_diff.y * elasticity * delta_time;
-    camera_velocity.z += pos_diff.z * elasticity * delta_time;
-    
-    // Apply damping
-    camera_velocity.x *= (1.0f - damping * delta_time);
-    camera_velocity.y *= (1.0f - damping * delta_time);
-    camera_velocity.z *= (1.0f - damping * delta_time);
-    
-    // Update camera position
-    camera_entity->transform->position.x += camera_velocity.x * delta_time;
-    camera_entity->transform->position.y += camera_velocity.y * delta_time;
-    camera_entity->transform->position.z += camera_velocity.z * delta_time;
-    
-    // CONSTRAINT: Prevent camera from getting too far from player
-    Vector3 cam_to_player = {
-        player_pos.x - camera_entity->transform->position.x,
-        player_pos.y - camera_entity->transform->position.y,
-        player_pos.z - camera_entity->transform->position.z
-    };
-    float distance_to_player = sqrtf(cam_to_player.x * cam_to_player.x + 
-                                    cam_to_player.y * cam_to_player.y + 
-                                    cam_to_player.z * cam_to_player.z);
-    
-    // Max distance based on camera mode
-    float max_distance = (current_camera_mode == CAMERA_MODE_CHASE_FAR) ? 50.0f : 30.0f;
-    if (distance_to_player > max_distance) {
-        // Pull camera back toward player
-        float scale = max_distance / distance_to_player;
-        camera_entity->transform->position.x = player_pos.x - cam_to_player.x * scale;
-        camera_entity->transform->position.y = player_pos.y - cam_to_player.y * scale;
-        camera_entity->transform->position.z = player_pos.z - cam_to_player.z * scale;
-        printf("⚠️  Camera too far (%.1f), constraining to %.1f\n", distance_to_player, max_distance);
+    // Add camera shake based on acceleration for visceral feedback
+    if (camera->behavior == CAMERA_BEHAVIOR_CHASE && (player_speed > 5.0f || acceleration_magnitude > 2.0f)) {
+        float shake_intensity = fminf((player_speed / 100.0f) + (acceleration_magnitude / 50.0f), 0.4f);
+        float shake_freq = navigation_time * 25.0f;  // High frequency shake
+        
+        // Add more pronounced shake during acceleration/deceleration
+        Vector3 shake_offset = {
+            sinf(shake_freq * 1.3f) * shake_intensity * 0.7f,
+            sinf(shake_freq * 1.7f) * shake_intensity * 0.5f,
+            sinf(shake_freq * 1.1f) * shake_intensity * 0.3f
+        };
+        
+        // Apply shake to the final camera offset
+        camera->follow_offset.x += shake_offset.x;
+        camera->follow_offset.y += shake_offset.y;
+        camera->follow_offset.z += shake_offset.z;
+        
+        // Dynamic FOV change during high acceleration for "warp" effect
+        if (acceleration_magnitude > 10.0f) {
+            float fov_boost = fminf(acceleration_magnitude / 100.0f, 0.15f);
+            camera->fov += fov_boost * 20.0f;  // Increase FOV up to 20 degrees during high acceleration
+        }
     }
     
-    // Update camera target
-    camera_entity->camera->target = desired_target;
-    
-    // Debug output (more frequent during debugging)
+    // Debug output
     static float last_cam_log = 0.0f;
-    if (navigation_time - last_cam_log > 1.0f) {  // Every 1 second instead of 3
+    if (navigation_time - last_cam_log > 2.0f) {
         const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
-        Vector3 cam_pos = camera_entity->transform->position;
+        struct Transform* player_transform = entity_get_transform(world, player_ship_id);
+        Vector3 player_pos = player_transform ? player_transform->position : (Vector3){0, 0, 0};
+        Vector3 cam_pos = camera->position;
         float cam_distance = sqrtf((cam_pos.x - player_pos.x) * (cam_pos.x - player_pos.x) + 
                                   (cam_pos.y - player_pos.y) * (cam_pos.y - player_pos.y) + 
                                   (cam_pos.z - player_pos.z) * (cam_pos.z - player_pos.z));
-        printf("📷 [%s] Player:(%.1f,%.1f,%.1f) Camera:(%.1f,%.1f,%.1f) Dist:%.1f Speed:%.1f\n",
+        printf("📷 [%s] Player:(%.1f,%.1f,%.1f) Camera:(%.1f,%.1f,%.1f) Dist:%.1f Speed:%.1f Smooth:%.1f\n",
                mode_names[current_camera_mode],
                player_pos.x, player_pos.y, player_pos.z,
                cam_pos.x, cam_pos.y, cam_pos.z,
-               cam_distance, player_speed);
+               cam_distance, player_speed, new_smoothing);
         last_cam_log = navigation_time;
     }
 }
@@ -663,10 +641,9 @@ static bool derelict_navigation_input(struct World* world, SceneStateManager* st
             const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
             printf("📷 Camera mode: %s\n", mode_names[current_camera_mode]);
             
-            // Reset camera state for smooth transition
-            camera_velocity = (Vector3){0, 0, 0};
-            camera_zoom_factor = 1.0f;
-            camera_target_zoom = 1.0f;
+            // Apply the new camera mode immediately by calling update_camera_system
+            update_camera_system(world, 0.0f);
+            
             return true;
         }
         
@@ -712,3 +689,72 @@ const SceneScript derelict_navigation_script = {
     .on_exit = derelict_navigation_cleanup,
     .on_input = derelict_navigation_input
 };
+
+// Gamepad diagnostic function - helps debug controller connection issues
+void diagnose_gamepad_issues(void) {
+    printf("\n🔍 GAMEPAD DIAGNOSTIC REPORT\n");
+    printf("=====================================\n");
+    
+    // Check if hidapi is working
+    printf("📡 HID API Status:\n");
+    struct hid_device_info* device_list = hid_enumerate(0x0, 0x0);
+    if (!device_list) {
+        printf("   ❌ No HID devices detected at all\n");
+        printf("   💡 This suggests a system-level HID issue\n");
+    } else {
+        printf("   ✅ HID enumeration working\n");
+        
+        // Count all HID devices
+        int total_devices = 0;
+        int gaming_devices = 0;
+        struct hid_device_info* current = device_list;
+        
+        while (current) {
+            total_devices++;
+            
+            // Check for gaming-related devices
+            if (current->vendor_id == 0x045e ||  // Microsoft
+                current->vendor_id == 0x054c ||  // Sony
+                current->vendor_id == 0x2dc8 ||  // 8BitDo
+                current->vendor_id == 0x0079 ||  // DragonRise
+                current->vendor_id == 0x046d ||  // Logitech
+                current->vendor_id == 0x0e6f) {  // Logic3
+                gaming_devices++;
+                printf("   🎮 Found gaming device: VID:0x%04X PID:0x%04X\n", 
+                       current->vendor_id, current->product_id);
+                if (current->product_string) {
+                    char product_name[256];
+                    wcstombs(product_name, current->product_string, sizeof(product_name) - 1);
+                    product_name[sizeof(product_name) - 1] = '\0';
+                    printf("      Name: %s\n", product_name);
+                }
+            }
+            current = current->next;
+        }
+        
+        printf("   📊 Total HID devices: %d\n", total_devices);
+        printf("   🎮 Gaming-related devices: %d\n", gaming_devices);
+        
+        hid_free_enumeration(device_list);
+    }
+    
+    printf("\n🎮 SUPPORTED CONTROLLERS:\n");
+    printf("   Xbox Controllers (VID: 0x045E):\n");
+    printf("     - Xbox One: PID 0x02EA\n");
+    printf("     - Xbox 360: PID 0x028E\n");
+    printf("     - Xbox Elite: PID 0x02E3\n");
+    printf("   PlayStation Controllers (VID: 0x054C):\n");
+    printf("     - DualShock 4: PID 0x09CC\n");
+    printf("     - DualSense: PID 0x0CE6\n");
+    printf("   8BitDo Controllers (VID: 0x2DC8):\n");
+    printf("     - Most models supported\n");
+    
+    printf("\n💡 TROUBLESHOOTING STEPS:\n");
+    printf("   1. Connect your controller via USB first\n");
+    printf("   2. Ensure controller is in pairing mode for Bluetooth\n");
+    printf("   3. Check macOS System Preferences > Bluetooth\n");
+    printf("   4. Try pressing the Xbox/PS button to wake the controller\n");
+    printf("   5. For Xbox controllers: Hold Xbox button + Connect button\n");
+    printf("   6. For PS4/5: Hold Share + PS button until light flashes\n");
+    printf("=====================================\n\n");
+}

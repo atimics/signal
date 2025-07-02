@@ -1,0 +1,8 @@
+# Navigation Menu - FTL Planning Interface
+# Central hub for plotting FTL routes and navigation
+
+scene: navigation_menu
+description=Ship's navigation interface for FTL route planning and system overview
+
+# Minimal environment - just the ship's interior
+spawn: scene_node 0 0 0

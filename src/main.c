@@ -1,5 +1,3 @@
-#include "graphics_api.h"
-
 // Nuklear implementation
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -27,6 +25,12 @@
 #include "ui.h"
 #include "scene_state.h"
 #include "scene_script.h"
+
+// Sokol includes
+#include "sokol_app.h"
+#include "sokol_gfx.h"
+#include "sokol_glue.h"
+#include "sokol_log.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
