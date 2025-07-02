@@ -106,6 +106,22 @@ void input_update(void) {
             current_input.thrust -= gamepad->left_trigger; // Left trigger = reverse
         }
         
+        // Debug: Log significant gamepad inputs
+        static int input_debug_counter = 0;
+        if (++input_debug_counter % 30 == 0) {  // Every 0.5 seconds at 60fps
+            if (fabsf(gamepad->left_stick_x) > deadzone || fabsf(gamepad->left_stick_y) > deadzone ||
+                fabsf(gamepad->right_stick_x) > deadzone || fabsf(gamepad->right_stick_y) > deadzone ||
+                gamepad->left_trigger > deadzone || gamepad->right_trigger > deadzone) {
+                printf("🕹️ Input: LS(%.2f,%.2f) RS(%.2f,%.2f) LT:%.2f RT:%.2f\n",
+                       gamepad->left_stick_x, gamepad->left_stick_y,
+                       gamepad->right_stick_x, gamepad->right_stick_y,
+                       gamepad->left_trigger, gamepad->right_trigger);
+                printf("   Mapped: thrust=%.2f pitch=%.2f yaw=%.2f roll=%.2f strafe=%.2f\n",
+                       current_input.thrust, current_input.pitch, current_input.yaw, 
+                       current_input.roll, current_input.strafe);
+            }
+        }
+        
         // Shoulder buttons for roll
         if (gamepad->buttons[GAMEPAD_BUTTON_RB]) {
             current_input.roll += 1.0f; // Right bumper = roll right

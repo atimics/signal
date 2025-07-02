@@ -39,93 +39,37 @@ struct nk_rect {
 #define NK_MAXIMIZED             0
 #define NK_MINIMIZED             1
 
-// Mock nuklear function stubs
-static inline struct nk_rect nk_rect(float x, float y, float w, float h) {
-    struct nk_rect r = {x, y, w, h};
-    return r;
-}
-
-static inline bool nk_begin(struct nk_context* ctx, const char* title, struct nk_rect bounds, uint32_t flags) {
-    (void)ctx; (void)title; (void)bounds; (void)flags;
-    return true;
-}
+// Mock nuklear function declarations
+struct nk_rect nk_rect(float x, float y, float w, float h);
+bool nk_begin(struct nk_context* ctx, const char* title, struct nk_rect bounds, uint32_t flags);
+void nk_end(struct nk_context* ctx);
 
 static inline void nk_end(struct nk_context* ctx) {
     (void)ctx;
 }
 
-static inline void nk_layout_row_dynamic(struct nk_context* ctx, float height, int cols) {
-    (void)ctx; (void)height; (void)cols;
-}
-
-static inline bool nk_button_label(struct nk_context* ctx, const char* title) {
-    (void)ctx; (void)title;
-    return false; // Never clicked in test mode
-}
-
-static inline void nk_label(struct nk_context* ctx, const char* text, int align) {
-    (void)ctx; (void)text; (void)align;
-}
-
-static inline void nk_labelf(struct nk_context* ctx, int align, const char* fmt, ...) {
-    (void)ctx; (void)align; (void)fmt;
-}
-
-static inline bool nk_checkbox_label(struct nk_context* ctx, const char* label, bool* active) {
-    (void)ctx; (void)label; (void)active;
-    return false;
-}
-
-static inline bool nk_group_begin(struct nk_context* ctx, const char* title, uint32_t flags) {
-    (void)ctx; (void)title; (void)flags;
-    return true;
-}
-
-static inline void nk_group_end(struct nk_context* ctx) {
-    (void)ctx;
-}
-
-static inline bool nk_selectable_label(struct nk_context* ctx, const char* str, int align, bool* value) {
-    (void)ctx; (void)str; (void)align; (void)value;
-    return false;
-}
-
-static inline void nk_spacing(struct nk_context* ctx, int cols) {
-    (void)ctx; (void)cols;
-}
-
-static inline int nk_strlen(const char* str) {
-    int len = 0;
-    while (str && str[len]) len++;
-    return len;
-}
-
-static inline bool nk_tree_push_hashed(struct nk_context* ctx, int type, const char* title, int state, const char* hash, int len, int line) {
-    (void)ctx; (void)type; (void)title; (void)state; (void)hash; (void)len; (void)line;
-    return true;
-}
-
-static inline void nk_tree_pop(struct nk_context* ctx) {
-    (void)ctx;
-}
+// Nuklear function declarations (implemented in nuklear_test_stubs.c)
+void nk_layout_row_dynamic(struct nk_context* ctx, float height, int cols);
+bool nk_button_label(struct nk_context* ctx, const char* title);
+void nk_label(struct nk_context* ctx, const char* text, int align);
+void nk_labelf(struct nk_context* ctx, int align, const char* fmt, ...);
+bool nk_checkbox_label(struct nk_context* ctx, const char* label, bool* active);
+bool nk_group_begin(struct nk_context* ctx, const char* title, uint32_t flags);
+void nk_group_end(struct nk_context* ctx);
+bool nk_selectable_label(struct nk_context* ctx, const char* str, int align, bool* value);
+void nk_spacing(struct nk_context* ctx, int cols);
+int nk_strlen(const char* str);
+bool nk_tree_push_hashed(struct nk_context* ctx, int type, const char* title, int state, const char* hash, int len, int line);
+void nk_tree_pop(struct nk_context* ctx);
 
 // Mock color type
 struct nk_color {
     uint8_t r, g, b, a;
 };
 
-static inline struct nk_color nk_rgb(int r, int g, int b) {
-    struct nk_color color = {(uint8_t)r, (uint8_t)g, (uint8_t)b, 255};
-    return color;
-}
-
-static inline void nk_style_push_color(struct nk_context* ctx, struct nk_color* style_color, struct nk_color color) {
-    (void)ctx; (void)style_color; (void)color;
-}
-
-static inline void nk_style_pop_color(struct nk_context* ctx) {
-    (void)ctx;
-}
+struct nk_color nk_rgb(int r, int g, int b);
+void nk_style_push_color(struct nk_context* ctx, struct nk_color* style_color, struct nk_color color);
+void nk_style_pop_color(struct nk_context* ctx);
 
 // Helper macro for style color access in test mode
 #define NK_STYLE_COLOR_PTR(ctx, member) ((void*)0)

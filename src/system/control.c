@@ -62,10 +62,14 @@ static Vector3 process_gamepad_angular_input(const InputState* input, float sens
     const float gamepad_yaw_sensitivity = sensitivity * 1.1f;   // Slightly higher for turns
     const float gamepad_roll_sensitivity = sensitivity * 1.0f;  // Normal for banking
     
-    // Simple linear response instead of adaptive curves
-    result.x = input->pitch * gamepad_pitch_sensitivity;
-    result.y = input->yaw * gamepad_yaw_sensitivity;
-    result.z = input->roll * gamepad_roll_sensitivity;
+    // For gamepad, right stick X (strafe) creates banking turns
+    float banking_input = input->strafe;  // Right stick X
+    float bank_yaw_strength = 1.0f;
+    float bank_roll_strength = 0.6f;
+    
+    result.x = input->pitch * gamepad_pitch_sensitivity;  // Left stick Y
+    result.y = (input->yaw + banking_input * bank_yaw_strength) * gamepad_yaw_sensitivity;  // Left stick X + banking
+    result.z = (input->roll - banking_input * bank_roll_strength) * gamepad_roll_sensitivity;  // Bumpers + banking
     
     return result;
 }
@@ -74,11 +78,15 @@ static Vector3 process_linear_input(const InputState* input, struct ControlAutho
 {
     if (!input || !control) return (Vector3){ 0.0f, 0.0f, 0.0f };
     
-    // Canyon racer flight model - banking creates natural turn forces
-    float banking_input = input->strafe;
+    // Check if this is gamepad input (to disable banking lateral forces for gamepad)
+    bool is_gamepad_input = (fabsf(input->thrust) < 1.0f && fabsf(input->thrust) > 0.0f) ||
+                           (fabsf(input->pitch) < 1.0f && fabsf(input->pitch) > 0.0f);
+    
+    // Canyon racer flight model - banking creates natural turn forces (keyboard only)
+    float banking_input = is_gamepad_input ? 0.0f : input->strafe;
     
     Vector3 linear_commands = {
-        banking_input * 0.2f, // Slight lateral force from banking (like centrifugal force)
+        banking_input * 0.2f, // Slight lateral force from banking (keyboard only)
         input->vertical,      // Up/down -> Y-axis (vertical thrust)
         -input->thrust        // Forward/backward -> Z-axis (negative Z = forward away from camera)
     };

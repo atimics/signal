@@ -64,6 +64,16 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     // Store previous button states for edge detection
     memcpy(gamepad->buttons_previous, gamepad->buttons, sizeof(gamepad->buttons));
     
+    // Debug: Log raw HID report data periodically
+    static int debug_counter = 0;
+    if (++debug_counter % 60 == 0) {  // Once per second at 60fps
+        printf("🎮 HID Report (size=%d): ", size);
+        for (int i = 0; i < (size < 20 ? size : 20); i++) {
+            printf("%02X ", data[i]);
+        }
+        printf("\n");
+    }
+    
     // Xbox controller report format (simplified)
     // This may need adjustment based on actual controller reports
     
