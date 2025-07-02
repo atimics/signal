@@ -121,3 +121,26 @@ assets/**/*.temp
 tools/signal_wordlist.txt
 tools/*wordlist*
 *.wordlist
+
+# Test binaries and build artifacts - these should never be committed
+tests/test_cmake-*
+tests/**/test_cmake-*
+tests/CMakeFiles/
+tests/cmake_install.cmake
+tests/Makefile
+tests/CTestTestfile.cmake
+
+# Test artifacts and binary outputs
+tests/artifacts/*.bmp
+tests/artifacts/*.png
+tests/artifacts/*.jpg
+tests/artifacts/*.jpeg
+tests/artifacts/*.tga
+tests/artifacts/*.dds
+tests/artifacts/*.exe
+tests/artifacts/*.bin
+
+# Test temporary files
+tests/**/*.tmp
+tests/**/*.temp
+tests/**/*.cache
