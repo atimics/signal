@@ -120,3 +120,10 @@ bool ui_is_debug_visible(void)
 {
     return g_debug_ui_visible;
 }
+
+// ============================================================================
+// LEGACY COMPATIBILITY (forwarded to ui_api.h)
+// ============================================================================
+
+// Note: These functions are now implemented in ui_api.c
+// The main application should use ui_api.h directly for new code

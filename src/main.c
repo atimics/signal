@@ -24,6 +24,7 @@
 #include "system/camera.h"
 #include "system/performance.h"
 #include "ui.h"
+#include "ui_api.h"
 #include "scene_state.h"
 #include "scene_script.h"
 

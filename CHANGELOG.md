@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Sprint 20: Advanced Lighting & Material System (July 1, 2025) - In Progress
-- **🚨 Critical Issue**: Global glow effect affecting all entities (needs immediate fix)
-- **🎯 New Architecture**: Comprehensive lighting system with material properties
-- **🔧 Material Enhancement**: Emission, specular, and ambient material properties
-- **✨ Selective Effects**: Proper material-based glow and lighting effects
-- **🏗️ Foundation**: Advanced rendering pipeline for future visual enhancements
+### ✅ COMPLETE - Sprint 20: Advanced Lighting & Material System (July 2, 2025)
+- **✅ Critical Issue Resolved**: Fixed global glow effect - now only logo cube glows properly
+- **✅ Material Property System**: Complete material architecture with metallic, roughness, emissive properties
+- **✅ Advanced Lighting Framework**: Multi-light support (directional, point, spot) with scene presets
+- **✅ Enhanced Shader System**: Material-aware fragment shader with proper glow detection
+- **✅ Configuration Management**: New configuration system with startup scene and auto-start options
+- **✅ Visual Quality**: Professional rendering with selective effects and realistic materials
+- **✅ Performance Optimized**: No frame rate regression despite advanced lighting features
+- **✅ Build Integration**: Material system fully integrated into asset pipeline and ECS
 
 ### ✅ COMPLETE - Sprint 19: Performance Optimization & Polish (July 1, 2025)
 - **✅ TDD Framework Complete**: Full RED/GREEN/REFACTOR workflow with 17/17 tests passing

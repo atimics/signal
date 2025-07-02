@@ -5,7 +5,7 @@
 
 #include "../scene_script.h"
 #include "../sokol_app.h" 
-#include "../ui.h"
+#include "../ui_api.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -18,14 +18,11 @@ static void scene_selector_enter(struct World* world, SceneStateManager* state)
     (void)world; // Unused parameter
     printf("🧭 Navigation Menu: Entered FTL navigation interface\n");
     
-    // Show the navigation menu UI immediately
-    ui_show_scene_selector();
-    
     // Set scene state to menu
     scene_state_set(state, SCENE_STATE_MENU);
     
-    // Enable UI visibility
-    ui_set_visible(true);
+    // The UI will be rendered automatically via the scene UI module system
+    printf("🎨 Scene UI module will handle navigation interface\n");
 }
 
 static void scene_selector_exit(struct World* world, SceneStateManager* state)
@@ -34,8 +31,7 @@ static void scene_selector_exit(struct World* world, SceneStateManager* state)
     (void)state; // Unused parameter
     printf("🎬 Scene Selector: Exiting scene selector\n");
     
-    // Hide the scene selector UI
-    ui_hide_scene_selector();
+    // No need to manually hide UI - scene UI modules handle this automatically
 }
 
 static void scene_selector_update(struct World* world, SceneStateManager* state, float dt)
