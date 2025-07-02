@@ -66,19 +66,24 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     
     // Debug: Log raw HID report data periodically with more detail
     static int debug_counter = 0;
-    if (++debug_counter % 60 == 0) {  // Once per second at 60fps
+    if (++debug_counter % 10 == 0) {  // 6 times per second at 60fps
         printf("🎮 HID Report (size=%d): ", size);
         for (int i = 0; i < (size < 20 ? size : 20); i++) {
             printf("%02X ", data[i]);
         }
         printf("\n");
         
-        // Log interpreted values
+        // Log all possible interpretations to find correct mapping
         if (size >= 14) {
-            printf("   Triggers: LT=%d RT=%d (raw bytes 4,5)\n", data[4], data[5]);
-            printf("   Sticks: LX=%d LY=%d RX=%d RY=%d (bytes 6-13)\n",
+            printf("   Standard mapping - Triggers: LT=%d RT=%d (bytes 4,5)\n", data[4], data[5]);
+            printf("   Standard mapping - Sticks: LX=%d LY=%d RX=%d RY=%d (bytes 6-13)\n",
                    *((int16_t*)(data + 6)), *((int16_t*)(data + 8)),
                    *((int16_t*)(data + 10)), *((int16_t*)(data + 12)));
+        }
+        if (size >= 16) {
+            // Some controllers have triggers at different positions
+            printf("   Alt mapping 1 - Triggers: LT=%d RT=%d (bytes 14,15)\n", data[14], data[15]);
+            printf("   Alt mapping 2 - Triggers: LT=%d RT=%d (bytes 2,5)\n", data[2], data[5]);
         }
     }
     
@@ -94,21 +99,29 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     // Byte 10-11: Right stick X (16-bit signed)
     // Byte 12-13: Right stick Y (16-bit signed)
     
-    // Try alternate mapping for Xbox controllers on macOS
+    // Xbox One controller on macOS typically has this layout:
+    // Byte 0: Report ID
+    // Byte 1: Buttons/D-pad
+    // Byte 2-3: More buttons
+    // Byte 4: Left stick X (low byte)
+    // Byte 5: Left stick X (high byte)
+    // Byte 6: Left stick Y (low byte)
+    // Byte 7: Left stick Y (high byte)
+    // Byte 8: Right stick X (low byte)
+    // Byte 9: Right stick X (high byte)
+    // Byte 10: Right stick Y (low byte)
+    // Byte 11: Right stick Y (high byte)
+    // Byte 12: Left trigger
+    // Byte 13: Right trigger
+    
     int16_t left_x, left_y, right_x, right_y;
     
     if (size >= 14) {
-        // Standard mapping
-        left_x = *((int16_t*)(data + 6));
-        left_y = *((int16_t*)(data + 8));
-        right_x = *((int16_t*)(data + 10));
-        right_y = *((int16_t*)(data + 12));
-    } else if (size >= 13) {
-        // Some controllers have 13-byte reports
-        left_x = *((int16_t*)(data + 5));
-        left_y = *((int16_t*)(data + 7));
-        right_x = *((int16_t*)(data + 9));
-        right_y = *((int16_t*)(data + 11));
+        // Try the most common Xbox mapping first
+        left_x = (int16_t)((data[5] << 8) | data[4]);
+        left_y = (int16_t)((data[7] << 8) | data[6]);
+        right_x = (int16_t)((data[9] << 8) | data[8]);
+        right_y = (int16_t)((data[11] << 8) | data[10]);
     } else {
         return; // Report too small
     }
@@ -119,12 +132,11 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     gamepad->right_stick_x = apply_deadzone(normalize_axis(right_x), axis_deadzone);
     gamepad->right_stick_y = apply_deadzone(normalize_axis(-right_y), axis_deadzone); // Invert Y
     
-    // Triggers - check if bytes 4 and 5 look like triggers (0-255 range)
-    if (data[4] <= 255 && data[5] <= 255) {
-        gamepad->left_trigger = data[4] / 255.0f;
-        gamepad->right_trigger = data[5] / 255.0f;
+    // Triggers - for Xbox controllers on macOS, triggers are typically at bytes 12-13
+    if (size >= 14) {
+        gamepad->left_trigger = data[12] / 255.0f;
+        gamepad->right_trigger = data[13] / 255.0f;
     } else {
-        // Alternate trigger locations for some controllers
         gamepad->left_trigger = 0.0f;
         gamepad->right_trigger = 0.0f;
     }

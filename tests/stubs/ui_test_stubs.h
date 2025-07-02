@@ -42,10 +42,7 @@ struct nk_rect {
 // Mock nuklear function declarations
 struct nk_rect nk_rect(float x, float y, float w, float h);
 bool nk_begin(struct nk_context* ctx, const char* title, struct nk_rect bounds, uint32_t flags);
-
-static inline void nk_end(struct nk_context* ctx) {
-    (void)ctx;
-}
+void nk_end(struct nk_context* ctx);
 
 // Nuklear function declarations (implemented in nuklear_test_stubs.c)
 void nk_layout_row_dynamic(struct nk_context* ctx, float height, int cols);
