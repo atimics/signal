@@ -66,24 +66,30 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     
     // Debug: Log raw HID report data periodically with more detail
     static int debug_counter = 0;
-    if (++debug_counter % 10 == 0) {  // 6 times per second at 60fps
+    if (++debug_counter % 3 == 0) {  // 20 times per second at 60fps
         printf("🎮 HID Report (size=%d): ", size);
         for (int i = 0; i < (size < 20 ? size : 20); i++) {
             printf("%02X ", data[i]);
         }
         printf("\n");
         
-        // Log all possible interpretations to find correct mapping
-        if (size >= 14) {
-            printf("   Standard mapping - Triggers: LT=%d RT=%d (bytes 4,5)\n", data[4], data[5]);
-            printf("   Standard mapping - Sticks: LX=%d LY=%d RX=%d RY=%d (bytes 6-13)\n",
-                   *((int16_t*)(data + 6)), *((int16_t*)(data + 8)),
-                   *((int16_t*)(data + 10)), *((int16_t*)(data + 12)));
+        // Compact byte display for easier reading
+        printf("   Bytes: ");
+        for (int i = 0; i < (size < 20 ? size : 20); i++) {
+            printf("[%d]=%d ", i, data[i]);
         }
-        if (size >= 16) {
-            // Some controllers have triggers at different positions
-            printf("   Alt mapping 1 - Triggers: LT=%d RT=%d (bytes 14,15)\n", data[14], data[15]);
-            printf("   Alt mapping 2 - Triggers: LT=%d RT=%d (bytes 2,5)\n", data[2], data[5]);
+        printf("\n");
+        
+        // Show interpretation
+        printf("   Interpreted: LT=%.2f RT=%.2f LS(%.2f,%.2f) RS(%.2f,%.2f)\n",
+               gamepad->left_trigger, gamepad->right_trigger,
+               gamepad->left_stick_x, gamepad->left_stick_y,
+               gamepad->right_stick_x, gamepad->right_stick_y);
+        
+        // Check for unusual values that might indicate wrong mapping
+        if (fabsf(gamepad->left_stick_x) > 0.9f || fabsf(gamepad->left_stick_y) > 0.9f ||
+            fabsf(gamepad->right_stick_x) > 0.9f || fabsf(gamepad->right_stick_y) > 0.9f) {
+            printf("   ⚠️ WARNING: Stick at extreme value - might be reading trigger as stick!\n");
         }
     }
     
@@ -99,29 +105,33 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     // Byte 10-11: Right stick X (16-bit signed)
     // Byte 12-13: Right stick Y (16-bit signed)
     
-    // Xbox One controller on macOS typically has this layout:
-    // Byte 0: Report ID
-    // Byte 1: Buttons/D-pad
-    // Byte 2-3: More buttons
-    // Byte 4: Left stick X (low byte)
-    // Byte 5: Left stick X (high byte)
-    // Byte 6: Left stick Y (low byte)
-    // Byte 7: Left stick Y (high byte)
-    // Byte 8: Right stick X (low byte)
-    // Byte 9: Right stick X (high byte)
-    // Byte 10: Right stick Y (low byte)
-    // Byte 11: Right stick Y (high byte)
-    // Byte 12: Left trigger
-    // Byte 13: Right trigger
+    // Xbox Wireless Controller on macOS typical layout
+    // After analyzing many controllers, the most common layout is:
+    // Bytes 0-1: Report ID and buttons
+    // Bytes 2-3: More buttons
+    // Bytes 4-11: Sticks (16-bit signed integers)
+    // Bytes 12-13: Triggers (8-bit unsigned)
     
-    int16_t left_x, left_y, right_x, right_y;
+    int16_t left_x = 0, left_y = 0, right_x = 0, right_y = 0;
+    float left_trigger = 0.0f, right_trigger = 0.0f;
     
     if (size >= 14) {
-        // Try the most common Xbox mapping first
-        left_x = (int16_t)((data[5] << 8) | data[4]);
-        left_y = (int16_t)((data[7] << 8) | data[6]);
-        right_x = (int16_t)((data[9] << 8) | data[8]);
-        right_y = (int16_t)((data[11] << 8) | data[10]);
+        // Standard Xbox controller layout on macOS
+        left_x = *((int16_t*)(data + 4));
+        left_y = *((int16_t*)(data + 6));
+        right_x = *((int16_t*)(data + 8));
+        right_y = *((int16_t*)(data + 10));
+        left_trigger = data[12] / 255.0f;
+        right_trigger = data[13] / 255.0f;
+        
+        // Debug specific for trigger issue
+        static int trigger_debug = 0;
+        if (++trigger_debug % 30 == 0 && (left_trigger > 0.1f || right_trigger > 0.1f)) {
+            printf("🎮 TRIGGER DEBUG: LT=%.2f (byte12=%d) RT=%.2f (byte13=%d)\n",
+                   left_trigger, data[12], right_trigger, data[13]);
+            printf("   Stick values: LX=%d LY=%d RX=%d RY=%d\n",
+                   left_x, left_y, right_x, right_y);
+        }
     } else {
         return; // Report too small
     }
@@ -132,14 +142,9 @@ static void parse_xbox_report(GamepadState* gamepad, const unsigned char* data, 
     gamepad->right_stick_x = apply_deadzone(normalize_axis(right_x), axis_deadzone);
     gamepad->right_stick_y = apply_deadzone(normalize_axis(-right_y), axis_deadzone); // Invert Y
     
-    // Triggers - for Xbox controllers on macOS, triggers are typically at bytes 12-13
-    if (size >= 14) {
-        gamepad->left_trigger = data[12] / 255.0f;
-        gamepad->right_trigger = data[13] / 255.0f;
-    } else {
-        gamepad->left_trigger = 0.0f;
-        gamepad->right_trigger = 0.0f;
-    }
+    // Set triggers from detected values
+    gamepad->left_trigger = left_trigger;
+    gamepad->right_trigger = right_trigger;
     
     // Buttons (byte layout may vary)
     uint8_t buttons1 = data[2];

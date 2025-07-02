@@ -53,7 +53,7 @@ cgame_add_test_suite(
 cgame_add_test_suite(
     NAME cmake-integration
     SOURCES integration/test_flight_integration.c
-    LIBS core systems physics control thrusters input camera_system
+    LIBS core systems control thrusters input camera_system
     STUBS graphics_api_test_stub
 )
 
