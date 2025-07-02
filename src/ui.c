@@ -7,6 +7,7 @@
 #include <stdlib.h>  // For malloc/free
 
 #include "core.h"
+#include "config.h"
 #include "ui.h"
 
 // Include graphics API (contains Nuklear setup)
