@@ -337,12 +337,12 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
         load_available_scenes();
     }
     
-    // Create a centered scene selector window
+    // Create a centered scene selector window (larger to accommodate config options)
     int screen_width = sapp_width();
     int screen_height = sapp_height();
     
-    int window_width = 400;
-    int window_height = 500;
+    int window_width = 500;
+    int window_height = 650;
     int x = (screen_width - window_width) / 2;
     int y = (screen_height - window_height) / 2;
     
@@ -350,13 +350,46 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
                  NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE | NK_WINDOW_CLOSABLE))
     {
         nk_layout_row_dynamic(ctx, 30, 1);
-        nk_label(ctx, "Select a Scene:", NK_TEXT_CENTERED);
+        nk_label(ctx, "Scene Navigation & Configuration", NK_TEXT_CENTERED);
         
         nk_layout_row_dynamic(ctx, 25, 1);
         nk_labelf(ctx, NK_TEXT_LEFT, "Current: %s", current_scene ? current_scene : "unknown");
         
+        // Configuration section
         nk_layout_row_dynamic(ctx, 10, 1); // Spacer
         nk_spacing(ctx, 1);
+        
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_label(ctx, "Startup Configuration:", NK_TEXT_LEFT);
+        
+        // Get current config
+        const char* startup_scene = config_get_startup_scene();
+        bool auto_start = config_get_auto_start();
+        
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_labelf(ctx, NK_TEXT_LEFT, "Startup Scene: %s", startup_scene);
+        
+        nk_layout_row_dynamic(ctx, 25, 2);
+        static bool temp_auto_start = false;
+        temp_auto_start = auto_start; // Sync with current config
+        
+        if (nk_checkbox_label(ctx, "Auto-start to scene", &temp_auto_start)) {
+            config_set_auto_start(temp_auto_start);
+        }
+        
+        if (nk_button_label(ctx, "Set Current as Startup")) {
+            if (current_scene) {
+                config_set_startup_scene(current_scene);
+                config_save();
+            }
+        }
+        
+        nk_layout_row_dynamic(ctx, 10, 1); // Spacer
+        nk_spacing(ctx, 1);
+        
+        // Scene selection section
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_label(ctx, "Available Scenes:", NK_TEXT_LEFT);
         
         // Use dynamic scene list
         if (ui_state.scene_count == 0) {
@@ -367,13 +400,25 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
             for (int i = 0; i < ui_state.scene_count; i++)
             {
                 // Highlight current scene
-                if (current_scene && strcmp(current_scene, ui_state.scene_names[i]) == 0)
-                {
+                bool is_current = (current_scene && strcmp(current_scene, ui_state.scene_names[i]) == 0);
+                bool is_startup = (strcmp(startup_scene, ui_state.scene_names[i]) == 0);
+                
+                if (is_current) {
                     nk_style_push_color(ctx, &ctx->style.button.normal.data.color, nk_rgb(70, 120, 200));
                     nk_style_push_color(ctx, &ctx->style.button.hover.data.color, nk_rgb(80, 130, 210));
+                } else if (is_startup) {
+                    nk_style_push_color(ctx, &ctx->style.button.normal.data.color, nk_rgb(120, 120, 70));
+                    nk_style_push_color(ctx, &ctx->style.button.hover.data.color, nk_rgb(130, 130, 80));
                 }
                 
-                if (nk_button_label(ctx, ui_state.scene_descriptions[i]))
+                // Create button label with indicators
+                char button_label[256];
+                snprintf(button_label, sizeof(button_label), "%s%s%s", 
+                         ui_state.scene_descriptions[i],
+                         is_current ? " [CURRENT]" : "",
+                         is_startup ? " [STARTUP]" : "");
+                
+                if (nk_button_label(ctx, button_label))
                 {
                     strcpy(ui_state.selected_scene, ui_state.scene_names[i]);
                     ui_state.scene_change_requested = true;
@@ -381,8 +426,7 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
                     printf("🎬 Scene change requested: %s\n", ui_state.scene_names[i]);
                 }
                 
-                if (current_scene && strcmp(current_scene, ui_state.scene_names[i]) == 0)
-                {
+                if (is_current || is_startup) {
                     nk_style_pop_color(ctx);
                     nk_style_pop_color(ctx);
                 }
@@ -392,7 +436,7 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
         nk_layout_row_dynamic(ctx, 10, 1); // Spacer
         nk_spacing(ctx, 1);
         
-        nk_layout_row_dynamic(ctx, 30, 2);
+        nk_layout_row_dynamic(ctx, 30, 3);
         if (nk_button_label(ctx, "Cancel"))
         {
             ui_state.show_scene_selector = false;
@@ -403,6 +447,11 @@ static void draw_scene_selector(struct nk_context* ctx, const char* current_scen
             // Reload scene list
             free_scene_list();
             load_available_scenes();
+        }
+        
+        if (nk_button_label(ctx, "Save Config"))
+        {
+            config_save();
         }
     }
     

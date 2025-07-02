@@ -14,6 +14,7 @@
 #include <time.h>
 
 #include "assets.h"
+#include "config.h"
 #include "core.h"
 #include "data.h"
 #include "gpu_resources.h"
@@ -170,6 +171,14 @@ static void init(void)
     printf("🎮 CGGame - Sokol-based Component Engine\n");
     printf("==========================================\n\n");
 
+    // Initialize configuration system
+    printf("⚙️  Initializing configuration...\n");
+    if (!config_init()) {
+        printf("❌ Failed to initialize configuration system\n");
+        sapp_quit();
+        return;
+    }
+
     // Initialize random seed
     srand((unsigned int)time(NULL));
 
@@ -242,8 +251,22 @@ static void init(void)
 
     printf("🏗️ Loading scene...\n");
 
-    // Load scene - CLI override or default to logo
-    const char* scene_to_load = (strlen(app_state.requested_scene) > 0) ? app_state.requested_scene : "logo";
+    // Determine initial scene: CLI override > config startup scene > default to logo
+    const char* scene_to_load;
+    if (strlen(app_state.requested_scene) > 0) {
+        // CLI override takes precedence
+        scene_to_load = app_state.requested_scene;
+        printf("🎯 Using CLI-specified scene: %s\n", scene_to_load);
+    } else if (config_get_auto_start()) {
+        // Use configured startup scene if auto-start is enabled
+        scene_to_load = config_get_startup_scene();
+        printf("⚙️  Using configured startup scene: %s (auto-start enabled)\n", scene_to_load);
+    } else {
+        // Default to logo scene
+        scene_to_load = "logo";
+        printf("🎮 Using default scene: %s\n", scene_to_load);
+    }
+    
     strcpy(app_state.current_scene, scene_to_load);
     printf("ℹ️ Loading scene: %s\n", scene_to_load);
 
@@ -372,6 +395,9 @@ static void cleanup(void)
     // Assets are cleaned up by the scheduler
     scheduler_destroy(&app_state.scheduler, &app_state.render_config);
     world_destroy(&app_state.world);
+    
+    // Shutdown configuration system
+    config_shutdown();
 
     sg_shutdown();
     printf("✅ Cleanup complete\n");

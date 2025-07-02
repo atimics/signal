@@ -54,7 +54,7 @@ typedef struct {
 static FlightObstacle obstacles[OBSTACLE_COUNT];
 
 // Forward declarations
-void diagnose_gamepad_issues(void);
+void diagnose_gamepad_issues(void);  // Defined in derelict_navigation_scene.c
 
 void flight_test_init(struct World* world, SceneStateManager* state) {
     (void)state;
@@ -515,70 +515,3 @@ const SceneScript flight_test_script = {
     .on_exit = flight_test_cleanup,
     .on_input = flight_test_input
 };
-
-// Gamepad diagnostic function (reused from derelict scene)
-void diagnose_gamepad_issues(void) {
-    printf("\n🔍 GAMEPAD DIAGNOSTIC REPORT\n");
-    printf("=====================================\n");
-    
-    printf("📡 HID API Status:\n");
-    struct hid_device_info* device_list = hid_enumerate(0x0, 0x0);
-    if (!device_list) {
-        printf("   ❌ No HID devices detected at all\n");
-        printf("   💡 This suggests a system-level HID issue\n");
-    } else {
-        printf("   ✅ HID enumeration working\n");
-        
-        int total_devices = 0;
-        int gaming_devices = 0;
-        struct hid_device_info* current = device_list;
-        
-        while (current) {
-            total_devices++;
-            
-            if (current->vendor_id == 0x045e ||  // Microsoft
-                current->vendor_id == 0x054c ||  // Sony
-                current->vendor_id == 0x2dc8 ||  // 8BitDo
-                current->vendor_id == 0x0079 ||  // DragonRise
-                current->vendor_id == 0x046d ||  // Logitech
-                current->vendor_id == 0x0e6f) {  // Logic3
-                gaming_devices++;
-                printf("   🎮 Found gaming device: VID:0x%04X PID:0x%04X\n", 
-                       current->vendor_id, current->product_id);
-                if (current->product_string) {
-                    char product_name[256];
-                    wcstombs(product_name, current->product_string, sizeof(product_name) - 1);
-                    product_name[sizeof(product_name) - 1] = '\0';
-                    printf("      Name: %s\n", product_name);
-                }
-            }
-            current = current->next;
-        }
-        
-        printf("   📊 Total HID devices: %d\n", total_devices);
-        printf("   🎮 Gaming-related devices: %d\n", gaming_devices);
-        
-        hid_free_enumeration(device_list);
-    }
-    
-    printf("\n🎮 SUPPORTED CONTROLLERS:\n");
-    printf("   Xbox Controllers (VID: 0x045E):\n");
-    printf("     - Xbox One: PID 0x02EA\n");
-    printf("     - Xbox 360: PID 0x028E\n");
-    printf("     - Xbox Elite: PID 0x02E3\n");
-    printf("     - Xbox Wireless: PID 0x0B13\n");
-    printf("   PlayStation Controllers (VID: 0x054C):\n");
-    printf("     - DualShock 4: PID 0x09CC\n");
-    printf("     - DualSense: PID 0x0CE6\n");
-    printf("   8BitDo Controllers (VID: 0x2DC8):\n");
-    printf("     - Most models supported\n");
-    
-    printf("\n💡 TROUBLESHOOTING STEPS:\n");
-    printf("   1. Connect your controller via USB first\n");
-    printf("   2. Ensure controller is in pairing mode for Bluetooth\n");
-    printf("   3. Check macOS System Preferences > Bluetooth\n");
-    printf("   4. Try pressing the Xbox/PS button to wake the controller\n");
-    printf("   5. For Xbox controllers: Hold Xbox button + Connect button\n");
-    printf("   6. For PS4/5: Hold Share + PS button until light flashes\n");
-    printf("=====================================\n\n");
-}
