@@ -24,14 +24,6 @@ static double get_time_ms(void) {
     return (double)ts.tv_sec * 1000.0 + (double)ts.tv_nsec / 1000000.0;
 }
 
-void setUp(void) {
-    // Setup for each test
-}
-
-void tearDown(void) {
-    // Cleanup after each test
-}
-
 void test_entity_creation_performance(void)
 {
     printf("🚀 Testing entity creation performance...\n");

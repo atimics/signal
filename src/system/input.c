@@ -102,15 +102,15 @@ void input_update(void) {
         }
         
         // Shoulder buttons for roll
-        if (gamepad->right_shoulder) {
-            current_input.roll += 1.0f; // Right shoulder = roll right
+        if (gamepad->buttons[GAMEPAD_BUTTON_RB]) {
+            current_input.roll += 1.0f; // Right bumper = roll right
         }
-        if (gamepad->left_shoulder) {
-            current_input.roll -= 1.0f; // Left shoulder = roll left
+        if (gamepad->buttons[GAMEPAD_BUTTON_LB]) {
+            current_input.roll -= 1.0f; // Left bumper = roll left
         }
         
-        // Boost on one of the face buttons
-        if (gamepad->button_a) {
+        // Boost on A button
+        if (gamepad->buttons[GAMEPAD_BUTTON_A]) {
             current_input.boost = 1.0f;
         }
     }

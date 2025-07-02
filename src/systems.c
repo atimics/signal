@@ -128,6 +128,11 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                          .enabled = true,
                                                          .update_func = thruster_system_update };
 
+    scheduler->systems[SYSTEM_CONTROL] = (SystemInfo){ .name = "Control",
+                                                       .frequency = 60.0f,  // Every frame
+                                                       .enabled = true,
+                                                       .update_func = control_system_update };
+
     // Initialize performance monitoring
     performance_init();
     
@@ -140,6 +145,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     printf("   Performance: %.1f Hz\n", scheduler->systems[SYSTEM_PERFORMANCE].frequency);
     printf("   Memory: %.1f Hz\n", scheduler->systems[SYSTEM_MEMORY].frequency);
     printf("   Thrusters: %.1f Hz\n", scheduler->systems[SYSTEM_THRUSTERS].frequency);
+    printf("   Control: %.1f Hz\n", scheduler->systems[SYSTEM_CONTROL].frequency);
 
     return true;
 }
