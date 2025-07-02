@@ -14,13 +14,22 @@ include(cmake/TestDiscovery.cmake)
 # TEST SUITE DEFINITION
 # ============================================================================
 
-# Core Engine Tests
+# Core Engine Tests - Individual executables
 cgame_add_test_suite(
-    NAME cmake-core
-    SOURCES 
-        core/test_components.c
-        core/test_math.c
-        core/test_world.c
+    NAME cmake-core_test_components
+    SOURCES core/test_components.c
+    LIBS core physics
+)
+
+cgame_add_test_suite(
+    NAME cmake-core_test_math
+    SOURCES core/test_math.c
+    LIBS core physics
+)
+
+cgame_add_test_suite(
+    NAME cmake-core_test_world
+    SOURCES core/test_world.c
     LIBS core physics
 )
 
