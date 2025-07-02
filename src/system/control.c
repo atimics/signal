@@ -1,6 +1,7 @@
 #include "control.h"
 #include "input.h"
 #include "thrusters.h"
+#include "../component/look_target.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -8,163 +9,149 @@
 static EntityID g_player_entity = INVALID_ENTITY;
 
 // ============================================================================
-// CONTROL PROCESSING FUNCTIONS
+// CANYON RACING CONTROL FUNCTIONS
 // ============================================================================
 
-// Enhanced sensitivity curve with velocity-adaptive response (disabled for now)
-/*
-static float apply_adaptive_sensitivity(float input, float base_sensitivity, float current_velocity, float max_velocity) {
-    if (fabsf(input) < 0.001f) return 0.0f;
-    
-    // Velocity-based sensitivity scaling: higher sensitivity at low speeds for precision
-    float velocity_factor = 1.0f;
-    if (max_velocity > 0.0f) {
-        float velocity_ratio = fabsf(current_velocity) / max_velocity;
-        velocity_factor = 1.5f - (velocity_ratio * 0.5f); // 1.5x at standstill, 1.0x at max speed
+// Calculate thrust direction based on look target
+static Vector3 calculate_look_based_thrust(const LookTarget* look_target, 
+                                         const Vector3* ship_position,
+                                         float thrust_magnitude) {
+    if (!look_target || !ship_position) {
+        return (Vector3){0, 0, -thrust_magnitude}; // Default forward
     }
     
-    // Adaptive response curve: more linear for small inputs, more aggressive for large inputs
-    float abs_input = fabsf(input);
-    float sign = input > 0.0f ? 1.0f : -1.0f;
+    // Get direction from ship to look target
+    Vector3 to_target = look_target_get_direction(look_target, ship_position);
     
-    float response;
-    if (abs_input < 0.3f) {
-        // Linear response for small inputs (precision zone)
-        response = abs_input * 1.8f;
+    // Scale by thrust magnitude
+    return vector3_multiply_scalar(to_target, thrust_magnitude);
+}
+
+// Calculate torque to turn ship towards look direction
+static Vector3 calculate_look_alignment_torque(const LookTarget* look_target,
+                                             const Vector3* ship_position,
+                                             const Quaternion* ship_orientation,
+                                             float alignment_strength) {
+    if (!look_target || !ship_position || !ship_orientation) {
+        return (Vector3){0, 0, 0};
+    }
+    
+    // Get desired forward direction
+    Vector3 desired_forward = look_target_get_direction(look_target, ship_position);
+    
+    // Get current forward direction
+    Vector3 current_forward = quaternion_rotate_vector(*ship_orientation, (Vector3){0, 0, -1});
+    
+    // Calculate rotation axis and angle
+    Vector3 rotation_axis = vector3_cross(current_forward, desired_forward);
+    float dot = vector3_dot(current_forward, desired_forward);
+    dot = fmaxf(-1.0f, fminf(1.0f, dot)); // Clamp to avoid NaN from acos
+    float angle = acosf(dot);
+    
+    // If vectors are nearly aligned, no torque needed
+    if (angle < 0.01f) {
+        return (Vector3){0, 0, 0};
+    }
+    
+    // Normalize rotation axis
+    rotation_axis = vector3_normalize(rotation_axis);
+    
+    // Apply proportional torque
+    return vector3_multiply_scalar(rotation_axis, angle * alignment_strength);
+}
+
+// Apply auto-leveling to keep ship upright
+static Vector3 apply_auto_level_torque(const Quaternion* ship_orientation, float strength) {
+    if (!ship_orientation || strength <= 0.0f) {
+        return (Vector3){0, 0, 0};
+    }
+    
+    // Get ship's current up vector
+    Vector3 current_up = quaternion_rotate_vector(*ship_orientation, (Vector3){0, 1, 0});
+    
+    // World up
+    Vector3 world_up = {0, 1, 0};
+    
+    // Calculate correction torque
+    Vector3 torque = vector3_cross(current_up, world_up);
+    
+    // Scale by strength
+    return vector3_multiply_scalar(torque, strength);
+}
+
+// Process linear input for canyon racing
+static Vector3 process_canyon_racing_linear(const InputState* input, 
+                                          struct ControlAuthority* control,
+                                          const Vector3* ship_position) {
+    if (!input || !control) return (Vector3){0, 0, 0};
+    
+    Vector3 linear_commands = {0, 0, 0};
+    
+    // Check if we're using look-based thrust
+    if (input->look_based_thrust && input->thrust > 0.0f) {
+        // Update player position for look target
+        input_update_player_position(ship_position);
+        
+        // Calculate thrust direction based on look target
+        linear_commands = calculate_look_based_thrust(&input->look_target, 
+                                                    ship_position, 
+                                                    input->thrust);
     } else {
-        // Smooth curve for larger inputs
-        float normalized = (abs_input - 0.3f) / 0.7f; // Map 0.3-1.0 to 0-1
-        response = 0.54f + (normalized * normalized * 0.46f); // Start at 0.54, curve to 1.0
+        // Traditional thrust (for reverse, vertical, etc.)
+        linear_commands = (Vector3){
+            0.0f,                // No strafe in canyon racing mode
+            input->vertical,     // Up/down
+            -input->thrust       // Forward/backward (negative Z = forward)
+        };
     }
     
-    return sign * response * base_sensitivity * velocity_factor;
-}
-*/
-
-// Turn rate limiter to prevent over-rotation (disabled for now)
-/*
-static Vector3 apply_turn_rate_limiting(Vector3 input, Vector3 previous_angular, float delta_limit) {
-    (void)previous_angular;  // Unused - rate limiting disabled
-    (void)delta_limit;       // Unused - rate limiting disabled
-    
-    // Return input unchanged - rate limiting was causing steering issues
-    return input;
-}
-*/
-
-// Gamepad-specific input processing with separate tuning
-static Vector3 process_gamepad_angular_input(const InputState* input, float sensitivity, Vector3 current_velocity) {
-    Vector3 result = { 0.0f, 0.0f, 0.0f };
-    (void)current_velocity;  // Unused for now - simplified approach
-    
-    // Reduced gamepad sensitivity to fix flipping issues
-    const float gamepad_pitch_sensitivity = sensitivity * 1.0f;
-    const float gamepad_yaw_sensitivity = sensitivity * 1.1f;   // Slightly higher for turns
-    const float gamepad_roll_sensitivity = sensitivity * 1.0f;  // Normal for banking
-    
-    // For gamepad, right stick X (strafe) creates banking turns
-    float banking_input = input->strafe;  // Right stick X
-    float bank_yaw_strength = 1.0f;
-    float bank_roll_strength = 0.6f;
-    
-    result.x = input->pitch * gamepad_pitch_sensitivity;  // Left stick Y
-    result.y = (input->yaw + banking_input * bank_yaw_strength) * gamepad_yaw_sensitivity;  // Left stick X + banking
-    result.z = (input->roll - banking_input * bank_roll_strength) * gamepad_roll_sensitivity;  // Bumpers + banking
-    
-    return result;
-}
-
-static Vector3 process_linear_input(const InputState* input, struct ControlAuthority* control)
-{
-    if (!input || !control) return (Vector3){ 0.0f, 0.0f, 0.0f };
-    
-    // Check if this is gamepad input (to disable banking lateral forces for gamepad)
-    bool is_gamepad_input = (fabsf(input->thrust) < 1.0f && fabsf(input->thrust) > 0.0f) ||
-                           (fabsf(input->pitch) < 1.0f && fabsf(input->pitch) > 0.0f);
-    
-    // Canyon racer flight model - banking creates natural turn forces (keyboard only)
-    float banking_input = is_gamepad_input ? 0.0f : input->strafe;
-    
-    Vector3 linear_commands = {
-        banking_input * 0.2f, // Slight lateral force from banking (keyboard only)
-        input->vertical,      // Up/down -> Y-axis (vertical thrust)
-        -input->thrust        // Forward/backward -> Z-axis (negative Z = forward away from camera)
-    };
-    
-    // Apply sensitivity
-    linear_commands = apply_sensitivity_curve(linear_commands, control->control_sensitivity);
-    
-    // Apply boost multiplier
+    // Apply boost
     if (input->boost > 0.0f) {
-        float boost_factor = 1.0f + input->boost * 0.5f; // Up to 50% boost
-        linear_commands.x *= boost_factor;
-        linear_commands.y *= boost_factor;
-        linear_commands.z *= boost_factor;
+        float boost_factor = 1.0f + input->boost * 3.0f; // 4x boost
+        linear_commands = vector3_multiply_scalar(linear_commands, boost_factor);
     }
     
     // Apply brake
     if (input->brake) {
-        linear_commands.x *= 0.1f; // Reduce thrust when braking
-        linear_commands.y *= 0.1f;
-        linear_commands.z *= 0.1f;
+        linear_commands = vector3_multiply_scalar(linear_commands, 0.05f);
     }
     
     return linear_commands;
 }
 
-static Vector3 process_angular_input(const InputState* input, struct ControlAuthority* control, struct Physics* physics)
-{
-    if (!input || !control) return (Vector3){ 0.0f, 0.0f, 0.0f };
+// Process angular input for canyon racing
+static Vector3 process_canyon_racing_angular(const InputState* input,
+                                           struct ControlAuthority* control,
+                                           const Vector3* ship_position,
+                                           const Quaternion* ship_orientation) {
+    if (!input || !control) return (Vector3){0, 0, 0};
     
-    static Vector3 previous_angular = { 0.0f, 0.0f, 0.0f };
-    (void)previous_angular;  // Unused for now - rate limiting disabled
+    Vector3 angular_commands = {0, 0, 0};
     
-    // Check if this is gamepad input (more sophisticated detection)
-    bool is_gamepad_input = (fabsf(input->pitch) < 1.0f && fabsf(input->pitch) > 0.0f) ||
-                           (fabsf(input->yaw) < 1.0f && fabsf(input->yaw) > 0.0f) ||
-                           (fabsf(input->roll) < 1.0f && fabsf(input->roll) > 0.0f);
+    // Direct ship control from input
+    angular_commands.x = input->pitch * control->control_sensitivity;
+    angular_commands.y = input->yaw * control->control_sensitivity;
+    angular_commands.z = input->roll * control->control_sensitivity;
     
-    Vector3 angular_commands;
-    
-    if (is_gamepad_input) {
-        // Use enhanced gamepad processing
-        Vector3 current_angular_velocity = physics ? physics->angular_velocity : (Vector3){ 0.0f, 0.0f, 0.0f };
-        angular_commands = process_gamepad_angular_input(input, control->control_sensitivity, current_angular_velocity);
-        
-        // Turn rate limiting disabled - was causing steering issues
-        // angular_commands = apply_turn_rate_limiting(angular_commands, previous_angular, 0.15f);
-    } else {
-        // Proper flight model for keyboard
-        // A/D control banking turns (combined yaw and roll)
-        float banking_input = input->strafe;  // A = -1, D = +1
-        float bank_yaw_strength = 1.2f;
-        float bank_roll_strength = 0.8f;
-        
-        angular_commands = (Vector3){
-            input->pitch,                              // X = Pitch (nose up/down)
-            banking_input * bank_yaw_strength + input->yaw,   // Y = Yaw (turn)
-            -banking_input * bank_roll_strength + input->roll  // Z = Roll (bank opposite to turn)
-        };
-        
-        // Apply standard sensitivity curve for keyboard
-        angular_commands = apply_sensitivity_curve(angular_commands, control->control_sensitivity);
+    // Add look-direction alignment when thrusting
+    if (input->look_based_thrust && input->thrust > 0.0f) {
+        Vector3 look_torque = calculate_look_alignment_torque(&input->look_target,
+                                                            ship_position,
+                                                            ship_orientation,
+                                                            2.0f); // Alignment strength
+        angular_commands = vector3_add(angular_commands, look_torque);
     }
     
-    // Store for next frame's rate limiting
-    previous_angular = angular_commands;
-    
-    // Debug angular commands (less frequent)
-    static uint32_t angular_debug = 0;
-    if ((fabsf(angular_commands.x) > 0.01f || fabsf(angular_commands.y) > 0.01f || fabsf(angular_commands.z) > 0.01f) && ++angular_debug % 60 == 0) {
-        printf("🏎️ Angular [%s]: P:%.2f Y:%.2f R:%.2f\n", 
-               is_gamepad_input ? "GAMEPAD" : "KEYBOARD",
-               angular_commands.x, angular_commands.y, angular_commands.z);
+    // Add auto-leveling
+    if (input->auto_level > 0.0f) {
+        Vector3 level_torque = apply_auto_level_torque(ship_orientation, input->auto_level);
+        angular_commands = vector3_add(angular_commands, level_torque);
     }
     
-    // Apply flight assistance if enabled
-    if (control->flight_assist_enabled && physics) {
-        angular_commands = apply_stability_assist(angular_commands, physics->angular_velocity, control->stability_assist);
-    }
+    // Clamp to reasonable values
+    angular_commands.x = fmaxf(-1.0f, fminf(1.0f, angular_commands.x));
+    angular_commands.y = fmaxf(-1.0f, fminf(1.0f, angular_commands.y));
+    angular_commands.z = fmaxf(-1.0f, fminf(1.0f, angular_commands.z));
     
     return angular_commands;
 }
@@ -173,10 +160,9 @@ static Vector3 process_angular_input(const InputState* input, struct ControlAuth
 // MAIN CONTROL SYSTEM UPDATE
 // ============================================================================
 
-void control_system_update(struct World* world, RenderConfig* render_config, float delta_time)
-{
-    (void)render_config;  // Unused parameter
-    (void)delta_time;     // Unused parameter
+void control_system_update(struct World* world, RenderConfig* render_config, float delta_time) {
+    (void)render_config;
+    (void)delta_time;
     if (!world) return;
 
     // Get current input state
@@ -184,21 +170,20 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
     if (!input) return;
 
     uint32_t control_updates = 0;
+    (void)control_updates; // Suppress unused warning
 
     // Process all entities with control authority
-    for (uint32_t i = 0; i < world->entity_count; i++)
-    {
+    for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
 
         if (!(entity->component_mask & COMPONENT_CONTROL_AUTHORITY) ||
-            !(entity->component_mask & COMPONENT_THRUSTER_SYSTEM))
-        {
+            !(entity->component_mask & COMPONENT_THRUSTER_SYSTEM)) {
             continue;
         }
 
         struct ControlAuthority* control = entity->control_authority;
         struct ThrusterSystem* thrusters = entity->thruster_system;
-        struct Physics* physics = entity->physics; // Optional for flight assist
+        struct Transform* transform = entity->transform;
         
         if (!control || !thrusters) continue;
 
@@ -206,64 +191,48 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
         if (control->controlled_by != INVALID_ENTITY && control->controlled_by == g_player_entity) {
             control_updates++;
             
-            // Process linear input (thrust, strafe, vertical)
-            Vector3 linear_commands = process_linear_input(input, control);
-            control->input_linear = linear_commands;
+            // Get ship position and orientation
+            Vector3 ship_position = transform ? transform->position : (Vector3){0, 0, 0};
+            Quaternion ship_orientation = transform ? transform->rotation : 
+                                         (Quaternion){0, 0, 0, 1};
             
+            // Process linear input (thrust)
+            Vector3 linear_commands = process_canyon_racing_linear(input, control, &ship_position);
+            control->input_linear = linear_commands;
             thruster_set_linear_command(thrusters, linear_commands);
             
-            // Process angular input (pitch, yaw, roll) - 6DOF
-            Vector3 angular_commands = process_angular_input(input, control, physics);
+            // Process angular input (rotation)
+            Vector3 angular_commands = process_canyon_racing_angular(input, control, 
+                                                                   &ship_position, 
+                                                                   &ship_orientation);
             control->input_angular = angular_commands;
             thruster_set_angular_command(thrusters, angular_commands);
             
             // Store boost and brake state
             control->input_boost = input->boost;
             control->input_brake = input->brake;
+            
+            // Debug output
+            static uint32_t debug_counter = 0;
+            if (++debug_counter % 60 == 0 && 
+                (input->thrust != 0.0f || fabsf(angular_commands.x) > 0.1f || 
+                 fabsf(angular_commands.y) > 0.1f || fabsf(angular_commands.z) > 0.1f)) {
+                
+                printf("🏎️ Canyon Control: ");
+                if (input->look_based_thrust) {
+                    printf("LOOK-THRUST ");
+                }
+                if (input->auto_level > 0.0f) {
+                    printf("AUTO-LEVEL(%.1f) ", input->auto_level);
+                }
+                printf("Lin:(%.2f,%.2f,%.2f) Ang:(%.2f,%.2f,%.2f)\n",
+                       linear_commands.x, linear_commands.y, linear_commands.z,
+                       angular_commands.x, angular_commands.y, angular_commands.z);
+            }
         } else {
             // Clear commands for non-player entities
-            thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 0.0f });
-            thruster_set_angular_command(thrusters, (Vector3){ 0.0f, 0.0f, 0.0f });
-        }
-    }
-
-    // Debug logging (more frequent for troubleshooting)
-    static uint32_t log_counter = 0;
-    if (++log_counter % 60 == 0)  // Every second at 60 FPS for more frequent debugging
-    {
-        printf("🎮 Control: %d entities processed, Player: %d\n", 
-               control_updates, g_player_entity);
-        
-        // Print input state for debugging
-        if (input) {
-            printf("🎮 Input: T:%.2f S:%.2f V:%.2f P:%.2f Y:%.2f R:%.2f B:%s Boost:%.2f\n",
-                   input->thrust, input->strafe, input->vertical,
-                   input->pitch, input->yaw, input->roll,
-                   input->brake ? "ON" : "OFF", input->boost);
-            
-            // Debug any non-zero input
-            if (input->thrust != 0.0f || input->strafe != 0.0f || input->vertical != 0.0f) {
-                printf("🚀 Movement input detected: T:%.2f S:%.2f V:%.2f\n", 
-                       input->thrust, input->strafe, input->vertical);
-            }
-            
-            // Debug strafe specifically since left/right asymmetry reported
-            if (input->strafe != 0.0f) {
-                printf("↔️ STRAFE: %.2f (A=LEFT=-1, D=RIGHT=+1)\n", input->strafe);
-            }
-            
-            // Debug angular controls specifically
-            if (input->pitch != 0.0f || input->yaw != 0.0f || input->roll != 0.0f) {
-                printf("🔄 Angular input: P:%.2f Y:%.2f R:%.2f\n", 
-                       input->pitch, input->yaw, input->roll);
-            }
-            
-            // Debug yaw specifically since it's not working
-            if (input->yaw != 0.0f) {
-                printf("➡️ YAW: %.2f (LEFT=-1, RIGHT=+1)\n", input->yaw);
-            }
-        } else {
-            printf("❌ Control: No input state available!\n");
+            thruster_set_linear_command(thrusters, (Vector3){0, 0, 0});
+            thruster_set_angular_command(thrusters, (Vector3){0, 0, 0});
         }
     }
 }
@@ -272,27 +241,23 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
 // CONTROL CONFIGURATION FUNCTIONS
 // ============================================================================
 
-void control_set_player_entity(struct World* world, EntityID player_entity)
-{
-    (void)world;  // Unused for now, but may be needed for validation
+void control_set_player_entity(struct World* world, EntityID player_entity) {
+    (void)world;
     g_player_entity = player_entity;
-    printf("🎮 Control: Player entity set to %d\n", player_entity);
+    printf("🎮 Canyon Racing Control: Player entity set to %d\n", player_entity);
 }
 
-void control_set_sensitivity(struct ControlAuthority* control, float sensitivity)
-{
+void control_set_sensitivity(struct ControlAuthority* control, float sensitivity) {
     if (!control) return;
-    control->control_sensitivity = fmaxf(0.1f, fminf(5.0f, sensitivity)); // Clamp 0.1-5.0
+    control->control_sensitivity = fmaxf(0.1f, fminf(5.0f, sensitivity));
 }
 
-void control_set_flight_assist(struct ControlAuthority* control, bool enabled)
-{
+void control_set_flight_assist(struct ControlAuthority* control, bool enabled) {
     if (!control) return;
     control->flight_assist_enabled = enabled;
 }
 
-void control_toggle_flight_assist(struct ControlAuthority* control)
-{
+void control_toggle_flight_assist(struct ControlAuthority* control) {
     if (!control) return;
     control->flight_assist_enabled = !control->flight_assist_enabled;
     printf("🎮 Flight Assist: %s\n", control->flight_assist_enabled ? "ON" : "OFF");
@@ -302,25 +267,23 @@ void control_toggle_flight_assist(struct ControlAuthority* control)
 // FLIGHT ASSISTANCE FUNCTIONS  
 // ============================================================================
 
-Vector3 apply_stability_assist(Vector3 input, Vector3 current_angular_velocity, float assist_strength)
-{
-    // Apply counter-rotation to reduce angular velocity when no input is given
+Vector3 apply_stability_assist(Vector3 input, Vector3 current_angular_velocity, float assist_strength) {
     Vector3 assisted_input = input;
     
     if (assist_strength > 0.0f) {
-        // If there's no input on an axis, apply counter-rotation to stabilize
-        if (fabsf(input.x) < 0.1f) { // Pitch
+        // Apply counter-rotation to stabilize
+        if (fabsf(input.x) < 0.1f) {
             assisted_input.x -= current_angular_velocity.x * assist_strength * 0.5f;
         }
-        if (fabsf(input.y) < 0.1f) { // Yaw
+        if (fabsf(input.y) < 0.1f) {
             assisted_input.y -= current_angular_velocity.y * assist_strength * 0.5f;
         }
-        if (fabsf(input.z) < 0.1f) { // Roll
+        if (fabsf(input.z) < 0.1f) {
             assisted_input.z -= current_angular_velocity.z * assist_strength * 0.5f;
         }
     }
     
-    // Clamp the result to valid input range
+    // Clamp
     assisted_input.x = fmaxf(-1.0f, fminf(1.0f, assisted_input.x));
     assisted_input.y = fmaxf(-1.0f, fminf(1.0f, assisted_input.y));
     assisted_input.z = fmaxf(-1.0f, fminf(1.0f, assisted_input.z));
@@ -328,21 +291,19 @@ Vector3 apply_stability_assist(Vector3 input, Vector3 current_angular_velocity, 
     return assisted_input;
 }
 
-Vector3 apply_sensitivity_curve(Vector3 input, float sensitivity)
-{
-    // Simplified sensitivity curve for keyboard input (less aggressive than before)
+Vector3 apply_sensitivity_curve(Vector3 input, float sensitivity) {
+    // Simple quadratic curve for smooth response
     Vector3 result;
     
-    // Use quadratic curve for smooth response - less aggressive than cubic
     float sign_x = input.x > 0 ? 1.0f : -1.0f;
     float sign_y = input.y > 0 ? 1.0f : -1.0f;
     float sign_z = input.z > 0 ? 1.0f : -1.0f;
     
-    result.x = input.x * fabsf(input.x) * sign_x * sensitivity * 0.8f; // Slightly reduced
-    result.y = input.y * fabsf(input.y) * sign_y * sensitivity * 0.8f;
-    result.z = input.z * fabsf(input.z) * sign_z * sensitivity * 0.8f;
+    result.x = input.x * fabsf(input.x) * sign_x * sensitivity;
+    result.y = input.y * fabsf(input.y) * sign_y * sensitivity;
+    result.z = input.z * fabsf(input.z) * sign_z * sensitivity;
     
-    // Clamp to valid range
+    // Clamp
     result.x = fmaxf(-1.0f, fminf(1.0f, result.x));
     result.y = fmaxf(-1.0f, fminf(1.0f, result.y));
     result.z = fmaxf(-1.0f, fminf(1.0f, result.z));

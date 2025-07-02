@@ -24,12 +24,13 @@ static struct World test_world;
 
 void setUp(void)
 {
-    // Initialize test world
+    // Initialize test world properly
     memset(&test_world, 0, sizeof(struct World));
-    test_world.max_entities = 100;
-    test_world.entities = malloc(sizeof(struct Entity) * 100);
-    test_world.entity_count = 0;
-    test_world.next_entity_id = 1;
+    if (!world_init(&test_world)) {
+        printf("Failed to initialize test world\n");
+        exit(1);
+    }
+    test_world.max_entities = 100; // Override for test efficiency
     
     // Initialize input system
     input_init();
@@ -39,10 +40,8 @@ void tearDown(void)
 {
     input_shutdown();
     
-    if (test_world.entities) {
-        free(test_world.entities);
-        test_world.entities = NULL;
-    }
+    // Properly destroy the world
+    world_destroy(&test_world);
 }
 
 // ============================================================================
@@ -54,7 +53,7 @@ EntityID create_ship_entity(struct World* world, bool enable_6dof)
     EntityID entity = entity_create(world);
     
     // Add all flight-capable components
-    entity_add_component(world, entity, 
+    entity_add_components(world, entity, 
                         COMPONENT_PHYSICS | COMPONENT_TRANSFORM | 
                         COMPONENT_THRUSTER_SYSTEM | COMPONENT_CONTROL_AUTHORITY);
     
@@ -93,7 +92,7 @@ EntityID create_debris_entity(struct World* world)
     EntityID entity = entity_create(world);
     
     // Debris only has physics (no thrusters or control)
-    entity_add_component(world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(world, entity, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct Physics* physics = entity_get_physics(world, entity);
     physics->mass = 50.0f;
@@ -108,7 +107,7 @@ EntityID create_guided_missile_entity(struct World* world)
     EntityID entity = entity_create(world);
     
     // Missile has physics and thrusters, but no external control
-    entity_add_component(world, entity, 
+    entity_add_components(world, entity, 
                         COMPONENT_PHYSICS | COMPONENT_TRANSFORM | COMPONENT_THRUSTER_SYSTEM);
     
     struct Physics* physics = entity_get_physics(world, entity);
@@ -431,7 +430,7 @@ void test_entity_without_all_components(void)
 {
     // Test entities with missing components
     EntityID incomplete1 = entity_create(&test_world);
-    entity_add_component(&test_world, incomplete1, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, incomplete1, COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     // No thrusters or control
     
     EntityID incomplete2 = entity_create(&test_world);

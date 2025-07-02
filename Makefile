@@ -211,6 +211,19 @@ core/fast:
 .PHONY : core/fast
 
 #=============================================================================
+# Target rules for targets named look_target
+
+# Build rule for target.
+look_target: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 look_target
+.PHONY : look_target
+
+# fast build rule for target.
+look_target/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/look_target.dir/build.make CMakeFiles/look_target.dir/build
+.PHONY : look_target/fast
+
+#=============================================================================
 # Target rules for targets named physics
 
 # Build rule for target.
@@ -981,6 +994,30 @@ src/assets.s: src/assets.c.s
 src/assets.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/assets.dir/build.make CMakeFiles/assets.dir/src/assets.c.s
 .PHONY : src/assets.c.s
+
+src/component/look_target.o: src/component/look_target.c.o
+.PHONY : src/component/look_target.o
+
+# target to build an object file
+src/component/look_target.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/look_target.dir/build.make CMakeFiles/look_target.dir/src/component/look_target.c.o
+.PHONY : src/component/look_target.c.o
+
+src/component/look_target.i: src/component/look_target.c.i
+.PHONY : src/component/look_target.i
+
+# target to preprocess a source file
+src/component/look_target.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/look_target.dir/build.make CMakeFiles/look_target.dir/src/component/look_target.c.i
+.PHONY : src/component/look_target.c.i
+
+src/component/look_target.s: src/component/look_target.c.s
+.PHONY : src/component/look_target.s
+
+# target to generate assembly for a file
+src/component/look_target.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/look_target.dir/build.make CMakeFiles/look_target.dir/src/component/look_target.c.s
+.PHONY : src/component/look_target.c.s
 
 src/config.o: src/config.c.o
 .PHONY : src/config.o
@@ -1933,6 +1970,7 @@ help:
 	@echo "... input_processing"
 	@echo "... lod"
 	@echo "... logo_scene_script"
+	@echo "... look_target"
 	@echo "... material"
 	@echo "... memory"
 	@echo "... performance"
@@ -1974,6 +2012,9 @@ help:
 	@echo "... src/assets.o"
 	@echo "... src/assets.i"
 	@echo "... src/assets.s"
+	@echo "... src/component/look_target.o"
+	@echo "... src/component/look_target.i"
+	@echo "... src/component/look_target.s"
 	@echo "... src/config.o"
 	@echo "... src/config.i"
 	@echo "... src/config.s"

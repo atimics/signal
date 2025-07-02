@@ -1,188 +1,259 @@
-// src/system/input.c
-// Unified input abstraction implementation
+// Canyon Racing Input System - Simplified and Direct
+// This replaces the overly complex neural network input processing
 
 #include "input.h"
 #include "gamepad.h"
-#include "gamepad_hotplug.h"
-#include "../input_processing.h"
+#include "../component/look_target.h"
 #include "../sokol_app.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-// Enhanced input processing
-static ProductionInputProcessor input_processor = {0};
+// Input configuration
+#define GAMEPAD_DEADZONE 0.15f          // 15% deadzone
+#define LOOK_SENSITIVITY 2.0f           // Camera rotation speed
+#define PITCH_YAW_SENSITIVITY 1.0f      // Ship rotation speed
+#define MOUSE_SENSITIVITY 0.005f         // Mouse look sensitivity
+#define AUTO_LEVEL_STRENGTH 2.0f         // How fast ship auto-levels
 
-// Input state
-static InputState current_input = {0};
-static bool input_initialized = false;
+// Canyon racing input state
+typedef struct CanyonRacingInput {
+    // Current processed input
+    InputState current_state;
+    
+    // Look target for camera
+    LookTarget look_target;
+    
+    // Mouse state
+    float mouse_delta_x;
+    float mouse_delta_y;
+    bool mouse_captured;
+    
+    // Auto-level state
+    bool auto_leveling;
+    float auto_level_timer;
+    
+    // Device state
+    InputDeviceType last_device;
+    bool initialized;
+} CanyonRacingInput;
 
-// Keyboard state tracking
+// Global state
+static CanyonRacingInput canyon_input = {0};
 static bool keyboard_state[INPUT_ACTION_COUNT] = {0};
 
-bool input_init(void) {
-    if (input_initialized) return true;
+// Simple deadzone function
+static float apply_deadzone(float value, float deadzone) {
+    if (fabsf(value) < deadzone) {
+        return 0.0f;
+    }
     
+    // Scale to remove deadzone
+    float sign = value > 0 ? 1.0f : -1.0f;
+    return sign * (fabsf(value) - deadzone) / (1.0f - deadzone);
+}
+
+bool input_init(void) {
     // Initialize gamepad system
     if (!gamepad_init()) {
-        printf("⚠️  Input: Gamepad initialization failed - keyboard only\n");
+        printf("⚠️  Canyon Racing Input: Gamepad initialization failed - keyboard/mouse only\n");
     } else {
-        printf("🎮 Input: Gamepad system ready\n");
+        printf("🎮 Canyon Racing Input: Gamepad system ready\n");
     }
     
     // Clear input state
-    memset(&current_input, 0, sizeof(InputState));
+    memset(&canyon_input, 0, sizeof(CanyonRacingInput));
     memset(keyboard_state, 0, sizeof(keyboard_state));
     
-    // Initialize enhanced input processing system
-    production_input_processor_init(&input_processor);
-    printf("✨ Enhanced input processing system initialized\n");
+    // Initialize look target
+    look_target_init(&canyon_input.look_target);
     
-    input_initialized = true;
-    printf("✅ Input system initialized\n");
+    canyon_input.initialized = true;
+    printf("✅ Canyon Racing Input system initialized\n");
     return true;
 }
 
 void input_shutdown(void) {
-    if (!input_initialized) return;
+    if (!canyon_input.initialized) return;
     
     gamepad_shutdown();
-    input_initialized = false;
-    printf("🎮 Input system shutdown\n");
+    canyon_input.initialized = false;
+    printf("🎮 Canyon Racing Input system shutdown\n");
 }
 
 void input_update(void) {
-    if (!input_initialized) return;
-    
-    // Update hot-plug detection
-    gamepad_update_hotplug(0.016f); // Assume 60 FPS for now
+    if (!canyon_input.initialized) return;
     
     // Poll gamepad
     gamepad_poll();
     
     // Clear current input
-    memset(&current_input, 0, sizeof(InputState));
+    memset(&canyon_input.current_state, 0, sizeof(InputState));
     
-    // Process keyboard input (digital)
-    // Linear movement
-    if (keyboard_state[INPUT_ACTION_THRUST_FORWARD]) current_input.thrust += 1.0f;
-    if (keyboard_state[INPUT_ACTION_THRUST_BACKWARD]) current_input.thrust -= 1.0f;
-    if (keyboard_state[INPUT_ACTION_STRAFE_RIGHT]) current_input.strafe += 1.0f;
-    if (keyboard_state[INPUT_ACTION_STRAFE_LEFT]) current_input.strafe -= 1.0f;
-    if (keyboard_state[INPUT_ACTION_MANEUVER_UP]) current_input.vertical += 1.0f;
-    if (keyboard_state[INPUT_ACTION_MANEUVER_DOWN]) current_input.vertical -= 1.0f;
+    // Get player entity position (will be set by control system)
+    Vector3 player_position = {0, 0, 0}; // TODO: Get from player entity
     
-    // Angular movement (6DOF)
-    if (keyboard_state[INPUT_ACTION_PITCH_UP]) current_input.pitch += 1.0f;
-    if (keyboard_state[INPUT_ACTION_PITCH_DOWN]) current_input.pitch -= 1.0f;
-    if (keyboard_state[INPUT_ACTION_YAW_RIGHT]) current_input.yaw += 1.0f;
-    if (keyboard_state[INPUT_ACTION_YAW_LEFT]) current_input.yaw -= 1.0f;
-    if (keyboard_state[INPUT_ACTION_ROLL_RIGHT]) current_input.roll += 1.0f;
-    if (keyboard_state[INPUT_ACTION_ROLL_LEFT]) current_input.roll -= 1.0f;
+    // Process keyboard input
+    // WASD for pitch/yaw
+    if (keyboard_state[INPUT_ACTION_PITCH_DOWN]) canyon_input.current_state.pitch -= 1.0f; // W = dive
+    if (keyboard_state[INPUT_ACTION_PITCH_UP]) canyon_input.current_state.pitch += 1.0f;   // S = climb
+    if (keyboard_state[INPUT_ACTION_YAW_LEFT]) canyon_input.current_state.yaw -= 1.0f;     // A = left
+    if (keyboard_state[INPUT_ACTION_YAW_RIGHT]) canyon_input.current_state.yaw += 1.0f;    // D = right
+    
+    // Q/E for roll
+    if (keyboard_state[INPUT_ACTION_ROLL_LEFT]) canyon_input.current_state.roll -= 1.0f;
+    if (keyboard_state[INPUT_ACTION_ROLL_RIGHT]) canyon_input.current_state.roll += 1.0f;
+    
+    // Space for thrust towards look target
+    if (keyboard_state[INPUT_ACTION_THRUST_FORWARD]) {
+        canyon_input.current_state.thrust = 1.0f;
+        canyon_input.current_state.look_based_thrust = true;
+    }
     
     // Modifiers
-    if (keyboard_state[INPUT_ACTION_BOOST]) current_input.boost = 1.0f;
-    if (keyboard_state[INPUT_ACTION_BRAKE]) current_input.brake = true;
+    if (keyboard_state[INPUT_ACTION_BOOST]) canyon_input.current_state.boost = 1.0f;
+    if (keyboard_state[INPUT_ACTION_BRAKE]) {
+        canyon_input.current_state.brake = true;
+        canyon_input.auto_leveling = true;
+    }
     
-    // Add gamepad input (analog) - Enhanced Processing Pipeline
+    // Process gamepad input
     GamepadState* gamepad = gamepad_get_state(0);
     if (gamepad && gamepad->connected) {
-        // Get raw gamepad input
-        InputVector2 raw_left_stick = {gamepad->left_stick_x, gamepad->left_stick_y};
+        // Left stick for pitch/yaw (ship control)
+        float left_x = apply_deadzone(gamepad->left_stick_x, GAMEPAD_DEADZONE);
+        float left_y = apply_deadzone(gamepad->left_stick_y, GAMEPAD_DEADZONE);
         
-        // Process left stick through enhanced pipeline (primary flight control)
-        Vector6 left_stick_output = production_input_process(&input_processor, raw_left_stick, 0.016f);
-        
-        // Apply processed left stick to flight controls
-        current_input.pitch -= left_stick_output.pitch; // Invert Y (up stick = nose up)
-        current_input.yaw += left_stick_output.yaw;     // Left stick X = turn
-        
-        // Process right stick for banking/vertical thrust (simpler processing for now)
-        const float deadzone = 0.08f;
-        if (fabsf(gamepad->right_stick_x) > deadzone) {
-            current_input.strafe += gamepad->right_stick_x * 1.2f; // Amplified banking input
-        }
-        if (fabsf(gamepad->right_stick_y) > deadzone) {
-            current_input.vertical -= gamepad->right_stick_y; // Invert Y (up stick = thrust up)
+        if (left_x != 0.0f || left_y != 0.0f) {
+            canyon_input.current_state.yaw += left_x * PITCH_YAW_SENSITIVITY;
+            canyon_input.current_state.pitch -= left_y * PITCH_YAW_SENSITIVITY; // Invert Y
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Triggers for forward/reverse thrust
-        if (gamepad->right_trigger > deadzone) {
-            current_input.thrust += gamepad->right_trigger; // Right trigger = forward
-        }
-        if (gamepad->left_trigger > deadzone) {
-            current_input.thrust -= gamepad->left_trigger; // Left trigger = reverse
+        // Right stick for camera/look target control
+        float right_x = apply_deadzone(gamepad->right_stick_x, GAMEPAD_DEADZONE);
+        float right_y = apply_deadzone(gamepad->right_stick_y, GAMEPAD_DEADZONE);
+        
+        if (right_x != 0.0f || right_y != 0.0f) {
+            float delta_azimuth = right_x * LOOK_SENSITIVITY * 0.016f;
+            float delta_elevation = -right_y * LOOK_SENSITIVITY * 0.016f; // Invert Y
+            
+            look_target_update(&canyon_input.look_target, &player_position,
+                             delta_azimuth, delta_elevation, 0.0f);
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Track that gamepad was used
-        if (fabsf(gamepad->left_stick_x) > deadzone || fabsf(gamepad->left_stick_y) > deadzone ||
-            fabsf(gamepad->right_stick_x) > deadzone || fabsf(gamepad->right_stick_y) > deadzone ||
-            gamepad->left_trigger > deadzone || gamepad->right_trigger > deadzone ||
-            gamepad->buttons[GAMEPAD_BUTTON_A] || gamepad->buttons[GAMEPAD_BUTTON_B]) {
-            input_set_last_device_type(INPUT_DEVICE_GAMEPAD);
+        // Right trigger for thrust towards look target
+        float right_trigger = apply_deadzone(gamepad->right_trigger, GAMEPAD_DEADZONE);
+        if (right_trigger > 0.0f) {
+            canyon_input.current_state.thrust = right_trigger;
+            canyon_input.current_state.look_based_thrust = true;
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Debug: Log enhanced input processing
-        static int input_debug_counter = 0;
-        if (++input_debug_counter % 10 == 0) {  // Every ~0.16 seconds at 60fps
-            const float debug_deadzone = 0.08f;
-            if (fabsf(gamepad->left_stick_x) > debug_deadzone || fabsf(gamepad->left_stick_y) > debug_deadzone ||
-                fabsf(gamepad->right_stick_x) > debug_deadzone || fabsf(gamepad->right_stick_y) > debug_deadzone ||
-                gamepad->left_trigger > debug_deadzone || gamepad->right_trigger > debug_deadzone) {
-                printf("🕹️ RAW: LS(%.3f,%.3f) RS(%.3f,%.3f) LT:%.3f RT:%.3f\n",
-                       gamepad->left_stick_x, gamepad->left_stick_y,
-                       gamepad->right_stick_x, gamepad->right_stick_y,
-                       gamepad->left_trigger, gamepad->right_trigger);
-                printf("   ENHANCED: thrust=%.3f pitch=%.3f yaw=%.3f roll=%.3f strafe=%.3f\n",
-                       current_input.thrust, current_input.pitch, current_input.yaw, 
-                       current_input.roll, current_input.strafe);
-                printf("   Processor: Cal=%d Neural=%d MRAC=%d\n",
-                       input_processor.calibration_state, 
-                       input_processor.config.enable_neural_processing,
-                       input_processor.config.enable_mrac_safety);
-                
-                // Extra debug for trigger issue
-                if (gamepad->right_trigger > debug_deadzone) {
-                    printf("   ⚠️ RT pressed: %.3f -> thrust: %.3f (yaw should be: %.3f)\n",
-                           gamepad->right_trigger, current_input.thrust, current_input.yaw);
-                }
-            }
+        // Left trigger for decelerate and auto-level
+        float left_trigger = apply_deadzone(gamepad->left_trigger, GAMEPAD_DEADZONE);
+        if (left_trigger > 0.0f) {
+            canyon_input.current_state.brake = true;
+            canyon_input.auto_leveling = true;
+            canyon_input.auto_level_timer = 1.0f; // Keep auto-leveling for 1 second
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Shoulder buttons for roll
+        // Bumpers for roll
         if (gamepad->buttons[GAMEPAD_BUTTON_RB]) {
-            current_input.roll += 1.0f; // Right bumper = roll right
+            canyon_input.current_state.roll += 1.0f;
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         if (gamepad->buttons[GAMEPAD_BUTTON_LB]) {
-            current_input.roll -= 1.0f; // Left bumper = roll left
+            canyon_input.current_state.roll -= 1.0f;
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
         // Face buttons
         if (gamepad->buttons[GAMEPAD_BUTTON_A]) {
-            current_input.boost = 1.0f; // A = Boost
+            canyon_input.current_state.boost = 1.0f;
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         if (gamepad->buttons[GAMEPAD_BUTTON_B]) {
-            current_input.brake = true; // B = Brake
+            canyon_input.current_state.brake = true;
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
     }
     
-    // Clamp combined values
-    current_input.thrust = fmaxf(-1.0f, fminf(1.0f, current_input.thrust));
-    current_input.strafe = fmaxf(-1.0f, fminf(1.0f, current_input.strafe));
-    current_input.vertical = fmaxf(-1.0f, fminf(1.0f, current_input.vertical));
-    current_input.pitch = fmaxf(-1.0f, fminf(1.0f, current_input.pitch));
-    current_input.yaw = fmaxf(-1.0f, fminf(1.0f, current_input.yaw));
-    current_input.roll = fmaxf(-1.0f, fminf(1.0f, current_input.roll));
-    current_input.boost = fmaxf(0.0f, fminf(1.0f, current_input.boost));
+    // Process mouse input for look target
+    if (canyon_input.mouse_captured && 
+        (fabsf(canyon_input.mouse_delta_x) > 0.001f || fabsf(canyon_input.mouse_delta_y) > 0.001f)) {
+        
+        float delta_azimuth = canyon_input.mouse_delta_x * MOUSE_SENSITIVITY;
+        float delta_elevation = canyon_input.mouse_delta_y * MOUSE_SENSITIVITY;
+        
+        look_target_update(&canyon_input.look_target, &player_position,
+                         delta_azimuth, delta_elevation, 0.0f);
+        
+        canyon_input.last_device = INPUT_DEVICE_KEYBOARD; // Mouse counts as keyboard
+        
+        // Clear mouse deltas
+        canyon_input.mouse_delta_x = 0.0f;
+        canyon_input.mouse_delta_y = 0.0f;
+    }
+    
+    // Update auto-leveling
+    if (canyon_input.auto_leveling) {
+        canyon_input.current_state.auto_level = AUTO_LEVEL_STRENGTH;
+        
+        // Decay auto-level timer
+        canyon_input.auto_level_timer -= 0.016f; // Assume 60 FPS
+        if (canyon_input.auto_level_timer <= 0.0f) {
+            canyon_input.auto_leveling = false;
+        }
+    }
+    
+    // Store look target in input state
+    canyon_input.current_state.look_target = canyon_input.look_target;
+    
+    // Clamp values
+    canyon_input.current_state.thrust = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.thrust));
+    canyon_input.current_state.pitch = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.pitch));
+    canyon_input.current_state.yaw = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.yaw));
+    canyon_input.current_state.roll = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.roll));
+    canyon_input.current_state.boost = fmaxf(0.0f, fminf(1.0f, canyon_input.current_state.boost));
+    
+    // Debug output
+    static int debug_counter = 0;
+    if (++debug_counter % 60 == 0) { // Every second
+        if (canyon_input.current_state.thrust > 0.0f || 
+            fabsf(canyon_input.current_state.pitch) > 0.1f ||
+            fabsf(canyon_input.current_state.yaw) > 0.1f) {
+            
+            printf("🏎️ Canyon Racing Input: T:%.2f P:%.2f Y:%.2f R:%.2f ",
+                   canyon_input.current_state.thrust,
+                   canyon_input.current_state.pitch,
+                   canyon_input.current_state.yaw,
+                   canyon_input.current_state.roll);
+            
+            if (canyon_input.current_state.look_based_thrust) {
+                printf("LOOK-THRUST ");
+            }
+            if (canyon_input.current_state.auto_level > 0.0f) {
+                printf("AUTO-LEVEL ");
+            }
+            
+            printf("Look: Az:%.2f El:%.2f Dist:%.1f\n",
+                   canyon_input.look_target.azimuth,
+                   canyon_input.look_target.elevation,
+                   canyon_input.look_target.distance);
+        }
+    }
 }
 
 bool input_handle_keyboard(int key_code, bool is_pressed) {
-    if (!input_initialized) return false;
+    if (!canyon_input.initialized) return false;
     
     InputAction action = INPUT_ACTION_COUNT; // Invalid
     
     switch (key_code) {
-        // Modern WASD + Mouse flight scheme
+        // WASD for pitch/yaw
         case SAPP_KEYCODE_W:
             action = INPUT_ACTION_PITCH_DOWN;  // W = nose down (dive)
             break;
@@ -190,33 +261,18 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
             action = INPUT_ACTION_PITCH_UP;    // S = nose up (climb)
             break;
         case SAPP_KEYCODE_A:
-            action = INPUT_ACTION_STRAFE_LEFT;
+            action = INPUT_ACTION_YAW_LEFT;    // A = yaw left
             break;
         case SAPP_KEYCODE_D:
-            action = INPUT_ACTION_STRAFE_RIGHT;
+            action = INPUT_ACTION_YAW_RIGHT;   // D = yaw right
             break;
+            
+        // Space for thrust towards look target
         case SAPP_KEYCODE_SPACE:
             action = INPUT_ACTION_THRUST_FORWARD;
             break;
-        case SAPP_KEYCODE_X:
-            action = INPUT_ACTION_THRUST_BACKWARD;
-            break;
-        case SAPP_KEYCODE_R:
-            action = INPUT_ACTION_MANEUVER_UP;
-            break;
-        case SAPP_KEYCODE_F:
-            action = INPUT_ACTION_MANEUVER_DOWN;
-            break;
-        case SAPP_KEYCODE_LEFT_SHIFT:
-        case SAPP_KEYCODE_RIGHT_SHIFT:
-            action = INPUT_ACTION_BOOST;
-            break;
-        case SAPP_KEYCODE_LEFT_ALT:
-        case SAPP_KEYCODE_RIGHT_ALT:
-            action = INPUT_ACTION_BRAKE;
-            break;
-        
-        // Roll controls (Q/E like many flight games)
+            
+        // Q/E for roll
         case SAPP_KEYCODE_Q:
             action = INPUT_ACTION_ROLL_LEFT;
             break;
@@ -224,18 +280,14 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
             action = INPUT_ACTION_ROLL_RIGHT;
             break;
             
-        // Arrow keys as backup for pitch/yaw (for non-mouse users)
-        case SAPP_KEYCODE_UP:
-            action = INPUT_ACTION_PITCH_UP;
+        // Modifiers
+        case SAPP_KEYCODE_LEFT_SHIFT:
+        case SAPP_KEYCODE_RIGHT_SHIFT:
+            action = INPUT_ACTION_BOOST;
             break;
-        case SAPP_KEYCODE_DOWN:
-            action = INPUT_ACTION_PITCH_DOWN;
-            break;
-        case SAPP_KEYCODE_LEFT:
-            action = INPUT_ACTION_YAW_LEFT;
-            break;
-        case SAPP_KEYCODE_RIGHT:
-            action = INPUT_ACTION_YAW_RIGHT;
+        case SAPP_KEYCODE_LEFT_CONTROL:
+        case SAPP_KEYCODE_RIGHT_CONTROL:
+            action = INPUT_ACTION_BRAKE;
             break;
             
         default:
@@ -245,9 +297,8 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
     if (action < INPUT_ACTION_COUNT) {
         keyboard_state[action] = is_pressed;
         
-        // Track that keyboard was used
         if (is_pressed) {
-            input_set_last_device_type(INPUT_DEVICE_KEYBOARD);
+            canyon_input.last_device = INPUT_DEVICE_KEYBOARD;
         }
         
         return true;
@@ -256,48 +307,80 @@ bool input_handle_keyboard(int key_code, bool is_pressed) {
     return false;
 }
 
+void input_handle_mouse_motion(float delta_x, float delta_y) {
+    if (!canyon_input.initialized) return;
+    
+    canyon_input.mouse_delta_x += delta_x;
+    canyon_input.mouse_delta_y += delta_y;
+}
+
+void input_handle_mouse_button(int button, bool is_pressed) {
+    if (!canyon_input.initialized) return;
+    
+    // Right mouse button to capture/release mouse
+    if (button == 1) { // Right button
+        canyon_input.mouse_captured = is_pressed;
+        
+        if (is_pressed) {
+            printf("🖱️ Mouse captured for look control\n");
+        } else {
+            printf("🖱️ Mouse released\n");
+        }
+    }
+}
+
+void input_handle_mouse_wheel(float delta) {
+    if (!canyon_input.initialized) return;
+    
+    // Zoom camera in/out
+    float distance_delta = -delta * 5.0f; // Invert and scale
+    look_target_update(&canyon_input.look_target, NULL, 0.0f, 0.0f, distance_delta);
+}
+
 const InputState* input_get_state(void) {
-    if (!input_initialized) return NULL;
-    return &current_input;
+    if (!canyon_input.initialized) return NULL;
+    return &canyon_input.current_state;
+}
+
+void input_update_player_position(const Vector3* position) {
+    if (!canyon_input.initialized || !position) return;
+    
+    // Update look target to follow player
+    look_target_update_world_position(&canyon_input.look_target, position);
 }
 
 bool input_has_gamepad(void) {
-    if (!input_initialized) return false;
+    if (!canyon_input.initialized) return false;
     
     GamepadState* gamepad = gamepad_get_state(0);
     return (gamepad && gamepad->connected);
 }
 
+InputDeviceType input_get_last_device_type(void) {
+    return canyon_input.last_device;
+}
+
+void input_set_last_device_type(InputDeviceType type) {
+    canyon_input.last_device = type;
+}
+
 void input_print_debug(void) {
-    if (!input_initialized) return;
+    if (!canyon_input.initialized) return;
     
-    printf("🎮 Input: T:%.2f S:%.2f V:%.2f P:%.2f Y:%.2f R:%.2f B:%.2f Brake:%s Gamepad:%s\n",
-           current_input.thrust,
-           current_input.strafe,
-           current_input.vertical,
-           current_input.pitch,
-           current_input.yaw,
-           current_input.roll,
-           current_input.boost,
-           current_input.brake ? "ON" : "OFF",
-           input_has_gamepad() ? "YES" : "NO");
+    printf("🏎️ Canyon Racing - T:%.2f P:%.2f Y:%.2f R:%.2f B:%.2f Brake:%s Look:%s Auto:%s Device:%s\n",
+           canyon_input.current_state.thrust,
+           canyon_input.current_state.pitch,
+           canyon_input.current_state.yaw,
+           canyon_input.current_state.roll,
+           canyon_input.current_state.boost,
+           canyon_input.current_state.brake ? "ON" : "OFF",
+           canyon_input.current_state.look_based_thrust ? "YES" : "NO",
+           canyon_input.auto_leveling ? "YES" : "NO",
+           canyon_input.last_device == INPUT_DEVICE_GAMEPAD ? "GAMEPAD" : "KB/MOUSE");
 }
 
-// Get access to the enhanced input processor for debugging
-ProductionInputProcessor* input_get_processor(void) {
-    return input_initialized ? &input_processor : NULL;
-}
-
-// Enable/disable enhanced processing features
+// Stub functions for compatibility
+ProductionInputProcessor* input_get_processor(void) { return NULL; }
 void input_set_processing_config(bool enable_neural, bool enable_mrac, bool enable_kalman) {
-    if (!input_initialized) return;
-    
-    input_processor.config.enable_neural_processing = enable_neural;
-    input_processor.config.enable_mrac_safety = enable_mrac;
-    input_processor.config.enable_kalman_filtering = enable_kalman;
-    
-    printf("🔧 Input processing config: Neural=%s MRAC=%s Kalman=%s\n",
-           enable_neural ? "ON" : "OFF",
-           enable_mrac ? "ON" : "OFF", 
-           enable_kalman ? "ON" : "OFF");
+    (void)enable_neural; (void)enable_mrac; (void)enable_kalman;
 }

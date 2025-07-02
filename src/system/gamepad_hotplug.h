@@ -6,13 +6,7 @@
 #include "gamepad.h"
 #include <stdbool.h>
 
-// Input device tracking for adaptive UI
-typedef enum {
-    INPUT_DEVICE_NONE = 0,
-    INPUT_DEVICE_KEYBOARD,
-    INPUT_DEVICE_GAMEPAD,
-    INPUT_DEVICE_MOUSE
-} InputDeviceType;
+// Input device tracking moved to input.h to avoid duplicate definitions
 
 // Gamepad hot-plug detection
 typedef struct {
@@ -36,9 +30,7 @@ void gamepad_update_hotplug(float delta_time);
 void gamepad_set_connected_callback(void (*callback)(int));
 void gamepad_set_disconnected_callback(void (*callback)(int));
 
-// Input device tracking for adaptive UI
-InputDeviceType input_get_last_device_type(void);
-void input_set_last_device_type(InputDeviceType device);
+// Input device tracking functions moved to input.h
 bool input_was_gamepad_used_last(void);
 
 // UI helper functions

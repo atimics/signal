@@ -23,6 +23,7 @@
 #include "systems.h"
 #include "system/camera.h"
 #include "system/performance.h"
+#include "system/input.h"  // For canyon racing input handling
 #include "ui.h"
 #include "ui_api.h"
 #include "scene_state.h"
@@ -525,7 +526,45 @@ static void event(const sapp_event* ev)
                     printf("📸 Screenshot attempted: %s (function not implemented)\n", filename);
                 }
             }
+            // Forward keyboard events to canyon racing input system
+            else
+            {
+                input_handle_keyboard(ev->key_code, true);
+            }
             break;
+            
+        case SAPP_EVENTTYPE_KEY_UP:
+            // Forward key up events to input system
+            input_handle_keyboard(ev->key_code, false);
+            break;
+            
+        case SAPP_EVENTTYPE_MOUSE_MOVE:
+            // Forward mouse motion to canyon racing input
+            input_handle_mouse_motion(ev->mouse_dx, ev->mouse_dy);
+            break;
+            
+        case SAPP_EVENTTYPE_MOUSE_DOWN:
+            // Right mouse button (1) for camera control
+            if (ev->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
+            {
+                input_handle_mouse_button(1, true);
+                sapp_lock_mouse(true);  // Capture mouse for FPS-style control
+            }
+            break;
+            
+        case SAPP_EVENTTYPE_MOUSE_UP:
+            if (ev->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
+            {
+                input_handle_mouse_button(1, false);
+                sapp_lock_mouse(false);  // Release mouse
+            }
+            break;
+            
+        case SAPP_EVENTTYPE_MOUSE_SCROLL:
+            // Forward scroll events for camera zoom
+            input_handle_mouse_wheel(ev->scroll_y);
+            break;
+            
         default:
             break;
     }

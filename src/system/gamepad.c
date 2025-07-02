@@ -4,6 +4,7 @@
 
 #include "gamepad.h"
 #include "gamepad_hotplug.h"
+#include "input.h"  // For input_get_last_device_type
 #include "../hidapi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,8 +29,7 @@ static GamepadHotplugState hotplug_state = {
     .on_disconnected = NULL
 };
 
-// Input device tracking
-static InputDeviceType last_input_device = INPUT_DEVICE_KEYBOARD;
+// Input device tracking - now handled by input.c
 
 // Utility function to normalize axis values
 static float normalize_axis(int16_t raw_value) {
@@ -584,27 +584,12 @@ void gamepad_set_disconnected_callback(void (*callback)(int)) {
 // ============================================================================
 // INPUT DEVICE TRACKING
 // ============================================================================
-
-InputDeviceType input_get_last_device_type(void) {
-    return last_input_device;
-}
-
-void input_set_last_device_type(InputDeviceType device) {
-    if (last_input_device != device) {
-        last_input_device = device;
-        
-        const char* device_names[] = {
-            "None", "Keyboard", "Gamepad", "Mouse"
-        };
-        
-        if (device < sizeof(device_names) / sizeof(device_names[0])) {
-            printf("🎮 Input device switched to: %s\n", device_names[device]);
-        }
-    }
-}
+// Note: input_get_last_device_type and input_set_last_device_type have been
+// moved to input.c for the canyon racing system to avoid duplicate symbols
 
 bool input_was_gamepad_used_last(void) {
-    return last_input_device == INPUT_DEVICE_GAMEPAD;
+    // Now delegates to the input system
+    return input_get_last_device_type() == INPUT_DEVICE_GAMEPAD;
 }
 
 // ============================================================================

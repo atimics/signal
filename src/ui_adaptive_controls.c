@@ -4,6 +4,7 @@
 #include "ui_adaptive_controls.h"
 #include "system/gamepad.h"
 #include "system/gamepad_hotplug.h"
+#include "system/input.h"  // For InputDeviceType
 #include "sokol_app.h"
 #include <stdio.h>
 #include <string.h>
@@ -92,7 +93,7 @@ void ui_adaptive_controls_update(float delta_time) {
     InputDeviceType last_device = input_get_last_device_type();
     if (last_device == INPUT_DEVICE_GAMEPAD && gamepad_get_primary() != NULL) {
         adaptive_state.target_display_device = INPUT_DEVICE_GAMEPAD;
-    } else if (last_device == INPUT_DEVICE_KEYBOARD || last_device == INPUT_DEVICE_MOUSE) {
+    } else if (last_device == INPUT_DEVICE_KEYBOARD) {
         adaptive_state.target_display_device = INPUT_DEVICE_KEYBOARD;
     }
     

@@ -134,6 +134,9 @@ target_include_directories(hidapi PUBLIC ${CMAKE_SOURCE_DIR}/third_party/hidapi)
 add_library(core src/core.c)
 target_include_directories(core PUBLIC src)
 
+# Component Libraries
+add_library(look_target src/component/look_target.c)
+
 # Individual System Libraries
 add_library(physics src/system/physics.c)
 add_library(collision src/system/collision.c)
@@ -146,9 +149,10 @@ add_library(material src/system/material.c)
 add_library(gamepad src/system/gamepad.c)
 add_library(input_processing src/input_processing.c)
 add_library(input src/system/input.c)
-target_link_libraries(input PRIVATE input_processing core)
+target_link_libraries(input PRIVATE input_processing core look_target)
 add_library(thrusters src/system/thrusters.c)
 add_library(control src/system/control.c)
+target_link_libraries(control PRIVATE look_target)
 
 # Systems Library (aggregator)
 add_library(systems src/systems.c)

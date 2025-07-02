@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include "../input_processing.h"  // For ProductionInputProcessor type
+#include "../component/look_target.h"  // For LookTarget struct
 
 // Input actions (logical inputs independent of device)
 typedef enum {
@@ -25,6 +26,12 @@ typedef enum {
     INPUT_ACTION_COUNT
 } InputAction;
 
+// Input device type
+typedef enum {
+    INPUT_DEVICE_KEYBOARD,
+    INPUT_DEVICE_GAMEPAD
+} InputDeviceType;
+
 // Input state for a single frame
 typedef struct {
     // Linear movement
@@ -40,6 +47,11 @@ typedef struct {
     // Modifiers
     float boost;       // 0.0 to 1.0 (analog boost intensity)
     bool brake;        // digital brake on/off
+    
+    // Canyon racing extensions
+    bool look_based_thrust;    // True if thrust should go towards look target
+    float auto_level;          // Auto-leveling strength (0.0 = off)
+    LookTarget look_target;    // Camera look target
 } InputState;
 
 // Initialize input system
@@ -66,3 +78,11 @@ void input_print_debug(void);
 // Enhanced input processing access (Sprint 22)
 ProductionInputProcessor* input_get_processor(void);
 void input_set_processing_config(bool enable_neural, bool enable_mrac, bool enable_kalman);
+
+// Canyon racing extensions
+void input_handle_mouse_motion(float delta_x, float delta_y);
+void input_handle_mouse_button(int button, bool is_pressed);
+void input_handle_mouse_wheel(float delta);
+void input_update_player_position(const Vector3* position);
+InputDeviceType input_get_last_device_type(void);
+void input_set_last_device_type(InputDeviceType type);

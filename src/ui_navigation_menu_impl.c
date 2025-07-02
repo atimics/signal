@@ -7,6 +7,7 @@
 #include "scene_state.h"
 #include "system/gamepad.h"
 #include "system/gamepad_hotplug.h"
+#include "system/input.h"  // For input_set_last_device_type and INPUT_DEVICE_KEYBOARD
 #include "sokol_app.h"
 #include <stdio.h>
 #include <string.h>

@@ -427,9 +427,13 @@ EntityID scene_node_find_by_name(struct World* world, const char* name);
 Vector3 vector3_add(Vector3 a, Vector3 b);
 Vector3 vector3_subtract(Vector3 a, Vector3 b);
 Vector3 vector3_multiply(Vector3 v, float scalar);
+Vector3 vector3_multiply_scalar(Vector3 v, float scalar);  // Alias for vector3_multiply
 Vector3 vector3_normalize(Vector3 v);
 float vector3_length(Vector3 v);
 float vector3_distance(Vector3 a, Vector3 b);
+Vector3 vector3_lerp(Vector3 a, Vector3 b, float t);
+float vector3_dot(Vector3 a, Vector3 b);
+Vector3 vector3_cross(Vector3 a, Vector3 b);
 
 // Quaternion utility functions
 Vector3 quaternion_rotate_vector(Quaternion q, Vector3 v);

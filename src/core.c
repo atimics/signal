@@ -623,6 +623,38 @@ float vector3_distance(Vector3 a, Vector3 b)
     return vector3_length(diff);
 }
 
+Vector3 vector3_multiply_scalar(Vector3 v, float scalar)
+{
+    return vector3_multiply(v, scalar);  // Alias for consistency
+}
+
+Vector3 vector3_lerp(Vector3 a, Vector3 b, float t)
+{
+    // Clamp t to [0, 1]
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    
+    return (Vector3){
+        a.x + (b.x - a.x) * t,
+        a.y + (b.y - a.y) * t,
+        a.z + (b.z - a.z) * t
+    };
+}
+
+float vector3_dot(Vector3 a, Vector3 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+Vector3 vector3_cross(Vector3 a, Vector3 b)
+{
+    return (Vector3){
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    };
+}
+
 // ============================================================================
 // QUATERNION UTILITY FUNCTIONS
 // ============================================================================
