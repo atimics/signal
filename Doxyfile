@@ -23,7 +23,7 @@ FILE_PATTERNS          = *.h \
 RECURSIVE              = YES
 EXCLUDE_PATTERNS       = */vendor/* \
                          */external/*
-OUTPUTDIRECTORY        = docs/api_docs
+OUTPUT_DIRECTORY       = docs/api_docs
 GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
 GENERATE_RTF           = NO
@@ -32,7 +32,6 @@ GENERATE_MAN           = NO
 GENERATE_QHP           = NO
 GENERATE_ECLIPSEHELP   = NO
 GENERATE_CHI           = NO
-GENERATE_CHM           = NO
 GENERATE_DOCSET        = NO
 GENERATE_HTMLHELP      = NO
 HTML_OUTPUT            = html
