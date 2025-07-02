@@ -141,4 +141,13 @@ typedef struct {
     float total_time;
 } SystemScheduler;
 
+// ============================================================================
+// PHYSICS SYSTEM STUBS
+// ============================================================================
+
+void physics_system_update(struct World* world, float delta_time) {
+    (void)world;
+    (void)delta_time;
+}
+
 #endif // TEST_MODE
