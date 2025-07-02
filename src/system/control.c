@@ -104,23 +104,11 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
             Vector3 linear_commands = process_linear_input(input, control);
             control->input_linear = linear_commands;
             
-            // Debug: Print commands being sent to thrusters
-            if (linear_commands.x != 0.0f || linear_commands.y != 0.0f || linear_commands.z != 0.0f) {
-                printf("🎮 Sending linear commands: [%.2f,%.2f,%.2f] to thrusters\n",
-                       linear_commands.x, linear_commands.y, linear_commands.z);
-            }
-            
             thruster_set_linear_command(thrusters, linear_commands);
             
             // Process angular input (pitch, yaw, roll) - 6DOF
             Vector3 angular_commands = process_angular_input(input, control, physics);
             control->input_angular = angular_commands;
-            
-            if (angular_commands.x != 0.0f || angular_commands.y != 0.0f || angular_commands.z != 0.0f) {
-                printf("🎮 Sending angular commands: [%.2f,%.2f,%.2f] to thrusters\n",
-                       angular_commands.x, angular_commands.y, angular_commands.z);
-            }
-            
             thruster_set_angular_command(thrusters, angular_commands);
             
             // Store boost and brake state

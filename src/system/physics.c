@@ -76,11 +76,12 @@ static void physics_apply_forces(struct Physics* physics, float delta_time)
     Vector3 linear_acceleration = vector3_multiply(physics->force_accumulator, 1.0f / physics->mass);
     physics->acceleration = linear_acceleration;
     
-    // Debug output for non-zero forces
+    // Debug output for non-zero forces (reduced frequency)
+    static uint32_t force_log_counter = 0;
     float force_mag = sqrtf(physics->force_accumulator.x * physics->force_accumulator.x + 
                           physics->force_accumulator.y * physics->force_accumulator.y + 
                           physics->force_accumulator.z * physics->force_accumulator.z);
-    if (force_mag > 0.1f) {
+    if (force_mag > 0.1f && ++force_log_counter % 60 == 0) {  // Every second at 60 FPS
         printf("⚡ Force: [%.2f,%.2f,%.2f] Mass: %.2f -> Accel: [%.2f,%.2f,%.2f]\n",
                physics->force_accumulator.x, physics->force_accumulator.y, physics->force_accumulator.z,
                physics->mass,
