@@ -94,6 +94,11 @@ bool ui_handle_event(const void* ev)
 {
     const sapp_event* event = (const sapp_event*)ev;
     
+    // Debug: log when UI receives key '1'
+    if (event->type == SAPP_EVENTTYPE_KEY_DOWN && event->key_code == SAPP_KEYCODE_1) {
+        printf("🔍 DEBUG: ui_handle_event received key '1'\n");
+    }
+    
     // Handle global UI hotkeys before passing to scene UI or Nuklear
     if (event->type == SAPP_EVENTTYPE_KEY_DOWN) {
         switch (event->key_code) {
@@ -120,7 +125,14 @@ bool ui_handle_event(const void* ev)
     // For now, we'll skip scene-specific event handling
     
     // Pass event to Nuklear and return whether it was captured
-    return snk_handle_event(event);
+    bool captured = snk_handle_event(event);
+    
+    // Debug: log if Nuklear captured key '1'
+    if (event->type == SAPP_EVENTTYPE_KEY_DOWN && event->key_code == SAPP_KEYCODE_1) {
+        printf("🔍 DEBUG: snk_handle_event returned %s for key '1'\n", captured ? "true (CAPTURED)" : "false");
+    }
+    
+    return captured;
 }
 
 // ============================================================================

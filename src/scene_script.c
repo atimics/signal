@@ -87,6 +87,11 @@ bool scene_script_execute_input(const char* scene_name, struct World* world, Sce
     const SceneScript* script = scene_script_find(scene_name);
     if (script && script->on_input)
     {
+        // Debug: log when scene input handler is called
+        const sapp_event* ev = (const sapp_event*)event;
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_1) {
+            printf("🔍 DEBUG: scene_script_execute_input called for scene '%s' with key '1'\n", scene_name);
+        }
         return script->on_input(world, state, event);
     }
     

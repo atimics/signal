@@ -407,15 +407,26 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
+    // Debug: log key '1' events
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_1) {
+        printf("🔍 DEBUG: main.c event() received key '1' in scene '%s'\n", app_state.scene_state.current_scene_name);
+    }
+    
     // Handle UI events first - if UI captures the event, don't process it further
     if (ui_handle_event(ev))
     {
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_1) {
+            printf("🔍 DEBUG: UI captured key '1' - stopping event propagation\n");
+        }
         return;  // UI captured this event
     }
 
     // Handle scene-specific input events first
     if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
     {
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_1) {
+            printf("🔍 DEBUG: Scene script handled key '1'\n");
+        }
         return;  // Scene script handled this event
     }
 

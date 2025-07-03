@@ -186,7 +186,7 @@ void test_camera_aspect_ratio_update(void)
     float initial_aspect = camera->aspect_ratio;
     
     // Update aspect ratio
-    float new_aspect = 16.0f / 9.0f;
+    float new_aspect = 4.0f / 3.0f;  // Different from default 16:9
     update_camera_aspect_ratio(&test_world, new_aspect);
     
     TEST_ASSERT_EQUAL_FLOAT(new_aspect, camera->aspect_ratio);
@@ -273,7 +273,7 @@ void test_camera_position_updates(void)
 void test_camera_rotation_updates(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
     
     struct Transform* transform = entity_get_transform(&test_world, entity);
     
@@ -303,7 +303,7 @@ void test_camera_multiple_cameras_performance(void)
     // Create many cameras
     for (int i = 0; i < camera_count; i++) {
         cameras[i] = entity_create(&test_world);
-        entity_add_component(&test_world, cameras[i], COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+        entity_add_components(&test_world, cameras[i], COMPONENT_CAMERA | COMPONENT_TRANSFORM);
         
         struct Camera* camera = entity_get_camera(&test_world, cameras[i]);
         struct Transform* transform = entity_get_transform(&test_world, cameras[i]);
@@ -321,7 +321,7 @@ void test_camera_multiple_cameras_performance(void)
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
     
     // Should complete within 2ms for 10 cameras
-    TEST_ASSERT_LESS_THAN(0.002, elapsed);
+    TEST_ASSERT_TRUE(elapsed < 0.002);
 }
 
 // ============================================================================
@@ -331,7 +331,7 @@ void test_camera_multiple_cameras_performance(void)
 void test_camera_invalid_parameters(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
     
@@ -388,7 +388,7 @@ void test_camera_single_camera_cycling(void)
 {
     // Test cycling with only one camera
     EntityID camera = entity_create(&test_world);
-    entity_add_component(&test_world, camera, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, camera, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
     
     world_set_active_camera(&test_world, camera);
     
@@ -407,8 +407,7 @@ void test_camera_single_camera_cycling(void)
 void test_camera_perspective_projection_parameters(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA);
-    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
     
@@ -432,8 +431,7 @@ void test_camera_perspective_projection_parameters(void)
 void test_camera_follow_parameters(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_CAMERA);
-    entity_add_component(&test_world, entity, COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_CAMERA | COMPONENT_TRANSFORM);
     
     struct Camera* camera = entity_get_camera(&test_world, entity);
     
