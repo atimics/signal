@@ -13,6 +13,7 @@
 #include "gpu_resources.h"
 #include "system/material.h"
 #include "graphics_api.h"
+#include "scene_yaml_loader.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
