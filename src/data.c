@@ -541,14 +541,24 @@ bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* asse
 {
     if (!world || !registry || !scene_name) return false;
 
+    // First, try to load from YAML file
+    char yaml_filename[256];
+    snprintf(yaml_filename, sizeof(yaml_filename), "%s.yaml", scene_name);
+    
+    if (scene_load_from_yaml(world, yaml_filename)) {
+        printf("✅ Loaded scene from YAML: %s\n", yaml_filename);
+        return true;
+    }
+    
+    // Fall back to old template system
     SceneTemplate* scene = find_scene_template(registry, scene_name);
     if (!scene)
     {
-        printf("❌ Scene template not found: %s\n", scene_name);
+        printf("❌ Scene not found in YAML or templates: %s\n", scene_name);
         return false;
     }
 
-    printf("🏗️  Loading scene: %s\n", scene->name);
+    printf("🏗️  Loading scene from template: %s\n", scene->name);
 
     for (uint32_t i = 0; i < scene->spawn_count; i++)
     {
