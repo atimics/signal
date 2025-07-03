@@ -135,51 +135,63 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
         if (control->controlled_by != INVALID_ENTITY && control->controlled_by == g_player_entity) {
             control_updates++;
             
-            // Get ship position and orientation
-            Vector3 ship_position = transform ? transform->position : (Vector3){0, 0, 0};
-            Quaternion ship_orientation = transform ? transform->rotation : 
-                                         (Quaternion){0, 0, 0, 1};
+            // Check if we have any actual input to process
+            bool has_input = (input->thrust != 0.0f || 
+                            input->pitch != 0.0f || 
+                            input->yaw != 0.0f || 
+                            input->roll != 0.0f ||
+                            input->brake ||
+                            input->boost > 0.0f);
             
-            // Get current angular velocity for stabilization
-            Vector3* angular_velocity_ptr = NULL;
-            if (physics && physics->has_6dof) {
-                angular_velocity_ptr = &physics->angular_velocity;
-            }
-            
-            // Process linear input (thrust)
-            Vector3 linear_commands = process_canyon_racing_linear(input, control, 
-                                                                 &ship_position, &ship_orientation);
-            control->input_linear = linear_commands;
-            thruster_set_linear_command(thrusters, linear_commands);
-            
-            // Process angular input (rotation) with gyroscopic stabilization
-            Vector3 angular_commands = process_canyon_racing_angular(input, control, 
-                                                                   &ship_position, 
-                                                                   &ship_orientation,
-                                                                   angular_velocity_ptr);
-            control->input_angular = angular_commands;
-            thruster_set_angular_command(thrusters, angular_commands);
-            
-            // Store boost and brake state
-            control->input_boost = input->boost;
-            control->input_brake = input->brake;
-            
-            // Debug output
-            static uint32_t debug_counter = 0;
-            if (++debug_counter % 60 == 0 && 
-                (input->thrust != 0.0f || fabsf(angular_commands.x) > 0.1f || 
-                 fabsf(angular_commands.y) > 0.1f || fabsf(angular_commands.z) > 0.1f)) {
+            // Only override thrust commands if there's actual player input
+            // This allows scripted flight to work when player isn't providing input
+            if (has_input) {
+                // Get ship position and orientation
+                Vector3 ship_position = transform ? transform->position : (Vector3){0, 0, 0};
+                Quaternion ship_orientation = transform ? transform->rotation : 
+                                             (Quaternion){0, 0, 0, 1};
                 
-                printf("🏎️ Canyon Control: ");
-                if (input->look_based_thrust) {
-                    printf("LOOK-THRUST ");
+                // Get current angular velocity for stabilization
+                Vector3* angular_velocity_ptr = NULL;
+                if (physics && physics->has_6dof) {
+                    angular_velocity_ptr = &physics->angular_velocity;
                 }
-                if (input->auto_level > 0.0f) {
-                    printf("AUTO-LEVEL(%.1f) ", input->auto_level);
+                
+                // Process linear input (thrust)
+                Vector3 linear_commands = process_canyon_racing_linear(input, control, 
+                                                                     &ship_position, &ship_orientation);
+                control->input_linear = linear_commands;
+                thruster_set_linear_command(thrusters, linear_commands);
+                
+                // Process angular input (rotation) with gyroscopic stabilization
+                Vector3 angular_commands = process_canyon_racing_angular(input, control, 
+                                                                       &ship_position, 
+                                                                       &ship_orientation,
+                                                                       angular_velocity_ptr);
+                control->input_angular = angular_commands;
+                thruster_set_angular_command(thrusters, angular_commands);
+                
+                // Store boost and brake state
+                control->input_boost = input->boost;
+                control->input_brake = input->brake;
+                
+                // Debug output
+                static uint32_t debug_counter = 0;
+                if (++debug_counter % 60 == 0 && 
+                    (input->thrust != 0.0f || fabsf(angular_commands.x) > 0.1f || 
+                     fabsf(angular_commands.y) > 0.1f || fabsf(angular_commands.z) > 0.1f)) {
+                    
+                    printf("🏎️ Canyon Control: ");
+                    if (input->look_based_thrust) {
+                        printf("LOOK-THRUST ");
+                    }
+                    if (input->auto_level > 0.0f) {
+                        printf("AUTO-LEVEL(%.1f) ", input->auto_level);
+                    }
+                    printf("Lin:(%.2f,%.2f,%.2f) Ang:(%.2f,%.2f,%.2f)\n",
+                           linear_commands.x, linear_commands.y, linear_commands.z,
+                           angular_commands.x, angular_commands.y, angular_commands.z);
                 }
-                printf("Lin:(%.2f,%.2f,%.2f) Ang:(%.2f,%.2f,%.2f)\n",
-                       linear_commands.x, linear_commands.y, linear_commands.z,
-                       angular_commands.x, angular_commands.y, angular_commands.z);
             }
         } else {
             // For non-player entities, only clear commands if they're not being
