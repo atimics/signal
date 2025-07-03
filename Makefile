@@ -284,11 +284,11 @@ TEST_INPUT_SRC = tests/systems/test_input.c tests/vendor/unity.c
 TEST_FLIGHT_INTEGRATION_SRC = tests/integration/test_flight_integration.c tests/vendor/unity.c
 
 # Critical physics tests for Sprint 21 velocity integration bug
-PHYSICS_TEST_SOURCES = src/core.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
-build/test_physics_critical: tests/unit/test_physics_critical.c $(PHYSICS_TEST_SOURCES)
+PHYSICS_TEST_SOURCES = tests/vendor/unity.c src/core.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
+build/test_physics_critical: tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES)
 	@echo "🔧 Building critical physics tests..."
 	$(CC) $(TEST_CFLAGS) \
-		-o $@ tests/unit/test_physics_critical.c $(PHYSICS_TEST_SOURCES) $(LDFLAGS)
+		-o $@ tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES) $(LDFLAGS)
 
 # Main test target - runs all essential tests including new comprehensive tests
 test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET)

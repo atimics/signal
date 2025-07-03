@@ -302,14 +302,17 @@ bool ode_test_handle_event(struct World* world, SceneStateManager* state, const 
             }
             
             case SAPP_KEYCODE_F6: {
-                // Apply random impulse to obstacles
-                printf("💥 Applying random impulses to obstacles...\n");
+                // Apply random impulse to all physics entities
+                printf("💥 Applying random impulses to physics entities...\n");
                 
-                for (int i = 0; i < 5; i++) {
-                    if (obstacle_ids[i] == INVALID_ENTITY) continue;
+                for (uint32_t i = 0; i < world->entity_count; i++) {
+                    struct Entity* entity = &world->entities[i];
                     
-                    struct Physics* obs_physics = entity_get_physics(world, obstacle_ids[i]);
-                    if (!obs_physics) continue;
+                    if (!(entity->component_mask & COMPONENT_PHYSICS)) continue;
+                    if (entity->id == test_ship_id) continue;  // Skip player ship
+                    
+                    struct Physics* physics = entity_get_physics(world, entity->id);
+                    if (!physics) continue;
                     
                     // Random impulse
                     Vector3 impulse = {
@@ -319,7 +322,7 @@ bool ode_test_handle_event(struct World* world, SceneStateManager* state, const 
                     };
                     
                     if (use_ode_physics) {
-                        dBodyID body = ode_get_body(ode_system, obstacle_ids[i]);
+                        dBodyID body = ode_get_body(ode_system, entity->id);
                         if (body) {
                             dBodyAddForce(body, impulse.x, impulse.y, impulse.z);
                             
@@ -333,14 +336,14 @@ bool ode_test_handle_event(struct World* world, SceneStateManager* state, const 
                         }
                     } else {
                         // Use custom physics
-                        physics_add_force(obs_physics, impulse);
+                        physics_add_force(physics, impulse);
                         
                         Vector3 torque = {
                             ((float)rand() / RAND_MAX - 0.5f) * 100.0f,
                             ((float)rand() / RAND_MAX - 0.5f) * 100.0f,
                             ((float)rand() / RAND_MAX - 0.5f) * 100.0f
                         };
-                        physics_add_torque(obs_physics, torque);
+                        physics_add_torque(physics, torque);
                     }
                 }
                 return true;
