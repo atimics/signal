@@ -176,11 +176,11 @@ void test_sensitivity_curve_application(void)
 {
     Vector3 input = { 0.5f, -0.3f, 0.8f };
     
-    // Test normal sensitivity
+    // Test normal sensitivity - quadratic curve: input * |input| * sensitivity
     Vector3 result1 = apply_sensitivity_curve(input, 1.0f);
-    TEST_ASSERT_EQUAL_FLOAT(0.5f, result1.x);
-    TEST_ASSERT_EQUAL_FLOAT(-0.3f, result1.y);
-    TEST_ASSERT_EQUAL_FLOAT(0.8f, result1.z);
+    TEST_ASSERT_EQUAL_FLOAT(0.25f, result1.x);  // 0.5 * 0.5 * 1.0 = 0.25
+    TEST_ASSERT_EQUAL_FLOAT(-0.09f, result1.y); // -0.3 * 0.3 * 1.0 = -0.09
+    TEST_ASSERT_EQUAL_FLOAT(0.64f, result1.z);  // 0.8 * 0.8 * 1.0 = 0.64
     
     // Test doubled sensitivity
     Vector3 result2 = apply_sensitivity_curve(input, 2.0f);
@@ -220,9 +220,9 @@ void test_stability_assist_basic_function(void)
     Vector3 result = apply_stability_assist(input, angular_velocity, assist_strength);
     
     // Should apply counter-rotation to reduce angular velocity
-    TEST_ASSERT_LESS_THAN(0.0f, result.x);  // Counter pitch
-    TEST_ASSERT_GREATER_THAN(0.0f, result.y); // Counter yaw
-    TEST_ASSERT_LESS_THAN(0.0f, result.z);  // Counter roll
+    TEST_ASSERT_TRUE(result.x < 0.0f);  // Counter pitch
+    TEST_ASSERT_TRUE(result.y > 0.0f); // Counter yaw
+    TEST_ASSERT_TRUE(result.z < 0.0f);  // Counter roll
 }
 
 void test_stability_assist_with_input_override(void)
@@ -237,8 +237,8 @@ void test_stability_assist_with_input_override(void)
     TEST_ASSERT_EQUAL_FLOAT(0.5f, result.x);
     
     // Should still apply assistance on other axes
-    TEST_ASSERT_GREATER_THAN(0.0f, result.y); // Counter yaw
-    TEST_ASSERT_LESS_THAN(0.0f, result.z);  // Counter roll
+    TEST_ASSERT_TRUE(result.y > 0.0f); // Counter yaw
+    TEST_ASSERT_TRUE(result.z < 0.0f);  // Counter roll
 }
 
 void test_stability_assist_disabled(void)
@@ -319,7 +319,7 @@ void test_control_system_full_update(void)
 void test_control_non_player_entity_ignored(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, 
+    entity_add_components(&test_world, entity, 
                         COMPONENT_CONTROL_AUTHORITY | COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ControlAuthority* control = entity_get_control_authority(&test_world, entity);
@@ -354,7 +354,7 @@ void test_control_multiple_entities_performance(void)
     // Create many controlled entities
     for (int i = 0; i < entity_count; i++) {
         entities[i] = entity_create(&test_world);
-        entity_add_component(&test_world, entities[i], 
+        entity_add_components(&test_world, entities[i], 
                            COMPONENT_CONTROL_AUTHORITY | COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
         
         struct ControlAuthority* control = entity_get_control_authority(&test_world, entities[i]);
