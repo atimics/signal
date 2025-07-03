@@ -17,6 +17,8 @@ typedef struct { uint32_t id; } sg_shader;
 typedef struct { uint32_t id; } sg_pipeline;
 typedef struct { uint32_t id; } sg_sampler;
 typedef struct { uint32_t id; } sg_bindings;
+typedef struct { uint32_t id; } sg_buffer;
+typedef struct { uint32_t id; } sg_image;
 
 // Resource state enum (from engine_test_stubs.c)
 typedef enum {
@@ -110,6 +112,24 @@ void sg_destroy_sampler(sg_sampler smp) {
     // No-op in test mode
 }
 
+// Resource allocation functions (for Sprint 23 100% test coverage)
+sg_buffer sg_alloc_buffer(void) {
+    return (sg_buffer){.id = 100};
+}
+
+sg_image sg_alloc_image(void) {
+    return (sg_image){.id = 200};
+}
+
+sg_shader sg_alloc_shader(void) {
+    return (sg_shader){.id = 300};
+}
+
+sg_resource_state sg_query_image_state(sg_image img) {
+    (void)img;
+    return SG_RESOURCESTATE_VALID;
+}
+
 // Rendering functions
 void sg_apply_pipeline(sg_pipeline pip) {
     (void)pip;
@@ -149,6 +169,23 @@ sg_resource_state sg_query_pipeline_state(sg_pipeline pip) {
 sg_resource_state sg_query_sampler_state(sg_sampler smp) {
     (void)smp;
     return SG_RESOURCESTATE_VALID;
+}
+
+// Look target component functions (missing from input system)
+void look_target_init(void* look_target) {
+    (void)look_target;
+    printf("[TEST STUB] look_target_init called\n");
+}
+
+void look_target_update(void* look_target, const void* entity_position, 
+                       float delta_azimuth, float delta_elevation, float delta_distance) {
+    (void)look_target; (void)entity_position; (void)delta_azimuth; (void)delta_elevation; (void)delta_distance;
+    // No-op in test mode
+}
+
+void look_target_update_world_position(void* look_target, const void* position) {
+    (void)look_target; (void)position;
+    // No-op in test mode
 }
 
 // ==== ASSET SYSTEM STUBS ====
