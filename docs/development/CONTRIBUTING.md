@@ -12,7 +12,7 @@ We welcome contributions in various forms, including but not limited to:
 
 1.  **Fork the Repository**: Start by forking the main repository to your own GitHub account.
 2.  **Create a Branch**: Create a new branch for your changes. Use a descriptive name (e.g., `feature/new-lighting-model`, `fix/camera-bug`).
-3.  **Make Your Changes**: Implement your changes, adhering to the coding standards outlined in the [Development Guide](docs/guides/development/DEVELOPMENT_GUIDE.md).
+3.  **Make Your Changes**: Implement your changes, adhering to the coding standards outlined below and in the project documentation.
 4.  **Update Documentation**: The "Definition of Done" for any feature or fix includes updating relevant documentation. If your changes affect the architecture, asset pipeline, or user-facing features, please update the corresponding documents.
 5.  **Submit a Pull Request**: Push your changes to your fork and submit a pull request to the main repository.
 
@@ -39,7 +39,24 @@ Link to any related issues (e.g., "Closes #123").
 
 ## Coding Standards
 
-Please refer to the [Development Guide](docs/guides/development/DEVELOPMENT_GUIDE.md) for detailed coding standards, naming conventions, and design patterns.
+### C Code Style
+- **Standard**: C99 with GNU extensions
+- **Formatting**: Use `clang-format` with project settings
+- **Naming**: 
+  - Functions: `snake_case` (e.g., `entity_create()`)
+  - Types: `PascalCase` (e.g., `EntityID`)
+  - Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_ENTITIES`)
+- **Comments**: Use Doxygen-style comments for public APIs
+
+### ECS Patterns
+- Components contain only data (no behavior)
+- Systems process components and implement logic
+- Entities are just IDs
+
+### Testing
+- All new code must have unit tests
+- Target: 100% test coverage (currently 98%)
+- Run `make test` before submitting PR
 
 ## Definition of Done
 
