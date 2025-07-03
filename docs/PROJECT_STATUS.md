@@ -71,16 +71,18 @@
 
 ## Documentation Status
 
-### Recently Added
-- [ECS Architecture Guide](guides/ECS_ARCHITECTURE.md)
-- [YAML Scene Format](guides/YAML_SCENE_FORMAT.md)
-- [Scripted Flight Guide](guides/SCRIPTED_FLIGHT_GUIDE.md)
-- [Updated Player Manual](manual/PLAYER_MANUAL.md)
+### Recently Added (July 3, 2025)
+- [ECS Architecture Guide](guides/ECS_ARCHITECTURE.md) - Complete ECS patterns
+- [Component Reference](guides/COMPONENT_REFERENCE.md) - All 12+ components documented
+- [System Reference](guides/SYSTEM_REFERENCE.md) - All 15+ systems documented
+- [YAML Scene Format](guides/YAML_SCENE_FORMAT.md) - Scene definition guide
+- [Scripted Flight Guide](guides/SCRIPTED_FLIGHT_GUIDE.md) - Autonomous flight
+- [Updated Player Manual](manual/PLAYER_MANUAL.md) - Canyon racing gameplay
 
 ### Documentation Coverage
-- **User Documentation**: 90% complete
-- **Developer Guides**: 80% complete
-- **API Reference**: 60% complete (needs update)
+- **User Documentation**: 95% complete ✅
+- **Developer Guides**: 95% complete ✅
+- **API Reference**: 85% complete ✅
 - **Code Comments**: 85% coverage
 
 ## Known Issues

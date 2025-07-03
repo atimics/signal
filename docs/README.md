@@ -16,6 +16,8 @@ Welcome to the CGame project documentation. This directory contains all project 
   - [Memory Testing](development/MEMORY_TESTING.md) - Memory testing guidelines
 - **[`guides/`](guides/)** - Technical guides
   - [ECS Architecture](guides/ECS_ARCHITECTURE.md) - Entity Component System patterns
+  - [Component Reference](guides/COMPONENT_REFERENCE.md) - All available components
+  - [System Reference](guides/SYSTEM_REFERENCE.md) - All game systems
   - [YAML Scene Format](guides/YAML_SCENE_FORMAT.md) - Scene definition guide
   - [Scripted Flight System](guides/SCRIPTED_FLIGHT_GUIDE.md) - Autonomous flight paths
 
