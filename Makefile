@@ -291,6 +291,14 @@ TEST_RENDERING_TARGET = $(BUILD_DIR)/test_rendering
 ENGINE_TEST_SRC = src/ui_api.c src/ui_scene.c src/ui_components.c src/core.c \
                   tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
 
+# New critical test targets
+TEST_INPUT_CRITICAL_TARGET = $(BUILD_DIR)/test_input_critical
+TEST_FLIGHT_SCENE_CRITICAL_TARGET = $(BUILD_DIR)/test_flight_scene_critical
+
+# New critical test source files
+TEST_INPUT_CRITICAL_SRC = tests/systems/test_input_system_critical.c tests/vendor/unity.c
+TEST_FLIGHT_SCENE_CRITICAL_SRC = tests/integration/test_flight_test_scene_critical.c tests/vendor/unity.c
+
 # System test targets - match actual file locations
 TEST_PHYSICS_TARGET = $(BUILD_DIR)/test_physics_6dof
 TEST_THRUSTERS_TARGET = $(BUILD_DIR)/test_thrusters  
@@ -315,7 +323,7 @@ build/test_physics_critical: tests/systems/test_physics_critical.c $(PHYSICS_TES
 		-o $@ tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES) $(LDFLAGS)
 
 # Main test target - runs all essential tests including new comprehensive tests
-test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET)
+test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET)
 	@echo "🧪 Running Comprehensive CGame Test Suite"
 	@echo "=========================================="
 	@echo "📐 Core Math Tests..."
@@ -350,6 +358,12 @@ test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_
 	@echo ""
 	@echo "✈️  Flight Integration Tests..."
 	./$(TEST_FLIGHT_INTEGRATION_TARGET)
+	@echo ""
+	@echo "🧪 Critical Input System Tests..."
+	./$(TEST_INPUT_CRITICAL_TARGET)
+	@echo ""
+	@echo "✈️ Critical Flight Scene Tests..."
+	./$(TEST_FLIGHT_SCENE_CRITICAL_TARGET)
 	@echo ""
 	@echo "✅ All tests completed successfully!"
 
@@ -440,6 +454,22 @@ $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
+
+# Build critical input system tests
+$(TEST_INPUT_CRITICAL_TARGET): $(TEST_INPUT_CRITICAL_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building critical input system tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_INPUT_CRITICAL_SRC) src/core.c src/system/input.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build critical flight scene tests
+$(TEST_FLIGHT_SCENE_CRITICAL_TARGET): $(TEST_FLIGHT_SCENE_CRITICAL_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building critical flight scene tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
 
 # ============================================================================
 # MEMORY TESTING TARGETS
