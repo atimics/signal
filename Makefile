@@ -404,7 +404,7 @@ $(TEST_CONTROL_TARGET): $(TEST_CONTROL_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CONTROL_SRC) src/core.c src/system/control.c src/system/thrusters.c src/system/physics.c src/system/input.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CONTROL_SRC) src/core.c src/system/control.c src/system/thrusters.c src/system/physics.c src/system/input.c src/system/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build camera system tests
 $(TEST_CAMERA_TARGET): $(TEST_CAMERA_SRC) | $(BUILD_DIR)
@@ -420,7 +420,7 @@ $(TEST_INPUT_TARGET): $(TEST_INPUT_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_INPUT_SRC) src/core.c src/system/input.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_INPUT_SRC) src/core.c src/system/input.c src/system/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build flight integration tests
 $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
@@ -428,7 +428,7 @@ $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
+		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/system/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
 
 # ============================================================================
 # MEMORY TESTING TARGETS

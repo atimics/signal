@@ -24,6 +24,7 @@ typedef struct {
     bool in_position;
     bool in_rotation;
     bool in_scale;
+    bool in_array;  // Track if we're inside any array
     int array_index;
     Vector3 temp_vec3;
     Quaternion temp_quat;
@@ -117,17 +118,23 @@ static void process_yaml_value(YAMLParseState* state, const char* value) {
         } else if (strcmp(state->current_key, "mesh") == 0) {
             // Load mesh from asset registry
             if (entity->renderable) {
+                printf("🔍 Attempting to load mesh '%s' for entity %d\n", value, state->current_entity);
                 if (state->assets && assets_create_renderable_from_mesh(state->assets, value, entity->renderable)) {
                     printf("✅ Entity %d assigned mesh: %s (%d indices)\n",
                            state->current_entity, value, entity->renderable->index_count);
+                    printf("   GPU resources created for mesh\n");
                 } else {
                     printf("⚠️  Entity %d failed to load mesh: %s\n",
                            state->current_entity, value);
-                    // Create empty GPU resources
+                    // Don't override existing GPU resources
+                    // Just create new ones if needed
                     entity->renderable->gpu_resources = gpu_resources_create();
                     entity->renderable->index_count = 0;
                     entity->renderable->visible = false;
                 }
+            } else {
+                printf("❌ Entity %d has no renderable component for mesh %s\n", 
+                       state->current_entity, value);
             }
         }
     }
@@ -226,9 +233,16 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                 break;
                 
             case YAML_MAPPING_START_EVENT:
+                // Debug output
+                if (state.in_entities) {
+                    printf("   🔍 New entity mapping started\n");
+                }
                 state.expecting_value = false; // Reset for new mapping
-                // Check context for nested mappings
-                if (strcmp(state.current_key, "components") == 0) {
+                
+                // If we're in the entities sequence, this starts a new entity
+                if (state.in_entities && state.current_entity == INVALID_ENTITY) {
+                    // Don't create entity yet - wait for type
+                } else if (strcmp(state.current_key, "components") == 0) {
                     state.in_components = true;
                 } else if (state.in_components && strcmp(state.current_key, "physics") == 0) {
                     state.in_physics = true;
@@ -262,6 +276,10 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                 else if (state.in_collision) state.in_collision = false;
                 else if (state.in_camera) state.in_camera = false;
                 else if (state.in_components) state.in_components = false;
+                else if (state.in_entities && state.current_entity != INVALID_ENTITY) {
+                    // End of an entity definition in the entities sequence
+                    state.current_entity = INVALID_ENTITY;
+                }
                 break;
                 
             case YAML_SEQUENCE_START_EVENT:
@@ -271,27 +289,49 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                     printf("📋 Loading entities...\n");
                 } else if (strcmp(state.current_key, "position") == 0) {
                     state.in_position = true;
+                    state.in_array = true;
                 } else if (strcmp(state.current_key, "rotation") == 0) {
                     state.in_rotation = true;
+                    state.in_array = true;
                 } else if (strcmp(state.current_key, "scale") == 0) {
                     state.in_scale = true;
+                    state.in_array = true;
+                } else if (strcmp(state.current_key, "follow_offset") == 0 || 
+                          strcmp(state.current_key, "size") == 0) {
+                    state.in_array = true;
                 }
                 break;
                 
             case YAML_SEQUENCE_END_EVENT:
-                if (state.in_position) state.in_position = false;
-                else if (state.in_rotation) state.in_rotation = false;
-                else if (state.in_scale) state.in_scale = false;
-                else if (state.in_entities) {
+                if (state.in_position) {
+                    state.in_position = false;
+                    state.in_array = false;
+                } else if (state.in_rotation) {
+                    state.in_rotation = false;
+                    state.in_array = false;
+                } else if (state.in_scale) {
+                    state.in_scale = false;
+                    state.in_array = false;
+                } else if (state.in_entities) {
                     state.in_entities = false;
                     state.current_entity = INVALID_ENTITY;
+                } else if (state.in_array) {
+                    // Generic array end
+                    state.in_array = false;
                 }
                 break;
                 
             case YAML_SCALAR_EVENT: {
                 char* value = (char*)event.data.scalar.value;
                 
-                if (!state.expecting_value) {
+                // If we're in an array, all scalars are values
+                if (state.in_array) {
+                    if (state.in_position || state.in_rotation || state.in_scale ||
+                        (strcmp(state.current_key, "follow_offset") == 0) ||
+                        (strcmp(state.current_key, "size") == 0)) {
+                        process_yaml_array_value(&state, value);
+                    }
+                } else if (!state.expecting_value) {
                     // This is a key
                     strncpy(state.current_key, value, sizeof(state.current_key) - 1);
                     state.expecting_value = true;
@@ -310,6 +350,15 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                             entity_add_component(world, state.current_entity, COMPONENT_TRANSFORM);
                             entity_add_component(world, state.current_entity, COMPONENT_RENDERABLE);
                             
+                            // Initialize renderable with empty resources
+                            struct Renderable* renderable = entity_get_renderable(world, state.current_entity);
+                            if (renderable) {
+                                renderable->gpu_resources = gpu_resources_create();
+                                renderable->visible = true;
+                                renderable->material_id = 0; // Default material
+                                printf("   Initialized renderable component\n");
+                            }
+                            
                             // Add player component for player ships
                             if (strcmp(value, "player_ship") == 0) {
                                 entity_add_component(world, state.current_entity, COMPONENT_PLAYER);
@@ -320,10 +369,6 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                                 printf("   Configured ship with FIGHTER preset\n");
                             }
                         }
-                    } else if (state.in_position || state.in_rotation || state.in_scale ||
-                              (strcmp(state.current_key, "follow_offset") == 0) ||
-                              (strcmp(state.current_key, "size") == 0)) {
-                        process_yaml_array_value(&state, value);
                     } else {
                         process_yaml_value(&state, value);
                     }

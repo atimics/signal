@@ -1,0 +1,9 @@
+# Simple test scene
+name: test
+entities:
+  - type: cube1
+    position: [0, 0, 0]
+    mesh: logo_cube
+  - type: cube2
+    position: [5, 0, 0]
+    mesh: logo_cube
