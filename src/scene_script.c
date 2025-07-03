@@ -14,6 +14,7 @@ extern const SceneScript scene_selector_script;
 extern const SceneScript derelict_navigation_script;
 extern const SceneScript flight_test_script;
 extern const SceneScript ode_test_script;
+extern const SceneScript ship_launch_test_script;
 
 // ============================================================================
 // SCENE SCRIPT REGISTRY
@@ -25,6 +26,7 @@ static const SceneScript* scene_scripts[] = {
     &derelict_navigation_script,
     &flight_test_script,
     &ode_test_script,
+    &ship_launch_test_script,
     // Add more scene scripts here as they are created
 };
 
@@ -86,15 +88,15 @@ bool scene_script_execute_input(const char* scene_name, struct World* world, Sce
         return script->on_input(world, state, event);
     }
     
-    // Default behavior for scenes without specific scripts: ESC returns to scene selector
+    // Default behavior for scenes without specific scripts: ESC returns to navigation menu
     const sapp_event* ev = (const sapp_event*)event;
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_ESCAPE)
     {
-        // Don't handle ESC if we're already in the scene selector
-        if (strcmp(scene_name, "scene_selector") != 0)
+        // Don't handle ESC if we're already in the navigation menu
+        if (strcmp(scene_name, "navigation_menu") != 0 && strcmp(scene_name, "scene_selector") != 0)
         {
-            printf("🎬 Default handler: ESC pressed in %s, returning to scene selector\n", scene_name);
-            scene_state_request_transition(state, "scene_selector");
+            printf("🎬 Default handler: ESC pressed in %s, returning to navigation menu\n", scene_name);
+            scene_state_request_transition(state, "navigation_menu");
             return true; // Event handled
         }
     }

@@ -38,29 +38,17 @@ static void navigation_menu_init(struct World* world) {
     NavigationMenuData* data = calloc(1, sizeof(NavigationMenuData));
     module->data = data;
     
-    // Initialize menu items
-    data->destinations[0] = "🚀 Flight Test Range";
-    data->descriptions[0] = "Test your ship's flight capabilities";
+    // Initialize menu items - Clean vertical slice
+    data->destinations[0] = "🚀 Ship Launch Pad";
+    data->descriptions[0] = "Launch your ship from the landing pad";
     
-    data->destinations[1] = "🏁 Canyon Racing";
-    data->descriptions[1] = "High-speed canyon racing challenge";
+    data->destinations[1] = "🏁 Flight Test";
+    data->descriptions[1] = "Test your ship's flight capabilities";
     
-    data->destinations[2] = "🧲 Derelict Navigation";
-    data->descriptions[2] = "Navigate the Aethelian command ship";
+    data->destinations[2] = "🎮 Thruster Demo";
+    data->descriptions[2] = "Visualize thruster system";
     
-    data->destinations[3] = "🌟 System Overview";
-    data->descriptions[3] = "View the star system map";
-    
-    data->destinations[4] = "🚀 Thruster Test";
-    data->descriptions[4] = "Test gyroscopic stabilization system";
-    
-    data->destinations[5] = "🚀 Ship Launch Test";
-    data->descriptions[5] = "Test ship launch with thruster visualization";
-    
-    data->destinations[6] = "🎬 Scene Selector";
-    data->descriptions[6] = "Debug: Select any scene directly";
-    
-    data->destination_count = 7;
+    data->destination_count = 3;
     data->selected_index = 0;
     
     // Set up control hints
@@ -151,13 +139,9 @@ static bool navigation_menu_handle_event(const void* event, struct World* world)
                 // Trigger selection
                 {
                     const char* scene_names[] = {
-                        "flight_test",
-                        "racing_canyon",
-                        "derelict_alpha",
-                        "system_overview",
-                        "thruster_test",
                         "ship_launch_test",
-                        "scene_selector"
+                        "flight_test",
+                        "thruster_test"
                     };
                     
                     if (data->selected_index < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {
@@ -184,13 +168,9 @@ static bool navigation_menu_handle_event(const void* event, struct World* world)
     if (ui_adaptive_menu_select()) {
         // Trigger selection with gamepad
         const char* scene_names[] = {
-            "flight_test",
-            "racing_canyon",
-            "derelict_alpha",
-            "system_overview",
-            "thruster_test",
             "ship_launch_test",
-            "scene_selector"
+            "flight_test",
+            "thruster_test"
         };
         
         if (data->selected_index < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {

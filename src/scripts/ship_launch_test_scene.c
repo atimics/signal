@@ -253,6 +253,10 @@ bool ship_launch_test_input(struct World* world, SceneStateManager* state, const
                            launch_state->thruster_component->visual_debug ? "ON" : "OFF");
                 }
                 return true;
+                
+            default:
+                // Handle all other keys
+                break;
         }
     }
     
