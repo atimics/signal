@@ -536,6 +536,19 @@ scene_selector_scene_script/fast:
 .PHONY : scene_selector_scene_script/fast
 
 #=============================================================================
+# Target rules for targets named thruster_test_scene_script
+
+# Build rule for target.
+thruster_test_scene_script: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 thruster_test_scene_script
+.PHONY : thruster_test_scene_script
+
+# fast build rule for target.
+thruster_test_scene_script/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/thruster_test_scene_script.dir/build.make CMakeFiles/thruster_test_scene_script.dir/build
+.PHONY : thruster_test_scene_script/fast
+
+#=============================================================================
 # Target rules for targets named scene_script
 
 # Build rule for target.
@@ -1464,6 +1477,30 @@ src/scripts/scene_selector_scene.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/scene_selector_scene_script.dir/build.make CMakeFiles/scene_selector_scene_script.dir/src/scripts/scene_selector_scene.c.s
 .PHONY : src/scripts/scene_selector_scene.c.s
 
+src/scripts/thruster_test_scene.o: src/scripts/thruster_test_scene.c.o
+.PHONY : src/scripts/thruster_test_scene.o
+
+# target to build an object file
+src/scripts/thruster_test_scene.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/thruster_test_scene_script.dir/build.make CMakeFiles/thruster_test_scene_script.dir/src/scripts/thruster_test_scene.c.o
+.PHONY : src/scripts/thruster_test_scene.c.o
+
+src/scripts/thruster_test_scene.i: src/scripts/thruster_test_scene.c.i
+.PHONY : src/scripts/thruster_test_scene.i
+
+# target to preprocess a source file
+src/scripts/thruster_test_scene.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/thruster_test_scene_script.dir/build.make CMakeFiles/thruster_test_scene_script.dir/src/scripts/thruster_test_scene.c.i
+.PHONY : src/scripts/thruster_test_scene.c.i
+
+src/scripts/thruster_test_scene.s: src/scripts/thruster_test_scene.c.s
+.PHONY : src/scripts/thruster_test_scene.s
+
+# target to generate assembly for a file
+src/scripts/thruster_test_scene.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/thruster_test_scene_script.dir/build.make CMakeFiles/thruster_test_scene_script.dir/src/scripts/thruster_test_scene.c.s
+.PHONY : src/scripts/thruster_test_scene.c.s
+
 src/system/ai.o: src/system/ai.c.o
 .PHONY : src/system/ai.o
 
@@ -2031,6 +2068,7 @@ help:
 	@echo "... test_cmake-performance_test_performance_simple"
 	@echo "... test_cmake-rendering"
 	@echo "... test_cmake-ui"
+	@echo "... thruster_test_scene_script"
 	@echo "... thrusters"
 	@echo "... ui"
 	@echo "... ui_adaptive_controls"
@@ -2107,6 +2145,9 @@ help:
 	@echo "... src/scripts/scene_selector_scene.o"
 	@echo "... src/scripts/scene_selector_scene.i"
 	@echo "... src/scripts/scene_selector_scene.s"
+	@echo "... src/scripts/thruster_test_scene.o"
+	@echo "... src/scripts/thruster_test_scene.i"
+	@echo "... src/scripts/thruster_test_scene.s"
 	@echo "... src/system/ai.o"
 	@echo "... src/system/ai.i"
 	@echo "... src/system/ai.s"
