@@ -57,6 +57,9 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
 
     uint32_t thruster_updates = 0;
     uint32_t force_applications = 0;
+    
+    static int sys_update_counter = 0;
+    bool debug_this_frame = (++sys_update_counter % 60 == 0);
 
     // Update all entities with thruster systems
     for (uint32_t i = 0; i < world->entity_count; i++)
@@ -77,12 +80,25 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
         if (!thrusters || !physics || !transform) continue;
 
         thruster_updates++;
+        
+        if (debug_this_frame) {
+            printf("⚙️ DEBUG: Processing thruster for entity %d\n", entity->id);
+        }
 
         // Calculate environmental efficiency
         float efficiency = thruster_calculate_efficiency(thrusters, physics->environment);
         
         // Calculate linear forces in ship-local space
         Vector3 linear_force = calculate_linear_force(thrusters, physics, efficiency);
+        
+        if (debug_this_frame) {
+            printf("  Thrust cmd: [%.2f,%.2f,%.2f], Force: [%.1f,%.1f,%.1f]\n",
+                   thrusters->current_linear_thrust.x,
+                   thrusters->current_linear_thrust.y,
+                   thrusters->current_linear_thrust.z,
+                   linear_force.x, linear_force.y, linear_force.z);
+        }
+        
         if (linear_force.x != 0.0f || linear_force.y != 0.0f || linear_force.z != 0.0f) {
             // Transform force from ship-local space to world space
             Vector3 world_force = quaternion_rotate_vector(transform->rotation, linear_force);
@@ -92,10 +108,11 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
             // Debug thrust direction (reduced frequency)
             static uint32_t thrust_debug_counter = 0;
             if (++thrust_debug_counter % 60 == 0 && (fabsf(linear_force.z) > 0.1f)) {  // Every second when thrusting
-                printf("🚀 THRUST: Local:[%.1f,%.1f,%.1f] World:[%.1f,%.1f,%.1f] Ship-Rot:(%.2f,%.2f,%.2f,%.2f)\n",
-                       linear_force.x, linear_force.y, linear_force.z,
-                       world_force.x, world_force.y, world_force.z,
-                       transform->rotation.x, transform->rotation.y, transform->rotation.z, transform->rotation.w);
+                printf("🚀 THRUST APPLIED TO ENTITY %d:\n", entity->id);
+                printf("   Local Force: [%.1f,%.1f,%.1f]\n", linear_force.x, linear_force.y, linear_force.z);
+                printf("   World Force: [%.1f,%.1f,%.1f]\n", world_force.x, world_force.y, world_force.z);
+                printf("   Position: [%.1f,%.1f,%.1f]\n", transform->position.x, transform->position.y, transform->position.z);
+                printf("   Velocity: [%.1f,%.1f,%.1f]\n", physics->velocity.x, physics->velocity.y, physics->velocity.z);
             }
         }
         

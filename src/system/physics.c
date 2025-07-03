@@ -337,6 +337,16 @@ void physics_add_force(struct Physics* physics, Vector3 force)
 {
     if (!physics) return;
     
+    // Debug significant forces
+    static int force_counter = 0;
+    if (++force_counter % 60 == 0 && 
+        (fabsf(force.x) > 1.0f || fabsf(force.y) > 1.0f || fabsf(force.z) > 1.0f)) {
+        printf("⚡ DEBUG: physics_add_force called with [%.1f,%.1f,%.1f]\n",
+               force.x, force.y, force.z);
+        printf("  Current accumulator: [%.1f,%.1f,%.1f]\n",
+               physics->force_accumulator.x, physics->force_accumulator.y, physics->force_accumulator.z);
+    }
+    
     // Clamp individual force to prevent numerical issues
     const float max_force = 100000.0f; // Maximum force component
     force.x = fmaxf(-max_force, fminf(max_force, force.x));
