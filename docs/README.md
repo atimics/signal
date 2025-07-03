@@ -14,10 +14,15 @@ Welcome to the CGame project documentation. This directory contains all project 
   - [Contributing Guide](development/CONTRIBUTING.md) - How to contribute
   - [Asset Pipeline](development/ASSET_PIPELINE_VALIDATION.md) - Asset validation
   - [Memory Testing](development/MEMORY_TESTING.md) - Memory testing guidelines
+- **[`guides/`](guides/)** - Technical guides
+  - [ECS Architecture](guides/ECS_ARCHITECTURE.md) - Entity Component System patterns
+  - [YAML Scene Format](guides/YAML_SCENE_FORMAT.md) - Scene definition guide
+  - [Scripted Flight System](guides/SCRIPTED_FLIGHT_GUIDE.md) - Autonomous flight paths
 
 ### 📖 User Documentation
 - **[`manual/`](manual/)** - User-facing documentation
-  - Player guides, controls, and troubleshooting
+  - [Player Manual](manual/PLAYER_MANUAL.md) - Complete game guide
+  - Controls reference and troubleshooting
 
 ### 🏃 Sprint Management
 - **[`sprints/`](sprints/)** - Sprint planning and tracking
