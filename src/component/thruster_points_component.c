@@ -41,7 +41,7 @@ void thruster_points_component_destroy(ThrusterPointsComponent* component) {
 }
 
 // Initialize from file (loads and validates)
-bool thruster_points_component_init(ThrusterPointsComponent* component, const struct Mesh* mesh) {
+bool thruster_points_component_init(ThrusterPointsComponent* component, const Mesh* mesh) {
     if (!component || !component->definition_file) return false;
     
     // Load thruster definitions

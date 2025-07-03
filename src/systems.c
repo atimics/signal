@@ -18,6 +18,8 @@
 #include "system/performance.h"
 #include "system/memory.h"
 #include "system/material.h"
+#include "system/thrusters.h"
+#include "system/control.h"
 #include "entity_yaml_loader.h"
 #include "scene_yaml_loader.h"
 

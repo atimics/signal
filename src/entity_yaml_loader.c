@@ -43,131 +43,189 @@ static int parse_camera_behavior(const char* behavior_str)
     return 0; // Default to third person
 }
 
-// Helper function to parse boolean from string
-static bool parse_bool(const char* str)
-{
-    if (!str) return false;
-    return (strcmp(str, "true") == 0 || strcmp(str, "1") == 0 || strcmp(str, "yes") == 0);
-}
-
-// Helper to trim whitespace
-static void trim_whitespace(char* str)
-{
-    if (!str) return;
-    
-    // Trim leading whitespace
-    char* start = str;
-    while (isspace(*start)) start++;
-    
-    // Trim trailing whitespace
-    char* end = start + strlen(start) - 1;
-    while (end > start && isspace(*end)) end--;
-    
-    // Null terminate
-    *(end + 1) = '\0';
-    
-    // Move trimmed string to beginning
-    if (start != str) {
-        memmove(str, start, strlen(start) + 1);
-    }
-}
-
-// Parser state structure
+// Parse state for YAML processing
 typedef struct {
     DataRegistry* registry;
     EntityTemplate* current_template;
-    char current_section[64];  // "components" or "properties"
-    char current_key[64];
+    int depth;
     bool in_templates;
+    bool in_template;
+    bool in_components;
+    bool in_properties; 
     bool in_follow_offset;
-    int template_count;
-} YamlParserState;
+    char current_key[64];
+    char current_template_name[64];
+} YAMLParseState;
 
-// Process a key-value pair
-static void process_yaml_pair(YamlParserState* state, const char* key, const char* value)
+// Initialize parse state
+static void init_parse_state(YAMLParseState* state, DataRegistry* registry)
 {
-    if (!state || !key || !value || !state->current_template) return;
+    memset(state, 0, sizeof(YAMLParseState));
+    state->registry = registry;
+}
+
+// Set component flags based on YAML
+static void set_component_flag(EntityTemplate* template, const char* component_name, bool value)
+{
+    if (!template || !component_name) return;
     
-    char clean_key[64], clean_value[256];
-    strncpy(clean_key, key, sizeof(clean_key) - 1);
-    strncpy(clean_value, value, sizeof(clean_value) - 1);
-    trim_whitespace(clean_key);
-    trim_whitespace(clean_value);
-    
-    if (strcmp(state->current_section, "components") == 0) {
-        // Handle component flags
-        bool enable = parse_bool(clean_value);
-        
-        if (strcmp(clean_key, "transform") == 0) {
-            state->current_template->has_transform = enable;
-        } else if (strcmp(clean_key, "physics") == 0) {
-            state->current_template->has_physics = enable;
-        } else if (strcmp(clean_key, "collision") == 0) {
-            state->current_template->has_collision = enable;
-        } else if (strcmp(clean_key, "renderable") == 0) {
-            state->current_template->has_renderable = enable;
-        } else if (strcmp(clean_key, "ai") == 0) {
-            state->current_template->has_ai = enable;
-        } else if (strcmp(clean_key, "player") == 0) {
-            state->current_template->has_player = enable;
-        } else if (strcmp(clean_key, "thrusters") == 0) {
-            state->current_template->has_thrusters = enable;
-        } else if (strcmp(clean_key, "control_authority") == 0) {
-            state->current_template->has_control_authority = enable;
-        } else if (strcmp(clean_key, "camera") == 0) {
-            state->current_template->has_camera = enable;
-        }
-    } else if (strcmp(state->current_section, "properties") == 0) {
-        // Handle property values
-        if (state->in_follow_offset) {
-            // Handle follow_offset sub-properties
-            if (strcmp(clean_key, "x") == 0) {
-                state->current_template->follow_offset.x = atof(clean_value);
-            } else if (strcmp(clean_key, "y") == 0) {
-                state->current_template->follow_offset.y = atof(clean_value);
-            } else if (strcmp(clean_key, "z") == 0) {
-                state->current_template->follow_offset.z = atof(clean_value);
-            }
-        } else {
-            // Handle regular properties
-            if (strcmp(clean_key, "description") == 0) {
-                strncpy(state->current_template->description, clean_value, 
-                       sizeof(state->current_template->description) - 1);
-            } else if (strcmp(clean_key, "mass") == 0) {
-                state->current_template->mass = atof(clean_value);
-            } else if (strcmp(clean_key, "collision_radius") == 0) {
-                state->current_template->collision_radius = atof(clean_value);
-            } else if (strcmp(clean_key, "drag") == 0) {
-                state->current_template->drag = atof(clean_value);
-            } else if (strcmp(clean_key, "kinematic") == 0) {
-                state->current_template->kinematic = parse_bool(clean_value);
-            } else if (strcmp(clean_key, "mesh_name") == 0) {
-                strncpy(state->current_template->mesh_name, clean_value,
-                       sizeof(state->current_template->mesh_name) - 1);
-            } else if (strcmp(clean_key, "material_name") == 0) {
-                strncpy(state->current_template->material_name, clean_value,
-                       sizeof(state->current_template->material_name) - 1);
-            } else if (strcmp(clean_key, "camera_behavior") == 0) {
-                state->current_template->camera_behavior = parse_camera_behavior(clean_value);
-            } else if (strcmp(clean_key, "fov") == 0) {
-                state->current_template->fov = atof(clean_value);
-            } else if (strcmp(clean_key, "near_plane") == 0) {
-                state->current_template->near_plane = atof(clean_value);
-            } else if (strcmp(clean_key, "far_plane") == 0) {
-                state->current_template->far_plane = atof(clean_value);
-            } else if (strcmp(clean_key, "follow_distance") == 0) {
-                state->current_template->follow_distance = atof(clean_value);
-            } else if (strcmp(clean_key, "follow_smoothing") == 0) {
-                state->current_template->follow_smoothing = atof(clean_value);
-            }
-        }
-    } else {
-        // Handle top-level template properties
-        if (strcmp(clean_key, "description") == 0) {
-            strncpy(state->current_template->description, clean_value,
-                   sizeof(state->current_template->description) - 1);
-        }
+    if (strcmp(component_name, "transform") == 0) {
+        template->has_transform = value;
+    } else if (strcmp(component_name, "physics") == 0) {
+        template->has_physics = value;
+    } else if (strcmp(component_name, "collision") == 0) {
+        template->has_collision = value;
+    } else if (strcmp(component_name, "renderable") == 0) {
+        template->has_renderable = value;
+    } else if (strcmp(component_name, "ai") == 0) {
+        template->has_ai = value;
+    } else if (strcmp(component_name, "player") == 0) {
+        template->has_player = value;
+    } else if (strcmp(component_name, "thrusters") == 0) {
+        template->has_thrusters = value;
+    } else if (strcmp(component_name, "control_authority") == 0) {
+        template->has_control_authority = value;
+    } else if (strcmp(component_name, "camera") == 0) {
+        template->has_camera = value;
     }
+}
+
+// Set property values based on YAML
+static void set_property_value(EntityTemplate* template, const char* property_name, const char* value)
+{
+    if (!template || !property_name || !value) return;
+    
+    if (strcmp(property_name, "mass") == 0) {
+        template->mass = (float)atof(value);
+    } else if (strcmp(property_name, "collision_radius") == 0) {
+        template->collision_radius = (float)atof(value);
+    } else if (strcmp(property_name, "drag") == 0) {
+        template->drag = (float)atof(value);
+    } else if (strcmp(property_name, "kinematic") == 0) {
+        template->kinematic = (strcmp(value, "true") == 0);
+    } else if (strcmp(property_name, "mesh_name") == 0) {
+        strncpy(template->mesh_name, value, sizeof(template->mesh_name) - 1);
+    } else if (strcmp(property_name, "material_name") == 0) {
+        strncpy(template->material_name, value, sizeof(template->material_name) - 1);
+    } else if (strcmp(property_name, "camera_behavior") == 0) {
+        template->camera_behavior = parse_camera_behavior(value);
+    } else if (strcmp(property_name, "fov") == 0) {
+        template->fov = (float)atof(value);
+    } else if (strcmp(property_name, "near_plane") == 0) {
+        template->near_plane = (float)atof(value);
+    } else if (strcmp(property_name, "far_plane") == 0) {
+        template->far_plane = (float)atof(value);
+    } else if (strcmp(property_name, "follow_distance") == 0) {
+        template->follow_distance = (float)atof(value);
+    } else if (strcmp(property_name, "follow_smoothing") == 0) {
+        template->follow_smoothing = (float)atof(value);
+    } else if (strcmp(property_name, "description") == 0) {
+        strncpy(template->description, value, sizeof(template->description) - 1);
+    }
+}
+
+// Handle follow_offset properties
+static void set_follow_offset_property(EntityTemplate* template, const char* axis, const char* value)
+{
+    if (!template || !axis || !value) return;
+    
+    float val = (float)atof(value);
+    if (strcmp(axis, "x") == 0) {
+        template->follow_offset.x = val;
+    } else if (strcmp(axis, "y") == 0) {
+        template->follow_offset.y = val;
+    } else if (strcmp(axis, "z") == 0) {
+        template->follow_offset.z = val;
+    }
+}
+
+// Process YAML scalar events
+static bool process_scalar_event(YAMLParseState* state, const char* value)
+{
+    if (state->depth == 1 && strcmp(value, "templates") == 0) {
+        state->in_templates = true;
+        return true;
+    }
+    
+    if (state->depth == 2 && state->in_templates) {
+        // Template name
+        if (state->registry->entity_template_count >= 128) {
+            printf("❌ Too many entity templates (max 128)\n");
+            return false;
+        }
+        
+        state->current_template = &state->registry->entity_templates[state->registry->entity_template_count++];
+        memset(state->current_template, 0, sizeof(EntityTemplate));
+        
+        strncpy(state->current_template->name, value, sizeof(state->current_template->name) - 1);
+        strncpy(state->current_template_name, value, sizeof(state->current_template_name) - 1);
+        
+        // Set defaults
+        state->current_template->scale = (Vector3){ 5.0f, 5.0f, 5.0f };
+        state->current_template->mass = 1.0f;
+        state->current_template->drag = 0.99f;
+        state->current_template->collision_radius = 1.0f;
+        state->current_template->layer_mask = 0xFFFFFFFF;
+        state->current_template->visible = true;
+        state->current_template->ai_update_frequency = 5.0f;
+        
+        state->in_template = true;
+        return true;
+    }
+    
+    if (state->depth == 3 && state->current_template) {
+        if (strcmp(value, "description") == 0) {
+            strncpy(state->current_key, "description", sizeof(state->current_key) - 1);
+        } else if (strcmp(value, "components") == 0) {
+            state->in_components = true;
+        } else if (strcmp(value, "properties") == 0) {
+            state->in_properties = true;
+        }
+        return true;
+    }
+    
+    if (state->depth == 4 && state->current_template) {
+        if (state->in_components) {
+            // Component key - next value will be boolean
+            strncpy(state->current_key, value, sizeof(state->current_key) - 1);
+        } else if (state->in_properties) {
+            if (strcmp(value, "follow_offset") == 0) {
+                state->in_follow_offset = true;
+            } else {
+                strncpy(state->current_key, value, sizeof(state->current_key) - 1);
+            }
+        } else if (strcmp(state->current_key, "description") == 0) {
+            set_property_value(state->current_template, "description", value);
+            state->current_key[0] = '\0';
+        }
+        return true;
+    }
+    
+    if (state->depth == 5 && state->current_template) {
+        if (state->in_components && strlen(state->current_key) > 0) {
+            // Component value
+            bool component_value = (strcmp(value, "true") == 0);
+            set_component_flag(state->current_template, state->current_key, component_value);
+            state->current_key[0] = '\0';
+        } else if (state->in_properties && strlen(state->current_key) > 0) {
+            // Property value
+            set_property_value(state->current_template, state->current_key, value);
+            state->current_key[0] = '\0';
+        } else if (state->in_follow_offset) {
+            // follow_offset axis key
+            strncpy(state->current_key, value, sizeof(state->current_key) - 1);
+        }
+        return true;
+    }
+    
+    if (state->depth == 6 && state->current_template && state->in_follow_offset) {
+        // follow_offset value
+        set_follow_offset_property(state->current_template, state->current_key, value);
+        state->current_key[0] = '\0';
+        return true;
+    }
+    
+    return true;
 }
 
 bool load_entity_templates_yaml(DataRegistry* registry, const char* filename)
@@ -189,7 +247,7 @@ bool load_entity_templates_yaml(DataRegistry* registry, const char* filename)
     printf("📝 Loading entity templates from YAML: %s\n", full_path);
     
     yaml_parser_t parser;
-    yaml_document_t document;
+    yaml_event_t event;
     
     if (!yaml_parser_initialize(&parser)) {
         printf("❌ Failed to initialize YAML parser\n");
@@ -199,144 +257,74 @@ bool load_entity_templates_yaml(DataRegistry* registry, const char* filename)
     
     yaml_parser_set_input_file(&parser, file);
     
-    if (!yaml_parser_load(&parser, &document)) {
-        printf("❌ Failed to load YAML document: %s\n", parser.problem);
-        yaml_parser_delete(&parser);
-        fclose(file);
-        return false;
-    }
+    YAMLParseState state;
+    init_parse_state(&state, registry);
     
-    // Get the root node
-    yaml_node_t* root = yaml_document_get_root_node(&document);
-    if (!root || root->type != YAML_MAPPING_NODE) {
-        printf("❌ YAML root is not a mapping\n");
-        goto cleanup;
-    }
+    bool done = false;
+    bool success = true;
     
-    YamlParserState state = {0};
-    state.registry = registry;
-    
-    // Find the "templates" mapping
-    for (yaml_node_pair_t* pair = root->data.mapping.pairs.start;
-         pair < root->data.mapping.pairs.top; pair++) {
-        
-        yaml_node_t* key_node = yaml_document_get_node(&document, pair->key);
-        yaml_node_t* value_node = yaml_document_get_node(&document, pair->value);
-        
-        if (key_node->type == YAML_SCALAR_NODE &&
-            strcmp((char*)key_node->data.scalar.value, "templates") == 0 &&
-            value_node->type == YAML_MAPPING_NODE) {
-            
-            // Process each template
-            for (yaml_node_pair_t* template_pair = value_node->data.mapping.pairs.start;
-                 template_pair < value_node->data.mapping.pairs.top; template_pair++) {
-                
-                yaml_node_t* template_key = yaml_document_get_node(&document, template_pair->key);
-                yaml_node_t* template_value = yaml_document_get_node(&document, template_pair->value);
-                
-                if (template_key->type != YAML_SCALAR_NODE || 
-                    template_value->type != YAML_MAPPING_NODE) continue;
-                
-                // Create new template
-                if (registry->entity_template_count >= 128) {
-                    printf("❌ Too many entity templates (max 128)\n");
-                    break;
-                }
-                
-                state.current_template = &registry->entity_templates[registry->entity_template_count++];
-                memset(state.current_template, 0, sizeof(EntityTemplate));
-                
-                // Set template name
-                strncpy(state.current_template->name, (char*)template_key->data.scalar.value,
-                       sizeof(state.current_template->name) - 1);
-                
-                // Set defaults
-                state.current_template->scale = (Vector3){ 5.0f, 5.0f, 5.0f };
-                state.current_template->mass = 1.0f;
-                state.current_template->drag = 0.99f;
-                state.current_template->collision_radius = 1.0f;
-                state.current_template->layer_mask = 0xFFFFFFFF;
-                state.current_template->visible = true;
-                state.current_template->ai_update_frequency = 5.0f;
-                
-                // Process template properties
-                for (yaml_node_pair_t* prop_pair = template_value->data.mapping.pairs.start;
-                     prop_pair < template_value->data.mapping.pairs.top; prop_pair++) {
-                    
-                    yaml_node_t* prop_key = yaml_document_get_node(&document, prop_pair->key);
-                    yaml_node_t* prop_value = yaml_document_get_node(&document, prop_pair->value);
-                    
-                    if (prop_key->type != YAML_SCALAR_NODE) continue;
-                    
-                    char* section_name = (char*)prop_key->data.scalar.value;
-                    
-                    if (strcmp(section_name, "description") == 0 && prop_value->type == YAML_SCALAR_NODE) {
-                        strncpy(state.current_template->description, (char*)prop_value->data.scalar.value,
-                               sizeof(state.current_template->description) - 1);
-                    } else if (strcmp(section_name, "components") == 0 && prop_value->type == YAML_MAPPING_NODE) {
-                        strncpy(state.current_section, "components", sizeof(state.current_section) - 1);
-                        
-                        // Process components
-                        for (yaml_node_pair_t* comp_pair = prop_value->data.mapping.pairs.start;
-                             comp_pair < prop_value->data.mapping.pairs.top; comp_pair++) {
-                            
-                            yaml_node_t* comp_key = yaml_document_get_node(&document, comp_pair->key);
-                            yaml_node_t* comp_value = yaml_document_get_node(&document, comp_pair->value);
-                            
-                            if (comp_key->type == YAML_SCALAR_NODE && comp_value->type == YAML_SCALAR_NODE) {
-                                process_yaml_pair(&state, (char*)comp_key->data.scalar.value,
-                                                 (char*)comp_value->data.scalar.value);
-                            }
-                        }
-                    } else if (strcmp(section_name, "properties") == 0 && prop_value->type == YAML_MAPPING_NODE) {
-                        strncpy(state.current_section, "properties", sizeof(state.current_section) - 1);
-                        
-                        // Process properties
-                        for (yaml_node_pair_t* prop_prop_pair = prop_value->data.mapping.pairs.start;
-                             prop_prop_pair < prop_value->data.mapping.pairs.top; prop_prop_pair++) {
-                            
-                            yaml_node_t* prop_prop_key = yaml_document_get_node(&document, prop_prop_pair->key);
-                            yaml_node_t* prop_prop_value = yaml_document_get_node(&document, prop_prop_pair->value);
-                            
-                            if (prop_prop_key->type != YAML_SCALAR_NODE) continue;
-                            
-                            char* prop_name = (char*)prop_prop_key->data.scalar.value;
-                            
-                            if (strcmp(prop_name, "follow_offset") == 0 && prop_prop_value->type == YAML_MAPPING_NODE) {
-                                state.in_follow_offset = true;
-                                
-                                // Process follow_offset coordinates
-                                for (yaml_node_pair_t* offset_pair = prop_prop_value->data.mapping.pairs.start;
-                                     offset_pair < prop_prop_value->data.mapping.pairs.top; offset_pair++) {
-                                    
-                                    yaml_node_t* offset_key = yaml_document_get_node(&document, offset_pair->key);
-                                    yaml_node_t* offset_value = yaml_document_get_node(&document, offset_pair->value);
-                                    
-                                    if (offset_key->type == YAML_SCALAR_NODE && offset_value->type == YAML_SCALAR_NODE) {
-                                        process_yaml_pair(&state, (char*)offset_key->data.scalar.value,
-                                                         (char*)offset_value->data.scalar.value);
-                                    }
-                                }
-                                
-                                state.in_follow_offset = false;
-                            } else if (prop_prop_value->type == YAML_SCALAR_NODE) {
-                                process_yaml_pair(&state, prop_name, (char*)prop_prop_value->data.scalar.value);
-                            }
-                        }
-                    }
-                }
-                
-                state.template_count++;
-            }
+    while (!done && success) {
+        if (!yaml_parser_parse(&parser, &event)) {
+            printf("❌ YAML parse error: %s\n", parser.problem);
+            success = false;
             break;
         }
+        
+        switch (event.type) {
+            case YAML_STREAM_START_EVENT:
+                break;
+                
+            case YAML_DOCUMENT_START_EVENT:
+                break;
+                
+            case YAML_MAPPING_START_EVENT:
+                state.depth++;
+                break;
+                
+            case YAML_MAPPING_END_EVENT:
+                state.depth--;
+                if (state.depth == 2 && state.in_template) {
+                    // End of template
+                    state.in_template = false;
+                    state.current_template = NULL;
+                    state.current_template_name[0] = '\0';
+                }
+                if (state.depth == 3) {
+                    state.in_components = false;
+                    state.in_properties = false;
+                }
+                if (state.depth == 4) {
+                    state.in_follow_offset = false;
+                }
+                break;
+                
+            case YAML_SCALAR_EVENT: {
+                const char* value = (const char*)event.data.scalar.value;
+                if (!process_scalar_event(&state, value)) {
+                    success = false;
+                }
+                break;
+            }
+            
+            case YAML_STREAM_END_EVENT:
+                done = true;
+                break;
+                
+            default:
+                break;
+        }
+        
+        yaml_event_delete(&event);
     }
     
-cleanup:
-    yaml_document_delete(&document);
     yaml_parser_delete(&parser);
     fclose(file);
     
-    printf("   ✅ Loaded %d entity templates from YAML\n", state.template_count);
-    return state.template_count > 0;
+    if (success) {
+        printf("   ✅ Loaded %d entity templates from YAML\n", registry->entity_template_count);
+    } else {
+        printf("   ❌ Failed to load entity templates from YAML\n");
+    }
+    
+    return success;
 }

@@ -13,10 +13,7 @@ extern const SceneScript logo_script;
 extern const SceneScript scene_selector_script;
 extern const SceneScript derelict_navigation_script;
 extern const SceneScript flight_test_script;
-// extern const SceneScript thruster_test_script;  // Temporarily disabled
 extern const SceneScript ode_test_script;
-// extern const SceneScript ship_assembly_test_script;  // Temporarily disabled
-// extern const SceneScript ship_launch_test_script;    // Temporarily disabled
 
 // ============================================================================
 // SCENE SCRIPT REGISTRY
@@ -27,10 +24,7 @@ static const SceneScript* scene_scripts[] = {
     &scene_selector_script,
     &derelict_navigation_script,
     &flight_test_script,
-    // &thruster_test_script,        // Temporarily disabled
     &ode_test_script,
-    // &ship_assembly_test_script,   // Temporarily disabled  
-    // &ship_launch_test_script,     // Temporarily disabled
     // Add more scene scripts here as they are created
 };
 

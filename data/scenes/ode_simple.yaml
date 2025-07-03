@@ -1,0 +1,54 @@
+# Simple ODE Physics Test Scene
+# Testing basic physics interactions and ODE integration
+
+name: ode_simple
+description: "Simple ODE physics test environment with basic entities"
+
+entities:
+  - type: player_ship
+    position: [0, 10, 0]
+    rotation: [0, 0, 0, 1]
+    components:
+      physics:
+        mass: 80.0
+        has_6dof: true
+      thrusters:
+        enabled: true
+      control_authority:
+        enabled: true
+
+  - type: landing_pad
+    position: [0, 0, 0]
+    scale: [10, 1, 10]
+    components:
+      collision:
+        enabled: true
+      renderable:
+        visible: true
+
+  - type: logo_cube
+    position: [5, 5, 0]
+    components:
+      physics:
+        mass: 10.0
+        kinematic: false
+      collision:
+        enabled: true
+      renderable:
+        visible: true
+
+  - type: chase_camera
+    position: [0, 20, -30]
+    components:
+      camera:
+        behavior: "chase"
+        follow_distance: 15.0
+
+lighting:
+  ambient_light:
+    color: [0.2, 0.2, 0.2]
+    intensity: 0.3
+  directional_lights:
+    - direction: [0.3, -0.7, 0.2]
+      color: [1.0, 1.0, 1.0]
+      intensity: 0.7

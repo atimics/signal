@@ -76,12 +76,12 @@ void data_registry_cleanup(DataRegistry* registry)
 // TEMPLATE LOADING (YAML WITH TEXT FALLBACK)
 // ============================================================================
 
-// Load entity templates with YAML priority and text fallback
+// Load entity templates with YAML priority only
 bool load_entity_templates_with_fallback(DataRegistry* registry, const char* base_name)
 {
     if (!registry || !base_name) return false;
     
-    // First, try to load from YAML file
+    // Load from YAML file only - text format deprecated
     char yaml_filename[256];
     snprintf(yaml_filename, sizeof(yaml_filename), "templates/%s.yaml", base_name);
     
@@ -90,16 +90,7 @@ bool load_entity_templates_with_fallback(DataRegistry* registry, const char* bas
         return true;
     }
     
-    // Fall back to text format
-    char text_filename[256];
-    snprintf(text_filename, sizeof(text_filename), "templates/%s.txt", base_name);
-    
-    if (load_entity_templates(registry, text_filename)) {
-        printf("✅ Loaded entity templates from text (fallback): %s\n", text_filename);
-        return true;
-    }
-    
-    printf("❌ Entity templates not found in YAML or text format: %s\n", base_name);
+    printf("❌ Entity templates not found: %s (text format deprecated)\n", base_name);
     return false;
 }
 
