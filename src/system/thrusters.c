@@ -124,12 +124,32 @@ void thruster_set_linear_command(struct ThrusterSystem* thrusters, Vector3 comma
 {
     if (!thrusters) return;
     
+    // Debug: log significant thrust commands
+    static int cmd_counter = 0;
+    if (++cmd_counter % 60 == 0 && 
+        (fabsf(command.x) > 0.1f || fabsf(command.y) > 0.1f || fabsf(command.z) > 0.1f)) {
+        printf("🚀 DEBUG: thruster_set_linear_command received: [%.2f,%.2f,%.2f]\n",
+               command.x, command.y, command.z);
+    }
+    
     // Clamp command values to [-1, 1]
+    Vector3 old_thrust = thrusters->current_linear_thrust;
     thrusters->current_linear_thrust = (Vector3){
         fmaxf(-1.0f, fminf(1.0f, command.x)),
         fmaxf(-1.0f, fminf(1.0f, command.y)),
         fmaxf(-1.0f, fminf(1.0f, command.z))
     };
+    
+    // Log when thrust changes significantly
+    if (fabsf(old_thrust.x - thrusters->current_linear_thrust.x) > 0.1f ||
+        fabsf(old_thrust.y - thrusters->current_linear_thrust.y) > 0.1f ||
+        fabsf(old_thrust.z - thrusters->current_linear_thrust.z) > 0.1f) {
+        printf("🚀 THRUST CHANGED: [%.2f,%.2f,%.2f] → [%.2f,%.2f,%.2f]\n",
+               old_thrust.x, old_thrust.y, old_thrust.z,
+               thrusters->current_linear_thrust.x,
+               thrusters->current_linear_thrust.y,
+               thrusters->current_linear_thrust.z);
+    }
 }
 
 void thruster_set_angular_command(struct ThrusterSystem* thrusters, Vector3 command)

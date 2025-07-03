@@ -256,11 +256,16 @@ void scripted_flight_resume(ScriptedFlight* flight) {
 // ============================================================================
 
 static void update_scripted_entity(struct World* world, EntityID entity_id, ScriptedFlight* flight, float delta_time) {
+    static int call_counter = 0;
+    if (++call_counter % 60 == 0) {
+        printf("🔍 DEBUG: update_scripted_entity called for entity %d\n", entity_id);
+    }
+    
     if (!flight->active || flight->manual_override) {
         static int debug_counter = 0;
         if (++debug_counter % 60 == 0) {
-            printf("🛩️  Scripted flight inactive: active=%d, override=%d\n", 
-                   flight->active, flight->manual_override);
+            printf("🛩️  Scripted flight inactive: entity=%d, active=%d, override=%d\n", 
+                   entity_id, flight->active, flight->manual_override);
         }
         return;
     }
@@ -359,15 +364,33 @@ static void update_scripted_entity(struct World* world, EntityID entity_id, Scri
     // Apply thrust commands through thruster system
     thruster_set_linear_command(thrusters, thrust_command);
     
-    // Debug output
+    // Debug output - ENHANCED
     static int thrust_debug_counter = 0;
     if (++thrust_debug_counter % 30 == 0) {
-        printf("🛩️  Scripted flight update: waypoint %d/%d, dist=%.1f, cmd=[%.2f,%.2f,%.2f]\n",
-               flight->current_waypoint, flight->path.waypoint_count,
-               distance, thrust_command.x, thrust_command.y, thrust_command.z);
-        printf("    Ship pos: [%.1f,%.1f,%.1f], Target: [%.1f,%.1f,%.1f]\n",
+        printf("\n🔍 === SCRIPTED FLIGHT DEBUG ===\n");
+        printf("📍 Entity %d: waypoint %d/%d, dist=%.1f\n",
+               entity_id, flight->current_waypoint, flight->path.waypoint_count, distance);
+        printf("📍 Position: [%.1f,%.1f,%.1f] → Target: [%.1f,%.1f,%.1f]\n",
                current_pos.x, current_pos.y, current_pos.z,
                target_pos.x, target_pos.y, target_pos.z);
+        printf("🚀 Thrust CMD: [%.2f,%.2f,%.2f] (normalized -1 to 1)\n",
+               thrust_command.x, thrust_command.y, thrust_command.z);
+        printf("🚀 Linear Force: [%.1f,%.1f,%.1f] N\n",
+               linear_force.x, linear_force.y, linear_force.z);
+        printf("📊 Velocity: current=[%.1f,%.1f,%.1f] desired=[%.1f,%.1f,%.1f]\n",
+               physics->velocity.x, physics->velocity.y, physics->velocity.z,
+               desired_velocity.x, desired_velocity.y, desired_velocity.z);
+        printf("📊 Speed: current=%.1f, desired=%.1f\n",
+               flight->current_speed, desired_speed);
+        
+        // Check thruster state
+        printf("⚙️ Thruster state: enabled=%d, max_force.z=%.1f\n",
+               thrusters->thrusters_enabled, thrusters->max_linear_force.z);
+        printf("⚙️ Current thrust in thruster: [%.2f,%.2f,%.2f]\n",
+               thrusters->current_linear_thrust.x,
+               thrusters->current_linear_thrust.y,
+               thrusters->current_linear_thrust.z);
+        printf("=================================\n\n");
     }
     
     flight->current_speed = vector3_length(physics->velocity);
@@ -380,6 +403,16 @@ static void update_scripted_entity(struct World* world, EntityID entity_id, Scri
 
 void scripted_flight_update(struct World* world, RenderConfig* render_config, float delta_time) {
     (void)render_config; // Unused
+    
+    static int update_counter = 0;
+    if (++update_counter % 60 == 0) {
+        printf("🔍 DEBUG: scripted_flight_update called, count=%d\n", g_scripted_flight_count);
+        for (int i = 0; i < g_scripted_flight_count; i++) {
+            printf("  - Entity %d: active=%d\n", 
+                   g_scripted_flights[i].entity_id,
+                   g_scripted_flights[i].flight.active);
+        }
+    }
     
     for (int i = 0; i < g_scripted_flight_count; i++) {
         update_scripted_entity(world, g_scripted_flights[i].entity_id, 
