@@ -47,8 +47,11 @@ typedef struct {
     // Modifiers
     float boost;       // 0.0 to 1.0 (analog boost intensity)
     bool brake;        // digital brake on/off
+    float brake_intensity; // 0.0 to 1.0 (analog brake pressure for zero-g)
     
-    // Canyon racing extensions
+    // Zero-g extensions
+    float strafe_left;     // 0.0 to 1.0 (left strafe intensity)
+    float strafe_right;    // 0.0 to 1.0 (right strafe intensity)
     bool look_based_thrust;    // True if thrust should go towards look target
     float auto_level;          // Auto-leveling strength (0.0 = off)
     LookTarget look_target;    // Camera look target

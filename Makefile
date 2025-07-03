@@ -323,7 +323,7 @@ build/test_physics_critical: tests/systems/test_physics_critical.c $(PHYSICS_TES
 		-o $@ tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES) $(LDFLAGS)
 
 # Main test target - runs all essential tests including new comprehensive tests
-test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET)
+test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET)
 	@echo "🧪 Running Comprehensive CGame Test Suite"
 	@echo "=========================================="
 	@echo "📐 Core Math Tests..."
@@ -469,7 +469,7 @@ $(TEST_FLIGHT_SCENE_CRITICAL_TARGET): $(TEST_FLIGHT_SCENE_CRITICAL_SRC) | $(BUIL
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
+		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c src/scene_state.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
 
 # ============================================================================
 # MEMORY TESTING TARGETS

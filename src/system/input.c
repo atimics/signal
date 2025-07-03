@@ -9,12 +9,13 @@
 #include <string.h>
 #include <math.h>
 
-// Input configuration
-#define GAMEPAD_DEADZONE 0.15f          // 15% deadzone (reduced for better responsiveness)
-#define LOOK_SENSITIVITY 2.5f           // Camera rotation speed (increased)
-#define PITCH_YAW_SENSITIVITY 1.2f      // Ship rotation speed (increased for snappier controls)
-#define MOUSE_SENSITIVITY 0.005f         // Mouse look sensitivity
-#define AUTO_LEVEL_STRENGTH 2.0f         // How fast ship auto-levels
+// Zero-G Input configuration
+#define GAMEPAD_DEADZONE 0.12f          // 12% deadzone for precise zero-g control
+#define LOOK_SENSITIVITY 3.0f           // Camera rotation speed
+#define PITCH_YAW_SENSITIVITY 0.8f      // Ship rotation speed (reduced for stability)
+#define MOUSE_SENSITIVITY 0.004f        // Mouse look sensitivity (reduced for precision)
+#define AUTO_LEVEL_STRENGTH 2.0f        // How fast ship auto-levels
+#define THRUST_SENSITIVITY 1.0f         // Thrust responsiveness
 
 // Canyon racing input state
 typedef struct CanyonRacingInput {
@@ -126,26 +127,30 @@ void input_update(void) {
         }
     }
     
-    // Process gamepad input
+    // Process gamepad input for ZERO-G FLIGHT
     if (using_gamepad) {
-        // CANYON RACING CONTROLS:
-        // Left stick: Primary flight control (pitch/yaw)
+        // ZERO-G CONTROLS OPTIMIZED FOR XBOX CONTROLLER:
+        // Left stick: Primary flight control (pitch/yaw) with response curve
         float left_x = apply_deadzone(gamepad->left_stick_x, GAMEPAD_DEADZONE);
         float left_y = apply_deadzone(gamepad->left_stick_y, GAMEPAD_DEADZONE);
         
         if (left_x != 0.0f || left_y != 0.0f) {
-            // Left stick X = Yaw (turn left/right)
-            canyon_input.current_state.yaw = left_x * PITCH_YAW_SENSITIVITY;
+            // Apply quadratic response curve for fine control in zero-g
+            float sign_x = left_x > 0 ? 1.0f : -1.0f;
+            float sign_y = left_y > 0 ? 1.0f : -1.0f;
+            float mag_x = fabsf(left_x);
+            float mag_y = fabsf(left_y);
             
-            // Left stick Y = Pitch (up/down)
-            canyon_input.current_state.pitch = -left_y * PITCH_YAW_SENSITIVITY; // Inverted for flight controls
+            // Quadratic response: more precision at low inputs, more power at high inputs
+            canyon_input.current_state.yaw = sign_x * mag_x * mag_x * PITCH_YAW_SENSITIVITY;
+            canyon_input.current_state.pitch = -sign_y * mag_y * mag_y * PITCH_YAW_SENSITIVITY; // Inverted for flight
             
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
             
-            // Debug output to see raw values
+            // Debug output
             static int stick_debug_counter = 0;
             if (++stick_debug_counter % 30 == 0) {
-                printf("🎮 LEFT STICK: Raw(%.3f,%.3f) → Pitch:%.3f Yaw:%.3f\n", 
+                printf("🎮 ZERO-G STICK: Raw(%.3f,%.3f) → Curved Pitch:%.3f Yaw:%.3f\n", 
                        left_x, left_y, canyon_input.current_state.pitch, canyon_input.current_state.yaw);
             }
         }
@@ -163,38 +168,53 @@ void input_update(void) {
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Right trigger for forward thrust (simplified)
-        float right_trigger = apply_deadzone(gamepad->right_trigger, GAMEPAD_DEADZONE);
+        // Right trigger for forward thrust with precise zero-g control
+        float right_trigger = apply_deadzone(gamepad->right_trigger, GAMEPAD_DEADZONE * 0.5f); // Lower deadzone for triggers
         if (right_trigger > 0.0f) {
-            canyon_input.current_state.thrust = right_trigger;
+            // Linear response for thrust - no curves needed for zero-g precision
+            canyon_input.current_state.thrust = right_trigger * THRUST_SENSITIVITY;
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Left trigger for brake/reverse thrust
-        float left_trigger = apply_deadzone(gamepad->left_trigger, GAMEPAD_DEADZONE);
+        // Left trigger for braking with enhanced zero-g stopping
+        float left_trigger = apply_deadzone(gamepad->left_trigger, GAMEPAD_DEADZONE * 0.5f);
         if (left_trigger > 0.0f) {
+            // Proportional braking based on trigger pressure
             canyon_input.current_state.brake = true;
-            // Note: Auto-leveling removed to prevent control conflicts
+            canyon_input.current_state.brake_intensity = left_trigger; // Store brake intensity
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Bumpers for roll
+        // Bumpers for roll (precise zero-g roll control)
         if (gamepad->buttons[GAMEPAD_BUTTON_RB]) {
-            canyon_input.current_state.roll += 1.0f;
+            canyon_input.current_state.roll += 0.7f; // Reduced for stability
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         if (gamepad->buttons[GAMEPAD_BUTTON_LB]) {
-            canyon_input.current_state.roll -= 1.0f;
+            canyon_input.current_state.roll -= 0.7f; // Reduced for stability
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Face buttons
+        // Face buttons for zero-g maneuvering
         if (gamepad->buttons[GAMEPAD_BUTTON_A]) {
+            // A button = boost (for emergency maneuvers)
             canyon_input.current_state.boost = 1.0f;
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         if (gamepad->buttons[GAMEPAD_BUTTON_B]) {
+            // B button = emergency stop (full brake)
             canyon_input.current_state.brake = true;
+            canyon_input.current_state.brake_intensity = 1.0f;
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+        }
+        if (gamepad->buttons[GAMEPAD_BUTTON_X]) {
+            // X button = strafe left (for translations)
+            canyon_input.current_state.strafe_left = 0.5f;
+            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+        }
+        if (gamepad->buttons[GAMEPAD_BUTTON_Y]) {
+            // Y button = strafe right (for translations)
+            canyon_input.current_state.strafe_right = 0.5f;
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
     }
@@ -222,27 +242,38 @@ void input_update(void) {
     // Store look target in input state
     canyon_input.current_state.look_target = canyon_input.look_target;
     
-    // Clamp values
+    // Clamp values for zero-g precision
     canyon_input.current_state.thrust = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.thrust));
     canyon_input.current_state.pitch = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.pitch));
     canyon_input.current_state.yaw = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.yaw));
     canyon_input.current_state.roll = fmaxf(-1.0f, fminf(1.0f, canyon_input.current_state.roll));
     canyon_input.current_state.boost = fmaxf(0.0f, fminf(1.0f, canyon_input.current_state.boost));
     
+    // Clamp additional zero-g controls
+    canyon_input.current_state.brake_intensity = fmaxf(0.0f, fminf(1.0f, canyon_input.current_state.brake_intensity));
+    canyon_input.current_state.strafe_left = fmaxf(0.0f, fminf(1.0f, canyon_input.current_state.strafe_left));
+    canyon_input.current_state.strafe_right = fmaxf(0.0f, fminf(1.0f, canyon_input.current_state.strafe_right));
+    
     // Debug output
     static int debug_counter = 0;
     if (++debug_counter % 60 == 0) { // Every second
         if (canyon_input.current_state.thrust > 0.0f || 
-            fabsf(canyon_input.current_state.pitch) > 0.1f ||
-            fabsf(canyon_input.current_state.yaw) > 0.1f) {
+            fabsf(canyon_input.current_state.pitch) > 0.05f ||
+            fabsf(canyon_input.current_state.yaw) > 0.05f ||
+            canyon_input.current_state.brake) {
             
-            printf("🏎️ Canyon Racing Input: T:%.2f P:%.2f Y:%.2f R:%.2f ",
+            printf("🚀 Zero-G Input: T:%.2f P:%.2f Y:%.2f R:%.2f ",
                    canyon_input.current_state.thrust,
                    canyon_input.current_state.pitch,
                    canyon_input.current_state.yaw,
                    canyon_input.current_state.roll);
             
-            // Simplified - no complex auto-assist systems
+            if (canyon_input.current_state.brake) {
+                printf("Brake:%.2f ", canyon_input.current_state.brake_intensity);
+            }
+            if (canyon_input.current_state.strafe_left > 0.0f || canyon_input.current_state.strafe_right > 0.0f) {
+                printf("Strafe L:%.2f R:%.2f ", canyon_input.current_state.strafe_left, canyon_input.current_state.strafe_right);
+            }
             
             printf("Look: Az:%.2f El:%.2f Dist:%.1f\n",
                    canyon_input.look_target.azimuth,

@@ -18,40 +18,109 @@ static EntityID g_player_entity = INVALID_ENTITY;
 // - apply_auto_level_torque: Part of auto-leveling system
 // All disabled for direct manual control only
 
-// Process linear input for canyon racing
+// Process linear input for canyon racing with auto-stop
 static Vector3 process_canyon_racing_linear(const InputState* input, 
                                           struct ControlAuthority* control,
                                           const Vector3* ship_position,
-                                          const Quaternion* ship_orientation) {
+                                          const Quaternion* ship_orientation,
+                                          const Vector3* current_velocity,
+                                          const Quaternion* ship_rotation) {
     (void)ship_position; // Unused for now
     (void)ship_orientation; // Unused for now
     if (!input || !control) return (Vector3){0, 0, 0};
     
     Vector3 linear_commands = {0, 0, 0};
     
-    // SIMPLIFIED: Direct thrust control only
-    // For now, stick with traditional forward thrust until we can implement proper target calculations
-    linear_commands = (Vector3){
-        0.0f,                // X: No strafe for now
-        input->vertical,     // Y: Up/down  
-        input->thrust        // Z: Forward/backward (positive Z = forward)
-    };
+    // Check if we have thrust input
+    bool has_thrust_input = (fabsf(input->thrust) > 0.01f || fabsf(input->vertical) > 0.01f);
     
-    // Apply boost
-    if (input->boost > 0.0f) {
-        float boost_factor = 1.0f + input->boost * 3.0f; // 4x boost
-        linear_commands = vector3_multiply_scalar(linear_commands, boost_factor);
+    if (has_thrust_input) {
+        // Manual thrust control
+        linear_commands = (Vector3){
+            0.0f,                // X: No strafe for now
+            input->vertical,     // Y: Up/down  
+            input->thrust        // Z: Forward/backward (positive Z = forward)
+        };
+        
+        // Apply boost
+        if (input->boost > 0.0f) {
+            float boost_factor = 1.0f + input->boost * 2.0f; // 3x boost (reduced from 4x)
+            linear_commands = vector3_multiply_scalar(linear_commands, boost_factor);
+        }
+    } else if (current_velocity && ship_rotation) {
+        // AUTO-STOP: Apply counter-thrust to slow down when no input
+        // Transform world velocity to ship-local space
+        Vector3 ship_forward = quaternion_rotate_vector(*ship_rotation, (Vector3){0, 0, 1});
+        Vector3 ship_right = quaternion_rotate_vector(*ship_rotation, (Vector3){1, 0, 0});
+        Vector3 ship_up = quaternion_rotate_vector(*ship_rotation, (Vector3){0, 1, 0});
+        
+        // Calculate velocity in ship's local coordinate system
+        float forward_velocity = vector3_dot(*current_velocity, ship_forward);
+        float right_velocity = vector3_dot(*current_velocity, ship_right);
+        float up_velocity = vector3_dot(*current_velocity, ship_up);
+        
+        // Auto-stop parameters
+        float auto_stop_strength = 0.8f; // How aggressively to stop
+        float velocity_threshold = 0.1f; // Don't auto-stop below this speed
+        
+        // Apply counter-thrust proportional to velocity
+        if (fabsf(forward_velocity) > velocity_threshold) {
+            linear_commands.z = -forward_velocity * auto_stop_strength;
+        }
+        if (fabsf(right_velocity) > velocity_threshold) {
+            linear_commands.x = -right_velocity * auto_stop_strength;
+        }
+        if (fabsf(up_velocity) > velocity_threshold) {
+            linear_commands.y = -up_velocity * auto_stop_strength;
+        }
+        
+        // Clamp auto-stop forces to reasonable limits
+        linear_commands.x = fmaxf(-0.5f, fminf(0.5f, linear_commands.x));
+        linear_commands.y = fmaxf(-0.5f, fminf(0.5f, linear_commands.y));
+        linear_commands.z = fmaxf(-0.5f, fminf(0.5f, linear_commands.z));
     }
     
-    // Apply brake
+    // Apply brake with intensity (overrides auto-stop)
     if (input->brake) {
-        linear_commands = vector3_multiply_scalar(linear_commands, 0.05f);
+        float brake_strength = 2.0f; // Base brake strength
+        
+        // Use brake intensity if available (from analog trigger)
+        if (input->brake_intensity > 0.0f) {
+            brake_strength *= input->brake_intensity;
+        }
+        
+        // Enhanced braking - stronger than auto-stop
+        if (current_velocity && ship_rotation) {
+            Vector3 ship_forward = quaternion_rotate_vector(*ship_rotation, (Vector3){0, 0, 1});
+            Vector3 ship_right = quaternion_rotate_vector(*ship_rotation, (Vector3){1, 0, 0});
+            Vector3 ship_up = quaternion_rotate_vector(*ship_rotation, (Vector3){0, 1, 0});
+            
+            float forward_velocity = vector3_dot(*current_velocity, ship_forward);
+            float right_velocity = vector3_dot(*current_velocity, ship_right);
+            float up_velocity = vector3_dot(*current_velocity, ship_up);
+            
+            // Proportional braking based on brake intensity
+            linear_commands.x = -right_velocity * brake_strength;
+            linear_commands.y = -up_velocity * brake_strength;
+            linear_commands.z = -forward_velocity * brake_strength;
+        } else {
+            // Fallback if no velocity data
+            linear_commands = vector3_multiply_scalar(linear_commands, 0.1f);
+        }
+    }
+    
+    // Add strafe controls for zero-g maneuvering
+    if (input->strafe_left > 0.0f) {
+        linear_commands.x -= input->strafe_left * 0.5f; // Strafe left
+    }
+    if (input->strafe_right > 0.0f) {
+        linear_commands.x += input->strafe_right * 0.5f; // Strafe right
     }
     
     return linear_commands;
 }
 
-// Process angular input for canyon racing with gyroscopic stabilization
+// Process angular input for canyon racing with enhanced stabilization
 static Vector3 process_canyon_racing_angular(const InputState* input,
                                            struct ControlAuthority* control,
                                            const Vector3* ship_position,
@@ -63,31 +132,49 @@ static Vector3 process_canyon_racing_angular(const InputState* input,
     
     Vector3 angular_commands = {0, 0, 0};
     
-    // Direct ship control from input
-    float sensitivity = control->control_sensitivity * 0.8f;
-    angular_commands.x = input->pitch * sensitivity;
-    angular_commands.y = input->yaw * sensitivity;
-    angular_commands.z = input->roll * sensitivity;
+    // Improved sensitivity scaling for zero-g precision
+    float base_sensitivity = control->control_sensitivity * 0.6f; // Reduced for stability
     
-    // GYROSCOPIC STABILIZATION: Apply counter-thrust when no input
-    // This simulates RCS thrusters firing to stop rotation
+    // Apply input with response curve for fine control
+    if (fabsf(input->pitch) > 0.01f) {
+        float sign = input->pitch > 0 ? 1.0f : -1.0f;
+        float magnitude = fabsf(input->pitch);
+        // Quadratic response curve for fine control at low inputs
+        angular_commands.x = sign * magnitude * magnitude * base_sensitivity;
+    }
+    
+    if (fabsf(input->yaw) > 0.01f) {
+        float sign = input->yaw > 0 ? 1.0f : -1.0f;
+        float magnitude = fabsf(input->yaw);
+        angular_commands.y = sign * magnitude * magnitude * base_sensitivity;
+    }
+    
+    if (fabsf(input->roll) > 0.01f) {
+        float sign = input->roll > 0 ? 1.0f : -1.0f;
+        float magnitude = fabsf(input->roll);
+        angular_commands.z = sign * magnitude * magnitude * base_sensitivity;
+    }
+    
+    // ENHANCED ZERO-G STABILIZATION
     if (current_angular_velocity) {
-        float stabilization_strength = 3.0f; // How aggressively to counter rotation
-        float input_deadzone = 0.1f;
+        float stabilization_strength = 4.0f; // Stronger stabilization for zero-g
+        float input_deadzone = 0.05f; // Smaller deadzone for better responsiveness
+        float velocity_threshold = 0.005f; // Stop very small rotations
         
-        // If no pitch input, counter pitch rotation
-        if (fabsf(input->pitch) < input_deadzone && fabsf(current_angular_velocity->x) > 0.01f) {
-            angular_commands.x = -current_angular_velocity->x * stabilization_strength;
+        // Enhanced stabilization with PD control
+        if (fabsf(input->pitch) < input_deadzone && fabsf(current_angular_velocity->x) > velocity_threshold) {
+            float damping = -current_angular_velocity->x * stabilization_strength;
+            angular_commands.x += damping;
         }
         
-        // If no yaw input, counter yaw rotation
-        if (fabsf(input->yaw) < input_deadzone && fabsf(current_angular_velocity->y) > 0.01f) {
-            angular_commands.y = -current_angular_velocity->y * stabilization_strength;
+        if (fabsf(input->yaw) < input_deadzone && fabsf(current_angular_velocity->y) > velocity_threshold) {
+            float damping = -current_angular_velocity->y * stabilization_strength;
+            angular_commands.y += damping;
         }
         
-        // If no roll input, counter roll rotation
-        if (fabsf(input->roll) < input_deadzone && fabsf(current_angular_velocity->z) > 0.01f) {
-            angular_commands.z = -current_angular_velocity->z * stabilization_strength;
+        if (fabsf(input->roll) < input_deadzone && fabsf(current_angular_velocity->z) > velocity_threshold) {
+            float damping = -current_angular_velocity->z * stabilization_strength;
+            angular_commands.z += damping;
         }
     }
     
@@ -146,35 +233,40 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                        entity->id, g_player_entity, control->controlled_by);
             }
             
-            // Check if we have any actual input to process
+            // Check if we have any actual input to process (including zero-g controls)
             bool has_input = (input->thrust != 0.0f || 
                             input->pitch != 0.0f || 
                             input->yaw != 0.0f || 
                             input->roll != 0.0f ||
                             input->brake ||
-                            input->boost > 0.0f);
+                            input->boost > 0.0f ||
+                            input->strafe_left > 0.0f ||
+                            input->strafe_right > 0.0f);
             
             // Only override thrust commands if there's actual player input
             // This allows scripted flight to work when player isn't providing input
             if (has_input) {
-                // Get ship position and orientation
+                // Get ship position, orientation, and velocity for enhanced control
                 Vector3 ship_position = transform ? transform->position : (Vector3){0, 0, 0};
                 Quaternion ship_orientation = transform ? transform->rotation : 
                                              (Quaternion){0, 0, 0, 1};
                 
-                // Get current angular velocity for stabilization
+                // Get current velocities for stabilization and auto-stop
                 Vector3* angular_velocity_ptr = NULL;
+                Vector3* linear_velocity_ptr = NULL;
                 if (physics && physics->has_6dof) {
                     angular_velocity_ptr = &physics->angular_velocity;
+                    linear_velocity_ptr = &physics->velocity;
                 }
                 
-                // Process linear input (thrust)
+                // Process linear input (thrust) with auto-stop functionality
                 Vector3 linear_commands = process_canyon_racing_linear(input, control, 
-                                                                     &ship_position, &ship_orientation);
+                                                                     &ship_position, &ship_orientation,
+                                                                     linear_velocity_ptr, &ship_orientation);
                 control->input_linear = linear_commands;
                 thruster_set_linear_command(thrusters, linear_commands);
                 
-                // Process angular input (rotation) with gyroscopic stabilization
+                // Process angular input (rotation) with enhanced stabilization
                 Vector3 angular_commands = process_canyon_racing_angular(input, control, 
                                                                        &ship_position, 
                                                                        &ship_orientation,
@@ -346,21 +438,21 @@ void control_configure_ship(struct World* world, EntityID ship_id, ShipConfigPre
             break;
             
         case SHIP_CONFIG_RACER:
-            // Canyon racing configuration
+            // Zero-G optimized configuration
             physics->mass = 80.0f;
-            physics->drag_linear = 0.99f;  // High drag for arcade feel
-            physics->drag_angular = 0.15f;
-            physics->moment_of_inertia = (Vector3){0.5f, 0.4f, 0.5f};
+            physics->drag_linear = 0.02f;   // Very low drag for zero-g realism
+            physics->drag_angular = 0.08f;  // Low angular drag for realistic rotation
+            physics->moment_of_inertia = (Vector3){0.4f, 0.3f, 0.4f}; // Reduced for responsiveness
             
             thrusters->ship_type = SHIP_TYPE_FIGHTER;
-            thrusters->max_linear_force = (Vector3){400, 400, 1200};
-            thrusters->max_angular_torque = (Vector3){80, 100, 60};
-            thrusters->thrust_response_time = 0.05f;
+            thrusters->max_linear_force = (Vector3){600, 600, 1000}; // Balanced thrust
+            thrusters->max_angular_torque = (Vector3){120, 140, 100}; // Enhanced torque for zero-g
+            thrusters->thrust_response_time = 0.03f; // Very responsive
             thrusters->vacuum_efficiency = 1.0f;
             thrusters->thrusters_enabled = true;
             
-            control->control_sensitivity = 2.0f;
-            control->stability_assist = 0.5f;
+            control->control_sensitivity = 1.0f; // Moderate sensitivity for stability
+            control->stability_assist = 0.7f;    // Strong assist for zero-g
             control->flight_assist_enabled = true;
             control->control_mode = CONTROL_ASSISTED;
             break;
@@ -386,23 +478,23 @@ void control_configure_ship(struct World* world, EntityID ship_id, ShipConfigPre
             break;
             
         case SHIP_CONFIG_RC_ROCKET:
-            // RC model rocket (test configuration)
-            physics->mass = 10.0f;
-            physics->drag_linear = 0.02f;
-            physics->drag_angular = 0.3f;
-            physics->moment_of_inertia = (Vector3){0.5f, 0.3f, 0.5f};
+            // Zero-G test rocket (lightweight and agile)
+            physics->mass = 8.0f;
+            physics->drag_linear = 0.005f;  // Minimal drag for true zero-g
+            physics->drag_angular = 0.02f;  // Minimal angular drag
+            physics->moment_of_inertia = (Vector3){0.2f, 0.15f, 0.2f}; // Very low inertia
             
             thrusters->ship_type = SHIP_TYPE_FIGHTER;
-            thrusters->max_linear_force = (Vector3){300, 300, 800};
-            thrusters->max_angular_torque = (Vector3){50, 80, 50};
-            thrusters->thrust_response_time = 0.05f;
+            thrusters->max_linear_force = (Vector3){400, 400, 600}; // Balanced for test flights
+            thrusters->max_angular_torque = (Vector3){80, 100, 60}; // Good maneuverability
+            thrusters->thrust_response_time = 0.02f; // Instant response
             thrusters->vacuum_efficiency = 1.0f;
             thrusters->thrusters_enabled = true;
             
-            control->control_sensitivity = 2.0f;
-            control->stability_assist = 0.0f;
-            control->flight_assist_enabled = false;
-            control->control_mode = CONTROL_MANUAL;
+            control->control_sensitivity = 0.8f; // Stable but responsive
+            control->stability_assist = 0.5f;    // Some assist but not overwhelming
+            control->flight_assist_enabled = true;
+            control->control_mode = CONTROL_ASSISTED;
             break;
     }
     

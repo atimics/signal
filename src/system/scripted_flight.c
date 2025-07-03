@@ -319,50 +319,86 @@ static void update_scripted_entity(struct World* world, EntityID entity_id, Scri
         return;
     }
     
-    // Calculate desired direction and velocity
+    // Calculate desired direction
     Vector3 direction = vector3_normalize_safe(vector3_subtract(target_pos, current_pos));
     
-    // Calculate desired speed based on distance and waypoint type
-    float desired_speed = target_waypoint->target_speed;
-    if (distance < 20.0f) {
-        // Slow down as we approach the waypoint
-        desired_speed *= (distance / 20.0f);
-        desired_speed = fmaxf(desired_speed, 2.0f);
-    }
+    // Get ship's current forward direction (Z-axis in local space)
+    Vector3 ship_forward = quaternion_rotate_vector(transform->rotation, (Vector3){0, 0, 1});
+    Vector3 ship_right = quaternion_rotate_vector(transform->rotation, (Vector3){1, 0, 0});
+    Vector3 ship_up = quaternion_rotate_vector(transform->rotation, (Vector3){0, 1, 0});
     
-    // Calculate thrust commands
-    Vector3 desired_velocity = vector3_multiply_scalar(direction, desired_speed);
-    Vector3 velocity_error = vector3_subtract(desired_velocity, physics->velocity);
+    // Calculate how aligned we are with the target direction
+    float alignment = vector3_dot(ship_forward, direction);
     
-    // Simple PID controller for velocity
-    float kp = 0.8f; // Proportional gain
-    Vector3 linear_force = vector3_multiply_scalar(velocity_error, kp * physics->mass);
+    // Calculate angular error for turning
+    Vector3 angular_error = vector3_cross(ship_forward, direction);
+    float yaw_error = vector3_dot(angular_error, ship_up);
+    float pitch_error = -vector3_dot(angular_error, ship_right);
     
-    // Limit force to maximum thrust capability
-    float max_force = thrusters->max_linear_force.z; // Use forward thrust as reference
-    float force_magnitude = vector3_length(linear_force);
-    if (force_magnitude > max_force) {
-        linear_force = vector3_multiply_scalar(linear_force, max_force / force_magnitude);
-    }
-    
-    // TODO: Calculate orientation for ship to face direction of travel
-    // For now, just apply thrust without orientation control
-    
-    // Convert world force to thrust commands (normalized -1 to 1)
+    // Initialize thrust commands
     Vector3 thrust_command = {0, 0, 0};
-    if (max_force > 0.0f) {
-        thrust_command.x = linear_force.x / max_force;
-        thrust_command.y = linear_force.y / max_force;
-        thrust_command.z = linear_force.z / max_force;
+    Vector3 angular_command = {0, 0, 0};
+    
+    // Angular control gains
+    float angular_kp = 3.0f;  // Proportional gain for turning
+    float angular_kd = 0.5f;  // Derivative gain for damping
+    
+    // Calculate angular commands (with damping)
+    angular_command.x = pitch_error * angular_kp - physics->angular_velocity.x * angular_kd;
+    angular_command.y = yaw_error * angular_kp - physics->angular_velocity.y * angular_kd;
+    angular_command.z = 0; // No roll control for now
+    
+    // Clamp angular commands
+    angular_command.x = fmaxf(-1.0f, fminf(1.0f, angular_command.x));
+    angular_command.y = fmaxf(-1.0f, fminf(1.0f, angular_command.y));
+    
+    // Only apply forward thrust when we're roughly aligned with the target
+    float alignment_threshold = 0.8f; // cos(~37 degrees)
+    
+    if (alignment > alignment_threshold) {
+        // We're facing the right direction, apply thrust
+        float desired_speed = target_waypoint->target_speed;
         
-        // Clamp to valid range
-        thrust_command.x = fmaxf(-1.0f, fminf(1.0f, thrust_command.x));
-        thrust_command.y = fmaxf(-1.0f, fminf(1.0f, thrust_command.y));
+        // Slow down as we approach the waypoint
+        if (distance < 20.0f) {
+            desired_speed *= (distance / 20.0f);
+            desired_speed = fmaxf(desired_speed, 2.0f);
+        }
+        
+        // Calculate forward thrust based on current forward speed
+        float current_forward_speed = vector3_dot(physics->velocity, ship_forward);
+        float speed_error = desired_speed - current_forward_speed;
+        
+        // Apply thrust in ship's forward direction only
+        float thrust_kp = 0.5f;
+        thrust_command.z = speed_error * thrust_kp;
         thrust_command.z = fmaxf(-1.0f, fminf(1.0f, thrust_command.z));
+        
+        // Small lateral corrections if needed
+        if (distance > 5.0f) {
+            float lateral_error = vector3_dot(direction, ship_right);
+            float vertical_error = vector3_dot(direction, ship_up);
+            
+            thrust_command.x = lateral_error * 0.2f;
+            thrust_command.y = vertical_error * 0.2f;
+            
+            thrust_command.x = fmaxf(-0.3f, fminf(0.3f, thrust_command.x));
+            thrust_command.y = fmaxf(-0.3f, fminf(0.3f, thrust_command.y));
+        }
+    } else {
+        // We need to turn first - reduce or stop forward thrust
+        thrust_command.z = 0.0f;
+        
+        // Optionally apply small reverse thrust to slow down while turning
+        float current_forward_speed = vector3_dot(physics->velocity, ship_forward);
+        if (current_forward_speed > 5.0f) {
+            thrust_command.z = -0.2f; // Light braking
+        }
     }
     
-    // Apply thrust commands through thruster system
+    // Apply commands through thruster system
     thruster_set_linear_command(thrusters, thrust_command);
+    thruster_set_angular_command(thrusters, angular_command);
     
     // Debug output - ENHANCED
     static int thrust_debug_counter = 0;
@@ -373,23 +409,23 @@ static void update_scripted_entity(struct World* world, EntityID entity_id, Scri
         printf("📍 Position: [%.1f,%.1f,%.1f] → Target: [%.1f,%.1f,%.1f]\n",
                current_pos.x, current_pos.y, current_pos.z,
                target_pos.x, target_pos.y, target_pos.z);
+        printf("🎯 Alignment: %.2f (threshold: %.2f) %s\n",
+               alignment, alignment_threshold, 
+               alignment > alignment_threshold ? "✅ ALIGNED" : "❌ TURNING");
+        printf("🔄 Angular CMD: pitch=%.2f, yaw=%.2f\n",
+               angular_command.x, angular_command.y);
         printf("🚀 Thrust CMD: [%.2f,%.2f,%.2f] (normalized -1 to 1)\n",
                thrust_command.x, thrust_command.y, thrust_command.z);
-        printf("🚀 Linear Force: [%.1f,%.1f,%.1f] N\n",
-               linear_force.x, linear_force.y, linear_force.z);
-        printf("📊 Velocity: current=[%.1f,%.1f,%.1f] desired=[%.1f,%.1f,%.1f]\n",
+        printf("📊 Velocity: current=[%.1f,%.1f,%.1f] fwd_speed=%.1f\n",
                physics->velocity.x, physics->velocity.y, physics->velocity.z,
-               desired_velocity.x, desired_velocity.y, desired_velocity.z);
-        printf("📊 Speed: current=%.1f, desired=%.1f\n",
-               flight->current_speed, desired_speed);
+               vector3_dot(physics->velocity, ship_forward));
+        printf("📊 Angular Vel: [%.2f,%.2f,%.2f] rad/s\n",
+               physics->angular_velocity.x, physics->angular_velocity.y, 
+               physics->angular_velocity.z);
         
         // Check thruster state
         printf("⚙️ Thruster state: enabled=%d, max_force.z=%.1f\n",
                thrusters->thrusters_enabled, thrusters->max_linear_force.z);
-        printf("⚙️ Current thrust in thruster: [%.2f,%.2f,%.2f]\n",
-               thrusters->current_linear_thrust.x,
-               thrusters->current_linear_thrust.y,
-               thrusters->current_linear_thrust.z);
         printf("=================================\n\n");
     }
     

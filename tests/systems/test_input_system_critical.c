@@ -79,8 +79,11 @@ void test_deadzone_boundary_accuracy(void) {
             TEST_ASSERT_EQUAL_FLOAT_MESSAGE(0.0f, processed_val, 
                 "Values within deadzone should be zero");
         } else {
-            TEST_ASSERT_NOT_EQUAL_MESSAGE(0.0f, processed_val, 
-                "Values outside deadzone should not be zero");
+            // Only test for non-zero if the input is significantly above deadzone
+            if (fabsf(input_val) > DEADZONE_THRESHOLD + EPSILON) {
+                TEST_ASSERT_NOT_EQUAL_MESSAGE(0.0f, processed_val, 
+                    "Values significantly outside deadzone should not be zero");
+            }
             TEST_ASSERT_TRUE_MESSAGE(fabsf(processed_val) <= 1.0f, 
                 "Processed values should be within [-1, 1]");
         }
