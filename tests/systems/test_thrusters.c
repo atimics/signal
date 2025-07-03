@@ -111,7 +111,7 @@ void test_thruster_command_clamping(void)
 void test_thruster_linear_force_generation(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -142,7 +142,7 @@ void test_thruster_linear_force_generation(void)
 void test_thruster_angular_force_generation(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -175,7 +175,7 @@ void test_thruster_angular_force_generation(void)
 void test_thruster_disabled_no_force(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -211,7 +211,7 @@ void test_thruster_disabled_no_force(void)
 void test_thruster_atmosphere_efficiency(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -238,7 +238,7 @@ void test_thruster_atmosphere_efficiency(void)
 void test_thruster_vacuum_efficiency(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -265,7 +265,7 @@ void test_thruster_vacuum_efficiency(void)
 void test_thruster_response_time_gradual_change(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     
@@ -290,7 +290,7 @@ void test_thruster_response_time_gradual_change(void)
 void test_thruster_instant_response_when_fast(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     
@@ -346,7 +346,7 @@ void test_thruster_entity_without_physics(void)
 void test_thruster_direction_identity_rotation(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -374,7 +374,7 @@ void test_thruster_direction_identity_rotation(void)
 void test_thruster_direction_90_degree_yaw(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -403,7 +403,7 @@ void test_thruster_direction_90_degree_yaw(void)
 void test_thruster_direction_90_degree_pitch(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -431,7 +431,7 @@ void test_thruster_direction_90_degree_pitch(void)
 void test_thruster_direction_combined_rotation(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -462,7 +462,7 @@ void test_thruster_direction_combined_rotation(void)
 void test_thruster_direction_zero_thrust(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);
@@ -520,7 +520,7 @@ void test_thruster_multiple_entities_performance(void)
 void test_thruster_zero_max_force_safety(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
+    entity_add_components(&test_world, entity, COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     struct Physics* physics = entity_get_physics(&test_world, entity);

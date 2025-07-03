@@ -84,8 +84,8 @@ void scene_list_widget_refresh(SceneListWidget* widget)
     widget->scene_count = 0;
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
-        if (strstr(entry->d_name, ".txt") && 
-            strcmp(entry->d_name, "navigation_menu.txt") != 0) {
+        if (strstr(entry->d_name, ".yaml") && 
+            strcmp(entry->d_name, "navigation_menu.yaml") != 0) {
             widget->scene_count++;
         }
     }
@@ -103,10 +103,10 @@ void scene_list_widget_refresh(SceneListWidget* widget)
     rewinddir(dir);
     int index = 0;
     while ((entry = readdir(dir)) != NULL && index < widget->scene_count) {
-        if (strstr(entry->d_name, ".txt") && 
-            strcmp(entry->d_name, "navigation_menu.txt") != 0) {
+        if (strstr(entry->d_name, ".yaml") && 
+            strcmp(entry->d_name, "navigation_menu.yaml") != 0) {
             
-            // Remove .txt extension for scene name
+            // Remove .yaml extension for scene name
             char* scene_name = malloc(strlen(entry->d_name) + 1);
             strcpy(scene_name, entry->d_name);
             char* dot = strrchr(scene_name, '.');
