@@ -119,8 +119,42 @@ bool ui_handle_event(const void* ev)
     // Note: current_scene would need to be passed here in a real implementation
     // For now, we'll skip scene-specific event handling
     
-    // Pass event to Nuklear and return whether it was captured
-    return snk_handle_event(event);
+    // Only pass mouse and touch events to Nuklear
+    // Keyboard events should go to the game unless Nuklear has an active text input
+    bool should_pass_to_nuklear = false;
+    
+    switch (event->type) {
+        case SAPP_EVENTTYPE_MOUSE_DOWN:
+        case SAPP_EVENTTYPE_MOUSE_UP:
+        case SAPP_EVENTTYPE_MOUSE_MOVE:
+        case SAPP_EVENTTYPE_MOUSE_SCROLL:
+        case SAPP_EVENTTYPE_MOUSE_ENTER:
+        case SAPP_EVENTTYPE_MOUSE_LEAVE:
+        case SAPP_EVENTTYPE_TOUCHES_BEGAN:
+        case SAPP_EVENTTYPE_TOUCHES_MOVED:
+        case SAPP_EVENTTYPE_TOUCHES_ENDED:
+        case SAPP_EVENTTYPE_TOUCHES_CANCELLED:
+            should_pass_to_nuklear = true;
+            break;
+            
+        case SAPP_EVENTTYPE_KEY_DOWN:
+        case SAPP_EVENTTYPE_KEY_UP:
+        case SAPP_EVENTTYPE_CHAR:
+            // Only pass keyboard events if there's an active text input
+            // For now, we'll assume no text inputs are active in the flight test scene
+            should_pass_to_nuklear = false;
+            break;
+            
+        default:
+            should_pass_to_nuklear = false;
+            break;
+    }
+    
+    if (should_pass_to_nuklear) {
+        return snk_handle_event(event);
+    }
+    
+    return false;  // Event not captured by UI
 }
 
 // ============================================================================
