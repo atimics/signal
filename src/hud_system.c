@@ -401,7 +401,6 @@ void hud_render_speedometer(struct nk_context* ctx, struct World* world, Vector2
     
     // Apply opacity
     uint8_t alpha = (uint8_t)(255 * opacity);
-    struct nk_color text_color = nk_rgba(100, 255, 100, alpha);
     struct nk_color bg_color = nk_rgba(0, 0, 0, (uint8_t)(128 * opacity));
     
     // Background
