@@ -85,14 +85,16 @@ These research documents were created for specific sprints but contain valuable 
 ### 🌌 Game Universe Research
 
 **A-Drive Propulsion System**
-- **Document**: [RES_TOPIC_A_DRIVE.md](project/research/RES_TOPIC_A_DRIVE.md)
-- **Status**: LORE/DESIGN - For future implementation
-- **Content**: FTL travel mechanics and lore
+- **Document**: Part of SIGNAL lore (archived)
+- **Status**: LORE/DESIGN - Not implemented
+- **Content**: FTL travel mechanics concept
+- **Location**: See archive/SIGNAL/ for lore documents
 
 **Universe Design**
-- **Document**: [RES_TOPIC_UNIVERSE.md](project/research/RES_TOPIC_UNIVERSE.md)
-- **Status**: LORE/DESIGN
-- **Content**: Game world structure and setting
+- **Document**: Part of SIGNAL concept (archived)
+- **Status**: LORE/DESIGN - Alternative game concept
+- **Content**: Original game world structure
+- **Note**: Current game focuses on canyon racing, not space exploration
 
 ### 📊 Research Outcomes Summary
 
@@ -124,12 +126,27 @@ All research documents should include:
 - **Recommendations**: Suggested actions
 - **Impact Assessment**: Effort, risk, and benefit analysis
 
+### 🔬 Recent Research (Sprint 23)
+
+**Scripted Flight System**
+- **Status**: COMPLETE - Implemented
+- **Document**: [Scripted Flight Guide](guides/SCRIPTED_FLIGHT_GUIDE.md)
+- **Key Findings**: Waypoint-based paths work well for cinematic sequences
+- **Outcome**: System implemented with 3 demonstration patterns
+
+**YAML Scene Loading**
+- **Status**: COMPLETE - Implemented
+- **Document**: [YAML Scene Format](guides/YAML_SCENE_FORMAT.md)
+- **Key Findings**: Human-readable format improves content creation
+- **Outcome**: Full YAML loader with entity and component support
+
 ### 🚀 Active Research Topics
 
 Currently, no active research initiatives. Next likely areas:
-1. **Procedural Generation**: For canyon racing tracks
-2. **Performance Optimization**: For large environments
-3. **Multiplayer Architecture**: For future online features
+1. **Procedural Canyon Generation**: For Sprint 24 racing tracks
+2. **Performance Optimization**: LOD system for large canyons
+3. **Ghost Replay System**: For time trial racing
+4. **Checkpoint Mechanics**: Optimal detection and validation
 
 ### 📁 Document Locations
 

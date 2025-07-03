@@ -407,22 +407,15 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
-    // Debug all key events
-    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
-        printf("🔑 MAIN: Key down event - code=%d (1=%d)\n", ev->key_code, SAPP_KEYCODE_1);
-    }
-    
     // Handle UI events first - if UI captures the event, don't process it further
     if (ui_handle_event(ev))
     {
-        printf("   UI captured event\n");
         return;  // UI captured this event
     }
 
     // Handle scene-specific input events first
     if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
     {
-        printf("   Scene script handled event\n");
         return;  // Scene script handled this event
     }
 
