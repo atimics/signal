@@ -234,11 +234,17 @@ void test_physics_moment_of_inertia_effects(void)
     RenderConfig dummy_config = {0};
     physics_system_update(&test_world, &dummy_config, 0.1f);
     
+    printf("DEBUG: physics1 angular velocity: [%.3f,%.3f,%.3f]\n", 
+           physics1->angular_velocity.x, physics1->angular_velocity.y, physics1->angular_velocity.z);
+    printf("DEBUG: physics2 angular velocity: [%.3f,%.3f,%.3f]\n", 
+           physics2->angular_velocity.x, physics2->angular_velocity.y, physics2->angular_velocity.z);
+    
     // Lower moment of inertia should result in higher angular velocity
     // Angular acceleration = torque / moment_of_inertia
     // physics1: 2.0 / 1.0 = 2.0 rad/s² → ω = 2.0 * 0.1 = 0.2 rad/s
     // physics2: 2.0 / 2.0 = 1.0 rad/s² → ω = 1.0 * 0.1 = 0.1 rad/s
-    TEST_ASSERT_GREATER_THAN(physics1->angular_velocity.x, physics2->angular_velocity.x);
+    // physics1 should have higher angular velocity than physics2
+    TEST_ASSERT_GREATER_THAN_FLOAT(physics2->angular_velocity.x, physics1->angular_velocity.x);
 }
 
 // ============================================================================
@@ -341,8 +347,8 @@ void test_physics_angular_drag_effects(void)
     physics_system_update(&test_world, &dummy_config, 1.0f);
     
     // Angular velocity should be reduced by drag
-    TEST_ASSERT_GREATER_THAN(initial_velocity.x, physics->angular_velocity.x); // initial > current (drag reduces)
-    TEST_ASSERT_GREATER_THAN(physics->angular_velocity.x, 0.0f); // But not zero
+    TEST_ASSERT_GREATER_THAN_FLOAT(initial_velocity.x, physics->angular_velocity.x); // initial > current (drag reduces)
+    TEST_ASSERT_GREATER_THAN_FLOAT(physics->angular_velocity.x, 0.0f); // But not zero
 }
 
 // ============================================================================
