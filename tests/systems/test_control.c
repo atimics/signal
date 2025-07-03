@@ -329,21 +329,22 @@ void test_control_non_player_entity_ignored(void)
     control->controlled_by = INVALID_ENTITY;
     control_set_player_entity(&test_world, 999); // Different entity
     
-    // Set some thrust values
+    // Set some thrust values (simulating scripted flight control)
     thrusters->current_linear_thrust = (Vector3){ 0.5f, 0.5f, 0.5f };
     thrusters->current_angular_thrust = (Vector3){ 0.5f, 0.5f, 0.5f };
     
     // Update control system
     control_system_update(&test_world, NULL, 0.016f);
     
-    // Thrust commands should be cleared for non-player entities
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thrusters->current_linear_thrust.x);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thrusters->current_linear_thrust.y);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thrusters->current_linear_thrust.z);
+    // Thrust commands should NOT be cleared for non-player entities
+    // This allows scripted flight and other systems to control the entity
+    TEST_ASSERT_EQUAL_FLOAT(0.5f, thrusters->current_linear_thrust.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.5f, thrusters->current_linear_thrust.y);
+    TEST_ASSERT_EQUAL_FLOAT(0.5f, thrusters->current_linear_thrust.z);
     
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thrusters->current_angular_thrust.x);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thrusters->current_angular_thrust.y);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thrusters->current_angular_thrust.z);
+    TEST_ASSERT_EQUAL_FLOAT(0.5f, thrusters->current_angular_thrust.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.5f, thrusters->current_angular_thrust.y);
+    TEST_ASSERT_EQUAL_FLOAT(0.5f, thrusters->current_angular_thrust.z);
 }
 
 void test_control_multiple_entities_performance(void)

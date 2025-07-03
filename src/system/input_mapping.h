@@ -89,25 +89,8 @@ typedef enum {
     GAMEPAD_AXIS_COUNT
 } GamepadAxis;
 
-// Gamepad button identifiers (Xbox layout)
-typedef enum {
-    GAMEPAD_BUTTON_A = 0,
-    GAMEPAD_BUTTON_B,
-    GAMEPAD_BUTTON_X,
-    GAMEPAD_BUTTON_Y,
-    GAMEPAD_BUTTON_LEFT_BUMPER,
-    GAMEPAD_BUTTON_RIGHT_BUMPER,
-    GAMEPAD_BUTTON_BACK,
-    GAMEPAD_BUTTON_START,
-    GAMEPAD_BUTTON_LEFT_STICK,
-    GAMEPAD_BUTTON_RIGHT_STICK,
-    GAMEPAD_BUTTON_DPAD_UP,
-    GAMEPAD_BUTTON_DPAD_DOWN,
-    GAMEPAD_BUTTON_DPAD_LEFT,
-    GAMEPAD_BUTTON_DPAD_RIGHT,
-    GAMEPAD_BUTTON_GUIDE,
-    GAMEPAD_BUTTON_COUNT
-} GamepadButton;
+// Use gamepad button definitions from gamepad.h
+#include "gamepad.h"
 
 // Input binding - maps a physical input to an action
 typedef struct {

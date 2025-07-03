@@ -17,6 +17,9 @@
 // R06 Solution: PIMPL Idiom - Forward declaration for opaque graphics resources
 struct GpuResources;
 
+// Forward declaration for controllable component
+struct Controllable;
+
 // ============================================================================
 // CORE TYPES
 // ============================================================================
@@ -57,6 +60,7 @@ typedef enum
     COMPONENT_SCENENODE = 1 << 7,
     COMPONENT_THRUSTER_SYSTEM = 1 << 8,
     COMPONENT_CONTROL_AUTHORITY = 1 << 9,
+    COMPONENT_CONTROLLABLE = 1 << 10,
 } ComponentType;
 
 /** @brief Level of Detail enumeration for performance optimization. */
@@ -321,6 +325,7 @@ struct Entity
     struct SceneNode* scene_node;
     struct ThrusterSystem* thruster_system;
     struct ControlAuthority* control_authority;
+    struct Controllable* controllable;
 };
 
 // ============================================================================
@@ -340,6 +345,7 @@ struct ComponentPools
     struct SceneNode scene_nodes[MAX_ENTITIES];
     struct ThrusterSystem thruster_systems[MAX_ENTITIES];
     struct ControlAuthority control_authorities[MAX_ENTITIES];
+    struct Controllable* controllables[MAX_ENTITIES];  // Use pointers for incomplete type
 
     uint32_t transform_count;
     uint32_t physics_count;
@@ -351,6 +357,7 @@ struct ComponentPools
     uint32_t scene_node_count;
     uint32_t thruster_system_count;
     uint32_t control_authority_count;
+    uint32_t controllable_count;
 };
 
 // ============================================================================
@@ -405,6 +412,7 @@ struct Camera* entity_get_camera(struct World* world, EntityID entity_id);
 struct SceneNode* entity_get_scene_node(struct World* world, EntityID entity_id);
 struct ThrusterSystem* entity_get_thruster_system(struct World* world, EntityID entity_id);
 struct ControlAuthority* entity_get_control_authority(struct World* world, EntityID entity_id);
+struct Controllable* entity_get_controllable(struct World* world, EntityID entity_id);
 
 // Camera management
 void world_set_active_camera(struct World* world, EntityID camera_entity);

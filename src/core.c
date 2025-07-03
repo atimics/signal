@@ -309,6 +309,13 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             entity->control_authority->control_mode = CONTROL_ASSISTED;
             break;
 
+        case COMPONENT_CONTROLLABLE:
+            if (world->components.controllable_count >= MAX_ENTITIES) return false;
+            // Controllable uses dynamic allocation since it's an incomplete type
+            entity->controllable = NULL; // Will be allocated when needed
+            world->components.controllables[world->components.controllable_count++] = NULL;
+            break;
+
         default:
             entity->component_mask &= ~type;  // Remove flag
             return false;
@@ -364,6 +371,9 @@ bool entity_remove_component(struct World* world, EntityID entity_id, ComponentT
             break;
         case COMPONENT_CONTROL_AUTHORITY:
             entity->control_authority = NULL;
+            break;
+        case COMPONENT_CONTROLLABLE:
+            entity->controllable = NULL;
             break;
     }
     return true;
@@ -437,6 +447,12 @@ struct ControlAuthority* entity_get_control_authority(struct World* world, Entit
 {
     struct Entity* entity = entity_get(world, entity_id);
     return entity ? entity->control_authority : NULL;
+}
+
+struct Controllable* entity_get_controllable(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->controllable : NULL;
 }
 
 // ============================================================================
