@@ -14,8 +14,8 @@ else
     ODE_INCLUDE = 
     ODE_LIB = -lode
 endif
-# Use double precision for ODE
-CFLAGS += $(ODE_INCLUDE) -DdDOUBLE -DUSE_ODE_PHYSICS
+# Use double precision for ODE (ODE defines it internally)
+CFLAGS += $(ODE_INCLUDE) -DUSE_ODE_PHYSICS
 LIBS += $(ODE_LIB)
 
 # Platform-specific flags
