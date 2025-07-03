@@ -1,37 +1,194 @@
-# The Ghost Signal: Player Manual
+# CGame: Player Manual
 
-Welcome, Drifter. This manual will help you survive the Graveyard.
+Welcome to CGame - Master the canyons, race against time, and become a legend!
 
-## 1. The Premise
+## 1. Getting Started
 
-Your symbiotic ship is failing. The only thing that can repair its alien core is the **Ghost Signal**, a mysterious broadcast from the heart of a dead fleet. You must follow this signal into the derelicts, salvaging the resources you need to stay alive.
+CGame is a high-speed canyon racing game where precision flying meets white-knuckle racing. Navigate treacherous canyon courses, beat checkpoint times, and climb the leaderboards.
 
-## 2. The Inhabitants of the Graveyard
+### Quick Start
+1. Launch the game: `./build/cgame`
+2. Select "Canyon Racing" from the main menu
+3. Choose your track (Tutorial recommended for first-time players)
+4. Race through checkpoints to complete the course!
 
-You are not alone in the Graveyard. Be wary of the other factions:
+## 2. Controls
 
-*   **The Chrome-Barons**: Brutal salvagers who will see you as competition.
-*   **The Echo-Scribes**: A cryptic cult of AI who worship the Ghost Signal. They may be willing to trade information, but they are unpredictable.
-*   **The Wardens**: The implacable immune system of the Aethelian Fleet. They will see your use of the Ghost Signal as a threat and will try to neutralize you.
+### Keyboard Controls
 
-## 3. Core Mechanics
+#### Flight Controls
+- **W/S** - Pitch down/up
+- **A/D** - Roll left/right
+- **Q/E** - Yaw left/right
+- **R/F** - Thrust forward/backward
+- **SHIFT/CTRL** - Vertical thrust up/down
+- **X** - Lateral thrust left
+- **C** - Lateral thrust right
 
-### 3.1. The Two States of Play
+#### Camera Controls
+- **TAB** - Cycle camera modes
+  - Chase Near (default)
+  - Chase Far
+  - Cockpit View
+  - Cinematic
 
-*   **Strategy (The Resonance Map)**: From the safety of a low-resonance zone, you can use your Resonance Map to analyze the Graveyard, predict enemy movements, and plan your next move.
-*   **Execution (In-Ship Piloting)**: Once you've planned your route, you'll pilot your ship directly, using your skills to navigate the treacherous derelicts.
+#### System Controls
+- **ESC** - Pause menu / Back
+- **F1** - Toggle HUD
+- **F11** - Toggle fullscreen
 
-### 3.2. Traversal
+### Gamepad Controls (Xbox/PlayStation)
 
-*   **The Attraction Drive ("A-Drive")**: This powerful, energy-intensive drive allows you to "surf" along the surfaces of the derelicts at high speed. Mastering the A-Drive is the key to survival.
-*   **The Fusion Torch**: For travel in open space, you'll rely on your slower, more efficient fusion torch.
+#### Flight Controls
+- **Left Stick** - Pitch and roll
+- **Right Stick** - Yaw and vertical thrust
+- **Right Trigger (RT)** - Forward thrust
+- **Left Trigger (LT)** - Reverse thrust
+- **Left Bumper (LB)** - Lateral thrust left
+- **Right Bumper (RB)** - Lateral thrust right
 
-### 3.3. The Resonance Cascade
+#### System Controls
+- **Start** - Pause menu
+- **Select/Back** - Toggle HUD
+- **Y/Triangle** - Cycle camera modes
 
-This is the core gameplay loop:
+## 3. Game Modes
 
-1.  **Plan**: Use your Resonance Map to identify a target.
-2.  **Travel**: Fly to the target location.
-3.  **Infiltrate**: Use your A-Drive to navigate the derelict.
-4.  **Exploit**: Use your Resonance Attenuator to crack Resonance Locks and acquire **Echoes** (lore and schematics).
-5.  **Upgrade**: Use the schematic fragments you find to craft new ship modules and improve your chances of survival.
+### Tutorial
+Learn the basics of flight and racing:
+- Wide, forgiving canyon walls
+- Clear checkpoint indicators
+- No time pressure
+- Practice all maneuvers safely
+
+### Time Trial
+Race against the clock:
+- Beat target times for Bronze, Silver, and Gold medals
+- Ghost replay of your best run
+- Leaderboard rankings
+- Unlock new tracks with medals
+
+### Canyon Racing
+The main racing experience:
+- 3 difficulty tiers (Beginner, Advanced, Expert)
+- Environmental hazards (wind zones, fog banks)
+- Progressive difficulty unlock system
+- Hidden shortcuts for skilled pilots
+
+### Free Flight
+Practice and explore:
+- No checkpoints or time limits
+- Perfect for learning track layouts
+- Find hidden paths and shortcuts
+- Test new control settings
+
+## 4. Racing Tips
+
+### Basic Flying
+1. **Start Gentle**: Use small control inputs - the ship is responsive!
+2. **Look Ahead**: Camera modes help you see upcoming turns
+3. **Use All Axes**: Combine pitch, roll, and yaw for smooth turns
+4. **Manage Speed**: Sometimes slower is faster through tight sections
+
+### Advanced Techniques
+1. **Banking Turns**: Roll into turns for tighter cornering
+2. **Boost Management**: Save boost for straightaways
+3. **Threading the Needle**: Use lateral thrust for precise positioning
+4. **Altitude Control**: Fly high to see ahead, low for speed
+
+### Environmental Challenges
+- **Wind Zones**: Blue particle effects indicate wind - compensate with opposite thrust
+- **Fog Banks**: Reduced visibility - memorize the track layout
+- **Narrow Passages**: Precision required - reduce speed if needed
+- **Moving Obstacles**: Time your approach carefully
+
+## 5. Progression System
+
+### Track Unlocking
+- Complete Tutorial to unlock Beginner tracks
+- Earn medals to unlock Advanced tracks
+- Master Advanced tracks to access Expert challenges
+- Hidden tracks unlock with special achievements
+
+### Medal Requirements
+- **Bronze**: Complete the track
+- **Silver**: Beat the target time
+- **Gold**: Perfect run with optimal racing line
+- **Platinum**: Developer ghost time (ultimate challenge)
+
+### Leaderboards
+- Track your best times
+- Compare with friends
+- Global rankings
+- Daily/Weekly challenges
+
+## 6. Scripted Flight Demo
+
+Press these keys during flight to see automated flight patterns:
+- **1** - Circuit demonstration
+- **2** - Figure-8 pattern
+- **3** - Landing approach
+
+These demonstrate the flight capabilities and can help you learn smooth control techniques.
+
+## 7. Settings
+
+### Graphics
+- Resolution selection
+- Fullscreen/Windowed mode
+- View distance (affects performance)
+- Particle effects density
+
+### Controls
+- Sensitivity adjustment (per axis)
+- Dead zone configuration
+- Invert axes options
+- Custom button mapping
+
+### Audio
+- Master volume
+- Effects volume
+- Music volume
+- Engine sound mix
+
+## 8. Troubleshooting
+
+### Performance Issues
+- Lower view distance in settings
+- Reduce particle effects
+- Close background applications
+- Ensure graphics drivers are updated
+
+### Control Problems
+- Calibrate gamepad in settings
+- Adjust dead zones if experiencing drift
+- Try different sensitivity settings
+- Check control mapping
+
+### Common Questions
+
+**Q: How do I restart a race quickly?**
+A: Press ESC and select "Restart Race"
+
+**Q: Can I change controls mid-race?**
+A: Yes, pause and go to Settings > Controls
+
+**Q: How do I unlock the next track?**
+A: Earn at least a Bronze medal on the current track
+
+**Q: What's the best camera mode?**
+A: Personal preference, but Chase Near is recommended for racing
+
+## 9. Tips from the Developers
+
+1. **Master one track** before moving on - consistency beats speed
+2. **Watch your ghost** to see where you can improve
+3. **Use practice mode** to find the optimal racing line
+4. **Experiment with controls** - find what works for you
+5. **Have fun!** It's about the journey, not just the destination
+
+---
+
+*For technical support, visit the project repository or community forums.*
+
+*Good luck, pilot! See you in the canyons!*
