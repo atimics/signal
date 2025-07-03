@@ -367,15 +367,15 @@ void test_thruster_direction_identity_rotation(void)
     thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 1.0f }); // Forward thrust
     
     // Clear any existing forces
-    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     
     // Update thruster system
     thruster_system_update(&test_world, NULL, 0.016f);
     
     // With identity rotation, force should still be in Z direction
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.x);
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.y);
-    TEST_ASSERT_TRUE(physics->accumulated_force.z > 0.0f);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->force_accumulator.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->force_accumulator.y);
+    TEST_ASSERT_TRUE(physics->force_accumulator.z > 0.0f);
 }
 
 void test_thruster_direction_90_degree_yaw(void)
@@ -396,15 +396,15 @@ void test_thruster_direction_90_degree_yaw(void)
     thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 1.0f }); // Forward thrust
     
     // Clear any existing forces
-    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     
     // Update thruster system
     thruster_system_update(&test_world, NULL, 0.016f);
     
     // After 90-degree yaw, forward thrust should point along positive X
-    TEST_ASSERT_TRUE(physics->accumulated_force.x > 0.0f);
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.y);
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.z);
+    TEST_ASSERT_TRUE(physics->force_accumulator.x > 0.0f);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->force_accumulator.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->force_accumulator.z);
 }
 
 void test_thruster_direction_90_degree_pitch(void)
@@ -424,15 +424,15 @@ void test_thruster_direction_90_degree_pitch(void)
     thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 1.0f }); // Forward thrust
     
     // Clear any existing forces
-    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     
     // Update thruster system
     thruster_system_update(&test_world, NULL, 0.016f);
     
     // After 90-degree pitch up, forward thrust should point along negative Y
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.x);
-    TEST_ASSERT_TRUE(physics->accumulated_force.y < -0.01f); // Pointing down
-    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->accumulated_force.z);
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->force_accumulator.x);
+    TEST_ASSERT_TRUE(physics->force_accumulator.y < -0.01f); // Pointing down
+    TEST_ASSERT_FLOAT_WITHIN(0.01f, 0.0f, physics->force_accumulator.z);
 }
 
 void test_thruster_direction_combined_rotation(void)
@@ -452,16 +452,16 @@ void test_thruster_direction_combined_rotation(void)
     thruster_set_linear_command(thrusters, (Vector3){ 1.0f, 0.5f, 2.0f });
     
     // Clear any existing forces
-    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     
     // Update thruster system
     thruster_system_update(&test_world, NULL, 0.016f);
     
     // Force should be non-zero and transformed
     float force_magnitude = sqrtf(
-        physics->accumulated_force.x * physics->accumulated_force.x +
-        physics->accumulated_force.y * physics->accumulated_force.y +
-        physics->accumulated_force.z * physics->accumulated_force.z
+        physics->force_accumulator.x * physics->force_accumulator.x +
+        physics->force_accumulator.y * physics->force_accumulator.y +
+        physics->force_accumulator.z * physics->force_accumulator.z
     );
     TEST_ASSERT_TRUE(force_magnitude > 0.0f);
 }
@@ -483,15 +483,15 @@ void test_thruster_direction_zero_thrust(void)
     thruster_set_linear_command(thrusters, (Vector3){ 0.0f, 0.0f, 0.0f });
     
     // Clear any existing forces
-    physics->accumulated_force = (Vector3){ 0.0f, 0.0f, 0.0f };
+    physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     
     // Update thruster system
     thruster_system_update(&test_world, NULL, 0.016f);
     
     // Zero thrust should remain zero after transformation
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->accumulated_force.x);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->accumulated_force.y);
-    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->accumulated_force.z);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->force_accumulator.x);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->force_accumulator.y);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, physics->force_accumulator.z);
 }
 
 void test_thruster_multiple_entities_performance(void)
