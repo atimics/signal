@@ -59,9 +59,9 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
         float right_velocity = vector3_dot(*current_velocity, ship_right);
         float up_velocity = vector3_dot(*current_velocity, ship_up);
         
-        // Auto-stop parameters - much gentler to prevent wobbling
-        float auto_stop_strength = 0.1f; // Very gentle auto-stop to prevent fighting user input
-        float velocity_threshold = 0.5f; // Higher threshold to prevent micro-corrections
+        // Auto-stop parameters - extremely gentle to eliminate jittering
+        float auto_stop_strength = 0.05f; // Extremely gentle auto-stop to prevent oscillations
+        float velocity_threshold = 1.0f; // Much higher threshold to prevent micro-corrections
         
         // Apply counter-thrust proportional to velocity
         if (fabsf(forward_velocity) > velocity_threshold) {
@@ -132,19 +132,19 @@ static Vector3 process_canyon_racing_angular(const InputState* input,
     
     Vector3 angular_commands = {0, 0, 0};
     
-    // Much gentler sensitivity for zero-g stability
-    float base_sensitivity = control->control_sensitivity * 0.3f; // Much more gentle
+    // Extremely gentle sensitivity for zero-g stability
+    float base_sensitivity = control->control_sensitivity * 0.15f; // Extremely gentle to prevent jittering
     
     // Direct linear input for predictable control
     angular_commands.x = input->pitch * base_sensitivity;
     angular_commands.y = input->yaw * base_sensitivity;
     angular_commands.z = input->roll * base_sensitivity;
     
-    // GENTLE ZERO-G STABILIZATION - prevent oscillations
+    // EXTREMELY GENTLE ZERO-G STABILIZATION - prevent oscillations
     if (current_angular_velocity) {
-        float stabilization_strength = 1.5f; // Much gentler stabilization
-        float input_deadzone = 0.08f; // Larger deadzone to prevent fighting user input
-        float velocity_threshold = 0.02f; // Only stabilize significant rotations
+        float stabilization_strength = 0.5f; // Extremely gentle stabilization
+        float input_deadzone = 0.15f; // Large deadzone to prevent fighting user input
+        float velocity_threshold = 0.1f; // Only stabilize significant rotations
         
         // Only apply stabilization if there's no user input and significant velocity
         if (fabsf(input->pitch) < input_deadzone && fabsf(current_angular_velocity->x) > velocity_threshold) {

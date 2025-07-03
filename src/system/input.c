@@ -12,11 +12,11 @@
 // Zero-G Input configuration - STABILITY FOCUSED
 #define GAMEPAD_DEADZONE 0.15f          // 15% deadzone for stability
 #define LOOK_SENSITIVITY 2.0f           // Camera rotation speed (reduced)
-#define PITCH_YAW_SENSITIVITY 0.4f      // Ship rotation speed (much lower for stability)
+#define PITCH_YAW_SENSITIVITY 0.2f      // Ship rotation speed (extremely low for stability)
 #define MOUSE_SENSITIVITY 0.003f        // Mouse look sensitivity 
 #define AUTO_LEVEL_STRENGTH 2.0f        // How fast ship auto-levels
-#define THRUST_SENSITIVITY 0.6f         // Thrust responsiveness (reduced)
-#define INPUT_SMOOTHING 0.85f           // Input smoothing factor (0.0 = no smoothing, 1.0 = full smoothing)
+#define THRUST_SENSITIVITY 0.4f         // Thrust responsiveness (further reduced)
+#define INPUT_SMOOTHING 0.92f           // Input smoothing factor (higher smoothing to prevent jittering)
 
 // Zero-G input state with smoothing
 typedef struct CanyonRacingInput {

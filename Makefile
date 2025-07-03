@@ -229,16 +229,19 @@ release: CFLAGS += -DNDEBUG -O3
 release: clean $(TARGET)
 
 # WebAssembly build (requires Emscripten)
+# Filter out platform-specific files for WASM
+WASM_SOURCES = $(filter-out hidapi_mac.c, $(SOURCES))
 wasm: assets-wasm | $(BUILD_DIR)
 	@echo "🌐 Building for WebAssembly..."
 	@echo "📋 Note: This requires Emscripten SDK to be installed and activated"
 	@echo "📋 Install with: https://emscripten.org/docs/getting_started/downloads.html"
 	@mkdir -p $(BUILD_DIR)
-	emcc -std=c99 -O2 -Isrc \
+	emcc $(addprefix $(SRC_DIR)/,$(WASM_SOURCES)) \
+		-std=c99 -O2 -Isrc \
 		-DSOKOL_GLES3 \
 		-DSOKOL_IMPL \
-		
 		-DEMSCRIPTEN \
+		-DWASM_BUILD \
 		-Wno-unused-function \
 		-Wno-unused-variable \
 		-Wno-unused-parameter \
@@ -249,7 +252,6 @@ wasm: assets-wasm | $(BUILD_DIR)
 		-s INITIAL_MEMORY=67108864 \
 		--preload-file $(BUILD_ASSETS_DIR)@/assets \
 		--shell-file src/shell.html \
-		$(addprefix src/,$(SOURCES)) \
 		-o $(BUILD_DIR)/cgame.html
 	@echo "✅ WebAssembly build complete: $(BUILD_DIR)/cgame.html"
 	@echo "📋 Serve with: python3 -m http.server 8000 (from build/ directory)"
