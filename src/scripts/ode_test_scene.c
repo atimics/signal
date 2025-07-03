@@ -35,9 +35,10 @@ void ode_test_enter(struct World* world, SceneStateManager* state) {
     
     // Load scene from YAML first
     printf("📄 Loading scene from YAML...\n");
-    if (!scene_load_from_yaml(world, "ode_test.yaml")) {
-        printf("⚠️ Failed to load YAML scene, continuing with programmatic setup\n");
-    }
+    // Note: Scene is already loaded by main system, this is just for additional entities
+    // if (!scene_load_from_yaml(world, assets, "ode_test.yaml")) {
+    //     printf("⚠️ Failed to load YAML scene, continuing with programmatic setup\n");
+    // }
     
     // Create and initialize ODE physics system
     ode_system = calloc(1, sizeof(ODEPhysicsSystem));

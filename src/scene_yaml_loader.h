@@ -2,10 +2,11 @@
 #define SCENE_YAML_LOADER_H
 
 #include "core.h"
+#include "assets.h"
 #include <stdbool.h>
 
 // Load a scene from a YAML file
-bool scene_load_from_yaml(struct World* world, const char* filename);
+bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char* filename);
 
 // Initialize YAML scene loader
 bool scene_yaml_loader_init(void);

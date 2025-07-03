@@ -3,6 +3,7 @@
 #include "system/material.h"
 #include "system/control.h"
 #include "assets.h"
+#include "gpu_resources.h"
 #include <yaml.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@
 // YAML parsing state
 typedef struct {
     struct World* world;
+    AssetRegistry* assets;
     EntityID current_entity;
     char current_key[256];
     bool in_entities;
@@ -113,11 +115,19 @@ static void process_yaml_value(YAMLParseState* state, const char* value) {
                        state->current_entity, value);
             }
         } else if (strcmp(state->current_key, "mesh") == 0) {
-            // For now, just log mesh assignment
+            // Load mesh from asset registry
             if (entity->renderable) {
-                printf("✅ Entity %d assigned mesh: %s\n",
-                       state->current_entity, value);
-                // TODO: Implement proper mesh loading from asset registry
+                if (state->assets && assets_create_renderable_from_mesh(state->assets, value, entity->renderable)) {
+                    printf("✅ Entity %d assigned mesh: %s (%d indices)\n",
+                           state->current_entity, value, entity->renderable->index_count);
+                } else {
+                    printf("⚠️  Entity %d failed to load mesh: %s\n",
+                           state->current_entity, value);
+                    // Create empty GPU resources
+                    entity->renderable->gpu_resources = gpu_resources_create();
+                    entity->renderable->index_count = 0;
+                    entity->renderable->visible = false;
+                }
             }
         }
     }
@@ -168,8 +178,8 @@ static void process_yaml_array_value(YAMLParseState* state, const char* value) {
     state->array_index++;
 }
 
-bool scene_load_from_yaml(struct World* world, const char* filename) {
-    if (!world || !filename) return false;
+bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char* filename) {
+    if (!world || !assets || !filename) return false;
     
     // Build full path
     char full_path[512];
@@ -196,6 +206,7 @@ bool scene_load_from_yaml(struct World* world, const char* filename) {
     
     YAMLParseState state = {0};
     state.world = world;
+    state.assets = assets;
     state.current_entity = INVALID_ENTITY;
     state.expecting_value = false;
     

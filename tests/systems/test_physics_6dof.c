@@ -382,7 +382,7 @@ void test_physics_large_force_stability(void)
     physics_add_force(physics, (Vector3){ 1000000.0f, 0.0f, 0.0f });
     physics_add_force(physics, (Vector3){ -999999.0f, 0.0f, 0.0f });
     
-    // Net force should be 1.0
+    // Net force should be 1.0 (check before update)
     TEST_ASSERT_EQUAL_FLOAT(1.0f, physics->force_accumulator.x);
     
     RenderConfig dummy_config = {0};
@@ -420,8 +420,8 @@ void test_physics_multiple_entities_6dof_performance(void)
     
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
     
-    // Should complete within 10ms for 50 entities
-    TEST_ASSERT_LESS_THAN(elapsed, 0.01);
+    // Should complete within 10ms for 50 entities (use microseconds for better precision)
+    TEST_ASSERT_LESS_THAN_DOUBLE(0.01, elapsed);
     
     // Verify all entities were processed
     for (int i = 0; i < entity_count; i++) {
@@ -831,7 +831,7 @@ void test_physics_drag_precision(void)
     }
     
     printf("Final velocity after 100 frames: %.6f m/s\n", physics->velocity.x);
-    TEST_ASSERT_GREATER_THAN_FLOAT(0.001f, physics->velocity.x);  // Should still be moving
+    TEST_ASSERT_GREATER_THAN_FLOAT(physics->velocity.x, 0.001f);  // Should still be moving
     
     printf("✅ Drag precision verified\n");
 }

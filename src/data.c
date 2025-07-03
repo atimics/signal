@@ -546,7 +546,7 @@ bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* asse
     char yaml_filename[256];
     snprintf(yaml_filename, sizeof(yaml_filename), "%s.yaml", scene_name);
     
-    if (scene_load_from_yaml(world, yaml_filename)) {
+    if (scene_load_from_yaml(world, assets, yaml_filename)) {
         printf("✅ Loaded scene from YAML: %s\n", yaml_filename);
         return true;
     }
