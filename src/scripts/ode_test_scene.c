@@ -162,11 +162,35 @@ void ode_test_enter(struct World* world, SceneStateManager* state) {
     printf("   F3 - Toggle ODE physics (compare with custom)\n");
     printf("   F5 - Reset positions\n");
     printf("   F6 - Apply random impulse to obstacles\n");
+    printf("   Space/X - Thrust forward/backward\n");
+    printf("   WASD - Pitch/Yaw control\n");
     printf("\n🌐 ODE Physics Features:\n");
     printf("   - Rigid body dynamics\n");
     printf("   - Collision detection and response\n");
     printf("   - Stable constraint solver\n");
     printf("   - Automatic sleeping for performance\n");
+    
+    // Add some default physics to entities without it
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        
+        // Skip if already has physics
+        if (entity->component_mask & COMPONENT_PHYSICS) continue;
+        
+        // Add physics to entities with collision
+        if (entity->component_mask & COMPONENT_COLLISION) {
+            entity_add_component(world, entity->id, COMPONENT_PHYSICS);
+            struct Physics* physics = entity_get_physics(world, entity->id);
+            if (physics) {
+                physics->mass = 100.0f;  // Default mass
+                physics->drag_linear = 0.05f;
+                physics->drag_angular = 0.1f;
+                physics->has_6dof = true;
+                physics->use_ode = true;
+                printf("   📦 Added physics to entity %u\n", entity->id);
+            }
+        }
+    }
 }
 
 void ode_test_update(struct World* world, SceneStateManager* state, float delta_time) {
