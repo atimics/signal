@@ -9,6 +9,7 @@
 #include "../system/input.h"
 #include "../system/control.h"
 #include "../system/thrusters.h"
+#include "../system/scripted_flight.h"
 #include "../hud_system.h"
 #include "../hidapi.h"
 #include "../sokol_app.h"
@@ -22,6 +23,10 @@
 static bool flight_test_initialized = false;
 static float flight_time = 0.0f;
 static EntityID player_ship_id = INVALID_ENTITY;
+
+// Scripted flight state
+static ScriptedFlight* player_scripted_flight = NULL;
+static bool scripted_flight_active = false;
 
 // Camera system state
 typedef enum {
@@ -184,6 +189,14 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     flight_time = 0.0f;
     flight_test_initialized = true;
     
+    // Initialize scripted flight system for the player ship
+    if (player_ship_id != INVALID_ENTITY) {
+        player_scripted_flight = scripted_flight_create_component(player_ship_id);
+        if (player_scripted_flight) {
+            printf("🛩️  Scripted flight system ready for player ship\n");
+        }
+    }
+    
     // Set up camera for flight testing
     current_camera_mode = CAMERA_MODE_CHASE_NEAR;
     
@@ -209,6 +222,12 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     printf("     Bumpers - Aerobatic roll\n");
     printf("     A Button - Boost, B Button - Brake\n");
     printf("\n🏎️ CANYON RACING: Use A/D or Right Stick X for banking turns!\n");
+    printf("🛩️  SCRIPTED FLIGHT CONTROLS:\n");
+    printf("     1 - Start circuit flight pattern\n");
+    printf("     2 - Start figure-8 flight pattern\n");
+    printf("     3 - Start landing approach\n");
+    printf("     0 - Stop scripted flight (manual control)\n");
+    printf("     P - Pause/Resume scripted flight\n");
     printf("📷 Camera Modes: COCKPIT → CHASE_NEAR → CHASE_FAR\n");
     printf("🎯 Physics: 6DOF enabled with flight assistance\n");
 }
@@ -330,6 +349,9 @@ void flight_test_update(struct World* world, SceneStateManager* state, float del
     // Update input system (the Control and Thruster systems handle the rest automatically)
     input_update();
     
+    // Update scripted flight system
+    scripted_flight_update(world, NULL, delta_time);
+    
     // Update camera system
     update_flight_camera_system(world, delta_time);
     
@@ -392,6 +414,66 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
             
             // Apply camera changes immediately
             update_flight_camera_system(world, 0.0f);
+            return true;
+        }
+        
+        if (ev->key_code == SAPP_KEYCODE_1) {
+            // Start scripted circuit flight
+            if (player_scripted_flight) {
+                FlightPath* circuit = scripted_flight_create_circuit_path();
+                scripted_flight_start(player_scripted_flight, circuit);
+                scripted_flight_active = true;
+                printf("🛩️  Started circuit flight pattern\n");
+            }
+            return true;
+        }
+        
+        if (ev->key_code == SAPP_KEYCODE_2) {
+            // Start scripted figure-8 flight
+            if (player_scripted_flight) {
+                FlightPath* figure8 = scripted_flight_create_figure_eight_path();
+                scripted_flight_start(player_scripted_flight, figure8);
+                scripted_flight_active = true;
+                printf("🛩️  Started figure-8 flight pattern\n");
+            }
+            return true;
+        }
+        
+        if (ev->key_code == SAPP_KEYCODE_3) {
+            // Start landing approach
+            if (player_scripted_flight) {
+                struct Transform* transform = entity_get_transform(world, player_ship_id);
+                if (transform) {
+                    Vector3 start_pos = transform->position;
+                    Vector3 landing_pos = {0, 5, 0}; // Landing pad position
+                    FlightPath* approach = scripted_flight_create_landing_approach_path(start_pos, landing_pos);
+                    scripted_flight_start(player_scripted_flight, approach);
+                    scripted_flight_active = true;
+                    printf("🛩️  Started landing approach pattern\n");
+                }
+            }
+            return true;
+        }
+        
+        if (ev->key_code == SAPP_KEYCODE_0) {
+            // Stop scripted flight
+            if (player_scripted_flight) {
+                scripted_flight_stop(player_scripted_flight);
+                scripted_flight_active = false;
+                printf("🛩️  Stopped scripted flight - manual control resumed\n");
+            }
+            return true;
+        }
+        
+        if (ev->key_code == SAPP_KEYCODE_P) {
+            // Pause/resume scripted flight
+            if (player_scripted_flight && scripted_flight_active) {
+                if (player_scripted_flight->manual_override) {
+                    scripted_flight_resume(player_scripted_flight);
+                } else {
+                    scripted_flight_pause(player_scripted_flight);
+                }
+            }
             return true;
         }
         

@@ -684,8 +684,8 @@ bool load_all_scene_templates(DataRegistry* registry, const char* scenes_dir)
         // Skip hidden files, current/parent directories
         if (entry->d_name[0] == '.') continue;
         
-        // Only process .txt files
-        if (!strstr(entry->d_name, ".txt")) continue;
+        // Only process .yaml files
+        if (!strstr(entry->d_name, ".yaml")) continue;
         
         // Build relative path for load_scene_templates
         char relative_path[512];

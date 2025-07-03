@@ -144,3 +144,4 @@ tests/artifacts/*.bin
 tests/**/*.tmp
 tests/**/*.temp
 tests/**/*.cache
+docs/api/html_generated/

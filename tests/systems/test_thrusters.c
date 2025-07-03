@@ -21,20 +21,13 @@ static struct World test_world;
 
 void setUp(void)
 {
-    // Initialize test world
-    memset(&test_world, 0, sizeof(struct World));
-    test_world.max_entities = 100;
-    test_world.entities = malloc(sizeof(struct Entity) * 100);
-    test_world.entity_count = 0;
-    test_world.next_entity_id = 1;
+    // Initialize test world properly
+    world_init(&test_world);
 }
 
 void tearDown(void)
 {
-    if (test_world.entities) {
-        free(test_world.entities);
-        test_world.entities = NULL;
-    }
+    world_destroy(&test_world);
 }
 
 // ============================================================================
@@ -51,6 +44,15 @@ void test_thruster_component_creation(void)
     
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     TEST_ASSERT_NOT_NULL(thrusters);
+    
+    // Debug output to see actual values
+    printf("DEBUG: max_linear_force = [%f, %f, %f]\n", 
+           thrusters->max_linear_force.x, thrusters->max_linear_force.y, thrusters->max_linear_force.z);
+    printf("DEBUG: max_angular_torque = [%f, %f, %f]\n", 
+           thrusters->max_angular_torque.x, thrusters->max_angular_torque.y, thrusters->max_angular_torque.z);
+    printf("DEBUG: atmosphere_efficiency = %f\n", thrusters->atmosphere_efficiency);
+    printf("DEBUG: vacuum_efficiency = %f\n", thrusters->vacuum_efficiency);
+    printf("DEBUG: thrusters_enabled = %s\n", thrusters->thrusters_enabled ? "true" : "false");
     
     // Check default values
     TEST_ASSERT_GREATER_THAN(0.0f, thrusters->max_linear_force.x);
