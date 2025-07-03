@@ -9,18 +9,22 @@
 #include <string.h>
 #include <math.h>
 
-// Zero-G Input configuration
-#define GAMEPAD_DEADZONE 0.12f          // 12% deadzone for precise zero-g control
-#define LOOK_SENSITIVITY 3.0f           // Camera rotation speed
-#define PITCH_YAW_SENSITIVITY 0.8f      // Ship rotation speed (reduced for stability)
-#define MOUSE_SENSITIVITY 0.004f        // Mouse look sensitivity (reduced for precision)
+// Zero-G Input configuration - STABILITY FOCUSED
+#define GAMEPAD_DEADZONE 0.15f          // 15% deadzone for stability
+#define LOOK_SENSITIVITY 2.0f           // Camera rotation speed (reduced)
+#define PITCH_YAW_SENSITIVITY 0.4f      // Ship rotation speed (much lower for stability)
+#define MOUSE_SENSITIVITY 0.003f        // Mouse look sensitivity 
 #define AUTO_LEVEL_STRENGTH 2.0f        // How fast ship auto-levels
-#define THRUST_SENSITIVITY 1.0f         // Thrust responsiveness
+#define THRUST_SENSITIVITY 0.6f         // Thrust responsiveness (reduced)
+#define INPUT_SMOOTHING 0.85f           // Input smoothing factor (0.0 = no smoothing, 1.0 = full smoothing)
 
-// Canyon racing input state
+// Zero-G input state with smoothing
 typedef struct CanyonRacingInput {
     // Current processed input
     InputState current_state;
+    
+    // Previous input for smoothing
+    InputState previous_state;
     
     // Look target for camera
     LookTarget look_target;
@@ -88,6 +92,9 @@ void input_update(void) {
     // Poll gamepad
     gamepad_poll();
     
+    // Store previous input for smoothing
+    canyon_input.previous_state = canyon_input.current_state;
+    
     // Clear current input - IMPORTANT: Reset all values to prevent accumulation
     memset(&canyon_input.current_state, 0, sizeof(InputState));
     canyon_input.current_state.pitch = 0.0f;
@@ -135,22 +142,22 @@ void input_update(void) {
         float left_y = apply_deadzone(gamepad->left_stick_y, GAMEPAD_DEADZONE);
         
         if (left_x != 0.0f || left_y != 0.0f) {
-            // Apply quadratic response curve for fine control in zero-g
-            float sign_x = left_x > 0 ? 1.0f : -1.0f;
-            float sign_y = left_y > 0 ? 1.0f : -1.0f;
-            float mag_x = fabsf(left_x);
-            float mag_y = fabsf(left_y);
+            // Linear response for more predictable control in zero-g
+            float raw_yaw = left_x * PITCH_YAW_SENSITIVITY;
+            float raw_pitch = -left_y * PITCH_YAW_SENSITIVITY; // Inverted for flight
             
-            // Quadratic response: more precision at low inputs, more power at high inputs
-            canyon_input.current_state.yaw = sign_x * mag_x * mag_x * PITCH_YAW_SENSITIVITY;
-            canyon_input.current_state.pitch = -sign_y * mag_y * mag_y * PITCH_YAW_SENSITIVITY; // Inverted for flight
+            // Apply input smoothing to reduce oscillations
+            canyon_input.current_state.yaw = canyon_input.previous_state.yaw * INPUT_SMOOTHING + 
+                                            raw_yaw * (1.0f - INPUT_SMOOTHING);
+            canyon_input.current_state.pitch = canyon_input.previous_state.pitch * INPUT_SMOOTHING + 
+                                              raw_pitch * (1.0f - INPUT_SMOOTHING);
             
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
             
             // Debug output
             static int stick_debug_counter = 0;
-            if (++stick_debug_counter % 30 == 0) {
-                printf("🎮 ZERO-G STICK: Raw(%.3f,%.3f) → Curved Pitch:%.3f Yaw:%.3f\n", 
+            if (++stick_debug_counter % 60 == 0) { // Reduced debug frequency
+                printf("🎮 ZERO-G STICK: Raw(%.3f,%.3f) → Smoothed Pitch:%.3f Yaw:%.3f\n", 
                        left_x, left_y, canyon_input.current_state.pitch, canyon_input.current_state.yaw);
             }
         }
@@ -168,11 +175,13 @@ void input_update(void) {
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Right trigger for forward thrust with precise zero-g control
-        float right_trigger = apply_deadzone(gamepad->right_trigger, GAMEPAD_DEADZONE * 0.5f); // Lower deadzone for triggers
+        // Right trigger for forward thrust with smoothing
+        float right_trigger = apply_deadzone(gamepad->right_trigger, GAMEPAD_DEADZONE * 0.6f); // Slightly higher deadzone
         if (right_trigger > 0.0f) {
-            // Linear response for thrust - no curves needed for zero-g precision
-            canyon_input.current_state.thrust = right_trigger * THRUST_SENSITIVITY;
+            // Apply smoothing to thrust for stability
+            float raw_thrust = right_trigger * THRUST_SENSITIVITY;
+            canyon_input.current_state.thrust = canyon_input.previous_state.thrust * INPUT_SMOOTHING + 
+                                               raw_thrust * (1.0f - INPUT_SMOOTHING);
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
@@ -185,13 +194,19 @@ void input_update(void) {
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Bumpers for roll (precise zero-g roll control)
+        // Bumpers for roll (gentle zero-g roll control)
+        float roll_input = 0.0f;
         if (gamepad->buttons[GAMEPAD_BUTTON_RB]) {
-            canyon_input.current_state.roll += 0.7f; // Reduced for stability
-            canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+            roll_input += 0.4f; // Much more gentle
         }
         if (gamepad->buttons[GAMEPAD_BUTTON_LB]) {
-            canyon_input.current_state.roll -= 0.7f; // Reduced for stability
+            roll_input -= 0.4f; // Much more gentle
+        }
+        
+        if (roll_input != 0.0f) {
+            // Apply smoothing to roll for stability
+            canyon_input.current_state.roll = canyon_input.previous_state.roll * INPUT_SMOOTHING + 
+                                             roll_input * (1.0f - INPUT_SMOOTHING);
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
