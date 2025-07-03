@@ -1,4 +1,4 @@
-# Simplified Thruster System Usage Guide
+# Thruster System Documentation
 
 ## Overview
 

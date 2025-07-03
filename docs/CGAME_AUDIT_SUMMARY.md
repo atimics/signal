@@ -98,7 +98,8 @@ Both systems are functional but would benefit from targeted improvements to enha
 **Timeline**: Future major release
 
 1. **Complete Legacy Deprecation**
-   - Consider entity template migration to YAML
+   - ✅ Entity template migration to YAML completed
+   - ✅ All text-based formats removed
    - Enhanced YAML validation and tooling
 
 ## Quality Assurance
