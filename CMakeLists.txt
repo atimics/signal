@@ -173,6 +173,7 @@ add_library(logo_scene_script src/scripts/logo_scene.c)
 add_library(derelict_navigation_scene_script src/scripts/derelict_navigation_scene.c)
 add_library(flight_test_scene_script src/scripts/flight_test_scene.c)
 add_library(scene_selector_scene_script src/scripts/scene_selector_scene.c)
+add_library(thruster_test_scene_script src/scripts/thruster_test_scene.c)
 
 add_library(scene_script src/scene_script.c)
 target_link_libraries(scene_script PRIVATE core data logo_scene_script derelict_navigation_scene_script flight_test_scene_script scene_selector_scene_script)

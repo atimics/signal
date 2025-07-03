@@ -411,7 +411,7 @@ void hud_render_speedometer(struct nk_context* ctx, struct World* world, Vector2
     struct nk_rect text_rect = nk_rect(pos.u + 5, pos.v + 5, size.u - 10, 20);
     
     // For now, we'll draw a simple filled rect as text background
-    nk_fill_rect(canvas, text_rect, 2.0f, nk_rgba(0, 80, 0, (uint8_t)(128 * opacity)));
+    nk_fill_rect(canvas, text_rect, 2.0f, nk_rgba(0, 80, 0, alpha));
     (void)speed_text; // Suppress unused warning - will implement text later
 }
 

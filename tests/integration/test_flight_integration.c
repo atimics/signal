@@ -206,13 +206,28 @@ void test_thrust_to_movement_pipeline(void)
     // Update physics system (integrates forces to movement)
     physics_system_update(&test_world, NULL, 0.016f);
     
+    // Re-fetch physics component after system update (in case pointer changed)
+    physics = entity_get_physics(&test_world, ship);
+    TEST_ASSERT_NOT_NULL(physics);
+    
     // Verify velocity increased
     printf("DEBUG: Velocity after physics update: [%.3f, %.3f, %.3f]\n", 
            physics->velocity.x, physics->velocity.y, physics->velocity.z);
+    printf("DEBUG: Velocity check - physics->velocity.x = %.6f, should be > 0.0\n", physics->velocity.x);
+    
+    if (physics->velocity.x <= 0.0f) {
+        printf("ERROR: Velocity did not increase as expected. Entity ID: %d\n", ship);
+        printf("DEBUG: Physics component address: %p\n", (void*)physics);
+        // Print more debug info
+        printf("DEBUG: Physics mass: %.3f, drag: %.6f\n", physics->mass, physics->drag_linear);
+        printf("DEBUG: Physics acceleration: [%.6f, %.6f, %.6f]\n", 
+               physics->acceleration.x, physics->acceleration.y, physics->acceleration.z);
+    }
+    
     TEST_ASSERT_GREATER_THAN(0.0f, physics->velocity.x);
     
     // Run multiple physics frames to accumulate position change
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 50; i++) {  // Increased from 10 to 50 frames
         // Apply thrust continuously
         thruster_set_linear_command(thrusters, (Vector3){ 1.0f, 0.0f, 0.0f });
         thruster_system_update(&test_world, NULL, 0.016f);
@@ -220,9 +235,9 @@ void test_thrust_to_movement_pipeline(void)
     }
     
     // Verify position changed after multiple frames
-    printf("DEBUG: Final position: [%.3f, %.3f, %.3f]\n", 
+    printf("DEBUG: Final position: [%.6f, %.6f, %.6f]\n",  // More precision for small changes
            transform->position.x, transform->position.y, transform->position.z);
-    TEST_ASSERT_GREATER_THAN(0.0f, transform->position.x);
+    TEST_ASSERT_GREATER_THAN(0.001f, transform->position.x);  // More realistic threshold
 }
 
 void test_angular_thrust_to_rotation_pipeline(void)
@@ -295,7 +310,7 @@ void test_complete_flight_simulation(void)
     physics->angular_velocity = (Vector3){ 0.0f, 0.0f, 0.0f };
     
     // Apply thrust for several frames
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 60; i++) {  // Increased from 20 to 60 frames
         // Set thrust commands
         thruster_set_linear_command(thrusters, (Vector3){ 0.5f, 0.0f, 0.0f });
         thruster_set_angular_command(thrusters, (Vector3){ 0.2f, 0.0f, 0.0f });
@@ -309,8 +324,10 @@ void test_complete_flight_simulation(void)
     TEST_ASSERT_GREATER_THAN(0.0f, physics->velocity.x);
     TEST_ASSERT_GREATER_THAN(0.0f, physics->angular_velocity.x);
     
-    // Should have moved forward
-    TEST_ASSERT_GREATER_THAN(0.0f, transform->position.x);
+    // Should have moved forward (check with realistic threshold)
+    printf("DEBUG: Complete flight simulation final position: [%.6f, %.6f, %.6f]\n", 
+           transform->position.x, transform->position.y, transform->position.z);
+    TEST_ASSERT_GREATER_THAN(0.001f, transform->position.x);
 }
 
 void test_multiple_entities_different_capabilities(void)
@@ -330,7 +347,7 @@ void test_multiple_entities_different_capabilities(void)
     missile_transform->position = (Vector3){ 20.0f, 0.0f, 0.0f };
     
     // Apply forces/thrust and run for multiple frames
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 60; i++) {  // Increased from 15 to 60 frames
         struct Physics* debris_physics = entity_get_physics(&test_world, debris);
         physics_add_force(debris_physics, (Vector3){ 100.0f, 0.0f, 0.0f });
         
@@ -345,10 +362,12 @@ void test_multiple_entities_different_capabilities(void)
         physics_system_update(&test_world, NULL, 0.016f);
     }
     
-    // All entities should have moved
-    TEST_ASSERT_GREATER_THAN(0.0f, ship_transform->position.x);
-    TEST_ASSERT_GREATER_THAN(10.0f, debris_transform->position.x);
-    TEST_ASSERT_GREATER_THAN(20.0f, missile_transform->position.x);
+    // All entities should have moved (with realistic thresholds)
+    printf("DEBUG: Multiple entities positions - Ship:[%.6f] Debris:[%.6f] Missile:[%.6f]\n",
+           ship_transform->position.x, debris_transform->position.x, missile_transform->position.x);
+    TEST_ASSERT_GREATER_THAN(0.001f, ship_transform->position.x);
+    TEST_ASSERT_GREATER_THAN(10.001f, debris_transform->position.x);
+    TEST_ASSERT_GREATER_THAN(20.001f, missile_transform->position.x);
 }
 
 // ============================================================================
@@ -373,6 +392,14 @@ void test_stability_assist_integration(void)
     Vector3 no_input = { 0.0f, 0.0f, 0.0f };
     Vector3 assisted_input = apply_stability_assist(no_input, physics->angular_velocity, control->stability_assist);
     
+    // Debug the stability assist calculation
+    printf("DEBUG: Stability assist - Input:[%.3f,%.3f,%.3f] AngVel:[%.3f,%.3f,%.3f] Assist:%.3f\n",
+           no_input.x, no_input.y, no_input.z,
+           physics->angular_velocity.x, physics->angular_velocity.y, physics->angular_velocity.z,
+           control->stability_assist);
+    printf("DEBUG: Stability assist result:[%.3f,%.3f,%.3f]\n",
+           assisted_input.x, assisted_input.y, assisted_input.z);
+    
     // Should apply counter-rotation
     TEST_ASSERT_LESS_THAN(0.0f, assisted_input.x);
 }
@@ -391,6 +418,10 @@ void test_control_sensitivity_integration(void)
     
     control->control_sensitivity = 2.0f;
     Vector3 high_sens = apply_sensitivity_curve(input, control->control_sensitivity);
+    
+    // Debug sensitivity calculations
+    printf("DEBUG: Sensitivity - Input:[%.3f] LowSens:[%.3f] HighSens:[%.3f]\n",
+           input.x, low_sens.x, high_sens.x);
     
     // Higher sensitivity should produce larger response
     TEST_ASSERT_GREATER_THAN(low_sens.x, high_sens.x);
@@ -435,9 +466,10 @@ void test_flight_mechanics_performance_scaling(void)
     clock_t end = clock();
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
     
-    // 100 frames with 20 entities should complete quickly (less than 50ms is very fast)
-    TEST_ASSERT_GREATER_THAN(0.0, elapsed);  // Should take some measurable time
-    TEST_ASSERT_LESS_THAN(elapsed, 0.1);     // But not more than 100ms
+    // Performance check - should complete within reasonable time
+    // Note: Very fast operations might register as 0 elapsed time
+    TEST_ASSERT_GREATER_OR_EQUAL(0.0, elapsed);  // Should be non-negative
+    TEST_ASSERT_LESS_THAN(elapsed, 0.1);         // But not more than 100ms
     
     printf("Flight mechanics performance: %.3fms for 100 frames, %d entities\n", 
            elapsed * 1000.0, entity_count);

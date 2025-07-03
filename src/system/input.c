@@ -87,52 +87,67 @@ void input_update(void) {
     // Poll gamepad
     gamepad_poll();
     
-    // Clear current input
+    // Clear current input - IMPORTANT: Reset all values to prevent accumulation
     memset(&canyon_input.current_state, 0, sizeof(InputState));
+    canyon_input.current_state.pitch = 0.0f;
+    canyon_input.current_state.yaw = 0.0f;
+    canyon_input.current_state.roll = 0.0f;
+    canyon_input.current_state.thrust = 0.0f;
     
     // Get player entity position (will be set by control system)
     Vector3 player_position = {0, 0, 0}; // TODO: Get from player entity
     
-    // Process keyboard input
-    // WASD for pitch/yaw
-    if (keyboard_state[INPUT_ACTION_PITCH_DOWN]) canyon_input.current_state.pitch -= 1.0f; // W = dive
-    if (keyboard_state[INPUT_ACTION_PITCH_UP]) canyon_input.current_state.pitch += 1.0f;   // S = climb
-    if (keyboard_state[INPUT_ACTION_YAW_LEFT]) canyon_input.current_state.yaw -= 1.0f;     // A = left
-    if (keyboard_state[INPUT_ACTION_YAW_RIGHT]) canyon_input.current_state.yaw += 1.0f;    // D = right
+    // Check if gamepad is connected first
+    GamepadState* gamepad = gamepad_get_state(0);
+    bool using_gamepad = (gamepad && gamepad->connected);
     
-    // Q/E for roll
-    if (keyboard_state[INPUT_ACTION_ROLL_LEFT]) canyon_input.current_state.roll -= 1.0f;
-    if (keyboard_state[INPUT_ACTION_ROLL_RIGHT]) canyon_input.current_state.roll += 1.0f;
-    
-    // Space for forward thrust (simplified - no look-based complexity)
-    if (keyboard_state[INPUT_ACTION_THRUST_FORWARD]) {
-        canyon_input.current_state.thrust = 1.0f;
-    }
-    
-    // Modifiers
-    if (keyboard_state[INPUT_ACTION_BOOST]) canyon_input.current_state.boost = 1.0f;
-    if (keyboard_state[INPUT_ACTION_BRAKE]) {
-        canyon_input.current_state.brake = true;
-        canyon_input.auto_leveling = true;
+    // Process keyboard input ONLY if no gamepad is active
+    if (!using_gamepad) {
+        // WASD for pitch/yaw
+        if (keyboard_state[INPUT_ACTION_PITCH_DOWN]) canyon_input.current_state.pitch = -1.0f; // W = dive
+        if (keyboard_state[INPUT_ACTION_PITCH_UP]) canyon_input.current_state.pitch = 1.0f;   // S = climb
+        if (keyboard_state[INPUT_ACTION_YAW_LEFT]) canyon_input.current_state.yaw = -1.0f;     // A = left
+        if (keyboard_state[INPUT_ACTION_YAW_RIGHT]) canyon_input.current_state.yaw = 1.0f;    // D = right
+        
+        // Q/E for roll
+        if (keyboard_state[INPUT_ACTION_ROLL_LEFT]) canyon_input.current_state.roll = -1.0f;
+        if (keyboard_state[INPUT_ACTION_ROLL_RIGHT]) canyon_input.current_state.roll = 1.0f;
+        
+        // Space for forward thrust (simplified - no look-based complexity)
+        if (keyboard_state[INPUT_ACTION_THRUST_FORWARD]) {
+            canyon_input.current_state.thrust = 1.0f;
+        }
+        
+        // Modifiers
+        if (keyboard_state[INPUT_ACTION_BOOST]) canyon_input.current_state.boost = 1.0f;
+        if (keyboard_state[INPUT_ACTION_BRAKE]) {
+            canyon_input.current_state.brake = true;
+            canyon_input.auto_leveling = true;
+        }
     }
     
     // Process gamepad input
-    GamepadState* gamepad = gamepad_get_state(0);
-    if (gamepad && gamepad->connected) {
+    if (using_gamepad) {
         // CANYON RACING CONTROLS:
-        // Left stick: Banking and fine targeting adjustments (ship orientation)
+        // Left stick: Primary flight control (pitch/yaw)
         float left_x = apply_deadzone(gamepad->left_stick_x, GAMEPAD_DEADZONE);
         float left_y = apply_deadzone(gamepad->left_stick_y, GAMEPAD_DEADZONE);
         
         if (left_x != 0.0f || left_y != 0.0f) {
-            // Left stick X = banking (roll + coordinated yaw for racing-style turns)
-            float bank_input = left_x * PITCH_YAW_SENSITIVITY;
-            canyon_input.current_state.roll += bank_input * 1.5f;     // Primary roll
-            canyon_input.current_state.yaw += bank_input * 0.3f;      // Coordinated turn
+            // Left stick X = Yaw (turn left/right)
+            canyon_input.current_state.yaw = left_x * PITCH_YAW_SENSITIVITY;
             
-            // Left stick Y = fine pitch adjustments
-            canyon_input.current_state.pitch -= left_y * PITCH_YAW_SENSITIVITY * 0.5f; // Reduced sensitivity for fine control
+            // Left stick Y = Pitch (up/down)
+            canyon_input.current_state.pitch = -left_y * PITCH_YAW_SENSITIVITY; // Inverted for flight controls
+            
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+            
+            // Debug output to see raw values
+            static int stick_debug_counter = 0;
+            if (++stick_debug_counter % 30 == 0) {
+                printf("🎮 LEFT STICK: Raw(%.3f,%.3f) → Pitch:%.3f Yaw:%.3f\n", 
+                       left_x, left_y, canyon_input.current_state.pitch, canyon_input.current_state.yaw);
+            }
         }
         
         // Right stick: Targeting reticle control (where you want to fly)
