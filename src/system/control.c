@@ -423,21 +423,21 @@ void control_configure_ship(struct World* world, EntityID ship_id, ShipConfigPre
             break;
             
         case SHIP_CONFIG_RACER:
-            // Zero-G optimized configuration
-            physics->mass = 80.0f;
-            physics->drag_linear = 0.02f;   // Very low drag for zero-g realism
-            physics->drag_angular = 0.08f;  // Low angular drag for realistic rotation
-            physics->moment_of_inertia = (Vector3){0.4f, 0.3f, 0.4f}; // Reduced for responsiveness
+            // Zero-G STABILITY optimized configuration
+            physics->mass = 120.0f; // Increased mass for stability
+            physics->drag_linear = 0.08f;   // Higher drag for natural damping
+            physics->drag_angular = 0.25f;  // Much higher angular drag for stability
+            physics->moment_of_inertia = (Vector3){0.8f, 0.6f, 0.8f}; // Higher inertia for stability
             
             thrusters->ship_type = SHIP_TYPE_FIGHTER;
-            thrusters->max_linear_force = (Vector3){600, 600, 1000}; // Balanced thrust
-            thrusters->max_angular_torque = (Vector3){120, 140, 100}; // Enhanced torque for zero-g
-            thrusters->thrust_response_time = 0.03f; // Very responsive
+            thrusters->max_linear_force = (Vector3){400, 400, 600}; // Reduced thrust for gentleness
+            thrusters->max_angular_torque = (Vector3){80, 90, 60}; // Much lower torque for stability
+            thrusters->thrust_response_time = 0.1f; // Slower response for smoothness
             thrusters->vacuum_efficiency = 1.0f;
             thrusters->thrusters_enabled = true;
             
-            control->control_sensitivity = 1.0f; // Moderate sensitivity for stability
-            control->stability_assist = 0.7f;    // Strong assist for zero-g
+            control->control_sensitivity = 0.6f; // Lower sensitivity for stability
+            control->stability_assist = 0.9f;    // Very strong assist for zero-g
             control->flight_assist_enabled = true;
             control->control_mode = CONTROL_ASSISTED;
             break;
