@@ -195,13 +195,10 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         if (player_scripted_flight) {
             printf("🛩️  Scripted flight system ready for player ship\n");
             
-            // Auto-start circuit flight for demonstration
-            FlightPath* circuit = scripted_flight_create_circuit_path();
-            if (circuit) {
-                scripted_flight_start(player_scripted_flight, circuit);
-                scripted_flight_active = true;
-                printf("🛩️  AUTO-STARTED circuit flight pattern!\n");
-            }
+            // Don't auto-start - let user manually activate with '1' key
+            printf("🛩️  Press '1' to start circuit flight pattern\n");
+            printf("🛩️  Press '2' for figure-8 pattern\n");
+            printf("🛩️  Press '3' for landing approach\n");
         }
     }
     
@@ -428,23 +425,26 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
         }
         
         if (ev->key_code == SAPP_KEYCODE_1) {
+            printf("🎮 '1' key detected - attempting to start circuit flight\n");
             // Start scripted circuit flight
-            printf("🛩️  Key '1' pressed - attempting to start circuit flight\n");
-            printf("    Player ship ID: %d\n", player_ship_id);
-            printf("    Scripted flight component: %p\n", player_scripted_flight);
-            
             if (player_scripted_flight) {
-                FlightPath* circuit = scripted_flight_create_circuit_path();
-                if (circuit) {
-                    printf("    Circuit path created with %d waypoints\n", circuit->waypoint_count);
-                    scripted_flight_start(player_scripted_flight, circuit);
-                    scripted_flight_active = true;
-                    printf("🛩️  Started circuit flight pattern\n");
+                printf("   ✓ Scripted flight component exists\n");
+                if (scripted_flight_active) {
+                    printf("   ⚠️  Flight already active - stopping current flight\n");
+                    scripted_flight_stop(player_scripted_flight);
+                    scripted_flight_active = false;
                 } else {
-                    printf("❌ Failed to create circuit path\n");
+                    FlightPath* circuit = scripted_flight_create_circuit_path();
+                    if (circuit) {
+                        scripted_flight_start(player_scripted_flight, circuit);
+                        scripted_flight_active = true;
+                        printf("🛩️  Started circuit flight pattern\n");
+                    } else {
+                        printf("   ❌ Failed to create circuit path\n");
+                    }
                 }
             } else {
-                printf("❌ No scripted flight component available\n");
+                printf("   ❌ No scripted flight component available\n");
             }
             return true;
         }

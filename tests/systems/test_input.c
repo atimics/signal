@@ -261,7 +261,7 @@ void test_input_system_performance(void)
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
     
     // 1000 input updates should complete in under 10ms
-    TEST_ASSERT_LESS_THAN(0.01, elapsed);
+    TEST_ASSERT_TRUE(elapsed < 0.01);
 }
 
 void test_input_state_access_performance(void)
@@ -278,7 +278,7 @@ void test_input_state_access_performance(void)
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
     
     // 10000 state accesses should complete in under 1ms
-    TEST_ASSERT_LESS_THAN(0.001, elapsed);
+    TEST_ASSERT_TRUE(elapsed < 0.001);
 }
 
 // ============================================================================

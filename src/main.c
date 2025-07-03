@@ -407,26 +407,15 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
-    // Debug: log key '1' events
-    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_1) {
-        printf("🔍 DEBUG: main.c event() received key '1' in scene '%s'\n", app_state.scene_state.current_scene_name);
-    }
-    
     // Handle UI events first - if UI captures the event, don't process it further
     if (ui_handle_event(ev))
     {
-        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_1) {
-            printf("🔍 DEBUG: UI captured key '1' - stopping event propagation\n");
-        }
         return;  // UI captured this event
     }
 
     // Handle scene-specific input events first
     if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
     {
-        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_1) {
-            printf("🔍 DEBUG: Scene script handled key '1'\n");
-        }
         return;  // Scene script handled this event
     }
 
@@ -464,28 +453,13 @@ static void event(const sapp_event* ev)
                 ui_toggle_hud();  // Also toggle the HUD
                 printf("🔧 Debug UI & HUD: %s\n", !current_visible ? "ON" : "OFF");
             }
-            // Toggle wireframe mode with W key
-            else if (ev->key_code == SAPP_KEYCODE_W)
+            // For number keys 1-9, let's not forward to input system
+            // since these might be used for camera switching or other scene-specific functions
+            else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
             {
-                app_state.render_config.wireframe_mode = !app_state.render_config.wireframe_mode;
-                printf("🔧 Wireframe mode: %s\n",
-                       app_state.render_config.wireframe_mode ? "ON" : "OFF");
+                // Do nothing - let scene scripts handle number keys
             }
-            // Take screenshot with S key
-            else if (ev->key_code == SAPP_KEYCODE_S)
-            {
-                char filename[64];
-                snprintf(filename, sizeof(filename), "screenshots/cube_test_%ld.bmp", time(NULL));
-                if (render_take_screenshot(&app_state.render_config, filename))
-                {
-                    printf("📸 Screenshot saved: %s\n", filename);
-                }
-                else
-                {
-                    printf("📸 Screenshot attempted: %s (function not implemented)\n", filename);
-                }
-            }
-            // Forward keyboard events to canyon racing input system
+            // Forward other keyboard events to canyon racing input system
             else
             {
                 input_handle_keyboard(ev->key_code, true);
@@ -498,8 +472,11 @@ static void event(const sapp_event* ev)
             {
                 return;  // Scene script handled this event
             }
-            // Forward key up events to input system
-            input_handle_keyboard(ev->key_code, false);
+            // Forward key up events to input system (but not number keys)
+            if (ev->key_code < SAPP_KEYCODE_1 || ev->key_code > SAPP_KEYCODE_9)
+            {
+                input_handle_keyboard(ev->key_code, false);
+            }
             break;
             
         case SAPP_EVENTTYPE_MOUSE_MOVE:
