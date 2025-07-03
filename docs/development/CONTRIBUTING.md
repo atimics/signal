@@ -55,7 +55,7 @@ Link to any related issues (e.g., "Closes #123").
 
 ### Testing
 - All new code must have unit tests
-- Target: 100% test coverage (currently 98%)
+- Target: 100% test coverage (see [Project Status](../PROJECT_STATUS.md) for current)
 - Run `make test` before submitting PR
 
 ## Definition of Done

@@ -114,6 +114,12 @@ Welcome to the CGame project documentation. This directory contains all project 
 - **New System**: Scripted flight paths for cinematic sequences
 - **Next**: Sprint 24 - Canyon Racing Prototype
 
+### New Features (Sprint 23)
+- **Scripted Flight System**: Autonomous waypoint-based flight paths
+- **YAML Scene Loading**: Human-readable scene definitions
+- **Enhanced Testing**: 56/57 tests passing (98% coverage)
+- **Documentation Overhaul**: New guides and consolidated structure
+
 ## 📞 Support
 
 For questions about documentation:
