@@ -18,6 +18,8 @@
 #include "system/performance.h"
 #include "system/memory.h"
 #include "system/material.h"
+#include "entity_yaml_loader.h"
+#include "scene_yaml_loader.h"
 
 // Global asset and data registries
 AssetRegistry g_asset_registry;
@@ -47,8 +49,8 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
         return false;
     }
 
-    // Load entity and scene templates
-    load_entity_templates(&g_data_registry, "templates/entities.txt");
+    // Load entity and scene templates (YAML-first with text fallback)
+    load_entity_templates_with_fallback(&g_data_registry, "entities");
     
     // Dynamically load all scene templates from scenes directory
     load_all_scene_templates(&g_data_registry, "scenes");
@@ -163,6 +165,11 @@ void scheduler_destroy(struct SystemScheduler* scheduler, RenderConfig* config)
     }
     assets_cleanup(&g_asset_registry);
     data_registry_cleanup(&g_data_registry);
+    
+    // Shutdown YAML loaders
+    entity_yaml_loader_shutdown();
+    scene_yaml_loader_shutdown();
+    
     printf("🎯 System scheduler destroyed after %d frames\n", scheduler->frame_count);
     scheduler_print_stats(scheduler);
 }

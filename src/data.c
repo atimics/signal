@@ -14,6 +14,7 @@
 #include "system/material.h"
 #include "graphics_api.h"
 #include "scene_yaml_loader.h"
+#include "entity_yaml_loader.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -69,6 +70,37 @@ void data_registry_cleanup(DataRegistry* registry)
 {
     if (!registry) return;
     printf("📋 Data registry cleaned up\n");
+}
+
+// ============================================================================
+// TEMPLATE LOADING (YAML WITH TEXT FALLBACK)
+// ============================================================================
+
+// Load entity templates with YAML priority and text fallback
+bool load_entity_templates_with_fallback(DataRegistry* registry, const char* base_name)
+{
+    if (!registry || !base_name) return false;
+    
+    // First, try to load from YAML file
+    char yaml_filename[256];
+    snprintf(yaml_filename, sizeof(yaml_filename), "templates/%s.yaml", base_name);
+    
+    if (load_entity_templates_yaml(registry, yaml_filename)) {
+        printf("✅ Loaded entity templates from YAML: %s\n", yaml_filename);
+        return true;
+    }
+    
+    // Fall back to text format
+    char text_filename[256];
+    snprintf(text_filename, sizeof(text_filename), "templates/%s.txt", base_name);
+    
+    if (load_entity_templates(registry, text_filename)) {
+        printf("✅ Loaded entity templates from text (fallback): %s\n", text_filename);
+        return true;
+    }
+    
+    printf("❌ Entity templates not found in YAML or text format: %s\n", base_name);
+    return false;
 }
 
 // ============================================================================

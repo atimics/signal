@@ -1,0 +1,16 @@
+# Ship Launch Test Scene
+# Demonstrates simplified thruster system with visual feedback
+
+metadata:
+  name: ship_launch_test
+  description: "Test ship launch with simplified thruster system"
+  author: "Claude Code"
+  version: "1.0"
+
+entities:
+  # Empty scene - all entities created by scene script
+  # The ship_launch_test_scene.c script creates:
+  # - Launchpad
+  # - Ship with thruster system
+  # - Chase camera
+  # - Reference markers

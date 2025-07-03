@@ -3,6 +3,8 @@
 #include "../system/input.h"
 #include "../system/control.h"
 #include "../system/thrusters.h"
+#include "../system/ode_physics.h"
+#include "../system/ode_thrusters.h"
 #include "../hud_system.h"
 #include "../sokol_app.h"
 #include <stdio.h>
@@ -20,6 +22,20 @@ static float test_time = 0.0f;
 static bool show_thrust_vectors = true;
 static bool show_physics_debug = true;
 static bool show_thruster_groups = true;
+
+// Launch sequence state
+typedef enum {
+    LAUNCH_IDLE,
+    LAUNCH_WARMUP,
+    LAUNCH_IGNITION,
+    LAUNCH_LIFTOFF,
+    LAUNCH_ASCENT,
+    LAUNCH_COMPLETE
+} LaunchState;
+
+static LaunchState launch_state = LAUNCH_IDLE;
+static float launch_timer = 0.0f;
+static ODEThrusterSystem* ship_thrusters = NULL;
 
 void thruster_test_enter(struct World* world, SceneStateManager* state) {
     (void)state;
@@ -43,6 +59,25 @@ void thruster_test_enter(struct World* world, SceneStateManager* state) {
     
     // Configure ship using unified preset
     control_configure_ship(world, test_ship_id, SHIP_CONFIG_RC_ROCKET);
+    
+    // Initialize ODE physics if not already
+    struct ODEPhysics* ode_physics = entity_get_ode_physics(world, test_ship_id);
+    if (!ode_physics) {
+        // Enable ODE physics for the ship
+        struct Physics* physics = entity_get_physics(world, test_ship_id);
+        if (physics) {
+            physics->use_ode = true;
+            printf("🔧 Enabled ODE physics for test ship\n");
+        }
+    }
+    
+    // Initialize ODE thruster system
+    ship_thrusters = calloc(1, sizeof(ODEThrusterSystem));
+    if (ship_thrusters && ode_thrusters_init(ship_thrusters, world, test_ship_id)) {
+        printf("✅ ODE thruster system initialized\n");
+    } else {
+        printf("❌ Failed to initialize ODE thruster system\n");
+    }
     
     // Get components for detailed logging
     struct Physics* physics = entity_get_physics(world, test_ship_id);
@@ -88,14 +123,21 @@ void thruster_test_enter(struct World* world, SceneStateManager* state) {
     test_time = 0.0f;
     
     printf("\n📋 THRUSTER TEST CONTROLS:\n");
+    printf("   SPACE - Initiate launch sequence\n");
     printf("   F1 - Toggle thrust vector display\n");
     printf("   F2 - Toggle physics debug info\n");
     printf("   F3 - Toggle thruster group display\n");
     printf("   F5 - Reset ship position\n");
-    printf("\n🎮 GYROSCOPIC STABILIZATION:\n");
-    printf("   - Ship automatically counters rotation when stick released\n");
-    printf("   - RCS thrusters fire to stop spin\n");
-    printf("   - Realistic momentum and inertia\n");
+    printf("\n🚀 LAUNCH SEQUENCE:\n");
+    printf("   1. Press SPACE to begin\n");
+    printf("   2. Engines warm up (2s)\n");
+    printf("   3. Main engines ignite\n");
+    printf("   4. Liftoff at sufficient thrust\n");
+    printf("   5. Control unlocks after clearing pad\n");
+    printf("\n🎮 GIMBAL CONTROL:\n");
+    printf("   - Main engines gimbal for steering\n");
+    printf("   - RCS thrusters for fine control\n");
+    printf("   - Physical thruster simulation via ODE\n");
 }
 
 void thruster_test_update(struct World* world, SceneStateManager* state, float delta_time) {

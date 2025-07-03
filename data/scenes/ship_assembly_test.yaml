@@ -1,0 +1,75 @@
+# Ship Assembly Test Scene
+# Tests modular ship construction with ODE physics
+
+name: ship_assembly_test
+description: "Test scene for modular ship assembly system"
+
+entities:
+  # Launch pad
+  - type: platform
+    position: [0, 0, 0]
+    scale: [10, 1, 10]
+    material: concrete
+    mesh: landing_pad
+    components:
+      physics:
+        mass: 0  # Static
+        kinematic: true
+      collision:
+        shape: box
+        size: [10, 1, 10]
+
+  # Assembly workspace marker
+  - type: marker
+    position: [0, 5, 0]
+    components:
+      # This is where we'll assemble the ship
+
+  # Tool camera
+  - type: camera
+    position: [15, 10, 15]
+    components:
+      camera:
+        target: [0, 5, 0]
+        fov: 60.0
+        behavior: orbital
+
+  # Parts storage area
+  - type: platform
+    position: [20, 0, 0]
+    scale: [10, 1, 20]
+    material: metal_grid
+    mesh: landing_pad
+    components:
+      physics:
+        mass: 0
+        kinematic: true
+
+  # UI camera for part selection
+  - type: camera
+    position: [20, 15, 0]
+    components:
+      camera:
+        target: [20, 0, 0]
+        fov: 45.0
+        behavior: static
+
+lighting:
+  ambient:
+    color: [0.20, 0.20, 0.25]
+    intensity: 0.40
+  
+  directional:
+    - direction: [0.30, -0.70, 0.20]
+      color: [1.0, 0.95, 0.85]
+      intensity: 0.80
+    
+    - direction: [-0.5, -0.3, -0.5]
+      color: [0.3, 0.4, 0.5]
+      intensity: 0.30
+
+environment:
+  gravity: [0, -9.81, 0]  # Earth gravity
+  atmosphere:
+    density: 1.225  # kg/m³ at sea level
+    pressure: 101325  # Pa

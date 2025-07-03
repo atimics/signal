@@ -160,9 +160,11 @@ transform->position = (Vector3){0, 0, 0};
 - Prefer data files over hardcoded entity creation
 
 ### Scene Definition
-- Create scenes in `data/scenes/` directory
-- Define entity spawns, positions, and relationships
+- Create scenes in YAML format in `data/scenes/` directory (e.g., `flight_test.yaml`)
+- Use structured YAML with entity definitions, component configurations, and scene metadata
+- Define entity spawns, positions, relationships, and component properties
 - Support scene loading/unloading for memory management
+- Legacy text format supported for backwards compatibility
 
 ## Testing and Debugging
 

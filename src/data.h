@@ -101,6 +101,7 @@ bool data_registry_init(DataRegistry* registry, const char* data_root);
 void data_registry_cleanup(DataRegistry* registry);
 
 // Template loading
+bool load_entity_templates_with_fallback(DataRegistry* registry, const char* base_name);
 bool load_entity_templates(DataRegistry* registry, const char* templates_path);
 bool load_scene_templates(DataRegistry* registry, const char* scenes_path);
 bool load_all_scene_templates(DataRegistry* registry, const char* scenes_dir);

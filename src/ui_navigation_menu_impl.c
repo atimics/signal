@@ -21,8 +21,8 @@ typedef struct {
     bool gamepad_was_connected;
     
     // Menu items
-    const char* destinations[8];
-    const char* descriptions[8];
+    const char* destinations[9];
+    const char* descriptions[9];
     int destination_count;
     
     // Control hints to display
@@ -54,10 +54,13 @@ static void navigation_menu_init(struct World* world) {
     data->destinations[4] = "🚀 Thruster Test";
     data->descriptions[4] = "Test gyroscopic stabilization system";
     
-    data->destinations[5] = "🎬 Scene Selector";
-    data->descriptions[5] = "Debug: Select any scene directly";
+    data->destinations[5] = "🚀 Ship Launch Test";
+    data->descriptions[5] = "Test ship launch with thruster visualization";
     
-    data->destination_count = 6;
+    data->destinations[6] = "🎬 Scene Selector";
+    data->descriptions[6] = "Debug: Select any scene directly";
+    
+    data->destination_count = 7;
     data->selected_index = 0;
     
     // Set up control hints
@@ -153,6 +156,7 @@ static bool navigation_menu_handle_event(const void* event, struct World* world)
                         "derelict_alpha",
                         "system_overview",
                         "thruster_test",
+                        "ship_launch_test",
                         "scene_selector"
                     };
                     
@@ -185,6 +189,7 @@ static bool navigation_menu_handle_event(const void* event, struct World* world)
             "derelict_alpha",
             "system_overview",
             "thruster_test",
+            "ship_launch_test",
             "scene_selector"
         };
         

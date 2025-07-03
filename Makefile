@@ -64,7 +64,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c component/look_target.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/thruster_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
+SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c component/look_target.c component/thruster_points_component.c thruster_points.c render_thrust_cones.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c render_thrusters.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c entity_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -97,6 +97,7 @@ help:
 	@echo "  generate-assets  - Generate procedural mesh assets"
 	@echo "  regenerate-assets- Clean and regenerate all assets"
 	@echo "  view-meshes      - Launch mesh viewer"
+	@echo "  validate-thrusters - Validate thruster attachment points"
 	@echo ""
 	@echo "🏃 RUN TARGETS:"
 	@echo "  run              - Run the game (use SCENE=name for specific scene)"
@@ -162,6 +163,16 @@ clean-source-assets:
 view-meshes:
 	@echo "🎨 Launching mesh viewer..."
 	$(PYTHON) $(TOOLS_DIR)/launch_mesh_viewer.py
+
+# Validate thruster definitions
+validate-thrusters: $(BUILD_DIR)/validate_thrusters
+	@echo "🔍 Validating thruster attachment points..."
+	@./$(BUILD_DIR)/validate_thrusters data/thrusters/ assets/meshes/
+	@echo "✅ Thruster validation complete"
+
+# Build thruster validation tool
+$(BUILD_DIR)/validate_thrusters: tools/validate_thrusters.c | $(BUILD_DIR)
+	$(CC) -Wall -Wextra -O2 -o $@ $< -lm
 
 # Link executable
 $(TARGET): $(OBJECTS) | $(BUILD_DIR)

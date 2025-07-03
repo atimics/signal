@@ -1,0 +1,19 @@
+# Thruster definitions for wedge_ship_mk2 - Corrected for actual mesh vertices
+# Format: thruster_name pos_x pos_y pos_z dir_x dir_y dir_z max_force
+
+# Main engines - rear vertices (5 and 6)
+main_left      -0.40  -0.20  -2.00    0.0  0.0  -1.0   10000.0
+main_right      0.40  -0.20  -2.00    0.0  0.0  -1.0   10000.0
+
+# RCS Thrusters - Use available vertices
+rcs_forward     0.00   0.00   2.00    0.0  0.0   1.0    800.0
+rcs_left       -1.00   0.40  -1.50   -1.0  0.0   0.0    800.0
+rcs_right       1.00   0.40  -1.50    1.0  0.0   0.0    800.0
+
+# Additional control thrusters at other vertices
+rcs_down_left  -1.00  -0.40  -1.50    0.0 -1.0   0.0    600.0
+rcs_down_right  1.00  -0.40  -1.50    0.0 -1.0   0.0    600.0
+
+# Center thrusters for pitch control
+pitch_up        0.00   0.10  -1.00    0.0  1.0   0.0    400.0
+pitch_down      0.00  -0.10  -1.00    0.0 -1.0   0.0    400.0

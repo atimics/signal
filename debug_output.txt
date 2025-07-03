@@ -1,0 +1,802 @@
+🎮 CGGame - Sokol-based Component Engine
+==========================================
+
+⚙️  Initializing configuration...
+📝 Config: Loaded 6 configuration values from cgame_config.txt
+🎯 Startup scene: thruster_test (auto-start: enabled)
+⚙️  Config system initialized
+🔧 Initializing graphics...
+🌍 Setting up world...
+🌍 World initialized - ready for 4096 entities
+⚙️ Starting systems...
+📁 Asset root: /Users/ratimics/develop/cgame/build/assets
+📋 Data registry initialized
+   Data root: /Users/ratimics/develop/cgame/data
+📝 Loading entity templates from /Users/ratimics/develop/cgame/data/templates/entities.txt
+   ✅ Loaded 13 entity templates
+🏗️  Dynamically loading all scene templates from /Users/ratimics/develop/cgame/data/scenes
+🏗️  Loading scene templates from /Users/ratimics/develop/cgame/data/scenes/ode_simple.txt
+   ✅ Loaded 0 scene templates
+✅ Dynamically loaded 1 scene template files
+📦 Created memory pool 'Meshes' (ID: 0, limit: 128.00 MB)
+📦 Created memory pool 'Textures' (ID: 1, limit: 64.00 MB)
+📦 Created memory pool 'Materials' (ID: 2, limit: 1.00 MB)
+✅ Memory system initialized:
+   Memory limit: 256 MB
+   Streaming: enabled
+   Unloading: enabled
+✅ Material system initialized with 4 default materials
+🚀 Initializing Sokol-based renderer (1200x800)
+📂 Loading vertex shader: assets/shaders/basic_3d.vert.metal
+📂 Loading fragment shader: assets/shaders/basic_3d.frag.metal
+🔧 Creating shader with entry points: vs=vs_main, fs=fs_main
+🔍 Shader state: 2 (VALID=2, FAILED=3, INVALID=4)
+🔧 Creating pipeline with default swapchain-compatible formats
+🔧 Creating pipeline with default swapchain-compatible formats
+🔍 Pipeline created with default formats
+🔍 Pipeline state: 2 (VALID=2, FAILED=3, INVALID=4)
+✅ Sokol rendering pipeline initialized with external shaders
+✅ Render system initialized successfully
+🔍 Loading assets...
+📋 Loading asset index: /Users/ratimics/develop/cgame/build/assets/meshes/index.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/metadata.json
+🔍 DEBUG: Parsed metadata - name='wedge_ship_mk2', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', name='wedge_ship_mk2'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', mesh_name='wedge_ship_mk2'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj
+🔍 Loading binary mesh: 9 vertices, 30 indices
+🔍 DEBUG: Creating GPU buffers for wedge_ship_mk2 - VB=288 bytes, IB=120 bytes
+✅ GPU resources created successfully for mesh wedge_ship_mk2
+✅ Loaded binary mesh: wedge_ship_mk2 (9 vertices, 30 indices) with AABB
+🔍 DEBUG: Set material 'wedge_ship_mk2' for mesh 'wedge_ship_mk2'
+🔍 DEBUG: Updated material 'wedge_ship_mk2' texture reference from 'texture.png' to 'wedge_ship_mk2_texture'
+✅ Loaded texture: wedge_ship_mk2_texture (1024x1024)
+✅ wedge_ship_mk2
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/metadata.json
+🔍 DEBUG: Parsed metadata - name='sun', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', name='sun'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', mesh_name='sun'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj
+🔍 Loading binary mesh: 56 vertices, 288 indices
+🔍 DEBUG: Creating GPU buffers for sun - VB=1792 bytes, IB=1152 bytes
+✅ GPU resources created successfully for mesh sun
+✅ Loaded binary mesh: sun (56 vertices, 288 indices) with AABB
+🔍 DEBUG: Set material 'sun' for mesh 'sun'
+🔍 DEBUG: Updated material 'sun' texture reference from 'texture.png' to 'sun_texture'
+✅ Loaded texture: sun_texture (1024x1024)
+✅ sun
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/metadata.json
+🔍 DEBUG: Parsed metadata - name='wedge_ship', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', name='wedge_ship'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', mesh_name='wedge_ship'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj
+🔍 Loading binary mesh: 7 vertices, 24 indices
+🔍 DEBUG: Creating GPU buffers for wedge_ship - VB=224 bytes, IB=96 bytes
+✅ GPU resources created successfully for mesh wedge_ship
+✅ Loaded binary mesh: wedge_ship (7 vertices, 24 indices) with AABB
+🔍 DEBUG: Set material 'wedge_ship' for mesh 'wedge_ship'
+🔍 DEBUG: Updated material 'wedge_ship' texture reference from 'texture.png' to 'wedge_ship_texture'
+✅ Loaded texture: wedge_ship_texture (1024x1024)
+✅ wedge_ship
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/metadata.json
+🔍 DEBUG: Parsed metadata - name='control_tower', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', name='control_tower'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', mesh_name='control_tower'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj
+🔍 Loading binary mesh: 39 vertices, 204 indices
+🔍 DEBUG: Creating GPU buffers for control_tower - VB=1248 bytes, IB=816 bytes
+✅ GPU resources created successfully for mesh control_tower
+✅ Loaded binary mesh: control_tower (39 vertices, 204 indices) with AABB
+🔍 DEBUG: Set material 'control_tower' for mesh 'control_tower'
+🔍 DEBUG: Updated material 'control_tower' texture reference from 'texture.png' to 'control_tower_texture'
+✅ Loaded texture: control_tower_texture (1024x1024)
+✅ control_tower
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/metadata.json
+🔍 DEBUG: Parsed metadata - name='logo_cube', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj', name='logo_cube'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj', mesh_name='logo_cube'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj
+🔍 Loading binary mesh: 24 vertices, 36 indices
+🔍 DEBUG: Creating GPU buffers for logo_cube - VB=768 bytes, IB=144 bytes
+✅ GPU resources created successfully for mesh logo_cube
+✅ Loaded binary mesh: logo_cube (24 vertices, 36 indices) with AABB
+🔍 DEBUG: Set material 'logo_cube' for mesh 'logo_cube'
+🔍 DEBUG: Updated material 'logo_cube' texture reference from 'logo.png' to 'logo_cube_texture'
+✅ Loaded texture: logo_cube_texture (1024x1024)
+✅ logo_cube
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/metadata.json
+🔍 DEBUG: Parsed metadata - name='landing_pad', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj', name='landing_pad'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj', mesh_name='landing_pad'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj
+🔍 Loading binary mesh: 14 vertices, 72 indices
+🔍 DEBUG: Creating GPU buffers for landing_pad - VB=448 bytes, IB=288 bytes
+✅ GPU resources created successfully for mesh landing_pad
+✅ Loaded binary mesh: landing_pad (14 vertices, 72 indices) with AABB
+🔍 DEBUG: Set material 'landing_pad' for mesh 'landing_pad'
+🔍 DEBUG: Updated material 'landing_pad' texture reference from 'texture.png' to 'landing_pad_texture'
+✅ Loaded texture: landing_pad_texture (1024x1024)
+✅ landing_pad
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/metadata.json
+🔍 DEBUG: Parsed metadata - name='planet_surface', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj', name='planet_surface'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj', mesh_name='planet_surface'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj
+🔍 Loading binary mesh: 4 vertices, 6 indices
+🔍 DEBUG: Creating GPU buffers for planet_surface - VB=128 bytes, IB=24 bytes
+✅ GPU resources created successfully for mesh planet_surface
+✅ Loaded binary mesh: planet_surface (4 vertices, 6 indices) with AABB
+🔍 DEBUG: Set material 'planet_surface' for mesh 'planet_surface'
+🔍 DEBUG: Updated material 'planet_surface' texture reference from 'texture.png' to 'planet_surface_texture'
+✅ Loaded texture: planet_surface_texture (1024x1024)
+✅ planet_surface
+📋 Loaded 7 meshes from asset index
+📋 Loaded Assets:
+   Meshes (7):
+     wedge_ship_mk2: 9 vertices, 30 indices ✅
+     sun: 56 vertices, 288 indices ✅
+     wedge_ship: 7 vertices, 24 indices ✅
+     control_tower: 39 vertices, 204 indices ✅
+     logo_cube: 24 vertices, 36 indices ✅
+     landing_pad: 14 vertices, 72 indices ✅
+     planet_surface: 4 vertices, 6 indices ✅
+   Textures (7):
+     wedge_ship_mk2_texture: 1024x1024 ✅
+     sun_texture: 1024x1024 ✅
+     wedge_ship_texture: 1024x1024 ✅
+     control_tower_texture: 1024x1024 ✅
+     logo_cube_texture: 1024x1024 ✅
+     landing_pad_texture: 1024x1024 ✅
+     planet_surface_texture: 1024x1024 ✅
+   Materials (7):
+     wedge_ship_mk2 ✅
+     sun ✅
+     wedge_ship ✅
+     control_tower ✅
+     logo_cube ✅
+     landing_pad ✅
+     planet_surface ✅
+📋 Entity Templates (13):
+   - control_tower: Spaceport control structure
+   - sun: Central star
+   - wedge_ship: Standard wedge-shaped spacecraft
+   - wedge_ship_mk2: Advanced wedge-shaped spacecraft  
+   - player_ship: Basic player-controlled spacecraft
+   - chase_camera: Third-person chase camera
+   - cockpit_camera: First-person cockpit camera
+   - security_camera: Fixed security camera
+   - ai_ship: AI-controlled spacecraft
+   - landing_pad: Spaceport landing platform
+   - planet_surface: Large planetary surface
+   - logo_cube: Gold standard reference cube for testing and validation
+   - scene_node: Minimal scene entity for utility purposes
+🏗️  Scene Templates (0):
+⚡ Performance monitoring initialized
+   Frame time warning: 20.0 ms
+   Memory warning: 512 MB
+🎯 System scheduler initialized
+   Physics: 60.0 Hz
+   Collision: 20.0 Hz
+   AI: 5.0 Hz (base)
+   Camera: 60.0 Hz
+   LOD: 30.0 Hz
+   Performance: 5.0 Hz
+   Memory: 2.0 Hz
+   Thrusters: 60.0 Hz
+   Control: 60.0 Hz
+🎨 Configuring renderer...
+🚀 Initializing Sokol-based renderer (1280x720)
+✅ Render system initialized successfully
+🏗️ Loading scene...
+⚙️  Using configured startup scene: thruster_test (auto-start enabled)
+ℹ️ Loading scene: thruster_test
+🏗️  Loading scene 'thruster_test' from data...
+   🔍 SCALAR: 'name' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'thruster_test' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='name' value='thruster_test' entity=0 in_components=0
+Loading scene: thruster_test
+   🔍 SCALAR: 'description' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'Gyroscopic control prototype for thruster testing' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='description' value='Gyroscopic control prototype for thruster testing' entity=0 in_components=0
+   🔍 SCALAR: 'entities' (expecting_value=0, in_array=0)
+📋 Loading entities...
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'player_ship' (expecting_value=1, in_array=0)
+📦 Created entity 1 of type: player_ship
+   Initialized renderable component (awaiting mesh)
+   Added PLAYER component
+⚠️ Ship 1 missing required components for configuration
+   Configured ship with FIGHTER preset
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '10' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'rotation' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '1' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'scale' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'physics' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'mass' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '10.0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mass' value='10.0' entity=1 in_components=1
+   🔍 SCALAR: 'drag_linear' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.02' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_linear' value='0.02' entity=1 in_components=1
+   🔍 SCALAR: 'drag_angular' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.3' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_angular' value='0.3' entity=1 in_components=1
+   🔍 SCALAR: 'has_6dof' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='has_6dof' value='true' entity=1 in_components=1
+   🔍 DEBUG: Mapping end at depth 2 for entity 1
+   🔍 SCALAR: 'thrusters' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'enabled' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='enabled' value='true' entity=1 in_components=1
+   🔍 DEBUG: Exiting components section
+   🔍 DEBUG: Mapping end at depth 2 for entity 1
+   🔍 SCALAR: 'control_authority' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'enabled' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='enabled' value='true' entity=1 in_components=0
+   🔍 DEBUG: Mapping end at depth 2 for entity 1
+   🔍 DEBUG: Mapping end at depth 1 for entity 1
+   🔍 SCALAR: 'material' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'racing_ship' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='material' value='racing_ship' entity=1 in_components=0
+✅ Entity 1 assigned material: racing_ship
+   🔍 SCALAR: 'mesh' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'wedge_ship_mk2' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mesh' value='wedge_ship_mk2' entity=1 in_components=0
+🔍 Attempting to load mesh 'wedge_ship_mk2' for entity 1
+🔍 DEBUG: Looking for material 'wedge_ship_mk2' for mesh 'wedge_ship_mk2'
+🔍 DEBUG: Material 'wedge_ship_mk2' has diffuse texture: 'wedge_ship_mk2_texture'
+🔍 DEBUG: Looking for texture 'wedge_ship_mk2_texture', found: YES
+✅ Assigned texture 'wedge_ship_mk2_texture' to mesh 'wedge_ship_mk2'
+✅ Created renderable from mesh 'wedge_ship_mk2': 30 indices
+✅ Entity 1 assigned mesh: wedge_ship_mk2 (30 indices)
+   GPU resources created for mesh
+   🔍 DEBUG: Mapping end at depth 0 for entity 1
+   🔍 DEBUG: End of entity 1 definition
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'landing_pad' (expecting_value=1, in_array=0)
+📦 Created entity 2 of type: landing_pad
+   Initialized renderable component (awaiting mesh)
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'scale' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '1' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'material' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'metal' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='material' value='metal' entity=2 in_components=0
+✅ Entity 2 assigned material: metal
+   🔍 SCALAR: 'mesh' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'landing_pad' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mesh' value='landing_pad' entity=2 in_components=0
+🔍 Attempting to load mesh 'landing_pad' for entity 2
+🔍 DEBUG: Looking for material 'landing_pad' for mesh 'landing_pad'
+🔍 DEBUG: Material 'landing_pad' has diffuse texture: 'landing_pad_texture'
+🔍 DEBUG: Looking for texture 'landing_pad_texture', found: YES
+✅ Assigned texture 'landing_pad_texture' to mesh 'landing_pad'
+✅ Created renderable from mesh 'landing_pad': 72 indices
+✅ Entity 2 assigned mesh: landing_pad (72 indices)
+   GPU resources created for mesh
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'physics' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'mass' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mass' value='0' entity=2 in_components=1
+   🔍 SCALAR: 'kinematic' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='kinematic' value='true' entity=2 in_components=1
+   🔍 DEBUG: Mapping end at depth 2 for entity 2
+   🔍 DEBUG: Exiting components section
+   🔍 DEBUG: Mapping end at depth 1 for entity 2
+   🔍 DEBUG: Mapping end at depth 0 for entity 2
+   🔍 DEBUG: End of entity 2 definition
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'obstacle' (expecting_value=1, in_array=0)
+📦 Created entity 3 of type: obstacle
+   Initialized renderable component (awaiting mesh)
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '15' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'scale' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'material' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'metal' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='material' value='metal' entity=3 in_components=0
+✅ Entity 3 assigned material: metal
+   🔍 SCALAR: 'mesh' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'logo_cube' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mesh' value='logo_cube' entity=3 in_components=0
+🔍 Attempting to load mesh 'logo_cube' for entity 3
+🔍 DEBUG: Looking for material 'logo_cube' for mesh 'logo_cube'
+🔍 DEBUG: Material 'logo_cube' has diffuse texture: 'logo_cube_texture'
+🔍 DEBUG: Looking for texture 'logo_cube_texture', found: YES
+✅ Assigned texture 'logo_cube_texture' to mesh 'logo_cube'
+✅ Created renderable from mesh 'logo_cube': 36 indices
+✅ Entity 3 assigned mesh: logo_cube (36 indices)
+   GPU resources created for mesh
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'physics' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'mass' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '50.0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mass' value='50.0' entity=3 in_components=1
+   🔍 SCALAR: 'drag_linear' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.1' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_linear' value='0.1' entity=3 in_components=1
+   🔍 SCALAR: 'drag_angular' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.2' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_angular' value='0.2' entity=3 in_components=1
+   🔍 SCALAR: 'has_6dof' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='has_6dof' value='true' entity=3 in_components=1
+   🔍 DEBUG: Mapping end at depth 2 for entity 3
+   🔍 DEBUG: Exiting components section
+   🔍 DEBUG: Mapping end at depth 1 for entity 3
+   🔍 DEBUG: Mapping end at depth 0 for entity 3
+   🔍 DEBUG: End of entity 3 definition
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'obstacle' (expecting_value=1, in_array=0)
+📦 Created entity 4 of type: obstacle
+   Initialized renderable component (awaiting mesh)
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '10.6' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '10.6' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'rotation' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0.383' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0.924' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'scale' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'material' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'metal' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='material' value='metal' entity=4 in_components=0
+✅ Entity 4 assigned material: metal
+   🔍 SCALAR: 'mesh' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'logo_cube' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mesh' value='logo_cube' entity=4 in_components=0
+🔍 Attempting to load mesh 'logo_cube' for entity 4
+🔍 DEBUG: Looking for material 'logo_cube' for mesh 'logo_cube'
+🔍 DEBUG: Material 'logo_cube' has diffuse texture: 'logo_cube_texture'
+🔍 DEBUG: Looking for texture 'logo_cube_texture', found: YES
+✅ Assigned texture 'logo_cube_texture' to mesh 'logo_cube'
+✅ Created renderable from mesh 'logo_cube': 36 indices
+✅ Entity 4 assigned mesh: logo_cube (36 indices)
+   GPU resources created for mesh
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'physics' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'mass' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '50.0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mass' value='50.0' entity=4 in_components=1
+   🔍 SCALAR: 'drag_linear' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.1' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_linear' value='0.1' entity=4 in_components=1
+   🔍 SCALAR: 'drag_angular' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.2' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_angular' value='0.2' entity=4 in_components=1
+   🔍 SCALAR: 'has_6dof' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='has_6dof' value='true' entity=4 in_components=1
+   🔍 DEBUG: Mapping end at depth 2 for entity 4
+   🔍 DEBUG: Exiting components section
+   🔍 DEBUG: Mapping end at depth 1 for entity 4
+   🔍 DEBUG: Mapping end at depth 0 for entity 4
+   🔍 DEBUG: End of entity 4 definition
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'obstacle' (expecting_value=1, in_array=0)
+📦 Created entity 5 of type: obstacle
+   Initialized renderable component (awaiting mesh)
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '15' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'rotation' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0.707' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0.707' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'scale' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'material' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'metal' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='material' value='metal' entity=5 in_components=0
+✅ Entity 5 assigned material: metal
+   🔍 SCALAR: 'mesh' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'logo_cube' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mesh' value='logo_cube' entity=5 in_components=0
+🔍 Attempting to load mesh 'logo_cube' for entity 5
+🔍 DEBUG: Looking for material 'logo_cube' for mesh 'logo_cube'
+🔍 DEBUG: Material 'logo_cube' has diffuse texture: 'logo_cube_texture'
+🔍 DEBUG: Looking for texture 'logo_cube_texture', found: YES
+✅ Assigned texture 'logo_cube_texture' to mesh 'logo_cube'
+✅ Created renderable from mesh 'logo_cube': 36 indices
+✅ Entity 5 assigned mesh: logo_cube (36 indices)
+   GPU resources created for mesh
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'physics' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'mass' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '50.0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mass' value='50.0' entity=5 in_components=1
+   🔍 SCALAR: 'drag_linear' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.1' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_linear' value='0.1' entity=5 in_components=1
+   🔍 SCALAR: 'drag_angular' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.2' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_angular' value='0.2' entity=5 in_components=1
+   🔍 SCALAR: 'has_6dof' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='has_6dof' value='true' entity=5 in_components=1
+   🔍 DEBUG: Mapping end at depth 2 for entity 5
+   🔍 DEBUG: Exiting components section
+   🔍 DEBUG: Mapping end at depth 1 for entity 5
+   🔍 DEBUG: Mapping end at depth 0 for entity 5
+   🔍 DEBUG: End of entity 5 definition
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'obstacle' (expecting_value=1, in_array=0)
+📦 Created entity 6 of type: obstacle
+   Initialized renderable component (awaiting mesh)
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '-10.6' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '10.6' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'rotation' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0.924' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0.383' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'scale' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'material' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'metal' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='material' value='metal' entity=6 in_components=0
+✅ Entity 6 assigned material: metal
+   🔍 SCALAR: 'mesh' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'logo_cube' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mesh' value='logo_cube' entity=6 in_components=0
+🔍 Attempting to load mesh 'logo_cube' for entity 6
+🔍 DEBUG: Looking for material 'logo_cube' for mesh 'logo_cube'
+🔍 DEBUG: Material 'logo_cube' has diffuse texture: 'logo_cube_texture'
+🔍 DEBUG: Looking for texture 'logo_cube_texture', found: YES
+✅ Assigned texture 'logo_cube_texture' to mesh 'logo_cube'
+✅ Created renderable from mesh 'logo_cube': 36 indices
+✅ Entity 6 assigned mesh: logo_cube (36 indices)
+   GPU resources created for mesh
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'physics' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'mass' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '50.0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mass' value='50.0' entity=6 in_components=1
+   🔍 SCALAR: 'drag_linear' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.1' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_linear' value='0.1' entity=6 in_components=1
+   🔍 SCALAR: 'drag_angular' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.2' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_angular' value='0.2' entity=6 in_components=1
+   🔍 SCALAR: 'has_6dof' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='has_6dof' value='true' entity=6 in_components=1
+   🔍 DEBUG: Mapping end at depth 2 for entity 6
+   🔍 DEBUG: Exiting components section
+   🔍 DEBUG: Mapping end at depth 1 for entity 6
+   🔍 DEBUG: Mapping end at depth 0 for entity 6
+   🔍 DEBUG: End of entity 6 definition
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'obstacle' (expecting_value=1, in_array=0)
+📦 Created entity 7 of type: obstacle
+   Initialized renderable component (awaiting mesh)
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '-15' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '5' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'rotation' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '1' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'scale' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '2' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'material' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'metal' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='material' value='metal' entity=7 in_components=0
+✅ Entity 7 assigned material: metal
+   🔍 SCALAR: 'mesh' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'logo_cube' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mesh' value='logo_cube' entity=7 in_components=0
+🔍 Attempting to load mesh 'logo_cube' for entity 7
+🔍 DEBUG: Looking for material 'logo_cube' for mesh 'logo_cube'
+🔍 DEBUG: Material 'logo_cube' has diffuse texture: 'logo_cube_texture'
+🔍 DEBUG: Looking for texture 'logo_cube_texture', found: YES
+✅ Assigned texture 'logo_cube_texture' to mesh 'logo_cube'
+✅ Created renderable from mesh 'logo_cube': 36 indices
+✅ Entity 7 assigned mesh: logo_cube (36 indices)
+   GPU resources created for mesh
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'physics' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'mass' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '50.0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='mass' value='50.0' entity=7 in_components=1
+   🔍 SCALAR: 'drag_linear' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.1' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_linear' value='0.1' entity=7 in_components=1
+   🔍 SCALAR: 'drag_angular' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.2' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='drag_angular' value='0.2' entity=7 in_components=1
+   🔍 SCALAR: 'has_6dof' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'true' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='has_6dof' value='true' entity=7 in_components=1
+   🔍 DEBUG: Mapping end at depth 2 for entity 7
+   🔍 DEBUG: Exiting components section
+   🔍 DEBUG: Mapping end at depth 1 for entity 7
+   🔍 DEBUG: Mapping end at depth 0 for entity 7
+   🔍 DEBUG: End of entity 7 definition
+   🔍 New entity mapping started
+   🔍 SCALAR: 'type' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'chase_camera' (expecting_value=1, in_array=0)
+📦 Created entity 8 of type: chase_camera
+   Initialized renderable component (awaiting mesh)
+   🔍 SCALAR: 'position' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '15' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '-25' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'components' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'camera' (expecting_value=0, in_array=0)
+   🔍 New entity mapping started
+   🔍 SCALAR: 'follow_target' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'player_ship' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='follow_target' value='player_ship' entity=8 in_components=1
+   🔍 SCALAR: 'follow_distance' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '30.0' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='follow_distance' value='30.0' entity=8 in_components=1
+   🔍 SCALAR: 'follow_offset' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '10' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '-20' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'follow_smoothing' (expecting_value=0, in_array=1)
+   🔍 SCALAR: '12.0' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'behavior' (expecting_value=0, in_array=1)
+   🔍 SCALAR: 'third_person' (expecting_value=0, in_array=1)
+   🔍 DEBUG: Exiting components section
+   🔍 SCALAR: 'lighting' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'ambient' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'color' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.10' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.15' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.10' value='0.15' entity=0 in_components=0
+   🔍 SCALAR: '0.20' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'intensity' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.20' value='intensity' entity=0 in_components=0
+   🔍 SCALAR: '0.30' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'directional' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.30' value='directional' entity=0 in_components=0
+   🔍 SCALAR: 'direction' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.30' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '-0.70' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.30' value='-0.70' entity=0 in_components=0
+   🔍 SCALAR: '0.20' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'color' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.20' value='color' entity=0 in_components=0
+   🔍 SCALAR: '0.40' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0.50' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.40' value='0.50' entity=0 in_components=0
+   🔍 SCALAR: '0.60' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'intensity' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.60' value='intensity' entity=0 in_components=0
+   🔍 SCALAR: '0.40' (expecting_value=0, in_array=0)
+   🔍 SCALAR: 'environment' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0.40' value='environment' entity=0 in_components=0
+   🔍 SCALAR: 'gravity' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '0' (expecting_value=0, in_array=0)
+   🔍 SCALAR: '-9.81' (expecting_value=1, in_array=0)
+🔍 DEBUG process_yaml_value: key='0' value='-9.81' entity=0 in_components=0
+   🔍 SCALAR: '0' (expecting_value=0, in_array=0)
+✅ Loaded YAML scene from thruster_test.yaml
+✅ Loaded scene from YAML: thruster_test.yaml
+🎯 Player found: Entity ID 1
+💡 Set ambient light: color(0.10,0.15,0.20) intensity=0.30
+💡 Added directional light: dir(0.30,-0.70,0.20) color(0.40,0.50,0.60) intensity=0.40
+💡 Scene lighting configured
+🌍 Scene loaded with 8 entities
+🎬 Scene state manager initialized - starting in LOGO state
+🎨 Registered scene UI module: navigation_menu
+🎨 Registered scene UI module: debug
+🎨 Registered scene UI module: logo
+🎨 Scene UI system initialized with 3 modules
+🎮 UI: Adaptive controls initialized (mode: Keyboard)
+✅ HUD system initialized with 11 components
+🎯 Default camera mode: CHASE_NEAR
+✅ Core UI system initialized
+🎥 Initializing camera system...
+🎥 Camera Entity 8: Using transform position (0.0, 15.0, -25.0)
+🎥 Initialized camera Entity 8: pos:(0.0,15.0,-25.0) target:(0.0,0.0,0.0) fov:60.0
+📹 Activated camera Entity 8: pos:(0.0,15.0,-25.0) behavior:0
+🎥 Camera system initialized
+
+📹 Available cameras:
+   1: Entity 8 (Third Person) pos:(0.0,15.0,-25.0) target:(0.0,0.0,0.0) fov:60.0
+   🎯 Active camera: Entity 8
+
+🎬 Executing scene script enter: thruster_test
+🚀 Initializing Thruster Test Scene - Gyroscopic Control Prototype
+🎯 Test ship found: Entity ID 1
+⚠️ Ship 1 missing required components for configuration
+   Mass: 10.0 kg (light RC model)
+   Linear Drag: 0.020
+   Angular Drag: 0.30
+   Max Thrust: [100, 100, 100] N
+   Max Torque: [50, 50, 50] N⋅m
+   Response Time: 0.100s
+🎮 Initializing gamepad system with hidapi...
+🎮 Connected gamepad 0: Xbox Wireless Controller (VID:0x045E PID:0x0B13)
+🎮 Found 1 gamepad(s)
+✅ Gamepad system initialized successfully
+🎮 Canyon Racing Input: Gamepad system ready
+✅ Canyon Racing Input system initialized
+🎮 Canyon Racing Control: Player entity set to 1
+📷 Camera configured to follow ship with offset
+
+📋 THRUSTER TEST CONTROLS:
+   F1 - Toggle thrust vector display
+   F2 - Toggle physics debug info
+   F3 - Toggle thruster group display
+   F5 - Reset ship position
+
+🎮 GYROSCOPIC STABILIZATION:
+   - Ship automatically counters rotation when stick released
+   - RCS thrusters fire to stop spin
+   - Realistic momentum and inertia
+✅ Engine initialized successfully!
+
+🎮 Starting simulation...
+Press ESC to exit, C to cycle cameras, W for wireframe
+🎮 gamepad_poll() called #1
+🎮 POLL #1: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+🔍 Total entities in world: 8
+🔍 Entity 1: components=0x133 (R:1 T:1)
+🔍 Entity 2: components=0x13 (R:1 T:1)
+🔍 Entity 3: components=0x13 (R:1 T:1)
+🔍 Entity 4: components=0x13 (R:1 T:1)
+🔍 Entity 5: components=0x13 (R:1 T:1)
+🔍 Entity 6: components=0x13 (R:1 T:1)
+🔍 Entity 7: components=0x13 (R:1 T:1)
+🔍 Entity 8: components=0x51 (R:1 T:1)
+🔍 Processing Entity 1: components=0x133 (R:1 T:1)
+🎯 Entity 1 transform: pos:(0.00,10.00,0.00) scale:(5.00,5.00,5.00)
+🎯 Entity 1 model matrix:
+   [5.00 0.00 0.00 0.00]
+   [0.00 5.00 0.00 0.00]
+   [0.00 0.00 5.00 0.00]
+   [0.00 10.00 0.00 1.00]
+🎯 Entity 1 MVP matrix:
+   [-4.87 0.00 0.00 0.00]
+   [0.00 8.49 -0.98 -0.98]
+   [0.00 1.70 4.90 4.90]
+   [0.00 0.00 25.30 25.50]
+🔍 Processing Entity 2: components=0x13 (R:1 T:1)
+🔍 Processing Entity 3: components=0x13 (R:1 T:1)
+🔍 Processing Entity 4: components=0x13 (R:1 T:1)
+🔍 Processing Entity 5: components=0x13 (R:1 T:1)
+🔍 Processing Entity 6: components=0x13 (R:1 T:1)
+🔍 Processing Entity 7: components=0x13 (R:1 T:1)
+🔍 Processing Entity 8: components=0x51 (R:1 T:1)
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎨 Sokol ECS rendering active: pipeline_state=2, renderable_entities=8
+🎮 gamepad_poll() called #2
+🎮 POLL #2: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+✅ LOD system initialized - distances: H:20.0 M:50.0 L:100.0 C:200.0
+🔍 Processing Entity 1: components=0x133 (R:1 T:1)
+🎯 Entity 1 transform: pos:(0.00,10.00,0.00) scale:(5.00,5.00,5.00)
+🎯 Entity 1 model matrix:
+   [5.00 0.00 0.00 0.00]
+   [0.00 5.00 0.00 0.00]
+   [0.00 0.00 5.00 0.00]
+   [0.00 10.00 0.00 1.00]
+🎯 Entity 1 MVP matrix:
+   [-4.87 0.00 0.00 0.00]
+   [0.00 8.49 -0.98 -0.98]
+   [0.00 1.70 4.90 4.90]
+   [0.00 0.00 25.30 25.50]
+🔍 Processing Entity 2: components=0x13 (R:1 T:1)
+🔍 Processing Entity 3: components=0x13 (R:1 T:1)
+🔍 Processing Entity 4: components=0x13 (R:1 T:1)
+🔍 Processing Entity 5: components=0x13 (R:1 T:1)
+🔍 Processing Entity 6: components=0x13 (R:1 T:1)
+🔍 Processing Entity 7: components=0x13 (R:1 T:1)
+🔍 Processing Entity 8: components=0x51 (R:1 T:1)
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎮 gamepad_poll() called #3
+🎮 POLL #3: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎮 gamepad_poll() called #4
+🎮 POLL #4: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎮 gamepad_poll() called #5
+🎮 POLL #5: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎮 POLL #6: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎮 POLL #7: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎮 POLL #8: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle or not sending data
+❌ Entity 8: Invalid vertex buffer (ID: 0)
+❌ Entity 8: Invalid index buffer (ID: 0)
+❌ Entity 8: Zero index count
+🎮 POLL #9: gamepad[0] bytes_read=0 connected=YES
+🎮 Zero-byte read - controller may be idle 

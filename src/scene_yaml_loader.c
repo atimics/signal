@@ -29,6 +29,7 @@ typedef struct {
     Vector3 temp_vec3;
     Quaternion temp_quat;
     bool expecting_value;
+    int entity_mapping_depth;  // Track nesting level within entity
 } YAMLParseState;
 
 // Helper to parse float from scalar
@@ -219,6 +220,7 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
     state.assets = assets;
     state.current_entity = INVALID_ENTITY;
     state.expecting_value = false;
+    state.entity_mapping_depth = 0;
     
     bool done = false;
     bool success = true;
@@ -245,7 +247,13 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                 // If we're in the entities sequence, this starts a new entity
                 if (state.in_entities && state.current_entity == INVALID_ENTITY) {
                     // Don't create entity yet - wait for type
-                } else if (strcmp(state.current_key, "components") == 0) {
+                    state.entity_mapping_depth = 1;  // Top level of entity mapping
+                } else if (state.in_entities && state.current_entity != INVALID_ENTITY) {
+                    // Nested mapping within entity
+                    state.entity_mapping_depth++;
+                }
+                
+                if (strcmp(state.current_key, "components") == 0) {
                     state.in_components = true;
                 } else if (state.in_components && strcmp(state.current_key, "physics") == 0) {
                     state.in_physics = true;
@@ -282,15 +290,24 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                     state.in_components = false;
                     printf("   🔍 DEBUG: Exiting components section\n");
                 }
-                else if (state.in_entities && state.current_entity != INVALID_ENTITY) {
-                    // End of an entity definition in the entities sequence
-                    printf("   🔍 DEBUG: End of entity %d definition\n", state.current_entity);
-                    state.current_entity = INVALID_ENTITY;
+                
+                // Handle entity mapping end based on nesting depth
+                if (state.in_entities && state.current_entity != INVALID_ENTITY) {
+                    state.entity_mapping_depth--;
+                    printf("   🔍 DEBUG: Mapping end at depth %d for entity %d\n", 
+                           state.entity_mapping_depth, state.current_entity);
+                    
+                    if (state.entity_mapping_depth == 0) {
+                        // Only reset entity when we exit the top-level entity mapping
+                        printf("   🔍 DEBUG: End of entity %d definition\n", state.current_entity);
+                        state.current_entity = INVALID_ENTITY;
+                    }
                 }
                 break;
                 
             case YAML_SEQUENCE_START_EVENT:
                 state.array_index = 0;
+                state.expecting_value = false;  // Reset when starting a sequence
                 if (strcmp(state.current_key, "entities") == 0) {
                     state.in_entities = true;
                     printf("📋 Loading entities...\n");
@@ -330,6 +347,8 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                 
             case YAML_SCALAR_EVENT: {
                 char* value = (char*)event.data.scalar.value;
+                printf("   🔍 SCALAR: '%s' (expecting_value=%d, in_array=%d)\n", 
+                       value, state.expecting_value, state.in_array);
                 
                 // If we're in an array, all scalars are values
                 if (state.in_array) {
