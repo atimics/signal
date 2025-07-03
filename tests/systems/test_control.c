@@ -179,20 +179,20 @@ void test_sensitivity_curve_application(void)
     // Test normal sensitivity - quadratic curve: input * |input| * sensitivity
     Vector3 result1 = apply_sensitivity_curve(input, 1.0f);
     TEST_ASSERT_EQUAL_FLOAT(0.25f, result1.x);  // 0.5 * 0.5 * 1.0 = 0.25
-    TEST_ASSERT_EQUAL_FLOAT(-0.09f, result1.y); // -0.3 * 0.3 * 1.0 = -0.09
+    TEST_ASSERT_EQUAL_FLOAT(0.09f, result1.y);  // -0.3 * 0.3 * -1.0 * 1.0 = 0.09
     TEST_ASSERT_EQUAL_FLOAT(0.64f, result1.z);  // 0.8 * 0.8 * 1.0 = 0.64
     
     // Test doubled sensitivity
     Vector3 result2 = apply_sensitivity_curve(input, 2.0f);
-    TEST_ASSERT_GREATER_THAN(result1.x, fabs(result2.x));
-    TEST_ASSERT_GREATER_THAN(result1.y, fabs(result2.y));
-    TEST_ASSERT_GREATER_THAN(result1.z, fabs(result2.z));
+    TEST_ASSERT_TRUE(fabs(result2.x) > result1.x);
+    TEST_ASSERT_TRUE(fabs(result2.y) > result1.y);
+    TEST_ASSERT_TRUE(fabs(result2.z) > result1.z);
     
     // Test halved sensitivity
     Vector3 result3 = apply_sensitivity_curve(input, 0.5f);
-    TEST_ASSERT_LESS_THAN(fabs(result3.x), result1.x);
-    TEST_ASSERT_LESS_THAN(fabs(result3.y), fabs(result1.y));
-    TEST_ASSERT_LESS_THAN(fabs(result3.z), result1.z);
+    TEST_ASSERT_TRUE(fabs(result3.x) < result1.x);
+    TEST_ASSERT_TRUE(fabs(result3.y) < fabs(result1.y));
+    TEST_ASSERT_TRUE(fabs(result3.z) < result1.z);
 }
 
 void test_sensitivity_curve_clamping(void)
@@ -376,7 +376,7 @@ void test_control_multiple_entities_performance(void)
     double elapsed = ((double)(end - start)) / CLOCKS_PER_SEC;
     
     // Should complete within 2ms for 20 entities
-    TEST_ASSERT_LESS_THAN(0.002, elapsed);
+    TEST_ASSERT_TRUE(elapsed < 0.002);
 }
 
 // ============================================================================

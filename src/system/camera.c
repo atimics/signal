@@ -291,3 +291,77 @@ static void update_legacy_render_config(RenderConfig* render_config, struct Came
     render_config->camera.far_plane = camera->far_plane;
     render_config->camera.aspect_ratio = camera->aspect_ratio;
 }
+
+bool camera_system_handle_input(struct World* world, RenderConfig* render_config, const sapp_event* ev)
+{
+    if (!world || !ev) return false;
+    
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN)
+    {
+        // Camera switching with number keys
+        if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
+        {
+            int camera_index = ev->key_code - SAPP_KEYCODE_1;  // 0-8
+            
+            if (switch_to_camera(world, camera_index))
+            {
+                printf("📹 Switched to camera %d\n", camera_index + 1);
+                
+                // Update aspect ratio for the new camera
+                if (render_config)
+                {
+                    float aspect_ratio = (float)render_config->screen_width / 
+                                       (float)render_config->screen_height;
+                    update_camera_aspect_ratio(world, aspect_ratio);
+                }
+                return true; // Handled
+            }
+            else
+            {
+                printf("📹 Camera %d not found\n", camera_index + 1);
+                return false; // Not handled - no such camera
+            }
+        }
+        // Camera cycling with C key
+        else if (ev->key_code == SAPP_KEYCODE_C)
+        {
+            if (cycle_to_next_camera(world))
+            {
+                // Get info about the new active camera
+                EntityID active_camera = world_get_active_camera(world);
+                struct Camera* camera = entity_get_camera(world, active_camera);
+                
+                const char* camera_type = "Unknown";
+                if (camera)
+                {
+                    switch (camera->behavior)
+                    {
+                        case CAMERA_BEHAVIOR_FIRST_PERSON: camera_type = "Cockpit"; break;
+                        case CAMERA_BEHAVIOR_THIRD_PERSON: camera_type = "Chase"; break;
+                        case CAMERA_BEHAVIOR_STATIC: camera_type = "Static/Overhead"; break;
+                        case CAMERA_BEHAVIOR_ORBITAL: camera_type = "Orbital"; break;
+                        default: camera_type = "Unknown"; break;
+                    }
+                }
+                
+                printf("📹 Cycled to %s camera (Entity %d)\n", camera_type, active_camera);
+                
+                // Update aspect ratio for the new camera
+                if (render_config)
+                {
+                    float aspect_ratio = (float)render_config->screen_width / 
+                                       (float)render_config->screen_height;
+                    update_camera_aspect_ratio(world, aspect_ratio);
+                }
+                return true; // Handled
+            }
+            else
+            {
+                printf("📹 No cameras available to cycle through\n");
+                return false;
+            }
+        }
+    }
+    
+    return false; // Not handled
+}

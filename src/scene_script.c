@@ -5,6 +5,8 @@
 
 #include "scene_script.h"
 #include "sokol_app.h"
+#include "system/camera.h"
+#include "render.h"
 #include <stdio.h>
 #include <string.h>
 

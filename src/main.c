@@ -413,7 +413,7 @@ static void event(const sapp_event* ev)
         return;  // UI captured this event
     }
 
-    // Handle scene-specific input events
+    // Handle scene-specific input events first
     if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
     {
         return;  // Scene script handled this event
@@ -423,6 +423,8 @@ static void event(const sapp_event* ev)
     switch (ev->type)
     {
         case SAPP_EVENTTYPE_KEY_DOWN:
+            
+            // Handle other keys
             if (ev->key_code == SAPP_KEYCODE_ESCAPE)
             {
                 // Only exit the application if we're in the navigation menu and ESC wasn't handled
@@ -450,60 +452,6 @@ static void event(const sapp_event* ev)
                 ui_set_debug_visible(!current_visible);  // Synchronize with UI system
                 ui_toggle_hud();  // Also toggle the HUD
                 printf("🔧 Debug UI & HUD: %s\n", !current_visible ? "ON" : "OFF");
-            }
-            // Camera switching with number keys (legacy support)
-            else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
-            {
-                int camera_index = ev->key_code - SAPP_KEYCODE_1;  // 0-8
-
-                // Use the new switch_to_camera function
-                if (switch_to_camera(&app_state.world, camera_index))
-                {
-                    printf("📹 Switched to camera %d\n", camera_index + 1);
-
-                    // Update aspect ratio for the new camera
-                    float aspect_ratio = (float)app_state.render_config.screen_width /
-                                         (float)app_state.render_config.screen_height;
-                    update_camera_aspect_ratio(&app_state.world, aspect_ratio);
-                }
-                else
-                {
-                    printf("📹 Camera %d not found\n", camera_index + 1);
-                }
-            }
-            // Camera cycling with C key
-            else if (ev->key_code == SAPP_KEYCODE_C)
-            {
-                if (cycle_to_next_camera(&app_state.world))
-                {
-                    // Get info about the new active camera
-                    EntityID active_camera = world_get_active_camera(&app_state.world);
-                    struct Camera* camera = entity_get_camera(&app_state.world, active_camera);
-                    
-                    const char* camera_type = "Unknown";
-                    if (camera)
-                    {
-                        switch (camera->behavior)
-                        {
-                            case CAMERA_BEHAVIOR_FIRST_PERSON: camera_type = "Cockpit"; break;
-                            case CAMERA_BEHAVIOR_THIRD_PERSON: camera_type = "Chase"; break;
-                            case CAMERA_BEHAVIOR_STATIC: camera_type = "Static/Overhead"; break;
-                            case CAMERA_BEHAVIOR_ORBITAL: camera_type = "Orbital"; break;
-                            default: camera_type = "Unknown"; break;
-                        }
-                    }
-                    
-                    printf("📹 Cycled to %s camera (Entity %d)\n", camera_type, active_camera);
-
-                    // Update aspect ratio for the new camera
-                    float aspect_ratio = (float)app_state.render_config.screen_width /
-                                         (float)app_state.render_config.screen_height;
-                    update_camera_aspect_ratio(&app_state.world, aspect_ratio);
-                }
-                else
-                {
-                    printf("📹 No cameras available to cycle through\n");
-                }
             }
             // Toggle wireframe mode with W key
             else if (ev->key_code == SAPP_KEYCODE_W)
@@ -534,6 +482,11 @@ static void event(const sapp_event* ev)
             break;
             
         case SAPP_EVENTTYPE_KEY_UP:
+            // Try scene script first for key up events
+            if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
+            {
+                return;  // Scene script handled this event
+            }
             // Forward key up events to input system
             input_handle_keyboard(ev->key_code, false);
             break;
