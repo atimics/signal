@@ -43,6 +43,9 @@ static bool parse_bool(const char* str) {
 
 // Process a key-value pair in the current context
 static void process_yaml_value(YAMLParseState* state, const char* value) {
+    printf("🔍 DEBUG process_yaml_value: key='%s' value='%s' entity=%d in_components=%d\n", 
+           state->current_key, value, state->current_entity, state->in_components);
+    
     if (!state->current_entity || state->current_entity == INVALID_ENTITY) {
         // Handle global settings
         if (strcmp(state->current_key, "name") == 0) {
@@ -275,9 +278,13 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                 if (state.in_physics) state.in_physics = false;
                 else if (state.in_collision) state.in_collision = false;
                 else if (state.in_camera) state.in_camera = false;
-                else if (state.in_components) state.in_components = false;
+                else if (state.in_components) {
+                    state.in_components = false;
+                    printf("   🔍 DEBUG: Exiting components section\n");
+                }
                 else if (state.in_entities && state.current_entity != INVALID_ENTITY) {
                     // End of an entity definition in the entities sequence
+                    printf("   🔍 DEBUG: End of entity %d definition\n", state.current_entity);
                     state.current_entity = INVALID_ENTITY;
                 }
                 break;
@@ -356,7 +363,8 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                                 renderable->gpu_resources = gpu_resources_create();
                                 renderable->visible = true;
                                 renderable->material_id = 0; // Default material
-                                printf("   Initialized renderable component\n");
+                                renderable->index_count = 0; // Will be set when mesh loads
+                                printf("   Initialized renderable component (awaiting mesh)\n");
                             }
                             
                             // Add player component for player ships
