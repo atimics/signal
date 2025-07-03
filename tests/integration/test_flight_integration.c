@@ -224,7 +224,9 @@ void test_thrust_to_movement_pipeline(void)
                physics->acceleration.x, physics->acceleration.y, physics->acceleration.z);
     }
     
-    TEST_ASSERT_GREATER_THAN(0.0f, physics->velocity.x);
+    // Debug just before assertion
+    printf("DEBUG: Just before assertion - physics->velocity.x = %f\n", physics->velocity.x);
+    TEST_ASSERT_TRUE(physics->velocity.x > 0.0f);
     
     // Run multiple physics frames to accumulate position change
     for (int i = 0; i < 50; i++) {  // Increased from 10 to 50 frames
@@ -327,7 +329,8 @@ void test_complete_flight_simulation(void)
     // Should have moved forward (check with realistic threshold)
     printf("DEBUG: Complete flight simulation final position: [%.6f, %.6f, %.6f]\n", 
            transform->position.x, transform->position.y, transform->position.z);
-    TEST_ASSERT_GREATER_THAN(0.001f, transform->position.x);
+    printf("DEBUG: Just before position assertion - transform->position.x = %f\n", transform->position.x);
+    TEST_ASSERT_TRUE(transform->position.x > 0.001f);
 }
 
 void test_multiple_entities_different_capabilities(void)
@@ -365,9 +368,9 @@ void test_multiple_entities_different_capabilities(void)
     // All entities should have moved (with realistic thresholds)
     printf("DEBUG: Multiple entities positions - Ship:[%.6f] Debris:[%.6f] Missile:[%.6f]\n",
            ship_transform->position.x, debris_transform->position.x, missile_transform->position.x);
-    TEST_ASSERT_GREATER_THAN(0.001f, ship_transform->position.x);
-    TEST_ASSERT_GREATER_THAN(10.001f, debris_transform->position.x);
-    TEST_ASSERT_GREATER_THAN(20.001f, missile_transform->position.x);
+    TEST_ASSERT_TRUE(ship_transform->position.x > 0.001f);
+    TEST_ASSERT_TRUE(debris_transform->position.x > 10.001f);
+    TEST_ASSERT_TRUE(missile_transform->position.x > 20.001f);
 }
 
 // ============================================================================
@@ -401,7 +404,7 @@ void test_stability_assist_integration(void)
            assisted_input.x, assisted_input.y, assisted_input.z);
     
     // Should apply counter-rotation
-    TEST_ASSERT_LESS_THAN(0.0f, assisted_input.x);
+    TEST_ASSERT_TRUE(assisted_input.x < 0.0f);
 }
 
 void test_control_sensitivity_integration(void)
@@ -424,7 +427,7 @@ void test_control_sensitivity_integration(void)
            input.x, low_sens.x, high_sens.x);
     
     // Higher sensitivity should produce larger response
-    TEST_ASSERT_GREATER_THAN(low_sens.x, high_sens.x);
+    TEST_ASSERT_TRUE(high_sens.x > low_sens.x);
 }
 
 // ============================================================================

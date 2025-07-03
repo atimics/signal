@@ -1,9 +1,10 @@
-#include "scene_script.h"
+#include "../scene_script.h"
+#include "../core.h"
 #include "../system/input.h"
 #include "../system/control.h"
-#include "../component/physics.h"
-#include "../component/thruster_system.h"
+#include "../system/thrusters.h"
 #include "../hud_system.h"
+#include "../sokol_app.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -46,30 +47,42 @@ void thruster_test_enter(struct World* world, SceneStateManager* state) {
     struct ControlAuthority* control = entity_get_control_authority(world, test_ship_id);
     
     if (physics && thrusters && control) {
-        // Configure for gyroscopic stabilization testing
-        physics->drag_angular = 0.5f;  // Low angular drag for realistic space physics
+        // Configure for RC rocket ship feel
+        physics->mass = 10.0f;  // Light weight like RC model (10kg)
+        physics->drag_linear = 0.02f;  // Very low drag - rockets are aerodynamic
+        physics->drag_angular = 0.3f;  // Some rotational damping but still floaty
         physics->has_6dof = true;
         
-        // Configure thruster system for RCS
+        // Set moment of inertia for rocket shape (tall cylinder)
+        physics->moment_of_inertia = (Vector3){0.5f, 0.3f, 0.5f};  // Less yaw inertia
+        
+        // Configure thruster system for RC rocket
         thrusters->ship_type = SHIP_TYPE_FIGHTER;
-        thrusters->max_linear_force = (Vector3){5000, 5000, 15000};  // Strong main engines
-        thrusters->max_angular_torque = (Vector3){1000, 1000, 800};  // RCS torque
-        thrusters->thrust_response_time = 0.1f;  // Quick response
+        thrusters->max_linear_force = (Vector3){300, 300, 800};  // Strong vertical thrust
+        thrusters->max_angular_torque = (Vector3){50, 80, 50};  // Quick RCS
+        thrusters->thrust_response_time = 0.05f;  // Near instant like RC
         thrusters->vacuum_efficiency = 1.0f;
         thrusters->thrusters_enabled = true;
         
-        // Control settings
-        control->control_sensitivity = 1.5f;
+        // Control settings for RC feel
+        control->control_sensitivity = 2.0f;  // Very responsive
         control->stability_assist = 0.0f;  // Let gyroscopic system handle stability
         control->flight_assist_enabled = false;  // Pure manual control
         control->control_mode = CONTROL_MANUAL;
         
-        printf("✅ Ship configured for gyroscopic control testing\n");
+        printf("✅ Ship configured for RC rocket testing\n");
+        printf("   Mass: %.1f kg (light RC model)\n", physics->mass);
+        printf("   Linear Drag: %.3f\n", physics->drag_linear);
         printf("   Angular Drag: %.2f\n", physics->drag_angular);
+        printf("   Max Thrust: [%.0f, %.0f, %.0f] N\n",
+               thrusters->max_linear_force.x,
+               thrusters->max_linear_force.y,
+               thrusters->max_linear_force.z);
         printf("   Max Torque: [%.0f, %.0f, %.0f] N⋅m\n", 
                thrusters->max_angular_torque.x,
                thrusters->max_angular_torque.y, 
                thrusters->max_angular_torque.z);
+        printf("   Response Time: %.3fs\n", thrusters->thrust_response_time);
     }
     
     // Initialize input system
@@ -78,6 +91,20 @@ void thruster_test_enter(struct World* world, SceneStateManager* state) {
     
     // Set HUD to chase near mode for testing
     hud_system_set_camera_mode(HUD_CAMERA_MODE_CHASE_NEAR);
+    
+    // Configure the chase camera to follow the player ship
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        if (entity->component_mask & COMPONENT_CAMERA) {
+            struct Camera* camera = entity_get_camera(world, entity->id);
+            if (camera) {
+                camera->follow_entity_id = test_ship_id;
+                camera->behavior = CAMERA_THIRD_PERSON;
+                camera->offset = (Vector3){0, 15, -30};  // Behind and above
+                printf("📷 Camera configured to follow ship with offset\n");
+            }
+        }
+    }
     
     thruster_test_initialized = true;
     test_time = 0.0f;
@@ -144,10 +171,12 @@ void thruster_test_update(struct World* world, SceneStateManager* state, float d
     }
 }
 
-bool thruster_test_handle_event(struct World* world, SceneStateManager* state, const sapp_event* ev) {
+bool thruster_test_handle_event(struct World* world, SceneStateManager* state, const void* event) {
     (void)state;
     
     if (!thruster_test_initialized) return false;
+    
+    const sapp_event* ev = (const sapp_event*)event;
     
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
         switch (ev->key_code) {
@@ -166,7 +195,7 @@ bool thruster_test_handle_event(struct World* world, SceneStateManager* state, c
                 printf("🔥 Thruster groups: %s\n", show_thruster_groups ? "ON" : "OFF");
                 return true;
                 
-            case SAPP_KEYCODE_F5:
+            case SAPP_KEYCODE_F5: {
                 // Reset ship position
                 struct Transform* transform = entity_get_transform(world, test_ship_id);
                 struct Physics* physics = entity_get_physics(world, test_ship_id);
@@ -178,6 +207,7 @@ bool thruster_test_handle_event(struct World* world, SceneStateManager* state, c
                     printf("🔄 Ship position reset\n");
                 }
                 return true;
+            }
                 
             default:
                 break;

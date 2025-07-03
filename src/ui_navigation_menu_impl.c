@@ -51,10 +51,13 @@ static void navigation_menu_init(struct World* world) {
     data->destinations[3] = "🌟 System Overview";
     data->descriptions[3] = "View the star system map";
     
-    data->destinations[4] = "🎬 Scene Selector";
-    data->descriptions[4] = "Debug: Select any scene directly";
+    data->destinations[4] = "🚀 Thruster Test";
+    data->descriptions[4] = "Test gyroscopic stabilization system";
     
-    data->destination_count = 5;
+    data->destinations[5] = "🎬 Scene Selector";
+    data->descriptions[5] = "Debug: Select any scene directly";
+    
+    data->destination_count = 6;
     data->selected_index = 0;
     
     // Set up control hints
@@ -149,6 +152,7 @@ static bool navigation_menu_handle_event(const void* event, struct World* world)
                         "racing_canyon",
                         "derelict_alpha",
                         "system_overview",
+                        "thruster_test",
                         "scene_selector"
                     };
                     
@@ -180,6 +184,7 @@ static bool navigation_menu_handle_event(const void* event, struct World* world)
             "racing_canyon",
             "derelict_alpha",
             "system_overview",
+            "thruster_test",
             "scene_selector"
         };
         

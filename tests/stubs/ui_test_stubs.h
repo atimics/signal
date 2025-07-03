@@ -49,13 +49,15 @@ void nk_layout_row_dynamic(struct nk_context* ctx, float height, int cols);
 bool nk_button_label(struct nk_context* ctx, const char* title);
 void nk_label(struct nk_context* ctx, const char* str, int flags);
 void nk_labelf(struct nk_context* ctx, int flags, const char* fmt, ...);
-bool nk_checkbox_label(struct nk_context* ctx, const char* label, bool* active);
+bool nk_checkbox_label(struct nk_context* ctx, const char* label, int* active);
 bool nk_group_begin(struct nk_context* ctx, const char* title, uint32_t flags);
 void nk_group_end(struct nk_context* ctx);
-bool nk_selectable_label(struct nk_context* ctx, const char* str, int flags, bool* value);
+bool nk_selectable_label(struct nk_context* ctx, const char* str, int flags, int* value);
 void nk_spacing(struct nk_context* ctx, int cols);
 int nk_strlen(const char* str);
 bool nk_tree_push_hashed(struct nk_context* ctx, int type, const char* title, int state, const char* hash, int len, int line);
+bool nk_tree_push(struct nk_context* ctx, int type, const char* title, int state);
+bool nk_tree_push_id(struct nk_context* ctx, int type, const char* title, int state, int id);
 void nk_tree_pop(struct nk_context* ctx);
 
 // Mock color type

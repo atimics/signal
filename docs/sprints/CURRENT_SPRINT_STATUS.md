@@ -26,6 +26,24 @@
 - **Blocker:** Input system enum conflicts and LookTarget integration issues
 - **Impact:** Phase 2 neural network implementation cannot proceed until input system stabilizes
 
+### 🔬 New Research Initiative: ODE Physics Integration
+- **Status:** Research Phase - Analysis Complete
+- **Document:** `docs/backlog/RESEARCH_ODE_INTEGRATION.md`
+- **Priority:** High - Addresses fundamental physics system limitations
+- **Timeline:** 7-week implementation plan with test-driven approach
+- **Goal:** Replace custom physics with production-tested ODE library while maintaining C99 purity
+
+**Key Benefits:**
+- Resolves Sprint 21 velocity integration inconsistencies
+- Adds robust collision detection and joint systems
+- Maintains deterministic behavior for networking
+- Reduces physics system maintenance burden
+
+**Next Actions:**
+1. Set up ODE build environment
+2. Create parallel test suite for migration validation
+3. Implement minimal ECS wrapper layer
+
 ---
 
 ## ✅ Recently Completed: Sprint 21

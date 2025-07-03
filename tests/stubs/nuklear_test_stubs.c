@@ -40,7 +40,7 @@ void nk_labelf(struct nk_context *ctx, int flags, const char *fmt, ...) {
     (void)ctx; (void)flags; (void)fmt;
 }
 
-bool nk_checkbox_label(struct nk_context *ctx, const char *label, bool *active) {
+bool nk_checkbox_label(struct nk_context *ctx, const char *label, int *active) {
     (void)ctx; (void)label; (void)active;
     return false;
 }
@@ -54,7 +54,7 @@ void nk_group_end(struct nk_context *ctx) {
     (void)ctx;
 }
 
-bool nk_selectable_label(struct nk_context *ctx, const char *str, int flags, bool *value) {
+bool nk_selectable_label(struct nk_context *ctx, const char *str, int flags, int *value) {
     (void)ctx; (void)str; (void)flags; (void)value;
     return false;
 }
@@ -76,6 +76,16 @@ bool nk_tree_push_hashed(struct nk_context *ctx, int type, const char *title, in
 
 void nk_tree_pop(struct nk_context *ctx) {
     (void)ctx;
+}
+
+bool nk_tree_push(struct nk_context *ctx, int type, const char *title, int state) {
+    (void)ctx; (void)type; (void)title; (void)state;
+    return true;
+}
+
+bool nk_tree_push_id(struct nk_context *ctx, int type, const char *title, int state, int id) {
+    (void)ctx; (void)type; (void)title; (void)state; (void)id;
+    return true;
 }
 
 struct nk_color nk_rgb(int r, int g, int b) {
