@@ -425,7 +425,11 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
         }
         
         if (ev->key_code == SAPP_KEYCODE_1) {
-            printf("🎮 '1' key detected - attempting to start circuit flight\n");
+            printf("\n🎮 === '1' KEY PRESSED - CIRCUIT FLIGHT DEBUG ===\n");
+            printf("   Player ship ID: %d\n", player_ship_id);
+            printf("   Scripted flight component: %p\n", player_scripted_flight);
+            printf("   Flight active flag: %d\n", scripted_flight_active);
+            
             // Start scripted circuit flight
             if (player_scripted_flight) {
                 printf("   ✓ Scripted flight component exists\n");
@@ -436,9 +440,18 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
                 } else {
                     FlightPath* circuit = scripted_flight_create_circuit_path();
                     if (circuit) {
+                        printf("   📍 Created circuit path with %d waypoints\n", circuit->waypoint_count);
                         scripted_flight_start(player_scripted_flight, circuit);
                         scripted_flight_active = true;
-                        printf("🛩️  Started circuit flight pattern\n");
+                        printf("   ✅ Started circuit flight pattern\n");
+                        printf("   Flight active: %d\n", player_scripted_flight->active);
+                        
+                        // Check control system state
+                        struct ControlAuthority* control = entity_get_control_authority(world, player_ship_id);
+                        if (control) {
+                            printf("   Control: controlled_by=%d, player_entity=%d\n", 
+                                   control->controlled_by, player_ship_id);
+                        }
                     } else {
                         printf("   ❌ Failed to create circuit path\n");
                     }
@@ -446,6 +459,7 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
             } else {
                 printf("   ❌ No scripted flight component available\n");
             }
+            printf("===========================================\n\n");
             return true;
         }
         
