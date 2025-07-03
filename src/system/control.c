@@ -182,9 +182,9 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                        angular_commands.x, angular_commands.y, angular_commands.z);
             }
         } else {
-            // Clear commands for non-player entities
-            thruster_set_linear_command(thrusters, (Vector3){0, 0, 0});
-            thruster_set_angular_command(thrusters, (Vector3){0, 0, 0});
+            // For non-player entities, only clear commands if they're not being
+            // controlled by another system (like scripted flight)
+            // Don't override commands that may have been set by other systems
         }
     }
 }
