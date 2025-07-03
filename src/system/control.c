@@ -132,14 +132,18 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
         if (!control || !thrusters) continue;
 
         // Only process input for player-controlled entities
-        if (control->controlled_by != INVALID_ENTITY && control->controlled_by == g_player_entity) {
+        // Check if this entity is the player (either by ID match or self-controlled player)
+        bool is_player_controlled = (entity->id == g_player_entity) || 
+                                   (control->controlled_by == entity->id && entity->id == g_player_entity);
+        
+        if (is_player_controlled) {
             control_updates++;
             
             // Debug output
             static int entity_debug_counter = 0;
             if (++entity_debug_counter % 60 == 0) {
-                printf("🎮 DEBUG: Control processing entity %d (player=%d)\n", 
-                       entity->id, g_player_entity);
+                printf("🎮 DEBUG: Control processing entity %d (player=%d, controlled_by=%d)\n", 
+                       entity->id, g_player_entity, control->controlled_by);
             }
             
             // Check if we have any actual input to process
@@ -212,17 +216,14 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                 }
             }
         } else {
-            // For non-player entities, clear control commands to ensure only
-            // the designated player entity can receive control input
-            static int clear_counter = 0;
-            if (++clear_counter % 300 == 0 && entity->id < 10) { // Log every 5 seconds for first 10 entities
-                printf("🎮 Clearing thrust for non-player entity %d (controlled_by=%d, player=%d)\n",
+            // For non-player entities, DO NOT clear thrust commands
+            // This allows scripted flight and other systems to control the entity
+            static int non_player_counter = 0;
+            if (++non_player_counter % 300 == 0 && entity->id < 10) { // Log every 5 seconds for first 10 entities
+                printf("🎮 Non-player entity %d (controlled_by=%d, player=%d) - NOT clearing thrust\n",
                        entity->id, control->controlled_by, g_player_entity);
             }
-            thruster_set_linear_command(thrusters, (Vector3){0.0f, 0.0f, 0.0f});
-            thruster_set_angular_command(thrusters, (Vector3){0.0f, 0.0f, 0.0f});
-            control->input_boost = 0.0f;
-            control->input_brake = false;
+            // Remove the clearing of thrust commands - let other systems control the entity
         }
     }
 }
