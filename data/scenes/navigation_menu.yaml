@@ -1,0 +1,29 @@
+# Navigation Menu Scene
+# Simple scene for the main menu/navigation interface
+
+name: navigation_menu
+description: "Main navigation menu"
+
+entities:
+  # Just a simple camera for the menu
+  - type: camera
+    position: [0, 10, -30]
+    components:
+      camera:
+        fov: 45.0
+        behavior: static
+        target: [0, 0, 0]
+
+# Minimal lighting for menu
+lighting:
+  ambient:
+    color: [0.2, 0.2, 0.3]
+    intensity: 0.5
+  
+  directional:
+    - direction: [0.3, -0.7, 0.2]
+      color: [0.8, 0.8, 0.9]
+      intensity: 0.6
+
+environment:
+  gravity: [0, 0, 0]

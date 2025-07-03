@@ -45,27 +45,18 @@ void test_thruster_component_creation(void)
     struct ThrusterSystem* thrusters = entity_get_thruster_system(&test_world, entity);
     TEST_ASSERT_NOT_NULL(thrusters);
     
-    // Debug output to see actual values
-    printf("DEBUG: max_linear_force = [%f, %f, %f]\n", 
-           thrusters->max_linear_force.x, thrusters->max_linear_force.y, thrusters->max_linear_force.z);
-    printf("DEBUG: max_angular_torque = [%f, %f, %f]\n", 
-           thrusters->max_angular_torque.x, thrusters->max_angular_torque.y, thrusters->max_angular_torque.z);
-    printf("DEBUG: atmosphere_efficiency = %f\n", thrusters->atmosphere_efficiency);
-    printf("DEBUG: vacuum_efficiency = %f\n", thrusters->vacuum_efficiency);
-    printf("DEBUG: thrusters_enabled = %s\n", thrusters->thrusters_enabled ? "true" : "false");
-    
     // Check default values
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->max_linear_force.x);
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->max_linear_force.y);
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->max_linear_force.z);
+    TEST_ASSERT_TRUE(thrusters->max_linear_force.x > 0.0f);
+    TEST_ASSERT_TRUE(thrusters->max_linear_force.y > 0.0f);
+    TEST_ASSERT_TRUE(thrusters->max_linear_force.z > 0.0f);
     
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->max_angular_torque.x);
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->max_angular_torque.y);
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->max_angular_torque.z);
+    TEST_ASSERT_TRUE(thrusters->max_angular_torque.x > 0.0f);
+    TEST_ASSERT_TRUE(thrusters->max_angular_torque.y > 0.0f);
+    TEST_ASSERT_TRUE(thrusters->max_angular_torque.z > 0.0f);
     
     TEST_ASSERT_TRUE(thrusters->thrusters_enabled);
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->atmosphere_efficiency);
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->vacuum_efficiency);
+    TEST_ASSERT_TRUE(thrusters->atmosphere_efficiency > 0.0f);
+    TEST_ASSERT_TRUE(thrusters->vacuum_efficiency > 0.0f);
 }
 
 void test_thruster_command_setting(void)
@@ -293,7 +284,7 @@ void test_thruster_response_time_gradual_change(void)
     
     // Thrust should not have reached full value immediately
     TEST_ASSERT_LESS_THAN(1.0f, thrusters->current_linear_thrust.x);
-    TEST_ASSERT_GREATER_THAN(0.0f, thrusters->current_linear_thrust.x);
+    TEST_ASSERT_TRUE(thrusters->current_linear_thrust.x > 0.0f);
 }
 
 void test_thruster_instant_response_when_fast(void)
