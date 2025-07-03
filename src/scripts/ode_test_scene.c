@@ -17,7 +17,6 @@
 
 static bool ode_test_initialized = false;
 static EntityID test_ship_id = INVALID_ENTITY;
-static EntityID obstacle_ids[5] = {INVALID_ENTITY};
 static float test_time = 0.0f;
 
 // ODE Physics System
@@ -59,92 +58,79 @@ void ode_test_enter(struct World* world, SceneStateManager* state) {
     
     if (test_ship_id == INVALID_ENTITY) {
         printf("❌ No player ship found in scene!\n");
-        return;
+        // Don't return - continue setup even without player ship
     }
     
-    // Configure ship
-    control_configure_ship(world, test_ship_id, SHIP_CONFIG_FIGHTER);
-    
-    // Enable ODE physics for the ship
-    struct Physics* physics = entity_get_physics(world, test_ship_id);
-    if (physics) {
-        physics->use_ode = true;
+    // Configure ship if found
+    if (test_ship_id != INVALID_ENTITY) {
+        control_configure_ship(world, test_ship_id, SHIP_CONFIG_FIGHTER);
         
-        // Create ODE body for the ship
-        dBodyID body = ode_create_body(ode_system, world, test_ship_id);
-        if (body) {
-            printf("✅ ODE body created for player ship\n");
+        // Enable ODE physics for the ship
+        struct Physics* physics = entity_get_physics(world, test_ship_id);
+        if (physics) {
+            physics->use_ode = true;
             
-            // Create collision geometry if the ship has collision component
-            if (entity_has_component(world, test_ship_id, COMPONENT_COLLISION)) {
-                dGeomID geom = ode_create_geometry(ode_system, world, test_ship_id);
-                if (geom) {
-                    printf("✅ ODE collision geometry created for player ship\n");
+            // Create ODE body for the ship
+            dBodyID body = ode_create_body(ode_system, world, test_ship_id);
+            if (body) {
+                printf("✅ ODE body created for player ship\n");
+                
+                // Create collision geometry if the ship has collision component
+                if (entity_has_component(world, test_ship_id, COMPONENT_COLLISION)) {
+                    dGeomID geom = ode_create_geometry(ode_system, world, test_ship_id);
+                    if (geom) {
+                        printf("✅ ODE collision geometry created for player ship\n");
+                    }
                 }
             }
         }
     }
     
-    // Create test obstacles with ODE physics
-    printf("🗿 Creating test obstacles with ODE physics...\n");
-    for (int i = 0; i < 5; i++) {
-        EntityID obstacle_id = entity_create(world);
-        if (obstacle_id == INVALID_ENTITY) continue;
+    // Enable ODE physics for all existing entities with physics components
+    printf("🗿 Enabling ODE physics for scene entities...\n");
+    int ode_body_count = 0;
+    
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
         
-        // Add required components
-        entity_add_component(world, obstacle_id, COMPONENT_TRANSFORM);
-        entity_add_component(world, obstacle_id, COMPONENT_PHYSICS);
-        entity_add_component(world, obstacle_id, COMPONENT_COLLISION);
-        entity_add_component(world, obstacle_id, COMPONENT_RENDERABLE);
+        // Skip if no physics component
+        if (!(entity->component_mask & COMPONENT_PHYSICS)) continue;
         
-        // Configure transform
-        struct Transform* transform = entity_get_transform(world, obstacle_id);
-        if (transform) {
-            // Position obstacles in a pattern
-            float angle = (float)i * 2.0f * M_PI / 5.0f;
-            transform->position = (Vector3){
-                cosf(angle) * 20.0f,
-                5.0f + (float)i * 3.0f,
-                sinf(angle) * 20.0f
-            };
-            transform->rotation = (Quaternion){0, 0, 0, 1};
-            transform->scale = (Vector3){2, 2, 2};
+        struct Physics* physics = entity->physics;
+        if (!physics) continue;
+        
+        // Enable ODE physics
+        physics->use_ode = true;
+        physics->has_6dof = true;
+        
+        // Set default mass if not set
+        if (physics->mass <= 0.0f) {
+            physics->mass = 50.0f;  // Default mass
         }
         
-        // Configure physics
-        struct Physics* obs_physics = entity_get_physics(world, obstacle_id);
-        if (obs_physics) {
-            obs_physics->mass = 100.0f;  // Heavy obstacles
-            obs_physics->drag_linear = 0.1f;
-            obs_physics->drag_angular = 0.2f;
-            obs_physics->has_6dof = true;
-            obs_physics->use_ode = true;
+        // Create ODE body
+        dBodyID body = ode_create_body(ode_system, world, entity->id);
+        if (body) {
+            ode_body_count++;
             
-            // Create ODE body
-            dBodyID obs_body = ode_create_body(ode_system, world, obstacle_id);
-            if (obs_body) {
-                printf("   🗿 Obstacle %d: ODE body created at (%.1f, %.1f, %.1f)\n", 
-                       i, transform->position.x, transform->position.y, transform->position.z);
+            struct Transform* transform = entity->transform;
+            if (transform) {
+                printf("   🗿 Entity %u: ODE body created at (%.1f, %.1f, %.1f) with mass %.1f\n", 
+                       entity->id, transform->position.x, transform->position.y, 
+                       transform->position.z, physics->mass);
+            }
+            
+            // Create collision geometry if entity has collision
+            if (entity->component_mask & COMPONENT_COLLISION) {
+                dGeomID geom = ode_create_geometry(ode_system, world, entity->id);
+                if (geom) {
+                    printf("   🗿 Entity %u: ODE collision geometry created\n", entity->id);
+                }
             }
         }
-        
-        // Configure collision
-        struct Collision* collision = entity_get_collision(world, obstacle_id);
-        if (collision) {
-            collision->shape = COLLISION_BOX;
-            collision->box_size = (Vector3){2, 2, 2};
-            collision->is_trigger = false;
-            collision->layer_mask = 0xFFFFFFFF;  // Collides with everything
-            
-            // Create ODE geometry
-            dGeomID obs_geom = ode_create_geometry(ode_system, world, obstacle_id);
-            if (obs_geom) {
-                printf("   🗿 Obstacle %d: ODE collision geometry created\n", i);
-            }
-        }
-        
-        obstacle_ids[i] = obstacle_id;
     }
+    
+    printf("✅ Created %d ODE bodies\n", ode_body_count);
     
     // Initialize input and control systems
     input_init();
@@ -289,27 +275,25 @@ bool ode_test_handle_event(struct World* world, SceneStateManager* state, const 
                     }
                 }
                 
-                // Reset obstacles
-                for (int i = 0; i < 5; i++) {
-                    if (obstacle_ids[i] == INVALID_ENTITY) continue;
+                // Reset all entities with physics
+                for (uint32_t i = 0; i < world->entity_count; i++) {
+                    struct Entity* entity = &world->entities[i];
                     
-                    struct Transform* obs_transform = entity_get_transform(world, obstacle_ids[i]);
-                    struct Physics* obs_physics = entity_get_physics(world, obstacle_ids[i]);
+                    if (!(entity->component_mask & COMPONENT_PHYSICS)) continue;
+                    if (entity->id == test_ship_id) continue;  // Skip player ship
                     
-                    if (obs_transform && obs_physics) {
-                        float angle = (float)i * 2.0f * M_PI / 5.0f;
-                        obs_transform->position = (Vector3){
-                            cosf(angle) * 20.0f,
-                            5.0f + (float)i * 3.0f,
-                            sinf(angle) * 20.0f
-                        };
-                        obs_physics->velocity = (Vector3){0, 0, 0};
-                        obs_physics->angular_velocity = (Vector3){0, 0, 0};
+                    struct Transform* transform = entity_get_transform(world, entity->id);
+                    struct Physics* physics = entity_get_physics(world, entity->id);
+                    
+                    if (transform && physics) {
+                        // Reset velocities
+                        physics->velocity = (Vector3){0, 0, 0};
+                        physics->angular_velocity = (Vector3){0, 0, 0};
                         
                         if (use_ode_physics) {
-                            dBodyID body = ode_get_body(ode_system, obstacle_ids[i]);
+                            dBodyID body = ode_get_body(ode_system, entity->id);
                             if (body) {
-                                ode_sync_to_body(body, obs_physics, obs_transform);
+                                ode_sync_to_body(body, physics, transform);
                             }
                         }
                     }

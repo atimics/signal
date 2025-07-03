@@ -142,15 +142,6 @@ typedef struct {
 } SystemScheduler;
 
 // ============================================================================
-// PHYSICS SYSTEM STUBS
-// ============================================================================
-
-void physics_system_update(struct World* world, float delta_time) {
-    (void)world;
-    (void)delta_time;
-}
-
-// ============================================================================
 // UI PERFORMANCE WIDGET STUBS (only for tests that don't link ui_components)
 // ============================================================================
 

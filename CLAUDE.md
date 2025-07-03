@@ -1,36 +1,25 @@
 # CGame Project Guide for Claude
 
-## 🏎️ UPDATE: Canyon Racing Control System Implemented!
-**New intuitive flight control scheme inspired by racing games**
-- **✅ Simplified Input**: Bypassed complex neural network processing
-- **✅ Look-Based Thrust**: Fly towards where you're looking
-- **✅ Camera Control**: Mouse (right-click) or gamepad right stick
-- **✅ Auto-Leveling**: Left trigger/brake for stability
-- **✅ Direct Controls**: WASD pitch/yaw, Space for thrust
-- **Status**: Fully implemented and ready for canyon racing!
+## � CURRENT SPRINT: Technical Excellence & Foundation Consolidation
+**Sprint 23** - Bulletproof Foundation Development (July 3-17, 2025)
+- **Status**: ACTIVE 🚀 - Ready to start
+- **Goal**: Transform excellent 93% test coverage into bulletproof 100% platform
+- **Scope**: Fix 4 graphics stub tests, establish performance monitoring
+- **Strategic Objective**: Enable accelerated gameplay development
 
-### Canyon Racing Controls
-- **Keyboard**: 
-  - WASD: Pitch/Yaw control
-  - Space: Thrust towards look target
-  - Q/E: Roll
-  - Right Mouse: Camera control (hold)
-  - Mouse Wheel: Zoom
-- **Gamepad**:
-  - Left Stick: Pitch/Yaw
-  - Right Stick: Camera/Look control
-  - Right Trigger: Thrust towards look target
-  - Left Trigger: Brake + Auto-level
-  - Bumpers: Roll
+### Sprint 23 Progress
+- **Week 1**: Technical excellence (graphics stubs, performance monitoring)
+- **Week 2**: Development workflow optimization and Sprint 24 preparation
+- **Foundation**: Already excellent (53/57 tests passing)
+- **Target**: Unshakeable platform for rapid content development
 
-## 🚧 Sprint 22 Phase 1 Complete!
-**Advanced Input Processing System - Statistical Foundation Ready**
-- **Phase 1 Complete**: Calibration system ✅
-- **Phase 1 Complete**: Kalman filtering (73% noise reduction) ✅
-- **Phase 1 Complete**: Neural-ready architecture ✅
-- **Phase 1 Complete**: Training data collection ✅
-- **Phase 2 Blocked**: Input system refactoring required
-- **Overall Status**: 40% complete, statistical filtering operational
+## ✅ Sprint 22 Complete - Strategic Pivot Success!
+**Advanced Input Processing → Gameplay Vertical Slice Focus**
+- **Achievement**: 93% test coverage foundation established
+- **Strategic Decision**: Removed neural network complexity 
+- **Result**: Clear pathway to canyon racing prototype
+- **Value**: Technical excellence without feature debt
+- **Status**: Archived to `docs/sprints/completed/sprint_22/`
 
 ## ✅ Sprint 21 Complete (98%)
 **All major physics and control bugs fixed!**
@@ -41,13 +30,14 @@
 ## Essential Documentation Links
 
 ### Must Read First
-1. **[Sprint Backlog & Status](docs/sprints/README.md)** - Current sprint status and priorities
-2. **[Active Sprint - Sprint 22](docs/sprints/active/SPRINT_22_CONSOLIDATED_GUIDE.md)** - Advanced input processing
-3. **[Sprint 21 Complete](docs/sprints/completed/sprint_21/SPRINT_21_COMPLETION_SUMMARY.md)** - Flight mechanics success
+1. **[Current Sprint Status](docs/sprints/CURRENT_SPRINT_STATUS.md)** - Sprint 23 technical excellence progress
+2. **[Sprint 23 Plan](docs/sprints/active/SPRINT_23_TECHNICAL_EXCELLENCE.md)** - Technical excellence & foundation consolidation
+3. **[Sprint 22 Complete](docs/sprints/completed/sprint_22/SPRINT_22_COMPLETE.md)** - Strategic pivot success
+4. **[Sprint Backlog & History](docs/sprints/README.md)** - All sprint status and priorities
 
 ### Quick Reference
 - **Build**: `make clean && make test && make`
-- **Run Tests**: `make test` (375+ tests)
+- **Run Tests**: `make test` (53/57 tests passing - 93% excellent foundation)
 - **Run Game**: `./build/cgame`
 - **Test Flight**: `./build/cgame --test-flight`
 

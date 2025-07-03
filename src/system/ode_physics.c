@@ -5,8 +5,7 @@
 
 #include "ode_physics.h"
 #include "thrusters.h"
-#include "../component/physics.h"
-#include "../core/math_utils.h"
+#include "../core.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -596,6 +595,8 @@ void ode_set_collision_layers(dGeomID geom, uint32_t category_bits, uint32_t col
     // This is a simplified implementation
     
     // TODO: Implement proper collision filtering
+    (void)category_bits;
+    (void)collide_bits;
 }
 
 // ============================================================================

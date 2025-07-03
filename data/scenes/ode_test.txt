@@ -1,0 +1,82 @@
+# ODE Physics Test Scene
+# Tests ODE (Open Dynamics Engine) physics integration
+
+# Player ship for testing
+spawn player_ship
+  position 0 10 0
+  rotation 0 0 0 1
+  scale 1 1 1
+  material racing_ship
+  mesh wedge_ship_mk2
+  has_physics true
+  has_collision true
+  has_thrusters true
+  has_control_authority true
+
+# Ground plane
+spawn landing_pad
+  position 0 0 0
+  rotation 0 0 0 1
+  scale 10 10 10
+  material metal
+  mesh landing_pad
+
+# Test obstacles - boxes arranged in a circle
+spawn scene_node
+  position 20 5 0
+  rotation 0 0 0 1
+  scale 2 2 2
+  material metal
+  mesh logo_cube
+  has_physics true
+  has_collision true
+
+spawn scene_node
+  position 14.14 5 14.14
+  rotation 0 0.383 0 0.924
+  scale 2 2 2
+  material metal
+  mesh logo_cube
+  has_physics true
+  has_collision true
+
+spawn scene_node
+  position 0 5 20
+  rotation 0 0.707 0 0.707
+  scale 2 2 2
+  material metal
+  mesh logo_cube
+  has_physics true
+  has_collision true
+
+spawn scene_node
+  position -14.14 5 14.14
+  rotation 0 0.924 0 0.383
+  scale 2 2 2
+  material metal
+  mesh logo_cube
+  has_physics true
+  has_collision true
+
+spawn scene_node
+  position -20 5 0
+  rotation 0 1 0 0
+  scale 2 2 2
+  material metal
+  mesh logo_cube
+  has_physics true
+  has_collision true
+
+# Camera
+spawn chase_camera
+  position 0 20 -30
+  rotation 0 0 0 1
+  scale 1 1 1
+  follow_target player_ship
+  follow_distance 40.0
+  follow_offset 0 15 -30
+  follow_smoothing 12.0
+
+# Lighting
+set_ambient_light 0.10 0.15 0.20 0.30
+add_directional_light 0.30 -0.70 0.20 0.40 0.50 0.60 0.40
