@@ -59,9 +59,9 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
         float right_velocity = vector3_dot(*current_velocity, ship_right);
         float up_velocity = vector3_dot(*current_velocity, ship_up);
         
-        // Auto-stop parameters - gentler for stability
-        float auto_stop_strength = 0.4f; // Much gentler auto-stop
-        float velocity_threshold = 0.2f; // Higher threshold to prevent micro-corrections
+        // Auto-stop parameters - much gentler to prevent wobbling
+        float auto_stop_strength = 0.1f; // Very gentle auto-stop to prevent fighting user input
+        float velocity_threshold = 0.5f; // Higher threshold to prevent micro-corrections
         
         // Apply counter-thrust proportional to velocity
         if (fabsf(forward_velocity) > velocity_threshold) {
