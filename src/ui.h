@@ -22,7 +22,6 @@ void ui_set_debug_visible(bool visible);
 bool ui_is_visible(void);
 bool ui_is_debug_visible(void);
 
-// Flight HUD system
-void ui_render_flight_hud(struct nk_context* ctx, struct World* world);
+// NOTE: Flight HUD system moved to hud_system.h for modular camera mode support
 
 #endif  // UI_H

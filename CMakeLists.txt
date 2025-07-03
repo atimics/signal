@@ -191,10 +191,12 @@ add_library(ui_api src/ui_api.c)
 add_library(ui_components src/ui_components.c)
 add_library(ui_scene src/ui_scene.c)
 add_library(ui_adaptive_controls src/ui_adaptive_controls.c)
+add_library(hud_system src/hud_system.c)
 add_library(ui_navigation_menu src/ui_navigation_menu_impl.c src/ui_navigation_menu_render.c)
 add_library(ui src/ui.c)
-target_link_libraries(ui PRIVATE core graphics_api ui_api ui_components ui_scene ui_adaptive_controls config)
+target_link_libraries(ui PRIVATE core graphics_api ui_api ui_components ui_scene ui_adaptive_controls hud_system config)
 target_link_libraries(ui_adaptive_controls PRIVATE core systems gamepad)
+target_link_libraries(hud_system PRIVATE core input look_target)
 target_link_libraries(ui_navigation_menu PRIVATE ui_scene ui_adaptive_controls scene_state)
 
 # Link main executable against all libraries

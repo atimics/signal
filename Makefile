@@ -666,6 +666,19 @@ ui_adaptive_controls/fast:
 .PHONY : ui_adaptive_controls/fast
 
 #=============================================================================
+# Target rules for targets named hud_system
+
+# Build rule for target.
+hud_system: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hud_system
+.PHONY : hud_system
+
+# fast build rule for target.
+hud_system/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hud_system.dir/build.make CMakeFiles/hud_system.dir/build
+.PHONY : hud_system/fast
+
+#=============================================================================
 # Target rules for targets named ui_navigation_menu
 
 # Build rule for target.
@@ -1138,6 +1151,30 @@ src/graphics_api.s: src/graphics_api.c.s
 src/graphics_api.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graphics_api.dir/build.make CMakeFiles/graphics_api.dir/src/graphics_api.c.s
 .PHONY : src/graphics_api.c.s
+
+src/hud_system.o: src/hud_system.c.o
+.PHONY : src/hud_system.o
+
+# target to build an object file
+src/hud_system.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hud_system.dir/build.make CMakeFiles/hud_system.dir/src/hud_system.c.o
+.PHONY : src/hud_system.c.o
+
+src/hud_system.i: src/hud_system.c.i
+.PHONY : src/hud_system.i
+
+# target to preprocess a source file
+src/hud_system.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hud_system.dir/build.make CMakeFiles/hud_system.dir/src/hud_system.c.i
+.PHONY : src/hud_system.c.i
+
+src/hud_system.s: src/hud_system.c.s
+.PHONY : src/hud_system.s
+
+# target to generate assembly for a file
+src/hud_system.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hud_system.dir/build.make CMakeFiles/hud_system.dir/src/hud_system.c.s
+.PHONY : src/hud_system.c.s
 
 src/input_processing.o: src/input_processing.c.o
 .PHONY : src/input_processing.o
@@ -1966,6 +2003,7 @@ help:
 	@echo "... gpu_resources"
 	@echo "... graphics_api"
 	@echo "... hidapi"
+	@echo "... hud_system"
 	@echo "... input"
 	@echo "... input_processing"
 	@echo "... lod"
@@ -2030,6 +2068,9 @@ help:
 	@echo "... src/graphics_api.o"
 	@echo "... src/graphics_api.i"
 	@echo "... src/graphics_api.s"
+	@echo "... src/hud_system.o"
+	@echo "... src/hud_system.i"
+	@echo "... src/hud_system.s"
 	@echo "... src/input_processing.o"
 	@echo "... src/input_processing.i"
 	@echo "... src/input_processing.s"

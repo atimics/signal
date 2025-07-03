@@ -179,27 +179,36 @@ void test_thrust_to_movement_pipeline(void)
     struct Physics* physics = entity_get_physics(&test_world, ship);
     struct Transform* transform = entity_get_transform(&test_world, ship);
     
-    // Set initial position
+    // Set initial position and clear state
     transform->position = (Vector3){ 0.0f, 0.0f, 0.0f };
-    
-    // Clear all physics state
+    transform->rotation = (Quaternion){ 0.0f, 0.0f, 0.0f, 1.0f }; // Identity rotation
     physics->velocity = (Vector3){ 0.0f, 0.0f, 0.0f };
     physics->acceleration = (Vector3){ 0.0f, 0.0f, 0.0f };
     physics->force_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     
-    // Apply forward thrust
+    // Ensure thrusters are enabled
+    thrusters->thrusters_enabled = true;
+    
+    // Apply forward thrust (X-axis in test coordinate system)
     thruster_set_linear_command(thrusters, (Vector3){ 1.0f, 0.0f, 0.0f });
+    
+    // Verify thrust command was set
+    TEST_ASSERT_EQUAL_FLOAT(1.0f, thrusters->current_linear_thrust.x);
     
     // Update thruster system (applies forces)
     thruster_system_update(&test_world, NULL, 0.016f);
     
     // Verify force was applied (before physics clears it)
+    printf("DEBUG: Force accumulator after thruster update: [%.3f, %.3f, %.3f]\n", 
+           physics->force_accumulator.x, physics->force_accumulator.y, physics->force_accumulator.z);
     TEST_ASSERT_GREATER_THAN(0.0f, physics->force_accumulator.x);
     
     // Update physics system (integrates forces to movement)
     physics_system_update(&test_world, NULL, 0.016f);
     
     // Verify velocity increased
+    printf("DEBUG: Velocity after physics update: [%.3f, %.3f, %.3f]\n", 
+           physics->velocity.x, physics->velocity.y, physics->velocity.z);
     TEST_ASSERT_GREATER_THAN(0.0f, physics->velocity.x);
     
     // Run multiple physics frames to accumulate position change
@@ -211,6 +220,8 @@ void test_thrust_to_movement_pipeline(void)
     }
     
     // Verify position changed after multiple frames
+    printf("DEBUG: Final position: [%.3f, %.3f, %.3f]\n", 
+           transform->position.x, transform->position.y, transform->position.z);
     TEST_ASSERT_GREATER_THAN(0.0f, transform->position.x);
 }
 

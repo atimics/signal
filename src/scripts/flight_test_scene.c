@@ -9,6 +9,7 @@
 #include "../system/input.h"
 #include "../system/control.h"
 #include "../system/thrusters.h"
+#include "../hud_system.h"
 #include "../hidapi.h"
 #include "../sokol_app.h"
 #include <stdio.h>
@@ -402,7 +403,11 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
             const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
             printf("📷 Flight camera mode: %s\n", mode_names[current_camera_mode]);
             
-            // Apply immediately
+            // Sync HUD system with camera mode
+            HUDCameraMode hud_mode = (HUDCameraMode)current_camera_mode;
+            hud_system_set_camera_mode(hud_mode);
+            
+            // Apply camera changes immediately
             update_flight_camera_system(world, 0.0f);
             return true;
         }
