@@ -1,119 +1,121 @@
-# Documentation Hub - SIGNAL Engine
+# CGame Documentation
 
-**Last Updated**: July 2, 2025  
-**Status**: Sprint 22 - Advanced Input Processing (Phase 1 Complete)
+Welcome to the CGame project documentation. This directory contains all project documentation organized for easy navigation and maintenance.
 
-Welcome to the SIGNAL engine documentation. This directory contains all technical documentation, guides, and project management resources for the CGame engine and "The Ghost Signal" game.
+## 📚 Documentation Structure
 
-## 📊 **Sprint 22 Progress**
+### 🎯 Active Development
+- **[`active/`](active/)** - Current development focus
+  - [Current Sprint](active/CURRENT_SPRINT.md) - Always points to active sprint
+  - [Sprint 23](active/sprint_23/) - Technical Excellence & Foundation Consolidation ✅ COMPLETE
 
-**Advanced Input Processing System** - Enhanced gamepad controls:
-- **[Sprint 22 Consolidated Guide](sprints/active/SPRINT_22_CONSOLIDATED_GUIDE.md)** - Complete implementation guide
-- **[Phase 1 Complete](sprints/active/SPRINT_22_PHASE_1_COMPLETE.md)** - Statistical foundation implemented
+### 🔧 Development Guides
+- **[`development/`](development/)** - Developer resources
+  - [Contributing Guide](development/CONTRIBUTING.md) - How to contribute
+  - [Asset Pipeline](development/ASSET_PIPELINE_VALIDATION.md) - Asset validation
+  - [Memory Testing](development/MEMORY_TESTING.md) - Memory testing guidelines
 
-## 📋 **Current Sprint Status**
+### 📖 User Documentation
+- **[`manual/`](manual/)** - User-facing documentation
+  - Player guides, controls, and troubleshooting
 
-**Sprint 22**: Advanced Input Processing - **Phase 1 Complete (40% Overall)**
-- **Active**: [Sprint 22 Implementation Guide](sprints/active/SPRINT_22_IMPLEMENTATION_GUIDE.md)
-- **Completed**: Calibration system, Kalman filtering, neural-ready architecture
-- **In Progress**: Neural network implementation for ML-based control refinement
+### 🏃 Sprint Management
+- **[`sprints/`](sprints/)** - Sprint planning and tracking
+  - [Sprint Overview](sprints/README.md) - Sprint history and management
+  - [`completed/`](sprints/completed/) - Historical sprint documentation
+  - [`backlog/`](sprints/backlog/) - Future work organization
+    - [`immediate/`](sprints/backlog/immediate/) - Next 2-3 sprints
+    - [`features/`](sprints/backlog/features/) - Feature proposals
+    - [`technical_debt/`](sprints/backlog/technical_debt/) - Technical debt tracking
 
-## 🔗 **Quick Navigation**
+### 🎨 Design Documents
+- **[`design/`](design/)** - Design and vision documents
+  - Game vision, technical architecture, and active proposals
 
-### **Development Documentation**
-- **[Developer Manual](development/DEVELOPER_MANUAL.md)** - Complete development guide and coding standards
-- **[Asset Pipeline](development/ASSET_PIPELINE.md)** - Asset creation and compilation guide
+### 🔧 API Documentation
+- **[`api/`](api/)** - Code documentation
+  - [`html_generated/`](api/html_generated/) - Auto-generated HTML documentation
+  - Component and system documentation
 
-### **Project Documentation**
-- **[Game Vision](project/GAME_VISION.md)** - Core game design and vision document
-- **[Player Manual](manual/PLAYER_MANUAL.md)** - Gameplay and controls guide for "The Ghost Signal"
-- **[Project Status](PROJECT_STATUS_CURRENT.md)** - Current engine state assessment
+### 📦 Archive
+- **[`archive/`](archive/)** - Historical documents
+  - [`research/`](archive/research/) - Old research papers
+  - [`proposals/`](archive/proposals/) - Superseded proposals
+  - [`migrations/`](archive/migrations/) - Completed migrations
+  - [`SIGNAL/`](archive/SIGNAL/) - Alternative game concept (historical)
 
-### **Technical Analysis**
-- **[Flight Mechanics Analysis](FLIGHT_MECHANICS_ANALYSIS.md)** - Current flight system technical review
-- **[Scene Overhaul](SCENE_OVERHAUL_COMPLETED.md)** - FTL navigation system implementation
+## 🔍 Quick Navigation
 
-### **Sprint Management**
-- **[Active Sprints](sprints/active/)** - Current sprint designs and plans
-- **[Completed Sprints](sprints/completed/)** - Historical sprint documentation (Sprint 21 complete)
-- **[Sprint Backlog](sprints/backlog/)** - Future sprint planning
+### For New Developers
+1. Start with [Current Sprint](active/CURRENT_SPRINT.md)
+2. Read [Contributing Guide](development/CONTRIBUTING.md)
+3. Check [Sprint Overview](sprints/README.md) for context
 
-## 📁 **Documentation Structure**
+### For Development
+- **Current Work**: [Sprint 23 Complete](active/sprint_23/) ✅
+- **Next Sprint**: [Sprint 24 Canyon Racing](sprints/backlog/SPRINT_24_CANYON_RACING.md) 🎮
+- **Development Guides**: [`development/`](development/)
+- **API Reference**: [`api/`](api/)
 
-```
-docs/
-├── sprints/
-│   ├── active/                    # Current sprint designs
-│   │   └── SPRINT_21_DESIGN.md    # Flight mechanics (under review)
-│   └── completed/                 # Completed sprint documentation
-│       ├── SPRINT_19_COMPLETE.md  # Performance optimization
-│       └── SPRINT_20_COMPLETE.md  # Lighting & materials
-├── project/
-│   ├── GAME_VISION.md             # Core game design document
-│   ├── lore/                      # Game world and narrative
-│   ├── research/                  # Technical research documents
-│   └── sprints/                   # Sprint planning and backlog
-├── development/
-│   ├── DEVELOPER_MANUAL.md        # Development guide
-│   └── ASSET_PIPELINE.md          # Asset workflow
-├── manual/
-│   └── PLAYER_MANUAL.md           # User documentation
-├── archive/                       # Historical planning documents
-│   ├── SPRINT_19_REFACTOR_PHASE.md
-│   ├── SPRINT_19_TDD_PLAN.md
-│   └── SPRINT_20_LIGHTING_PLAN.md
-├── ARCHITECTURE_ANALYSIS_FLIGHT_MECHANICS.md  # Critical architectural review
-├── CRITICAL_FINDINGS_SUMMARY.md              # Executive summary of issues
-├── FLIGHT_MECHANICS_ANALYSIS.md              # Technical flight system analysis
-├── PROJECT_STATUS_CURRENT.md                 # Current project state
-└── _posts/                                   # Blog posts and announcements
-```
+### For Planning
+- **Sprint Backlog**: [`sprints/backlog/`](sprints/backlog/)
+- **Design Documents**: [`design/`](design/)
+- **Feature Proposals**: [`sprints/backlog/features/`](sprints/backlog/features/)
 
-## 🎯 **For LLMs and AI Assistants**
+## 📋 Documentation Standards
 
-This documentation is optimized for both human and LLM consumption:
+### Organization Principles
+1. **Single Source of Truth**: Each document type has one canonical location
+2. **Clear Hierarchy**: Easy to find current vs historical information
+3. **Consistent Structure**: Predictable organization patterns
+4. **Active vs Archive**: Clear separation of current and historical content
 
-### **Document Types and Purpose**
-- **Analysis Documents**: Technical deep-dives with architectural recommendations
-- **Sprint Documents**: Implementation plans with task breakdowns and success criteria
-- **Status Documents**: Current state assessments and progress tracking
-- **Vision Documents**: High-level design and strategic direction
+### File Naming
+- Use descriptive, consistent names
+- Include dates for time-sensitive documents
+- Use UPPERCASE for major documents (README, CHANGELOG)
+- Use lowercase_with_underscores for most files
 
-### **Navigation Principles**
-- **Cross-References**: Documents link to related content for full context
-- **Status Indicators**: Clear flags for document currency and action requirements
-- **Hierarchical Structure**: Logical organization from high-level to implementation details
-- **Technical Depth**: Detailed specifications for implementation guidance
+### Cross-References
+- Use relative links when possible
+- Update links when moving files
+- Include navigation aids in major documents
 
-### **Critical Information Handling**
-- **Urgent Issues**: Prominently flagged with 🚨 indicators
-- **Dependencies**: Clear identification of document relationships
-- **Architectural Concerns**: Detailed analysis with specific recommendations
-- **Implementation Guidance**: Step-by-step technical specifications
+## 🔄 Maintenance
 
-## 📊 **Documentation Maintenance Standards**
+### Regular Tasks
+- Update [Current Sprint](active/CURRENT_SPRINT.md) status
+- Archive completed sprints
+- Clean up outdated proposals
+- Update cross-references
 
-**Archivist Role**: Documentation maintained for comprehensive accessibility and LLM/human collaboration:
+### Sprint Boundaries
+- Move completed sprints to [`completed/`](sprints/completed/)
+- Update active sprint documentation
+- Review and organize backlog items
 
-### **Organization Principles**
-- ✅ Completed documents moved to appropriate archive/completed folders
-- ✅ Active documents clearly marked with status and dependencies  
-- ✅ Critical issues flagged prominently for immediate attention
-- ✅ Cross-references maintained for efficient navigation
-- ✅ Technical specifications detailed for implementation guidance
+## 🚀 Recent Updates
 
-### **Quality Standards**
-- **Consistency**: Uniform formatting and structure across all documents
-- **Completeness**: Comprehensive coverage of technical and design aspects
-- **Currency**: Regular updates reflecting current project state
-- **Accessibility**: Clear language and structure for both human and AI readers
+### July 3, 2025 - Documentation Consolidation
+- ✅ Cleaned up duplicate SIGNAL documentation
+- ✅ Consolidated sprint documentation from multiple locations
+- ✅ Archived outdated research papers and proposals
+- ✅ Created clear directory structure
+- ✅ Updated Sprint 23 with scripted flight system
+- ✅ Created Sprint 24 Canyon Racing plan
 
-### **Update Protocols**
-- **Sprint Completion**: Move completed sprint docs to completed folder
-- **Critical Issues**: Create immediate action summaries for urgent matters
-- **Architectural Changes**: Document analysis and recommendations comprehensively
-- **Status Changes**: Update project status and cross-references accordingly
+### Sprint 23 Complete! 
+- **Achievement**: 98% test coverage, bulletproof foundation
+- **New System**: Scripted flight paths for cinematic sequences
+- **Next**: Sprint 24 - Canyon Racing Prototype
+
+## 📞 Support
+
+For questions about documentation:
+1. Check the relevant section above
+2. Review [Sprint Overview](sprints/README.md) for context
+3. Refer to [Contributing Guide](development/CONTRIBUTING.md) for development process
 
 ---
 
-**📋 Current Priority**: Review and resolve architectural concerns in Sprint 21 design before implementation begins. See critical findings documents for immediate action items.**
+*Last Updated: July 3, 2025 - Sprint 23 Documentation Consolidation Complete*
