@@ -37,7 +37,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
+SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c component/look_target.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/thruster_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -351,9 +351,9 @@ $(TEST_UI_TARGET): $(TEST_UI_SRC) | $(BUILD_DIR)
 $(TEST_RENDERING_TARGET): $(TEST_RENDERING_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building rendering tests..."
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
-		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND -DTEST_STANDALONE \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_RENDERING_SRC) src/core.c src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_RENDERING_SRC) src/core.c src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c src/assets.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build physics 6DOF tests
 $(TEST_PHYSICS_TARGET): $(TEST_PHYSICS_SRC) | $(BUILD_DIR)
@@ -401,7 +401,7 @@ $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
 
 # ============================================================================
 # MEMORY TESTING TARGETS

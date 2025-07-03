@@ -472,7 +472,7 @@ void test_flight_mechanics_performance_scaling(void)
     // Performance check - should complete within reasonable time
     // Note: Very fast operations might register as 0 elapsed time
     TEST_ASSERT_GREATER_OR_EQUAL(0.0, elapsed);  // Should be non-negative
-    TEST_ASSERT_LESS_THAN(elapsed, 0.1);         // But not more than 100ms
+    TEST_ASSERT_TRUE(elapsed < 0.1);             // But not more than 100ms (use direct comparison)
     
     printf("Flight mechanics performance: %.3fms for 100 frames, %d entities\n", 
            elapsed * 1000.0, entity_count);

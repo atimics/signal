@@ -8,6 +8,8 @@
 #include <dirent.h>
 
 #include "assets.h"
+#include "system/thrusters.h"
+#include "system/control.h"
 #include "gpu_resources.h"
 #include "system/material.h"
 #include "graphics_api.h"
@@ -179,6 +181,14 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path)
         else if (strcmp(key, "has_player") == 0)
         {
             current_template->has_player = (strcmp(value, "true") == 0);
+        }
+        else if (strcmp(key, "has_thrusters") == 0)
+        {
+            current_template->has_thrusters = (strcmp(value, "true") == 0);
+        }
+        else if (strcmp(key, "has_control_authority") == 0)
+        {
+            current_template->has_control_authority = (strcmp(value, "true") == 0);
         }
         else if (strcmp(key, "has_camera") == 0)
         {
@@ -471,6 +481,30 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
     if (template->has_player)
     {
         entity_add_component(world, id, COMPONENT_PLAYER);
+    }
+    
+    if (template->has_thrusters)
+    {
+        entity_add_component(world, id, COMPONENT_THRUSTER_SYSTEM);
+        struct ThrusterSystem* thrusters = entity_get_thruster_system(world, id);
+        if (thrusters)
+        {
+            // Initialize with default values
+            thrusters->thrusters_enabled = true;
+            thrusters->ship_type = SHIP_TYPE_FIGHTER;
+        }
+    }
+    
+    if (template->has_control_authority)
+    {
+        entity_add_component(world, id, COMPONENT_CONTROL_AUTHORITY);
+        struct ControlAuthority* control = entity_get_control_authority(world, id);
+        if (control)
+        {
+            // Initialize with default values
+            control->control_mode = CONTROL_MANUAL;
+            control->control_sensitivity = 1.0f;
+        }
     }
 
     if (template->has_camera)

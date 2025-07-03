@@ -98,9 +98,9 @@ void thruster_test_enter(struct World* world, SceneStateManager* state) {
         if (entity->component_mask & COMPONENT_CAMERA) {
             struct Camera* camera = entity_get_camera(world, entity->id);
             if (camera) {
-                camera->follow_entity_id = test_ship_id;
-                camera->behavior = CAMERA_THIRD_PERSON;
-                camera->offset = (Vector3){0, 15, -30};  // Behind and above
+                camera->follow_target = test_ship_id;
+                camera->behavior = CAMERA_BEHAVIOR_THIRD_PERSON;
+                camera->follow_offset = (Vector3){0, 15, -30};  // Behind and above
                 printf("📷 Camera configured to follow ship with offset\n");
             }
         }
@@ -126,6 +126,9 @@ void thruster_test_update(struct World* world, SceneStateManager* state, float d
     if (!thruster_test_initialized) return;
     
     test_time += delta_time;
+    
+    // Update input system to process gamepad/keyboard input
+    input_update();
     
     // Get ship components
     struct Physics* physics = entity_get_physics(world, test_ship_id);

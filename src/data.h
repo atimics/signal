@@ -47,6 +47,9 @@ typedef struct
     float ai_update_frequency;
 
     bool has_player;
+    
+    bool has_thrusters;
+    bool has_control_authority;
 
     bool has_camera;
     int camera_behavior;  // 0=third_person, 1=first_person, 2=static, etc.
