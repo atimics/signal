@@ -1,0 +1,112 @@
+# Flight Test Scene
+# Open space environment for testing 6DOF flight mechanics
+
+name: flight_test
+description: "Open space flight test environment"
+
+entities:
+  - type: player_ship
+    position: [0, 20, 0]
+    rotation: [0, 0, 0, 1]
+    components:
+      physics:
+        mass: 80.0
+        drag_linear: 0.01
+        drag_angular: 0.05
+        has_6dof: true
+      thrusters:
+        enabled: true
+      control_authority:
+        enabled: true
+    material: racing_ship
+    mesh: wedge_ship_mk2
+
+  # Large landing platform
+  - type: landing_pad
+    position: [0, 0, 0]
+    scale: [20, 1, 20]
+    material: metal
+    mesh: landing_pad
+    components:
+      physics:
+        mass: 0  # Static
+        kinematic: true
+
+  # Navigation markers
+  - type: marker
+    position: [50, 10, 0]
+    scale: [3, 3, 3]
+    material: emissive_blue
+    mesh: logo_cube
+
+  - type: marker
+    position: [-50, 10, 0]
+    scale: [3, 3, 3]
+    material: emissive_red
+    mesh: logo_cube
+
+  - type: marker
+    position: [0, 10, 50]
+    scale: [3, 3, 3]
+    material: emissive_green
+    mesh: logo_cube
+
+  - type: marker
+    position: [0, 10, -50]
+    scale: [3, 3, 3]
+    material: emissive_yellow
+    mesh: logo_cube
+
+  # Floating obstacles
+  - type: asteroid
+    position: [30, 15, 30]
+    rotation: [0.1, 0.2, 0.3, 0.9]
+    scale: [5, 5, 5]
+    material: metal
+    mesh: logo_cube
+    components:
+      physics:
+        mass: 500.0
+        drag_linear: 0.01
+        drag_angular: 0.02
+        has_6dof: true
+
+  - type: asteroid
+    position: [-30, 20, -30]
+    rotation: [0.3, 0.1, 0.2, 0.9]
+    scale: [4, 4, 4]
+    material: metal
+    mesh: logo_cube
+    components:
+      physics:
+        mass: 400.0
+        drag_linear: 0.01
+        drag_angular: 0.02
+        has_6dof: true
+
+  # Camera
+  - type: chase_camera
+    position: [0, 30, -50]
+    components:
+      camera:
+        follow_target: player_ship
+        follow_distance: 50.0
+        follow_offset: [0, 15, -35]
+        follow_smoothing: 8.0
+        behavior: chase
+
+lighting:
+  ambient:
+    color: [0.05, 0.08, 0.15]
+    intensity: 0.20
+  
+  directional:
+    - direction: [0.30, -0.70, 0.20]
+      color: [0.90, 0.85, 0.80]
+      intensity: 0.60
+    - direction: [-0.20, -0.40, -0.60]
+      color: [0.20, 0.30, 0.50]
+      intensity: 0.20
+
+environment:
+  gravity: [0, 0, 0]  # Zero gravity space environment

@@ -18,6 +18,19 @@ endif
 CFLAGS += $(ODE_INCLUDE) -DUSE_ODE_PHYSICS
 LIBS += $(ODE_LIB)
 
+# YAML support for scene loading
+ifeq ($(OS),Darwin)
+    # macOS with Homebrew
+    YAML_INCLUDE = -I/opt/homebrew/include
+    YAML_LIB = -L/opt/homebrew/lib -lyaml
+else
+    # Linux system-wide installation
+    YAML_INCLUDE = 
+    YAML_LIB = -lyaml
+endif
+CFLAGS += $(YAML_INCLUDE)
+LIBS += $(YAML_LIB)
+
 # Platform-specific flags
 ifeq ($(OS),Darwin)
     # macOS
@@ -51,7 +64,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c component/look_target.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/thruster_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
+SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c component/look_target.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/thruster_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -343,7 +356,7 @@ $(TEST_CORE_COMPONENTS_TARGET): $(TEST_CORE_COMPONENTS_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND -DTEST_STANDALONE \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CORE_COMPONENTS_SRC) src/core.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CORE_COMPONENTS_SRC) src/core.c src/system/physics.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build core world tests  
 $(TEST_CORE_WORLD_TARGET): $(TEST_CORE_WORLD_SRC) | $(BUILD_DIR)
@@ -351,7 +364,7 @@ $(TEST_CORE_WORLD_TARGET): $(TEST_CORE_WORLD_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND -DTEST_STANDALONE \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CORE_WORLD_SRC) src/core.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CORE_WORLD_SRC) src/core.c src/system/physics.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build UI tests (with test stubs)
 $(TEST_UI_TARGET): $(TEST_UI_SRC) | $(BUILD_DIR)

@@ -7,6 +7,7 @@
 #include "../system/ode_physics.h"
 #include "../hud_system.h"
 #include "../sokol_app.h"
+#include "../scene_yaml_loader.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -31,6 +32,12 @@ void ode_test_enter(struct World* world, SceneStateManager* state) {
     (void)state;
     
     printf("🌐 Initializing ODE Physics Test Scene\n");
+    
+    // Load scene from YAML first
+    printf("📄 Loading scene from YAML...\n");
+    if (!scene_load_from_yaml(world, "ode_test.yaml")) {
+        printf("⚠️ Failed to load YAML scene, continuing with programmatic setup\n");
+    }
     
     // Create and initialize ODE physics system
     ode_system = calloc(1, sizeof(ODEPhysicsSystem));
