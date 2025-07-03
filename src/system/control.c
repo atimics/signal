@@ -59,9 +59,9 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
         float right_velocity = vector3_dot(*current_velocity, ship_right);
         float up_velocity = vector3_dot(*current_velocity, ship_up);
         
-        // Auto-stop parameters
-        float auto_stop_strength = 0.8f; // How aggressively to stop
-        float velocity_threshold = 0.1f; // Don't auto-stop below this speed
+        // Auto-stop parameters - gentler for stability
+        float auto_stop_strength = 0.4f; // Much gentler auto-stop
+        float velocity_threshold = 0.2f; // Higher threshold to prevent micro-corrections
         
         // Apply counter-thrust proportional to velocity
         if (fabsf(forward_velocity) > velocity_threshold) {
@@ -132,36 +132,21 @@ static Vector3 process_canyon_racing_angular(const InputState* input,
     
     Vector3 angular_commands = {0, 0, 0};
     
-    // Improved sensitivity scaling for zero-g precision
-    float base_sensitivity = control->control_sensitivity * 0.6f; // Reduced for stability
+    // Much gentler sensitivity for zero-g stability
+    float base_sensitivity = control->control_sensitivity * 0.3f; // Much more gentle
     
-    // Apply input with response curve for fine control
-    if (fabsf(input->pitch) > 0.01f) {
-        float sign = input->pitch > 0 ? 1.0f : -1.0f;
-        float magnitude = fabsf(input->pitch);
-        // Quadratic response curve for fine control at low inputs
-        angular_commands.x = sign * magnitude * magnitude * base_sensitivity;
-    }
+    // Direct linear input for predictable control
+    angular_commands.x = input->pitch * base_sensitivity;
+    angular_commands.y = input->yaw * base_sensitivity;
+    angular_commands.z = input->roll * base_sensitivity;
     
-    if (fabsf(input->yaw) > 0.01f) {
-        float sign = input->yaw > 0 ? 1.0f : -1.0f;
-        float magnitude = fabsf(input->yaw);
-        angular_commands.y = sign * magnitude * magnitude * base_sensitivity;
-    }
-    
-    if (fabsf(input->roll) > 0.01f) {
-        float sign = input->roll > 0 ? 1.0f : -1.0f;
-        float magnitude = fabsf(input->roll);
-        angular_commands.z = sign * magnitude * magnitude * base_sensitivity;
-    }
-    
-    // ENHANCED ZERO-G STABILIZATION
+    // GENTLE ZERO-G STABILIZATION - prevent oscillations
     if (current_angular_velocity) {
-        float stabilization_strength = 4.0f; // Stronger stabilization for zero-g
-        float input_deadzone = 0.05f; // Smaller deadzone for better responsiveness
-        float velocity_threshold = 0.005f; // Stop very small rotations
+        float stabilization_strength = 1.5f; // Much gentler stabilization
+        float input_deadzone = 0.08f; // Larger deadzone to prevent fighting user input
+        float velocity_threshold = 0.02f; // Only stabilize significant rotations
         
-        // Enhanced stabilization with PD control
+        // Only apply stabilization if there's no user input and significant velocity
         if (fabsf(input->pitch) < input_deadzone && fabsf(current_angular_velocity->x) > velocity_threshold) {
             float damping = -current_angular_velocity->x * stabilization_strength;
             angular_commands.x += damping;
