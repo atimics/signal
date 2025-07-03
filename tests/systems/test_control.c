@@ -122,7 +122,7 @@ void test_control_player_entity_setting(void)
 void test_control_linear_input_processing(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, 
+    entity_add_components(&test_world, entity, 
                         COMPONENT_CONTROL_AUTHORITY | COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ControlAuthority* control = entity_get_control_authority(&test_world, entity);
@@ -147,7 +147,7 @@ void test_control_linear_input_processing(void)
 void test_control_angular_input_processing(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, 
+    entity_add_components(&test_world, entity, 
                         COMPONENT_CONTROL_AUTHORITY | COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ControlAuthority* control = entity_get_control_authority(&test_world, entity);
@@ -301,7 +301,7 @@ void test_control_mode_settings(void)
 void test_control_system_full_update(void)
 {
     EntityID entity = entity_create(&test_world);
-    entity_add_component(&test_world, entity, 
+    entity_add_components(&test_world, entity, 
                         COMPONENT_CONTROL_AUTHORITY | COMPONENT_THRUSTER_SYSTEM | COMPONENT_PHYSICS | COMPONENT_TRANSFORM);
     
     struct ControlAuthority* control = entity_get_control_authority(&test_world, entity);

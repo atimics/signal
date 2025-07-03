@@ -206,7 +206,14 @@ void scripted_flight_destroy_component(ScriptedFlight* component) {
 // ============================================================================
 
 void scripted_flight_start(ScriptedFlight* flight, const FlightPath* path) {
-    if (!flight || !path) return;
+    if (!flight) {
+        printf("❌ scripted_flight_start: flight is NULL\n");
+        return;
+    }
+    if (!path) {
+        printf("❌ scripted_flight_start: path is NULL\n");
+        return;
+    }
     
     memcpy(&flight->path, path, sizeof(FlightPath));
     flight->current_waypoint = 0;
@@ -217,6 +224,12 @@ void scripted_flight_start(ScriptedFlight* flight, const FlightPath* path) {
     
     printf("🛩️  Started scripted flight with %d waypoints (loop: %s)\n", 
            path->waypoint_count, path->loop ? "yes" : "no");
+    printf("🛩️  First waypoint: pos(%.1f, %.1f, %.1f) speed:%.1f tolerance:%.1f\n",
+           flight->path.waypoints[0].position.x,
+           flight->path.waypoints[0].position.y,
+           flight->path.waypoints[0].position.z,
+           flight->path.waypoints[0].target_speed,
+           flight->path.waypoints[0].tolerance);
 }
 
 void scripted_flight_stop(ScriptedFlight* flight) {
@@ -243,14 +256,25 @@ void scripted_flight_resume(ScriptedFlight* flight) {
 // ============================================================================
 
 static void update_scripted_entity(struct World* world, EntityID entity_id, ScriptedFlight* flight, float delta_time) {
-    if (!flight->active || flight->manual_override) return;
+    if (!flight->active || flight->manual_override) {
+        static int debug_counter = 0;
+        if (++debug_counter % 60 == 0) {
+            printf("🛩️  Scripted flight inactive: active=%d, override=%d\n", 
+                   flight->active, flight->manual_override);
+        }
+        return;
+    }
     
     // Get entity components
     struct Transform* transform = entity_get_transform(world, entity_id);
     struct Physics* physics = entity_get_physics(world, entity_id);
     struct ThrusterSystem* thrusters = entity_get_thruster_system(world, entity_id);
     
-    if (!transform || !physics || !thrusters) return;
+    if (!transform || !physics || !thrusters) {
+        printf("❌ Scripted flight missing components: T=%p P=%p TH=%p\n",
+               transform, physics, thrusters);
+        return;
+    }
     
     // Get current waypoint
     if (flight->current_waypoint >= flight->path.waypoint_count) {
@@ -334,6 +358,17 @@ static void update_scripted_entity(struct World* world, EntityID entity_id, Scri
     
     // Apply thrust commands through thruster system
     thruster_set_linear_command(thrusters, thrust_command);
+    
+    // Debug output
+    static int thrust_debug_counter = 0;
+    if (++thrust_debug_counter % 30 == 0) {
+        printf("🛩️  Scripted flight update: waypoint %d/%d, dist=%.1f, cmd=[%.2f,%.2f,%.2f]\n",
+               flight->current_waypoint, flight->path.waypoint_count,
+               distance, thrust_command.x, thrust_command.y, thrust_command.z);
+        printf("    Ship pos: [%.1f,%.1f,%.1f], Target: [%.1f,%.1f,%.1f]\n",
+               current_pos.x, current_pos.y, current_pos.z,
+               target_pos.x, target_pos.y, target_pos.z);
+    }
     
     flight->current_speed = vector3_length(physics->velocity);
     flight->state_timer += delta_time;

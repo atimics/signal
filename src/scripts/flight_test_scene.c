@@ -194,6 +194,14 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         player_scripted_flight = scripted_flight_create_component(player_ship_id);
         if (player_scripted_flight) {
             printf("🛩️  Scripted flight system ready for player ship\n");
+            
+            // Auto-start circuit flight for demonstration
+            FlightPath* circuit = scripted_flight_create_circuit_path();
+            if (circuit) {
+                scripted_flight_start(player_scripted_flight, circuit);
+                scripted_flight_active = true;
+                printf("🛩️  AUTO-STARTED circuit flight pattern!\n");
+            }
         }
     }
     
@@ -396,6 +404,8 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
     const sapp_event* ev = (const sapp_event*)event;
     
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
+        printf("🎮 Flight test: Key pressed - code=%d\n", ev->key_code);
+        
         if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
             printf("🚀 Flight Test: ESC pressed, returning to navigation menu\n");
             scene_state_request_transition(state, "navigation_menu");
@@ -419,11 +429,22 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
         
         if (ev->key_code == SAPP_KEYCODE_1) {
             // Start scripted circuit flight
+            printf("🛩️  Key '1' pressed - attempting to start circuit flight\n");
+            printf("    Player ship ID: %d\n", player_ship_id);
+            printf("    Scripted flight component: %p\n", player_scripted_flight);
+            
             if (player_scripted_flight) {
                 FlightPath* circuit = scripted_flight_create_circuit_path();
-                scripted_flight_start(player_scripted_flight, circuit);
-                scripted_flight_active = true;
-                printf("🛩️  Started circuit flight pattern\n");
+                if (circuit) {
+                    printf("    Circuit path created with %d waypoints\n", circuit->waypoint_count);
+                    scripted_flight_start(player_scripted_flight, circuit);
+                    scripted_flight_active = true;
+                    printf("🛩️  Started circuit flight pattern\n");
+                } else {
+                    printf("❌ Failed to create circuit path\n");
+                }
+            } else {
+                printf("❌ No scripted flight component available\n");
             }
             return true;
         }
