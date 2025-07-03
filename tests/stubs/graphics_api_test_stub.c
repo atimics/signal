@@ -171,23 +171,6 @@ sg_resource_state sg_query_sampler_state(sg_sampler smp) {
     return SG_RESOURCESTATE_VALID;
 }
 
-// Look target component functions (missing from input system)
-void look_target_init(void* look_target) {
-    (void)look_target;
-    printf("[TEST STUB] look_target_init called\n");
-}
-
-void look_target_update(void* look_target, const void* entity_position, 
-                       float delta_azimuth, float delta_elevation, float delta_distance) {
-    (void)look_target; (void)entity_position; (void)delta_azimuth; (void)delta_elevation; (void)delta_distance;
-    // No-op in test mode
-}
-
-void look_target_update_world_position(void* look_target, const void* position) {
-    (void)look_target; (void)position;
-    // No-op in test mode
-}
-
 // ==== ASSET SYSTEM STUBS ====
 
 bool load_assets_from_metadata(void* registry) {
