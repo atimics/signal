@@ -1,5 +1,9 @@
 #include "physics.h"
 
+#ifdef USE_ODE_PHYSICS
+#include "ode_physics.h"
+#endif
+
 #include <stdio.h>
 #include <math.h>
 
@@ -374,4 +378,97 @@ void physics_set_6dof_enabled(struct Physics* physics, bool enabled)
         physics->angular_acceleration = (Vector3){ 0.0f, 0.0f, 0.0f };
         physics->torque_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     }
+}
+
+// ============================================================================
+// ODE INTEGRATION
+// ============================================================================
+
+void physics_system_update_with_ode(struct World* world, struct ODEPhysicsSystem* ode_system, 
+                                   RenderConfig* render_config, float delta_time)
+{
+#ifdef USE_ODE_PHYSICS
+    (void)render_config;  // Unused
+    if (!world) return;
+    
+    // If no ODE system provided, fall back to regular physics
+    if (!ode_system) {
+        physics_system_update(world, render_config, delta_time);
+        return;
+    }
+    
+    // Let ODE handle the physics simulation
+    ode_physics_step(ode_system, world, delta_time);
+    
+    // For entities not using ODE, use custom physics
+    uint32_t custom_physics_updates = 0;
+    
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        
+        if (!(entity->component_mask & COMPONENT_PHYSICS) ||
+            !(entity->component_mask & COMPONENT_TRANSFORM)) {
+            continue;
+        }
+        
+        struct Physics* physics = entity->physics;
+        struct Transform* transform = entity->transform;
+        
+        // Skip if using ODE
+        if (physics->use_ode) continue;
+        if (physics->kinematic) continue;
+        
+        // Use custom physics for this entity
+        physics_apply_environmental_effects(physics, transform, delta_time);
+        physics_apply_forces(physics, delta_time);
+        physics_apply_torques(physics, delta_time);
+        physics_integrate_linear(physics, transform, delta_time);
+        
+        if (physics->has_6dof) {
+            physics_integrate_angular(physics, transform, delta_time);
+        }
+        
+        // Prevent going below ground
+        if (transform->position.y < -50.0f) {
+            transform->position.y = -50.0f;
+            physics->velocity.y = fmaxf(0.0f, physics->velocity.y);
+        }
+        
+        transform->dirty = true;
+        custom_physics_updates++;
+    }
+    
+    // Debug logging
+    static uint32_t log_counter = 0;
+    if (++log_counter % 120 == 0) {  // Every 2 seconds
+        uint32_t active_bodies = 0;
+        uint32_t total_bodies = 0;
+        float step_time = 0.0f;
+        ode_get_statistics(ode_system, &active_bodies, &total_bodies, &step_time);
+        
+        printf("🔧 Physics: ODE bodies: %u/%u (%.2fms), Custom updates: %u\n", 
+               active_bodies, total_bodies, step_time, custom_physics_updates);
+    }
+#else
+    // ODE not available, use regular physics
+    physics_system_update(world, render_config, delta_time);
+    (void)ode_system;
+#endif
+}
+
+void physics_set_use_ode(struct Physics* physics, bool use_ode)
+{
+    if (!physics) return;
+    physics->use_ode = use_ode;
+    
+    // Clear ODE handles if disabling
+    if (!use_ode) {
+        physics->ode_body = NULL;
+        physics->ode_geom = NULL;
+    }
+}
+
+bool physics_is_using_ode(const struct Physics* physics)
+{
+    return physics ? physics->use_ode : false;
 }

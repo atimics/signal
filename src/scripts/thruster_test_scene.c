@@ -41,36 +41,14 @@ void thruster_test_enter(struct World* world, SceneStateManager* state) {
         return;
     }
     
-    // Enhance ship with gyroscopic control
+    // Configure ship using unified preset
+    control_configure_ship(world, test_ship_id, SHIP_CONFIG_RC_ROCKET);
+    
+    // Get components for detailed logging
     struct Physics* physics = entity_get_physics(world, test_ship_id);
     struct ThrusterSystem* thrusters = entity_get_thruster_system(world, test_ship_id);
-    struct ControlAuthority* control = entity_get_control_authority(world, test_ship_id);
     
-    if (physics && thrusters && control) {
-        // Configure for RC rocket ship feel
-        physics->mass = 10.0f;  // Light weight like RC model (10kg)
-        physics->drag_linear = 0.02f;  // Very low drag - rockets are aerodynamic
-        physics->drag_angular = 0.3f;  // Some rotational damping but still floaty
-        physics->has_6dof = true;
-        
-        // Set moment of inertia for rocket shape (tall cylinder)
-        physics->moment_of_inertia = (Vector3){0.5f, 0.3f, 0.5f};  // Less yaw inertia
-        
-        // Configure thruster system for RC rocket
-        thrusters->ship_type = SHIP_TYPE_FIGHTER;
-        thrusters->max_linear_force = (Vector3){300, 300, 800};  // Strong vertical thrust
-        thrusters->max_angular_torque = (Vector3){50, 80, 50};  // Quick RCS
-        thrusters->thrust_response_time = 0.05f;  // Near instant like RC
-        thrusters->vacuum_efficiency = 1.0f;
-        thrusters->thrusters_enabled = true;
-        
-        // Control settings for RC feel
-        control->control_sensitivity = 2.0f;  // Very responsive
-        control->stability_assist = 0.0f;  // Let gyroscopic system handle stability
-        control->flight_assist_enabled = false;  // Pure manual control
-        control->control_mode = CONTROL_MANUAL;
-        
-        printf("✅ Ship configured for RC rocket testing\n");
+    if (physics && thrusters) {
         printf("   Mass: %.1f kg (light RC model)\n", physics->mass);
         printf("   Linear Drag: %.3f\n", physics->drag_linear);
         printf("   Angular Drag: %.2f\n", physics->drag_angular);

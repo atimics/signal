@@ -107,6 +107,11 @@ struct Physics
         PHYSICS_SPACE,
         PHYSICS_ATMOSPHERE
     } environment;
+    
+    // ODE Integration
+    bool use_ode;                // Use ODE physics instead of custom
+    void* ode_body;              // ODE rigid body handle (dBodyID)
+    void* ode_geom;              // ODE collision geometry (dGeomID)
 };
 
 /** @brief Defines an entity's collision shape and properties. */

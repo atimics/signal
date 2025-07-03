@@ -4,6 +4,20 @@ CFLAGS = -Wall -Wextra -Werror -std=c99 -O2 -g -Isrc
 LIBS = -lm
 OS := $(shell uname)
 
+# ODE Physics Configuration
+ifeq ($(OS),Darwin)
+    # macOS with Homebrew
+    ODE_INCLUDE = -I/opt/homebrew/include
+    ODE_LIB = -L/opt/homebrew/lib -lode
+else
+    # Linux system-wide installation
+    ODE_INCLUDE = 
+    ODE_LIB = -lode
+endif
+# Use double precision for ODE
+CFLAGS += $(ODE_INCLUDE) -DdDOUBLE -DUSE_ODE_PHYSICS
+LIBS += $(ODE_LIB)
+
 # Platform-specific flags
 ifeq ($(OS),Darwin)
     # macOS
@@ -37,7 +51,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files
-SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c component/look_target.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/thruster_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
+SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/control.c component/look_target.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/thruster_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable

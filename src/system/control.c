@@ -262,3 +262,114 @@ Vector3 apply_sensitivity_curve(Vector3 input, float sensitivity) {
     
     return result;
 }
+
+// ============================================================================
+// UNIFIED SHIP CONFIGURATION
+// ============================================================================
+
+void control_configure_ship(struct World* world, EntityID ship_id, ShipConfigPreset preset) {
+    if (!world || ship_id == INVALID_ENTITY) return;
+    
+    struct Physics* physics = entity_get_physics(world, ship_id);
+    struct ThrusterSystem* thrusters = entity_get_thruster_system(world, ship_id);
+    struct ControlAuthority* control = entity_get_control_authority(world, ship_id);
+    
+    if (!physics || !thrusters || !control) {
+        printf("⚠️ Ship %d missing required components for configuration\n", ship_id);
+        return;
+    }
+    
+    // Always enable 6DOF physics
+    physics->has_6dof = true;
+    
+    // Always set control to be self-controlled by default
+    control->controlled_by = ship_id;
+    
+    switch (preset) {
+        case SHIP_CONFIG_FIGHTER:
+            // Agile fighter configuration
+            physics->mass = 50.0f;
+            physics->drag_linear = 0.01f;
+            physics->drag_angular = 0.05f;
+            physics->moment_of_inertia = (Vector3){0.3f, 0.3f, 0.3f};
+            
+            thrusters->ship_type = SHIP_TYPE_FIGHTER;
+            thrusters->max_linear_force = (Vector3){500, 500, 1000};
+            thrusters->max_angular_torque = (Vector3){100, 100, 100};
+            thrusters->thrust_response_time = 0.1f;
+            thrusters->vacuum_efficiency = 1.0f;
+            thrusters->thrusters_enabled = true;
+            
+            control->control_sensitivity = 1.5f;
+            control->stability_assist = 0.3f;
+            control->flight_assist_enabled = true;
+            control->control_mode = CONTROL_ASSISTED;
+            break;
+            
+        case SHIP_CONFIG_RACER:
+            // Canyon racing configuration
+            physics->mass = 80.0f;
+            physics->drag_linear = 0.99f;  // High drag for arcade feel
+            physics->drag_angular = 0.15f;
+            physics->moment_of_inertia = (Vector3){0.5f, 0.4f, 0.5f};
+            
+            thrusters->ship_type = SHIP_TYPE_FIGHTER;
+            thrusters->max_linear_force = (Vector3){400, 400, 1200};
+            thrusters->max_angular_torque = (Vector3){80, 100, 60};
+            thrusters->thrust_response_time = 0.05f;
+            thrusters->vacuum_efficiency = 1.0f;
+            thrusters->thrusters_enabled = true;
+            
+            control->control_sensitivity = 2.0f;
+            control->stability_assist = 0.5f;
+            control->flight_assist_enabled = true;
+            control->control_mode = CONTROL_ASSISTED;
+            break;
+            
+        case SHIP_CONFIG_FREIGHTER:
+            // Heavy cargo ship
+            physics->mass = 500.0f;
+            physics->drag_linear = 0.02f;
+            physics->drag_angular = 0.1f;
+            physics->moment_of_inertia = (Vector3){2.0f, 2.0f, 2.0f};
+            
+            thrusters->ship_type = SHIP_TYPE_CARGO;
+            thrusters->max_linear_force = (Vector3){200, 200, 800};
+            thrusters->max_angular_torque = (Vector3){50, 50, 30};
+            thrusters->thrust_response_time = 0.3f;
+            thrusters->vacuum_efficiency = 0.8f;
+            thrusters->thrusters_enabled = true;
+            
+            control->control_sensitivity = 0.8f;
+            control->stability_assist = 0.8f;
+            control->flight_assist_enabled = true;
+            control->control_mode = CONTROL_ASSISTED;
+            break;
+            
+        case SHIP_CONFIG_RC_ROCKET:
+            // RC model rocket (test configuration)
+            physics->mass = 10.0f;
+            physics->drag_linear = 0.02f;
+            physics->drag_angular = 0.3f;
+            physics->moment_of_inertia = (Vector3){0.5f, 0.3f, 0.5f};
+            
+            thrusters->ship_type = SHIP_TYPE_FIGHTER;
+            thrusters->max_linear_force = (Vector3){300, 300, 800};
+            thrusters->max_angular_torque = (Vector3){50, 80, 50};
+            thrusters->thrust_response_time = 0.05f;
+            thrusters->vacuum_efficiency = 1.0f;
+            thrusters->thrusters_enabled = true;
+            
+            control->control_sensitivity = 2.0f;
+            control->stability_assist = 0.0f;
+            control->flight_assist_enabled = false;
+            control->control_mode = CONTROL_MANUAL;
+            break;
+    }
+    
+    printf("✅ Ship %d configured as %s\n", ship_id,
+           preset == SHIP_CONFIG_FIGHTER ? "FIGHTER" :
+           preset == SHIP_CONFIG_RACER ? "RACER" :
+           preset == SHIP_CONFIG_FREIGHTER ? "FREIGHTER" :
+           "RC_ROCKET");
+}

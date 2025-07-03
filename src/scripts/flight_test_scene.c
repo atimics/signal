@@ -99,54 +99,37 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         printf("🚀 Upgrading player ship with 6DOF flight mechanics...\n");
         
         // Add ThrusterSystem component
-        if (entity_add_component(world, player_ship_id, COMPONENT_THRUSTER_SYSTEM)) {
-            struct ThrusterSystem* thrusters = entity_get_thruster_system(world, player_ship_id);
-            if (thrusters) {
-                // Sprint 21: Configure as Fighter-class ship with proper characteristics
-                float base_thrust = FLIGHT_THRUST_FORCE * 300.0f;  // Zippy thrust for canyon racing
-                thruster_configure_ship_type(thrusters, SHIP_TYPE_FIGHTER, base_thrust);
-                
-                // Enable auto-deceleration to prevent skidding
-                thrusters->auto_deceleration = true;
-                
-                // Apply ship characteristics to physics
-                struct Physics* physics = entity_get_physics(world, player_ship_id);
-                if (physics) {
-                    thruster_apply_ship_characteristics(thrusters, physics);
-                }
-                
-                printf("   ✅ ThrusterSystem configured as FIGHTER class\n");
-                printf("   📊 Max thrust: Forward=%.0fN, Maneuver=%.0fN, Strafe=%.0fN\n",
-                       thrusters->max_linear_force.x, thrusters->max_linear_force.y, thrusters->max_linear_force.z);
-                printf("   🔄 Max torque: [%.1f, %.1f, %.1f] N⋅m\n",
-                       thrusters->max_angular_torque.x, thrusters->max_angular_torque.y, thrusters->max_angular_torque.z);
-                printf("   ⚡ Response time: %.3fs, Efficiency: %.1f\n",
-                       thrusters->thrust_response_time, thrusters->power_efficiency);
-            }
+        if (!entity_has_component(world, player_ship_id, COMPONENT_THRUSTER_SYSTEM)) {
+            entity_add_component(world, player_ship_id, COMPONENT_THRUSTER_SYSTEM);
         }
         
         // Add ControlAuthority component  
-        if (entity_add_component(world, player_ship_id, COMPONENT_CONTROL_AUTHORITY)) {
-            struct ControlAuthority* control = entity_get_control_authority(world, player_ship_id);
-            if (control) {
-                // Configure control settings for flight test
-                control->controlled_by = player_ship_id; // Self-controlled
-                control->control_sensitivity = 1.2f;     // High sensitivity for zippy canyon racing
-                control->stability_assist = 0.4f;        // Light assistance - let the pilot control the ship
-                control->flight_assist_enabled = true;
-                control->control_mode = CONTROL_ASSISTED;
-                printf("   ✅ ControlAuthority configured\n");
-                
-                // Set this as the player entity for the control system
-                control_set_player_entity(world, player_ship_id);
-            }
+        if (!entity_has_component(world, player_ship_id, COMPONENT_CONTROL_AUTHORITY)) {
+            entity_add_component(world, player_ship_id, COMPONENT_CONTROL_AUTHORITY);
         }
         
-        // Enable 6DOF physics on the player ship
+        // Configure ship using unified preset for canyon racing
+        control_configure_ship(world, player_ship_id, SHIP_CONFIG_RACER);
+        
+        // Set this as the player entity for the control system
+        control_set_player_entity(world, player_ship_id);
+        
+        // Get components for any scene-specific adjustments
         struct Physics* physics = entity_get_physics(world, player_ship_id);
+        struct ThrusterSystem* thrusters = entity_get_thruster_system(world, player_ship_id);
+        
+        if (thrusters) {
+            // Enable auto-deceleration for arcade feel
+            thrusters->auto_deceleration = true;
+            
+            printf("   ✅ Ship configured as RACER class\n");
+            printf("   📊 Max thrust: [%.0f, %.0f, %.0f] N\n",
+                   thrusters->max_linear_force.x, thrusters->max_linear_force.y, thrusters->max_linear_force.z);
+            printf("   🔄 Max torque: [%.1f, %.1f, %.1f] N⋅m\n",
+                   thrusters->max_angular_torque.x, thrusters->max_angular_torque.y, thrusters->max_angular_torque.z);
+        }
+        
         if (physics) {
-            physics->has_6dof = true;
-            physics->moment_of_inertia = (Vector3){ 2.0f, 2.0f, 1.5f }; // Ship-like inertia
             physics->drag_linear = 0.02f;   // Space drag (2% velocity loss per frame)
             physics->drag_angular = 0.10f;  // Moderate angular damping for stability
             physics->environment = PHYSICS_SPACE; // Zero gravity space flight

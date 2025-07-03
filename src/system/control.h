@@ -17,4 +17,15 @@ void control_toggle_flight_assist(struct ControlAuthority* control);
 Vector3 apply_stability_assist(Vector3 input, Vector3 current_angular_velocity, float assist_strength);
 Vector3 apply_sensitivity_curve(Vector3 input, float sensitivity);
 
+// Ship configuration presets
+typedef enum {
+    SHIP_CONFIG_FIGHTER,      // Fast, agile fighter
+    SHIP_CONFIG_RACER,        // Canyon racing optimized
+    SHIP_CONFIG_FREIGHTER,    // Heavy cargo ship
+    SHIP_CONFIG_RC_ROCKET     // RC model rocket (test)
+} ShipConfigPreset;
+
+// Unified ship control configuration
+void control_configure_ship(struct World* world, EntityID ship_id, ShipConfigPreset preset);
+
 #endif // SYSTEM_CONTROL_H
