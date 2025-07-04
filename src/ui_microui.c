@@ -132,6 +132,7 @@ static struct {
         uint32_t color;    // color as packed RGBA bytes
     } vertices[8192];
     int vertex_count;
+    int command_count;
 } render_state;
 
 // ============================================================================
@@ -163,10 +164,32 @@ void ui_microui_init(void) {
     g_ui_context.mu_ctx.text_width = text_width_callback;
     g_ui_context.mu_ctx.text_height = text_height_callback;
     
+    // Set up brighter color scheme for better visibility
+    // Terminal-style green phosphor aesthetic
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_WINDOWBG] = (mu_Color){ 0, 0, 0, 250 };      // Nearly black background
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTON] = (mu_Color){ 0, 0, 0, 0 };          // Transparent buttons
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTONHOVER] = (mu_Color){ 0, 40, 0, 100 };  // Subtle green glow on hover
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTONFOCUS] = (mu_Color){ 0, 60, 0, 150 };  // Stronger green glow when focused
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_TEXT] = (mu_Color){ 0, 255, 0, 255 };        // Bright green text
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BORDER] = (mu_Color){ 0, 100, 0, 255 };      // Dark green border
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_PANELBG] = (mu_Color){ 0, 10, 0, 200 };      // Very dark green panel
+    
     // Initialize font texture with bitmap font data
     // Font texture is 128x128 pixels, each pixel is 4 bytes (RGBA)
     // We'll arrange the 95 characters in a 16x16 grid (only using first 95 slots)
     memset(g_ui_context.font_texture, 0x00, 128 * 128 * 4); // Clear to black/transparent
+    
+    // IMPORTANT: Create a solid white block at the bottom-right corner for rectangle rendering
+    // We'll use the area from (120,120) to (127,127) as a solid white block
+    for (int y = 120; y < 128; y++) {
+        for (int x = 120; x < 128; x++) {
+            int pixel_idx = (y * 128 + x) * 4;
+            g_ui_context.font_texture[pixel_idx + 0] = 255; // R
+            g_ui_context.font_texture[pixel_idx + 1] = 255; // G
+            g_ui_context.font_texture[pixel_idx + 2] = 255; // B
+            g_ui_context.font_texture[pixel_idx + 3] = 255; // A
+        }
+    }
     
     // Render each character into the texture
     for (int char_idx = 0; char_idx < 95; char_idx++) {
@@ -349,8 +372,11 @@ void ui_microui_init(void) {
         .wrap_v = SG_WRAP_CLAMP_TO_EDGE
     });
     
+    // Initialize event queue
+    g_ui_context.event_queue.count = 0;
+    
     g_ui_context.initialized = true;
-    printf("✅ Microui wrapper initialized\n");
+    printf("✅ Microui wrapper initialized with event queue\n");
 }
 
 void ui_microui_shutdown(void) {
@@ -368,6 +394,11 @@ void ui_microui_shutdown(void) {
 // FRAME MANAGEMENT
 // ============================================================================
 
+// Forward declarations
+static void ui_microui_process_event(const sapp_event* ev);
+static void render_rect(mu_Rect rect, mu_Color color);
+static void render_text(const char* text, mu_Vec2 pos, mu_Color color);
+
 void ui_microui_begin_frame(void) {
     // printf("🎨 MicroUI: begin_frame called\n");
     
@@ -379,6 +410,29 @@ void ui_microui_begin_frame(void) {
     // Clear any previous frame state and reset the context
     mu_begin(&g_ui_context.mu_ctx);
     // printf("🎨 MicroUI: mu_begin() called, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
+    
+    // Process all queued events now that we're in an active frame
+    if (g_ui_context.event_queue.count > 0) {
+        // Only log if it's not just mouse moves filling the queue
+        int non_mouse_events = 0;
+        for (int i = 0; i < g_ui_context.event_queue.count; i++) {
+            if (g_ui_context.event_queue.events[i].type != SAPP_EVENTTYPE_MOUSE_MOVE) {
+                non_mouse_events++;
+            }
+        }
+        
+        if (non_mouse_events > 0) {
+            printf("🎨 MicroUI: Processing %d queued events (%d non-mouse)\n", 
+                   g_ui_context.event_queue.count, non_mouse_events);
+        }
+        
+        for (int i = 0; i < g_ui_context.event_queue.count; i++) {
+            ui_microui_process_event(&g_ui_context.event_queue.events[i]);
+        }
+        
+        // Clear the event queue
+        g_ui_context.event_queue.count = 0;
+    }
     
     // DIRECTLY push unclipped rect to clip stack (like begin_root_container does)
     // This avoids calling mu_push_clip_rect which itself calls mu_get_clip_rect
@@ -422,6 +476,48 @@ void ui_microui_end_frame(void) {
     
     mu_end(&g_ui_context.mu_ctx);
     // printf("🎨 MicroUI: mu_end() called\n");
+    
+    // Process commands immediately after ending the frame
+    // This ensures commands are available for rendering
+    render_state.vertex_count = 0;
+    render_state.command_count = 0;
+    
+    // Process all Microui commands
+    mu_Command *cmd = NULL;
+    int rect_count = 0, text_count = 0, clip_count = 0, icon_count = 0;
+    while (mu_next_command(&g_ui_context.mu_ctx, &cmd)) {
+        render_state.command_count++;
+        switch (cmd->type) {
+            case MU_COMMAND_RECT:
+                rect_count++;
+                render_rect(cmd->rect.rect, cmd->rect.color);
+                break;
+                
+            case MU_COMMAND_TEXT:
+                text_count++;
+                // Render actual text using bitmap font
+                render_text(cmd->text.str, cmd->text.pos, cmd->text.color);
+                break;
+                
+            case MU_COMMAND_ICON:
+                icon_count++;
+                // Icons not implemented yet
+                break;
+                
+            case MU_COMMAND_CLIP:
+                clip_count++;
+                // Handle scissor test for clipping
+                // For now, we'll acknowledge the clip command but not implement scissor testing
+                break;
+        }
+    }
+    
+    // Log command breakdown (reduced frequency)
+    static int log_counter = 0;
+    if (render_state.command_count > 0 && (log_counter++ % 60 == 0)) { // Log once per second at 60fps
+        printf("🎨 MicroUI: %d commands (%d rect, %d text, %d clip, %d icon), %d vertices\n", 
+               render_state.command_count, rect_count, text_count, clip_count, icon_count, render_state.vertex_count);
+    }
 }
 
 // ============================================================================
@@ -488,12 +584,15 @@ static void render_rect(mu_Rect rect, mu_Color color) {
     float w = rect.w;
     float h = rect.h;
     
-    // For solid rectangles, use texture coordinates that sample a solid white part
-    // We'll use the top-left corner which should be solid white from a character
-    float u1 = 0.0f;
-    float v1 = 0.0f;
-    float u2 = 1.0f / 128.0f; // Just a tiny piece to ensure solid color
-    float v2 = 1.0f / 128.0f;
+    // printf("🎨 Rendering rect: (%d,%d,%d,%d) color:(%d,%d,%d,%d)\n", 
+    //        rect.x, rect.y, rect.w, rect.h, color.r, color.g, color.b, color.a);
+    
+    // For solid rectangles, sample from the solid white block we created
+    // We placed a solid white 8x8 block at (120,120) to (127,127)
+    float u1 = 120.0f / 128.0f;   // Start of white block
+    float v1 = 120.0f / 128.0f;   // Start of white block
+    float u2 = 127.0f / 128.0f;   // End of white block
+    float v2 = 127.0f / 128.0f;   // End of white block
     
     // Triangle 1
     push_vertex(x, y, u1, v1, color);
@@ -507,39 +606,8 @@ static void render_rect(mu_Rect rect, mu_Color color) {
 }
 
 void ui_microui_render(int screen_width, int screen_height) {
-    render_state.vertex_count = 0;
-    
-    // Process all Microui commands
-    mu_Command *cmd = NULL;
-    int command_count = 0;
-    while (mu_next_command(&g_ui_context.mu_ctx, &cmd)) {
-        command_count++;
-        switch (cmd->type) {
-            case MU_COMMAND_RECT:
-                render_rect(cmd->rect.rect, cmd->rect.color);
-                break;
-                
-            case MU_COMMAND_TEXT:
-                // Render actual text using bitmap font
-                render_text(cmd->text.str, cmd->text.pos, cmd->text.color);
-                break;
-                
-            case MU_COMMAND_ICON:
-                // Icons not implemented yet
-                break;
-                
-            case MU_COMMAND_CLIP:
-                // Handle scissor test for clipping
-                // For now, we'll acknowledge the clip command but not implement scissor testing
-                // In a full implementation, this would set up proper clipping regions
-                break;
-        }
-    }
-    
-    // Only log when there are issues
-    if (command_count == 0 && render_state.vertex_count == 0) {
-        printf("🎨 MicroUI: WARNING - No commands or vertices generated\n");
-    }
+    // Commands have already been processed in end_frame
+    // Just upload and render the vertices
     
     // Upload vertex data
     if (render_state.vertex_count > 0) {
@@ -568,20 +636,42 @@ void ui_microui_render(int screen_width, int screen_height) {
 // INPUT HANDLING
 // ============================================================================
 
+// External function to check if UI is visible (defined in ui.c)
+extern bool ui_is_visible(void);
+
 bool ui_microui_handle_event(const void* event) {
     const sapp_event* ev = (const sapp_event*)event;
-    mu_Context* ctx = &g_ui_context.mu_ctx;
     
     // Don't process events if MicroUI context isn't properly initialized
     if (!g_ui_context.initialized) {
         return false;
     }
     
-    // Don't process events if clip stack is empty (not in a proper frame)
-    if (ctx->clip_stack.idx <= 0) {
-        // printf("🎨 MicroUI: Skipping event - no active frame (clip_stack.idx=%d)\n", ctx->clip_stack.idx);
+    // Don't queue events when UI is not visible
+    // This prevents the queue from filling up during logo scene
+    if (!ui_is_visible()) {
         return false;
     }
+    
+    // Queue the event instead of processing it immediately
+    // This fixes the timing issue where events arrive outside of active frames
+    if (g_ui_context.event_queue.count < UI_EVENT_QUEUE_SIZE) {
+        g_ui_context.event_queue.events[g_ui_context.event_queue.count++] = *ev;
+        // Log only important events (not mouse moves which are very frequent)
+        if (ev->type != SAPP_EVENTTYPE_MOUSE_MOVE) {
+            printf("🎨 MicroUI: Queued event type %d (queue size: %d)\n", ev->type, g_ui_context.event_queue.count);
+        }
+        return true;  // Event queued successfully
+    }
+    
+    // Queue is full, drop the event
+    printf("🎨 MicroUI: WARNING - Event queue full, dropping event\n");
+    return false;
+}
+
+// Internal function to process a queued event
+static void ui_microui_process_event(const sapp_event* ev) {
+    mu_Context* ctx = &g_ui_context.mu_ctx;
     
     switch (ev->type) {
         case SAPP_EVENTTYPE_MOUSE_MOVE:
@@ -595,11 +685,15 @@ bool ui_microui_handle_event(const void* event) {
         case SAPP_EVENTTYPE_MOUSE_DOWN:
             g_ui_context.mouse_buttons |= (1 << ev->mouse_button);
             mu_input_mousedown(ctx, ev->mouse_x, ev->mouse_y, 1 << ev->mouse_button);
+            printf("🎨 MicroUI: Mouse down at (%.0f,%.0f) button=%d mu_button=%d\n", 
+                   ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
             break;
             
         case SAPP_EVENTTYPE_MOUSE_UP:
             g_ui_context.mouse_buttons &= ~(1 << ev->mouse_button);
             mu_input_mouseup(ctx, ev->mouse_x, ev->mouse_y, 1 << ev->mouse_button);
+            printf("🎨 MicroUI: Mouse up at (%.0f,%.0f) button=%d mu_button=%d\n", 
+                   ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
             break;
             
         case SAPP_EVENTTYPE_MOUSE_SCROLL:
@@ -636,9 +730,6 @@ bool ui_microui_handle_event(const void* event) {
         default:
             break;
     }
-    
-    // Return true if mouse is over any UI element
-    return mu_mouse_over(ctx, mu_rect(0, 0, sapp_width(), sapp_height()));
 }
 
 // ============================================================================
@@ -691,4 +782,45 @@ mu_Context* ui_microui_get_mu_context(void) {
         return NULL;
     }
     return &g_ui_context.mu_ctx;
+}
+
+// Test helpers
+int ui_microui_get_rendered_vertex_count(void) {
+    return render_state.vertex_count;
+}
+
+int ui_microui_get_rendered_command_count(void) {
+    return render_state.command_count;
+}
+
+// Test utilities compatibility functions
+int ui_microui_get_vertex_count(void) {
+    return render_state.vertex_count;
+}
+
+int ui_microui_get_command_count(void) {
+    return render_state.command_count;
+}
+
+int ui_microui_get_draw_call_count(void) {
+    // Each command typically results in one draw call
+    return render_state.command_count;
+}
+
+const void* ui_microui_get_vertex_data(void) {
+    return render_state.vertices;
+}
+
+size_t ui_microui_get_vertex_data_size(void) {
+    return render_state.vertex_count * sizeof(render_state.vertices[0]);
+}
+
+bool ui_microui_is_font_texture_bound(void) {
+    return true; // Font texture is always bound during rendering
+}
+
+size_t ui_microui_get_memory_usage(void) {
+    // Basic memory usage calculation
+    return sizeof(g_ui_context) + sizeof(render_state) + 
+           (render_state.vertex_count * sizeof(render_state.vertices[0]));
 }

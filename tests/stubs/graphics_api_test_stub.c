@@ -29,6 +29,12 @@ typedef enum {
     SG_RESOURCESTATE_INVALID
 } sg_resource_state;
 
+// Range type for buffer updates
+typedef struct {
+    const void* ptr;
+    size_t size;
+} sg_range;
+
 // Sokol constants
 #define SG_INVALID_ID 0
 
@@ -169,6 +175,11 @@ sg_resource_state sg_query_pipeline_state(sg_pipeline pip) {
 sg_resource_state sg_query_sampler_state(sg_sampler smp) {
     (void)smp;
     return SG_RESOURCESTATE_VALID;
+}
+
+void sg_update_buffer(sg_buffer buf, const sg_range* data) {
+    (void)buf;
+    (void)data;
 }
 
 // ==== ASSET SYSTEM STUBS ====

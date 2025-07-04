@@ -9,6 +9,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+// Sokol app function stubs (types defined in sokol_app_stub.h)
+#ifdef SOKOL_APP_STUB_H
+int sapp_width(void) { return 1280; }
+int sapp_height(void) { return 720; }
+#endif
+
 // MicroUI type definitions for testing
 typedef struct { int x, y, w, h; } mu_Rect;
 typedef struct { int r, g, b, a; } mu_Color;

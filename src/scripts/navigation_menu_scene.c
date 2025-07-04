@@ -25,6 +25,9 @@ static void navigation_menu_enter(struct World* world, SceneStateManager* state)
     // Set scene state to menu
     scene_state_set(state, SCENE_STATE_MENU);
     
+    // TODO: Load menu input profile when input system is integrated
+    // scene_input_load_menu_profile();
+    
     // Enable UI for the navigation menu
     scene_state_set_ui_visible(state, true);
     ui_set_visible(true);  // Synchronize with UI system

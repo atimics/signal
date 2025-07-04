@@ -10,6 +10,7 @@
 #define UI_MICROUI_H
 
 #include "microui/microui.h"
+#include "sokol_app.h"
 #include <stdbool.h>
 
 // Forward declarations
@@ -20,6 +21,14 @@ struct SystemScheduler;
 // MICROUI WRAPPER CONTEXT
 // ============================================================================
 
+// Event queue for buffering input events
+#define UI_EVENT_QUEUE_SIZE 64
+
+typedef struct {
+    sapp_event events[UI_EVENT_QUEUE_SIZE];
+    int count;
+} UIEventQueue;
+
 typedef struct {
     mu_Context mu_ctx;          // Microui context
     bool initialized;           // Is the UI system initialized?
@@ -29,6 +38,9 @@ typedef struct {
     int mouse_dx, mouse_dy;
     int mouse_buttons;
     bool keys_down[512];        // Key state tracking
+    
+    // Event queue for deferred processing
+    UIEventQueue event_queue;   // Queue events to process during frame
     
     // Rendering data
     unsigned char font_texture[128 * 128 * 4];  // Built-in font texture (RGBA)
@@ -90,5 +102,9 @@ UIContext* ui_microui_get_context(void);
 
 // Get the Microui context directly
 mu_Context* ui_microui_get_mu_context(void);
+
+// Test helpers - get render state info
+int ui_microui_get_rendered_vertex_count(void);
+int ui_microui_get_rendered_command_count(void);
 
 #endif // UI_MICROUI_H
