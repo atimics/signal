@@ -8,6 +8,9 @@
 #include "ui_microui.h"
 #include "ui_microui_adapter.h"
 #include "graphics_api.h"
+#include "sokol_app.h"
+#include "sokol_gfx.h"
+#include "sokol_glue.h"
 #include <stdio.h>
 
 // ============================================================================
@@ -71,9 +74,19 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         }
     }
     
-    // End frame and render
+    // End frame
     ui_microui_end_frame();
+    
+    // Start UI render pass with blend for transparency
+    sg_pass_action ui_pass_action = {
+        .colors[0] = { 
+            .load_action = SG_LOADACTION_LOAD  // Load existing framebuffer (don't clear)
+        }
+    };
+    
+    sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = ui_pass_action });
     ui_microui_render(sapp_width(), sapp_height());
+    sg_end_pass();
 }
 
 bool ui_handle_event(const void* ev)

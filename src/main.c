@@ -355,15 +355,17 @@ static void frame(void)
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
 
-    // Render frame
+    // Render frame (3D entities)
     sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = app_state.pass_action });
 
     // Render entities
     render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
 
+    sg_end_pass();
+
+    // Render UI in a separate pass (MicroUI manages its own render state)
     ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
 
-    sg_end_pass();
     sg_commit();
 
     // End performance frame timing
