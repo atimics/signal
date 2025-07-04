@@ -323,10 +323,13 @@ static void frame(void)
     }
     
     // Handle scene transitions
+    bool scene_transition_occurred = false;
     if (scene_state_has_pending_transition(&app_state.scene_state))
     {
         const char* next_scene = scene_state_get_next_scene(&app_state.scene_state);
         printf("🎬 Executing scene transition: %s -> %s\n", app_state.scene_state.current_scene_name, next_scene);
+        
+        scene_transition_occurred = true;
         
         // Reset camera system before clearing world
         camera_system_reset();
@@ -363,8 +366,11 @@ static void frame(void)
 
     sg_end_pass();
 
-    // Render UI in a separate pass (MicroUI manages its own render state)
-    ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
+    // Only render UI if no scene transition occurred this frame to avoid MicroUI context issues
+    if (!scene_transition_occurred) {
+        // Render UI in a separate pass (MicroUI manages its own render state)
+        ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
+    }
 
     sg_commit();
 
