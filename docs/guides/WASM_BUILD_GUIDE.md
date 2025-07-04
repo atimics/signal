@@ -260,3 +260,44 @@ chmod +x test_wasm.sh
 5. Enjoy CGame in your browser!
 
 For issues, check the browser console and ensure WebGL 2 support.
+
+## Build Fixes Applied
+
+The WASM build required several fixes to resolve compilation issues:
+
+### Header Include Conflicts
+- **Issue**: Multiple includes of sokol headers causing redefinition errors
+- **Fix**: Centralized all sokol includes through `graphics_api.h`, removed direct includes from:
+  - `src/assets.c`
+  - `src/render_3d.c`
+  - `src/system/camera.h`
+
+### Type Definition Conflicts  
+- **Issue**: Forward declarations conflicting with actual sokol types
+- **Fix**: Conditional forward declarations only for non-WASM builds:
+  ```c
+  #ifndef WASM_BUILD
+  struct sapp_event;
+  #endif
+  ```
+
+### Missing Standard Definitions
+- **Issue**: `M_PI` and `strdup` not available in WASM environment
+- **Fix**: Created `src/wasm_defs.h` with portable definitions
+- **Files updated**: `render_thrust_cones.c`, `scripted_flight.c`, `look_target.c`, `thruster_points_component.c`
+
+### Platform-Specific Code
+- **Issue**: Platform-specific code (macOS HID, ODE physics, UI) included in WASM build
+- **Fix**: Enhanced WASM_SOURCES filter in Makefile to exclude:
+  - `hidapi_mac.c` (macOS-specific)
+  - `system/ode_physics.c` (physics library)
+  - `ui*.c` files (Nuklear UI components)
+  - `hud_system.c` (UI-dependent)
+  - `input_processing.c` (advanced input features)
+
+### Current Status
+✅ WASM build now compiles successfully
+✅ Minimal UI stubs for compatibility
+✅ Core flight mechanics should work
+⚠️  UI components disabled for simplicity
+⚠️  Advanced input processing excluded

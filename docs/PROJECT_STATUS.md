@@ -5,14 +5,14 @@
 ## Current Development Status
 
 ### Active Sprint
-- **Sprint 24**: Canyon Racing Prototype (Starting)
-- **Duration**: 2 weeks
-- **Goal**: First gameplay vertical slice
+- **Sprint 25**: UI Framework Migration (Critical)
+- **Duration**: 3-5 days
+- **Goal**: Complete Nuklear → MicroUI migration for WASM compatibility
 
-### Just Completed
-- **Sprint 23**: Technical Excellence ✅
-- **Completed**: July 3, 2025 (same day!)
-- **Achievement**: Bulletproof foundation for content development
+### Previous Sprint
+- **Sprint 24**: Canyon Racing Prototype (Paused)
+- **Status**: Paused to prioritize UI migration
+- **Reason**: WASM compatibility required before content development
 
 ## Technical Metrics
 
@@ -44,8 +44,19 @@
 - Basic rendering pipeline
 - Input handling system
 
-### 🚧 In Progress
-- Canyon track generation
+### 🚧 In Progress (UI Migration Sprint)
+- Nuklear → MicroUI migration
+- Scene UI system conversion
+- UI components widget migration
+- Build system cleanup
+
+### ⏳ Planned for Removal
+- Legacy HUD system (Nuklear-dependent)
+- Complex UI components requiring custom drawing
+- Sokol-Nuklear integration layer
+
+### 🎯 Next Sprint Goals
+- Canyon track generation (after UI migration)
 - Racing checkpoint system
 - Time trial mechanics
 - Ghost replay system
