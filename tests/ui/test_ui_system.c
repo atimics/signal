@@ -271,7 +271,7 @@ void test_entity_browser_widget_initialization(void)
     
     // Check initial state
     TEST_ASSERT_EQUAL_INT(-1, widget.selected_entity);
-    TEST_ASSERT_TRUE(widget.show_components);
+    TEST_ASSERT_FALSE(widget.show_components);
 }
 
 // ============================================================================

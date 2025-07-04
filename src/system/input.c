@@ -3,6 +3,7 @@
 
 #include "input.h"
 #include "gamepad.h"
+#include "gamepad_hotplug.h"
 #include "../component/look_target.h"
 #include "../input_processing.h"
 #include "../sokol_app.h"
@@ -56,12 +57,23 @@ static float apply_deadzone(float value, float deadzone) {
     return sign * (fabsf(value) - deadzone) / (1.0f - deadzone);
 }
 
+// Forward declaration for gamepad callbacks
+static void on_gamepad_connected(int gamepad_index);
+static void on_gamepad_disconnected(int gamepad_index);
+
 bool input_init(void) {
     // Initialize gamepad system
     if (!gamepad_init()) {
         printf("⚠️  AAA Input: Gamepad initialization failed - keyboard/mouse only\n");
     } else {
         printf("🎮 AAA Input: Gamepad system ready\n");
+        
+        // Enable gamepad hotplug detection for mid-game connections
+        gamepad_enable_hotplug(true);
+        gamepad_set_hotplug_interval(1.0f); // Check every second
+        gamepad_set_connected_callback(on_gamepad_connected);
+        gamepad_set_disconnected_callback(on_gamepad_disconnected);
+        printf("🔌 AAA Input: Gamepad hotplug detection enabled\n");
     }
     
     // Clear input state
@@ -90,6 +102,9 @@ void input_shutdown(void) {
 
 void input_update(void) {
     if (!canyon_input.initialized) return;
+    
+    // Update gamepad hotplug detection (checks for new connections)
+    gamepad_update_hotplug(0.016f); // Assume 60 FPS for now
     
     // Poll gamepad
     gamepad_poll();
@@ -447,4 +462,47 @@ void input_set_processing_config(bool enable_neural, bool enable_mrac, bool enab
            enable_neural ? "ON" : "OFF",
            enable_mrac ? "ON" : "OFF", 
            enable_kalman ? "ON" : "OFF");
+}
+
+// ============================================================================
+// GAMEPAD HOTPLUG CALLBACKS
+// ============================================================================
+
+static void on_gamepad_connected(int gamepad_index) {
+    printf("🎮 HOTPLUG: Gamepad %d connected!\n", gamepad_index);
+    
+    // Set last device to gamepad to update UI hints
+    canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+    
+    // Get gamepad info
+    GamepadState* gamepad = gamepad_get_state(gamepad_index);
+    if (gamepad) {
+        printf("   Device: %s\n", gamepad->product_string);
+        
+        // Recalibrate advanced processor for new device
+        if (canyon_input.processor_enabled) {
+            production_input_processor_reset(&canyon_input.processor);
+            printf("   Recalibrating input processor for new device\n");
+        }
+    }
+}
+
+static void on_gamepad_disconnected(int gamepad_index) {
+    printf("🎮 HOTPLUG: Gamepad %d disconnected\n", gamepad_index);
+    
+    // Check if any gamepads are still connected
+    bool any_connected = false;
+    for (int i = 0; i < 4; i++) {
+        GamepadState* gamepad = gamepad_get_state(i);
+        if (gamepad && gamepad->connected) {
+            any_connected = true;
+            break;
+        }
+    }
+    
+    // If no gamepads connected, switch to keyboard
+    if (!any_connected) {
+        canyon_input.last_device = INPUT_DEVICE_KEYBOARD;
+        printf("   No gamepads remaining - switching to keyboard/mouse\n");
+    }
 }

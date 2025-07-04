@@ -25,6 +25,26 @@ void scene_list_widget_init(SceneListWidget* widget)
     widget->scenes_loaded = false;
 }
 
+void scene_list_widget_shutdown(SceneListWidget* widget)
+{
+    // Free existing data
+    if (widget->scene_names) {
+        for (int i = 0; i < widget->scene_count; i++) {
+            free(widget->scene_names[i]);
+            free(widget->scene_descriptions[i]);
+        }
+        free(widget->scene_names);
+        free(widget->scene_descriptions);
+    }
+    
+    // Reset to initial state
+    widget->scene_names = NULL;
+    widget->scene_descriptions = NULL;
+    widget->scene_count = 0;
+    widget->selected_index = -1;
+    widget->scenes_loaded = false;
+}
+
 void scene_list_widget_refresh(SceneListWidget* widget)
 {
     // Free existing data

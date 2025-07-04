@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gpu_resources.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -58,6 +59,13 @@ void world_clear(struct World* world)
     if (!world) return;
     
     printf("🌍 Clearing world - removing %d entities\n", world->entity_count);
+    
+    // Properly destroy all entities to free resources
+    while (world->entity_count > 0) {
+        // Get the first entity (they get compacted as we destroy)
+        EntityID entity_id = world->entities[0].id;
+        entity_destroy(world, entity_id);
+    }
     
     // Clear all entities
     world->entity_count = 0;
@@ -351,6 +359,11 @@ bool entity_remove_component(struct World* world, EntityID entity_id, ComponentT
             entity->ai = NULL;
             break;
         case COMPONENT_RENDERABLE:
+            // Free GPU resources if allocated
+            if (entity->renderable && entity->renderable->gpu_resources) {
+                gpu_resources_destroy(entity->renderable->gpu_resources);
+                entity->renderable->gpu_resources = NULL;
+            }
             entity->renderable = NULL;
             break;
         case COMPONENT_PLAYER:

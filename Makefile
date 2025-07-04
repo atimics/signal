@@ -64,17 +64,20 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files - now includes Microui instead of Nuklear
-SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c input_processing.c system/thrusters.c system/thruster_points_system.c system/control.c system/scripted_flight.c component/look_target.c component/thruster_points_component.c thruster_points.c render_thrust_cones.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c microui/microui.c ui_microui.c ui_microui_adapter.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls_stubs.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c entity_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c scripts/ship_launch_test_scene.c config.c hidapi_mac.c main.c
+SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c input_processing.c system/thrusters.c system/thruster_points_system.c system/control.c system/scripted_flight.c component/look_target.c component/thruster_points_component.c thruster_points.c render_thrust_cones.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c microui/microui.c ui_microui.c ui_microui_adapter.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c ui_navigation_menu_impl.c ui_navigation_menu_microui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c entity_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c scripts/navigation_menu_scene.c scripts/ship_launch_test_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
 TARGET = $(BUILD_DIR)/cgame
 
-# Default target - try to build assets, then executable
-all: assets $(TARGET)
+# Default target - run tests first, then build assets and executable
+all: test assets $(TARGET)
 
 # Build with assets (may fail if asset compiler has issues)
 with-assets: assets $(TARGET)
+
+# Build without running tests (use with caution)
+build-only: assets $(TARGET)
 
 # Help target - show available commands
 help:
@@ -82,7 +85,8 @@ help:
 	@echo "========================================"
 	@echo ""
 	@echo "🏗️  BUILD TARGETS:"
-	@echo "  all              - Build game with assets (default)"
+	@echo "  all              - Run tests, then build game with assets (default)"
+	@echo "  build-only       - Build without running tests (use with caution)"
 	@echo "  with-assets      - Build game with assets (explicit)"
 	@echo "  debug            - Build with debug flags (-DDEBUG -O0)"
 	@echo "  release          - Build optimized release version"
@@ -90,6 +94,9 @@ help:
 	@echo ""
 	@echo "🧪 TEST TARGETS:"
 	@echo "  test             - Run comprehensive test suite (math, UI, performance, physics, thrusters, control, camera, input, flight integration)"
+	@echo "  test-leaks       - Run memory leak detection using logo scene (macOS)"
+	@echo "  memory-test      - Run Valgrind memory leak detection (Linux)"
+	@echo "  memory-check     - Run Valgrind memory error detection (Linux)"
 	@echo ""
 	@echo "🎨 ASSET TARGETS:"
 	@echo "  assets           - Compile assets to binary format"
@@ -318,11 +325,13 @@ TEST_INPUT_SRC = tests/systems/test_input.c tests/vendor/unity.c
 TEST_FLIGHT_INTEGRATION_SRC = tests/integration/test_flight_integration.c tests/vendor/unity.c
 
 # Critical physics tests for Sprint 21 velocity integration bug
-PHYSICS_TEST_SOURCES = tests/vendor/unity.c src/core.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
+PHYSICS_TEST_SOURCES = tests/vendor/unity.c src/core.c src/gpu_resources.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
 build/test_physics_critical: tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES)
 	@echo "🔧 Building critical physics tests..."
-	$(CC) $(TEST_CFLAGS) \
-		-o $@ tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES) $(LDFLAGS)
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES) -lm
 
 # Main test target - runs all essential tests including new comprehensive tests
 test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET)
@@ -369,13 +378,32 @@ test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_
 	@echo ""
 	@echo "✅ All tests completed successfully!"
 
+# Memory leak test for macOS using the logo scene
+test-leaks: $(TARGET)
+	@echo "🧠 Running memory leak detection on logo scene..."
+	@echo "#!/bin/bash" > $(BUILD_DIR)/test_logo.sh
+	@echo "timeout 3 ./$(TARGET) > /dev/null 2>&1 || true" >> $(BUILD_DIR)/test_logo.sh
+	@chmod +x $(BUILD_DIR)/test_logo.sh
+	@if command -v leaks >/dev/null 2>&1; then \
+		OUTPUT=$$(leaks --atExit -- $(BUILD_DIR)/test_logo.sh 2>&1); \
+		if echo "$$OUTPUT" | grep -q "0 leaks for 0 total leaked bytes"; then \
+			echo "✅ No memory leaks detected"; \
+		else \
+			echo "$$OUTPUT" | grep -E "Process.*[0-9]+ leak|total leaked"; \
+			echo "❌ Memory leaks detected!"; \
+			exit 1; \
+		fi \
+	else \
+		echo "⚠️  'leaks' command not available (macOS only)"; \
+	fi
+
 # Build math tests (no dependencies)
 $(TEST_CORE_MATH_TARGET): $(TEST_CORE_MATH_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building core math tests..."
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_STANDALONE -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CORE_MATH_SRC) src/core.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CORE_MATH_SRC) src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build core components tests
 $(TEST_CORE_COMPONENTS_TARGET): $(TEST_CORE_COMPONENTS_SRC) | $(BUILD_DIR)
@@ -383,7 +411,7 @@ $(TEST_CORE_COMPONENTS_TARGET): $(TEST_CORE_COMPONENTS_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND -DTEST_STANDALONE \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CORE_COMPONENTS_SRC) src/core.c src/system/physics.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CORE_COMPONENTS_SRC) src/core.c src/gpu_resources.c src/system/physics.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build core world tests  
 $(TEST_CORE_WORLD_TARGET): $(TEST_CORE_WORLD_SRC) | $(BUILD_DIR)
@@ -391,7 +419,7 @@ $(TEST_CORE_WORLD_TARGET): $(TEST_CORE_WORLD_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND -DTEST_STANDALONE \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CORE_WORLD_SRC) src/core.c src/system/physics.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CORE_WORLD_SRC) src/core.c src/gpu_resources.c src/system/physics.c tests/support/test_utilities.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build UI tests (with test stubs)
 $(TEST_UI_TARGET): $(TEST_UI_SRC) | $(BUILD_DIR)
@@ -399,7 +427,7 @@ $(TEST_UI_TARGET): $(TEST_UI_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_UI_SRC) $(ENGINE_TEST_SRC) tests/stubs/nuklear_test_stubs.c -lm
+		-o $@ $(TEST_UI_SRC) src/ui_api.c src/ui_scene.c src/ui_components.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c tests/stubs/microui_test_stubs.c -lm
 
 # Build rendering tests
 $(TEST_RENDERING_TARGET): $(TEST_RENDERING_SRC) | $(BUILD_DIR)
@@ -415,7 +443,7 @@ $(TEST_PHYSICS_TARGET): $(TEST_PHYSICS_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_PHYSICS_SRC) src/core.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_PHYSICS_SRC) src/core.c src/gpu_resources.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build thruster system tests  
 $(TEST_THRUSTERS_TARGET): $(TEST_THRUSTERS_SRC) | $(BUILD_DIR)
@@ -423,7 +451,7 @@ $(TEST_THRUSTERS_TARGET): $(TEST_THRUSTERS_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_THRUSTERS_SRC) src/core.c src/system/thrusters.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_THRUSTERS_SRC) src/core.c src/gpu_resources.c src/system/thrusters.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build control authority tests
 $(TEST_CONTROL_TARGET): $(TEST_CONTROL_SRC) | $(BUILD_DIR)
@@ -431,7 +459,7 @@ $(TEST_CONTROL_TARGET): $(TEST_CONTROL_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CONTROL_SRC) src/core.c src/system/control.c src/system/thrusters.c src/system/physics.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CONTROL_SRC) src/core.c src/gpu_resources.c src/system/control.c src/system/thrusters.c src/system/physics.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build camera system tests
 $(TEST_CAMERA_TARGET): $(TEST_CAMERA_SRC) | $(BUILD_DIR)
@@ -439,7 +467,7 @@ $(TEST_CAMERA_TARGET): $(TEST_CAMERA_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CAMERA_SRC) src/core.c src/system/camera.c src/render_camera.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CAMERA_SRC) src/core.c src/gpu_resources.c src/system/camera.c src/render_camera.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build input system tests
 $(TEST_INPUT_TARGET): $(TEST_INPUT_SRC) | $(BUILD_DIR)
@@ -447,7 +475,7 @@ $(TEST_INPUT_TARGET): $(TEST_INPUT_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_INPUT_SRC) src/core.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_INPUT_SRC) src/core.c src/gpu_resources.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build flight integration tests
 $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
@@ -455,7 +483,7 @@ $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/input_processing.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
+		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/gpu_resources.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/input_processing.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
 
 # Build critical input system tests
 $(TEST_INPUT_CRITICAL_TARGET): $(TEST_INPUT_CRITICAL_SRC) | $(BUILD_DIR)
@@ -463,15 +491,15 @@ $(TEST_INPUT_CRITICAL_TARGET): $(TEST_INPUT_CRITICAL_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_INPUT_CRITICAL_SRC) src/core.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_INPUT_CRITICAL_SRC) src/core.c src/gpu_resources.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build critical flight scene tests
 $(TEST_FLIGHT_SCENE_CRITICAL_TARGET): $(TEST_FLIGHT_SCENE_CRITICAL_SRC) | $(BUILD_DIR)
 	@echo "🔨 Building critical flight scene tests..."
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
-		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND -DINCLUDE_REAL_SCENE_STATE \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/input_processing.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c src/scene_state.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
+		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/gpu_resources.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/input_processing.c src/component/look_target.c src/scene_state.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # ============================================================================
 # MEMORY TESTING TARGETS
@@ -519,4 +547,14 @@ ubsan-test: clean
 memory-suite: asan-test memory-test memory-check
 	@echo "✅ Full memory testing suite completed"
 
-.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test help docs memory-test memory-check asan-test tsan-test ubsan-test memory-suite
+# MicroUI specific tests
+test-microui: | $(BUILD_DIR)
+	@echo "🔨 Building MicroUI core tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $(BUILD_DIR)/test_microui_core tests/microui/test_microui_core.c tests/vendor/unity.c tests/stubs/microui_test_stubs.c -lm
+	@echo "🧪 Running MicroUI tests..."
+	./$(BUILD_DIR)/test_microui_core
+
+.PHONY: all build-only with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test-leaks test-microui help docs memory-test memory-check asan-test tsan-test ubsan-test memory-suite

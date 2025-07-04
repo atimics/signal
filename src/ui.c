@@ -8,10 +8,12 @@
 #include "ui_microui.h"
 #include "ui_microui_adapter.h"
 #include "graphics_api.h"
+#include "ui_scene.h"
 #include "sokol_app.h"
 #include "sokol_gfx.h"
 #include "sokol_glue.h"
 #include <stdio.h>
+#include <string.h>
 
 // ============================================================================
 // GLOBAL UI STATE
@@ -19,6 +21,7 @@
 
 static bool g_ui_visible = true;
 static bool g_debug_ui_visible = false;
+static char g_current_scene[64] = {0};
 
 // ============================================================================
 // CORE UI SYSTEM
@@ -29,11 +32,17 @@ void ui_init(void)
     // Initialize Microui
     ui_microui_init();
     
+    // Initialize scene UI system
+    scene_ui_init();
+    
     printf("✅ Core UI system initialized with Microui\n");
 }
 
 void ui_shutdown(void)
 {
+    // Shutdown scene UI system
+    scene_ui_shutdown();
+    
     // Shutdown Microui
     ui_microui_shutdown();
     
@@ -42,12 +51,31 @@ void ui_shutdown(void)
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
 {
-    printf("🎨 ui_render called: g_ui_visible=%d, scene=%s\n", g_ui_visible, current_scene);
+    // Store current scene for event handling
+    if (current_scene) {
+        strncpy(g_current_scene, current_scene, sizeof(g_current_scene) - 1);
+        g_current_scene[sizeof(g_current_scene) - 1] = '\0';
+    }
     
     // Early exit if UI is not visible - absolutely no UI calls should happen
     if (!g_ui_visible) {
-        printf("🎨 UI not visible, skipping render\n");
         return;
+    }
+    
+    // TEMPORARY: Ensure navigation menu module exists when in navigation_menu scene
+    if (current_scene && strcmp(current_scene, "navigation_menu") == 0) {
+        SceneUIModule* nav_module = scene_ui_get_module("navigation_menu");
+        if (!nav_module) {
+            // Create and register the navigation menu module
+            extern SceneUIModule* create_navigation_menu_ui_module(void);
+            SceneUIModule* new_module = create_navigation_menu_ui_module();
+            if (new_module) {
+                scene_ui_register(new_module);
+                if (new_module->init) {
+                    new_module->init(world);
+                }
+            }
+        }
     }
     
     // Get Microui context
@@ -105,7 +133,7 @@ bool ui_handle_event(const void* ev)
 {
     const sapp_event* event = (const sapp_event*)ev;
     
-    // Handle global UI hotkeys before passing to Microui
+    // Handle global UI hotkeys before passing to scene modules
     if (event->type == SAPP_EVENTTYPE_KEY_DOWN) {
         switch (event->key_code) {
             case SAPP_KEYCODE_F1:
@@ -126,7 +154,18 @@ bool ui_handle_event(const void* ev)
         }
     }
     
-    // Pass event to Microui
+    // First, check if current scene's UI module wants to handle this event
+    if (strlen(g_current_scene) > 0) {
+        SceneUIModule* module = scene_ui_get_module(g_current_scene);
+        if (module && module->handle_event) {
+            // Pass NULL for world since we don't have it here
+            if (module->handle_event(ev, NULL)) {
+                return true;  // Scene UI module handled this event
+            }
+        }
+    }
+    
+    // If scene UI didn't handle it, pass to Microui for general UI handling
     return ui_microui_handle_event(event);
 }
 

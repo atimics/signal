@@ -13,6 +13,7 @@
 // Forward declarations for scene scripts
 extern const SceneScript logo_script;
 extern const SceneScript scene_selector_script;
+extern const SceneScript navigation_menu_script;
 extern const SceneScript derelict_navigation_script;
 extern const SceneScript flight_test_script;
 extern const SceneScript ode_test_script;
@@ -25,6 +26,7 @@ extern const SceneScript ship_launch_test_script;
 static const SceneScript* scene_scripts[] = {
     &logo_script,
     &scene_selector_script,
+    &navigation_menu_script,
     &derelict_navigation_script,
     &flight_test_script,
     &ode_test_script,

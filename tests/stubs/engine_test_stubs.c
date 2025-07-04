@@ -93,11 +93,37 @@ void config_set_startup_scene(const char* scene) { (void)scene; }
 int sapp_width(void) { return 1920; }
 int sapp_height(void) { return 1080; }
 
+// Scene state stubs
+#ifndef INCLUDE_REAL_SCENE_STATE
+void scene_state_request_transition(const char* scene_name) {
+    (void)scene_name;
+    // Test stub - no-op
+}
+#endif
+
+// UI adaptive control stubs
+bool ui_adaptive_should_show_gamepad(void) { return false; }
+const char* ui_adaptive_get_hint_text(const char* action) {
+    (void)action;
+    return "Press A";
+}
+
+// UI visibility stub
+void ui_set_visible(bool visible) {
+    (void)visible;
+    // Test stub - no-op
+}
+
 // Gamepad stubs for testing
 static GamepadState test_gamepad_state = {0};
 
 bool gamepad_init(void) { return true; }
 void gamepad_shutdown(void) {}
+void gamepad_enable_hotplug(bool enable) { (void)enable; }
+void gamepad_set_hotplug_interval(float seconds) { (void)seconds; }
+void gamepad_update_hotplug(void) {}
+void gamepad_set_connected_callback(void (*callback)(int)) { (void)callback; }
+void gamepad_set_disconnected_callback(void (*callback)(int)) { (void)callback; }
 void gamepad_poll(void) {}
 GamepadState* gamepad_get_state(int gamepad_index) { 
     (void)gamepad_index; 

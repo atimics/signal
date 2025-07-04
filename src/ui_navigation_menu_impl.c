@@ -1,197 +1,141 @@
-// src/ui_navigation_menu_impl.c
-// Navigation menu implementation without direct nuklear inclusion
+/**
+ * @file ui_navigation_menu_impl.c
+ * @brief Navigation menu UI module implementation
+ */
 
 #include "ui_scene.h"
 #include "ui_adaptive_controls.h"
 #include "ui_api.h"
-#include "scene_state.h"
-#include "system/gamepad.h"
-#include "system/gamepad_hotplug.h"
-#include "system/input.h"  // For input_set_last_device_type and INPUT_DEVICE_KEYBOARD
-#include "sokol_app.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <math.h>
+#include <string.h>
 
-// Navigation menu data
+// Navigation menu data structure
 typedef struct {
     int selected_index;
     float animation_timer;
     bool gamepad_was_connected;
     
-    // Menu items
     const char* destinations[9];
     const char* descriptions[9];
     int destination_count;
     
-    // Control hints to display
     ControlHint nav_hints[3];
 } NavigationMenuData;
 
-static void navigation_menu_init(struct World* world) {
+// Static module instance
+static SceneUIModule nav_module = {0};
+static NavigationMenuData nav_data = {0};
+
+// ============================================================================
+// NAVIGATION MENU UI MODULE IMPLEMENTATION
+// ============================================================================
+
+static void navigation_menu_init(struct World* world)
+{
     (void)world;
+    printf("🧭 Navigation Menu UI: Initializing\n");
     
-    SceneUIModule* module = scene_ui_get_module("navigation_menu");
-    if (!module) return;
+    // Initialize navigation data
+    nav_data.selected_index = 0;
+    nav_data.animation_timer = 0.0f;
+    nav_data.gamepad_was_connected = false;
     
-    NavigationMenuData* data = calloc(1, sizeof(NavigationMenuData));
-    module->data = data;
+    // Set up destinations
+    nav_data.destinations[0] = "Launch Sequence";
+    nav_data.descriptions[0] = "Test ship launch and physics initialization";
     
-    // Initialize menu items - Clean vertical slice
-    data->destinations[0] = "🚀 Ship Launch Pad";
-    data->descriptions[0] = "Launch your ship from the landing pad";
+    nav_data.destinations[1] = "Flight Training Arena";
+    nav_data.descriptions[1] = "Practice flight controls in open space";
     
-    data->destinations[1] = "🏁 Flight Test";
-    data->descriptions[1] = "Test your ship's flight capabilities";
+    nav_data.destinations[2] = "Thruster Calibration";
+    nav_data.descriptions[2] = "Fine-tune thruster response curves";
     
-    data->destinations[2] = "🎮 Thruster Demo";
-    data->descriptions[2] = "Visualize thruster system";
+    nav_data.destination_count = 3;
     
-    data->destination_count = 3;
-    data->selected_index = 0;
+    // Initialize control hints
+    nav_data.nav_hints[0].action_name = "Navigate";
+    nav_data.nav_hints[0].keyboard_hint = "↑↓ Arrow Keys";
+    nav_data.nav_hints[0].gamepad_hint = "D-Pad / Left Stick";
     
-    // Set up control hints
-    data->nav_hints[0] = UI_HINT_NAVIGATE;
-    data->nav_hints[1] = UI_HINT_SELECT;
-    data->nav_hints[2] = UI_HINT_BACK;
+    nav_data.nav_hints[1].action_name = "Select";
+    nav_data.nav_hints[1].keyboard_hint = "Enter";
+    nav_data.nav_hints[1].gamepad_hint = "A Button";
     
-    // Check initial gamepad state
-    data->gamepad_was_connected = (gamepad_get_primary() != NULL);
+    nav_data.nav_hints[2].action_name = "Exit";
+    nav_data.nav_hints[2].keyboard_hint = "Escape";
+    nav_data.nav_hints[2].gamepad_hint = "B Button";
     
-    printf("🧭 Navigation menu UI initialized\n");
+    // UI initialized with destinations
 }
 
-static void navigation_menu_shutdown(struct World* world) {
+static void navigation_menu_shutdown(struct World* world)
+{
     (void)world;
+    // Shutting down navigation menu UI
     
-    SceneUIModule* module = scene_ui_get_module("navigation_menu");
-    if (!module || !module->data) return;
-    
-    free(module->data);
-    module->data = NULL;
-    
-    printf("🧭 Navigation menu UI shutdown\n");
+    // Clean up any allocated resources
+    memset(&nav_data, 0, sizeof(nav_data));
 }
 
-// External render function that will be implemented in ui_navigation_menu.c
-extern void navigation_menu_render_nuklear(struct nk_context* ctx, NavigationMenuData* data, float delta_time);
-
-static void navigation_menu_render(struct nk_context* ctx, struct World* world, 
-                                  struct SystemScheduler* scheduler, float delta_time) {
+static void navigation_menu_update(struct World* world, float delta_time)
+{
     (void)world;
-    (void)scheduler;
     
-    SceneUIModule* module = scene_ui_get_module("navigation_menu");
-    if (!module || !module->data) return;
+    // Update animation timer
+    nav_data.animation_timer += delta_time;
     
-    NavigationMenuData* data = (NavigationMenuData*)module->data;
-    
-    // Update animation
-    data->animation_timer += delta_time;
-    
-    // Check for gamepad connection changes
-    bool gamepad_connected = (gamepad_get_primary() != NULL);
-    if (gamepad_connected != data->gamepad_was_connected) {
-        data->gamepad_was_connected = gamepad_connected;
-        printf("🧭 Navigation menu: Gamepad %s\n", 
-               gamepad_connected ? "connected" : "disconnected");
+    // Update gamepad connection status
+    bool gamepad_connected = ui_adaptive_should_show_gamepad();
+    if (gamepad_connected != nav_data.gamepad_was_connected) {
+        nav_data.gamepad_was_connected = gamepad_connected;
+        // Gamepad connection state changed
     }
-    
-    // Handle gamepad navigation
-    ui_adaptive_menu_navigate(&data->selected_index, data->destination_count);
-    
-    // Delegate actual rendering to the nuklear implementation
-    navigation_menu_render_nuklear(ctx, data, delta_time);
 }
 
-static bool navigation_menu_handle_event(const void* event, struct World* world) {
+static bool navigation_menu_handle_event(const void* event, struct World* world)
+{
+    (void)event;
     (void)world;
     
-    const sapp_event* ev = (const sapp_event*)event;
-    SceneUIModule* module = scene_ui_get_module("navigation_menu");
-    if (!module || !module->data) return false;
-    
-    NavigationMenuData* data = (NavigationMenuData*)module->data;
-    
-    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
-        switch (ev->key_code) {
-            case SAPP_KEYCODE_UP:
-            case SAPP_KEYCODE_W:
-                data->selected_index--;
-                if (data->selected_index < 0) {
-                    data->selected_index = data->destination_count - 1;
-                }
-                input_set_last_device_type(INPUT_DEVICE_KEYBOARD);
-                return true;
-                
-            case SAPP_KEYCODE_DOWN:
-            case SAPP_KEYCODE_S:
-                data->selected_index++;
-                if (data->selected_index >= data->destination_count) {
-                    data->selected_index = 0;
-                }
-                input_set_last_device_type(INPUT_DEVICE_KEYBOARD);
-                return true;
-                
-            case SAPP_KEYCODE_ENTER:
-            case SAPP_KEYCODE_SPACE:
-                // Trigger selection
-                {
-                    const char* scene_names[] = {
-                        "ship_launch_test",
-                        "flight_test",
-                        "thruster_test"
-                    };
-                    
-                    if (data->selected_index < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {
-                        printf("🧭 Navigation: Selected %s\n", scene_names[data->selected_index]);
-                        scene_state_request_transition(NULL, scene_names[data->selected_index]);
-                    }
-                }
-                input_set_last_device_type(INPUT_DEVICE_KEYBOARD);
-                return true;
-                
-            case SAPP_KEYCODE_ESCAPE:
-                // Could return to previous menu or quit
-                printf("🧭 Navigation: ESC pressed\n");
-                input_set_last_device_type(INPUT_DEVICE_KEYBOARD);
-                return true;
-                
-            default:
-                // Handle all other keys
-                break;
-        }
-    }
-    
-    // Check for gamepad input
-    if (ui_adaptive_menu_select()) {
-        // Trigger selection with gamepad
-        const char* scene_names[] = {
-            "ship_launch_test",
-            "flight_test",
-            "thruster_test"
-        };
-        
-        if (data->selected_index < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {
-            printf("🧭 Navigation: Gamepad selected %s\n", scene_names[data->selected_index]);
-            scene_state_request_transition(NULL, scene_names[data->selected_index]);
-        }
-        return true;
-    }
-    
+    // Event handling is done through MicroUI
     return false;
 }
 
-// Create the module
-SceneUIModule* create_navigation_menu_ui_module(void) {
-    SceneUIModule* module = calloc(1, sizeof(SceneUIModule));
+// External render function (implemented in ui_navigation_menu_microui.c)
+extern void navigation_menu_render_microui(NavigationMenuData* data, float delta_time);
+
+static void navigation_menu_render(void* ctx, struct World* world, 
+                                 struct SystemScheduler* scheduler, float delta_time)
+{
+    (void)ctx;  // We'll use the global MicroUI context
+    (void)scheduler;
     
-    module->scene_name = "navigation_menu";
-    module->init = navigation_menu_init;
-    module->shutdown = navigation_menu_shutdown;
-    module->render = navigation_menu_render;
-    module->handle_event = navigation_menu_handle_event;
+    // Update state before rendering
+    navigation_menu_update(world, delta_time);
     
-    return module;
+    // Call the MicroUI render function with our data
+    navigation_menu_render_microui(&nav_data, delta_time);
+}
+
+// ============================================================================
+// MODULE CREATION
+// ============================================================================
+
+SceneUIModule* create_navigation_menu_ui_module(void)
+{
+    // Creating navigation menu UI module
+    
+    // Set up the module
+    nav_module.scene_name = "navigation_menu";
+    nav_module.init = navigation_menu_init;
+    nav_module.shutdown = navigation_menu_shutdown;
+    nav_module.handle_event = navigation_menu_handle_event;
+    nav_module.render = navigation_menu_render;
+    nav_module.data = &nav_data;
+    
+    // Call the update function during render since there's no update field
+    // The module will update its state when rendered
+    
+    return &nav_module;
 }

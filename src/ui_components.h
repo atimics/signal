@@ -51,6 +51,7 @@ typedef struct {
 
 // Scene list widget
 void scene_list_widget_init(SceneListWidget* widget);
+void scene_list_widget_shutdown(SceneListWidget* widget);
 void scene_list_widget_refresh(SceneListWidget* widget);
 bool scene_list_widget_render_microui(struct mu_Context* ctx, SceneListWidget* widget, 
                                      const char* exclude_scene, char* selected_scene_out);
