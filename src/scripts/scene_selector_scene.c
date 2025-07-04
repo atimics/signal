@@ -6,6 +6,7 @@
 #include "../scene_script.h"
 #include "../graphics_api.h" 
 #include "../ui_api.h"
+#include "../ui.h"  // For ui_set_visible
 #include <stdio.h>
 #include <string.h>
 
@@ -21,8 +22,11 @@ static void scene_selector_enter(struct World* world, SceneStateManager* state)
     // Set scene state to menu
     scene_state_set(state, SCENE_STATE_MENU);
     
-    // The UI will be rendered automatically via the scene UI module system
-    printf("🎨 Scene UI module will handle navigation interface\n");
+    // Enable UI for the navigation menu
+    scene_state_set_ui_visible(state, true);
+    ui_set_visible(true);  // Synchronize with UI system
+    
+    printf("🎨 Navigation Menu: UI enabled for scene selection\n");
 }
 
 static void scene_selector_exit(struct World* world, SceneStateManager* state)

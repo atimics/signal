@@ -245,27 +245,59 @@ void ui_microui_shutdown(void) {
 // ============================================================================
 
 void ui_microui_begin_frame(void) {
-    printf("🔍 DEBUG: MicroUI begin_frame called\n");
+    printf("🎨 MicroUI: begin_frame called\n");
     
+    if (!g_ui_context.initialized) {
+        printf("❌ Error: MicroUI begin_frame called before initialization!\n");
+        return;
+    }
+    
+    // Clear any previous frame state and reset the context
     mu_begin(&g_ui_context.mu_ctx);
+    printf("🎨 MicroUI: mu_begin() called, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
     
-    // Set root clip rect to cover the entire screen
-    // This is needed because MicroUI expects at least one clip rect to be active
-    mu_Rect screen_rect = mu_rect(0, 0, sapp_width(), sapp_height());
-    mu_push_clip_rect(&g_ui_context.mu_ctx, screen_rect);
+    // DIRECTLY push unclipped rect to clip stack (like begin_root_container does)
+    // This avoids calling mu_push_clip_rect which itself calls mu_get_clip_rect
+    mu_Rect unclipped_rect = { 0, 0, 0x1000000, 0x1000000 };
     
-    printf("🔍 DEBUG: MicroUI begin_frame completed, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
+    // Manually push to clip stack (equivalent to push(ctx->clip_stack, unclipped_rect))
+    if (g_ui_context.mu_ctx.clip_stack.idx < MU_CLIPSTACK_SIZE) {
+        g_ui_context.mu_ctx.clip_stack.items[g_ui_context.mu_ctx.clip_stack.idx] = unclipped_rect;
+        g_ui_context.mu_ctx.clip_stack.idx++;
+    }
+    
+    printf("🎨 MicroUI: directly pushed unclipped rect, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
+    
+    // Verify clip stack has at least one entry
+    if (g_ui_context.mu_ctx.clip_stack.idx <= 0) {
+        printf("❌ Error: MicroUI clip stack still empty after direct push! idx=%d\n", 
+               g_ui_context.mu_ctx.clip_stack.idx);
+    }
 }
 
 void ui_microui_end_frame(void) {
-    printf("🔍 DEBUG: MicroUI end_frame called, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
+    printf("🎨 MicroUI: end_frame called, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
     
-    // Pop the root clip rect we pushed in begin_frame
-    mu_pop_clip_rect(&g_ui_context.mu_ctx);
+    if (!g_ui_context.initialized) {
+        printf("❌ Error: MicroUI end_frame called before initialization!\n");
+        return;
+    }
+    
+    // Debug: Verify clip stack has at least one entry before popping
+    if (g_ui_context.mu_ctx.clip_stack.idx <= 0) {
+        printf("❌ Error: MicroUI clip stack empty before popping! idx=%d\n", 
+               g_ui_context.mu_ctx.clip_stack.idx);
+        // Don't try to pop if stack is already empty
+        mu_end(&g_ui_context.mu_ctx);
+        return;
+    }
+    
+    // Pop the root clip rect we pushed in begin_frame (manually)
+    g_ui_context.mu_ctx.clip_stack.idx--;
+    printf("🎨 MicroUI: manually popped clip rect, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
     
     mu_end(&g_ui_context.mu_ctx);
-    
-    printf("🔍 DEBUG: MicroUI end_frame completed, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
+    printf("🎨 MicroUI: mu_end() called\n");
 }
 
 // ============================================================================
@@ -309,7 +341,9 @@ void ui_microui_render(int screen_width, int screen_height) {
     
     // Process all Microui commands
     mu_Command *cmd = NULL;
+    int command_count = 0;
     while (mu_next_command(&g_ui_context.mu_ctx, &cmd)) {
+        command_count++;
         switch (cmd->type) {
             case MU_COMMAND_RECT:
                 render_rect(cmd->rect.rect, cmd->rect.color);
@@ -341,6 +375,8 @@ void ui_microui_render(int screen_width, int screen_height) {
         }
     }
     
+    printf("🎨 MicroUI: Processed %d commands, generated %d vertices\n", command_count, render_state.vertex_count);
+    
     // Upload vertex data
     if (render_state.vertex_count > 0) {
         sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
@@ -366,6 +402,17 @@ void ui_microui_render(int screen_width, int screen_height) {
 bool ui_microui_handle_event(const void* event) {
     const sapp_event* ev = (const sapp_event*)event;
     mu_Context* ctx = &g_ui_context.mu_ctx;
+    
+    // Don't process events if MicroUI context isn't properly initialized
+    if (!g_ui_context.initialized) {
+        return false;
+    }
+    
+    // Don't process events if clip stack is empty (not in a proper frame)
+    if (ctx->clip_stack.idx <= 0) {
+        printf("🎨 MicroUI: Skipping event - no active frame (clip_stack.idx=%d)\n", ctx->clip_stack.idx);
+        return false;
+    }
     
     switch (ev->type) {
         case SAPP_EVENTTYPE_MOUSE_MOVE:

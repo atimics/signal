@@ -272,9 +272,20 @@ static void init(void)
     // Initialize UI system first before any UI calls
     ui_init();
     
-    // Start with debug UI and HUD hidden (~ to toggle)
-    scene_state_set_debug_ui_visible(&app_state.scene_state, false);
-    ui_set_debug_visible(false);  // Synchronize with UI system
+    // Set UI visibility based on initial scene
+    if (strcmp(scene_to_load, "logo") == 0) {
+        // Logo scene should start with UI hidden
+        scene_state_set_ui_visible(&app_state.scene_state, false);
+        scene_state_set_debug_ui_visible(&app_state.scene_state, false);
+        ui_set_visible(false);  // Synchronize with UI system
+        ui_set_debug_visible(false);  // Synchronize with UI system
+    } else {
+        // Other scenes start with UI visible but debug hidden
+        scene_state_set_ui_visible(&app_state.scene_state, true);
+        scene_state_set_debug_ui_visible(&app_state.scene_state, false);
+        ui_set_visible(true);  // Synchronize with UI system
+        ui_set_debug_visible(false);  // Synchronize with UI system
+    }
     
     // Initialize camera system after scene is loaded
     camera_system_init(&app_state.world, &app_state.render_config);
@@ -320,9 +331,7 @@ static void frame(void)
         printf("🎬 UI scene change request: %s -> %s\n", app_state.scene_state.current_scene_name, requested_scene);
         scene_state_request_transition(&app_state.scene_state, requested_scene);
         ui_clear_scene_change_request();
-    }
-    
-    // Handle scene transitions
+    }        // Handle scene transitions
     bool scene_transition_occurred = false;
     if (scene_state_has_pending_transition(&app_state.scene_state))
     {
@@ -348,7 +357,7 @@ static void frame(void)
         strcpy(app_state.current_scene, next_scene);
         app_state.scene_state.transition_pending = false;
         
-        // Execute enter script for new scene
+        // Execute enter script for new scene (this will set appropriate UI visibility)
         scene_script_execute_enter(next_scene, &app_state.world, &app_state.scene_state);
         
         printf("🎬 Scene transition completed: now in %s\n", next_scene);
@@ -366,11 +375,9 @@ static void frame(void)
 
     sg_end_pass();
 
-    // Only render UI if no scene transition occurred this frame to avoid MicroUI context issues
-    if (!scene_transition_occurred) {
-        // Render UI in a separate pass (MicroUI manages its own render state)
-        ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
-    }
+    // Always render UI to maintain MicroUI context state, even during transitions
+    // The ui_render function will handle visibility internally
+    ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
 
     sg_commit();
 

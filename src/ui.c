@@ -42,8 +42,13 @@ void ui_shutdown(void)
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
 {
-    // Early exit if UI is not visible
-    if (!g_ui_visible) return;
+    printf("🎨 ui_render called: g_ui_visible=%d, scene=%s\n", g_ui_visible, current_scene);
+    
+    // Early exit if UI is not visible - absolutely no UI calls should happen
+    if (!g_ui_visible) {
+        printf("🎨 UI not visible, skipping render\n");
+        return;
+    }
     
     // Get Microui context
     UIContext* ui_ctx = ui_microui_get_context();
@@ -51,15 +56,22 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         printf("⚠️ Warning: Cannot render UI - context not initialized\n");
         return;
     }
-    
+
     mu_Context* ctx = ui_microui_get_mu_context();
     if (!ctx) {
         printf("⚠️ Warning: Cannot render UI - MicroUI context not initialized\n");
         return;
     }
-    
-    // Begin Microui frame
+
+    // Begin Microui frame (this sets up the clip stack)
     ui_microui_begin_frame();
+    
+    // Additional safety check: ensure clip stack is properly set up
+    if (ctx->clip_stack.idx <= 0) {
+        printf("❌ Error: MicroUI clip stack not properly initialized! Skipping UI render.\n");
+        ui_microui_end_frame();  // Clean up
+        return;
+    }
     
     // Render scene-specific UI using Microui adapter
     scene_ui_render_microui(ctx, current_scene, world, scheduler, delta_time);

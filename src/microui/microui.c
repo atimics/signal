@@ -258,6 +258,12 @@ void mu_pop_clip_rect(mu_Context *ctx) {
 
 
 mu_Rect mu_get_clip_rect(mu_Context *ctx) {
+  if (ctx->clip_stack.idx <= 0) {
+    printf("❌ FATAL: mu_get_clip_rect called with empty clip stack! idx=%d\n", ctx->clip_stack.idx);
+    printf("❌ This suggests MicroUI functions are being called outside of begin/end frame cycle\n");
+    // Print a simple stack trace by checking common calling functions
+    printf("❌ Check if mu_begin_window, mu_layout_*, mu_button, etc. are being called improperly\n");
+  }
   expect(ctx->clip_stack.idx > 0);
   return ctx->clip_stack.items[ctx->clip_stack.idx - 1];
 }

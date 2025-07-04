@@ -118,6 +118,12 @@ void scene_ui_render_microui(mu_Context* ctx, const char* scene_name,
 {
     if (!ctx || !scene_name) return;
     
+    // Safety check: ensure MicroUI context has a proper clip stack
+    if (ctx->clip_stack.idx <= 0) {
+        printf("⚠️ Warning: scene_ui_render_microui called with empty clip stack, skipping\n");
+        return;
+    }
+    
     // Mark unused parameters
     (void)world;
     (void)scheduler;
