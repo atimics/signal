@@ -6,7 +6,7 @@
 #include "../system/camera.h"
 #include "../assets.h"
 #include "../systems.h"  // For get_asset_registry
-#include "sokol_app.h"  // For sapp_event
+#include "../graphics_api.h"  // For sapp_event
 #include <stdio.h>
 #include <stdlib.h>  // For calloc
 

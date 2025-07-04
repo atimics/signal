@@ -7,6 +7,7 @@
 // Forward declarations
 struct nk_context;
 struct World;
+typedef struct mu_Context mu_Context;
 
 // ============================================================================
 // HUD COMPONENT SYSTEM
@@ -73,6 +74,9 @@ void hud_system_update(float delta_time);
 
 // Render the current HUD based on camera mode
 void hud_system_render(struct nk_context* ctx, struct World* world);
+
+// Render HUD using Microui
+void hud_system_render_microui(mu_Context* ctx, struct World* world);
 
 // Switch to a different camera mode with smooth transition
 void hud_system_set_camera_mode(HUDCameraMode mode);

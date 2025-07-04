@@ -1,12 +1,3 @@
-// Nuklear implementation
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#define NK_IMPLEMENTATION
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +9,6 @@
 #include "core.h"
 #include "data.h"
 #include "gpu_resources.h"
-#include "nuklear.h"
 #include "render.h"
 #include "systems.h"
 #include "system/camera.h"
@@ -29,9 +19,10 @@
 #include "scene_state.h"
 #include "scene_script.h"
 
+// UI system includes
+
 // Sokol includes
-#include "sokol_app.h"
-#include "sokol_gfx.h"
+#include "graphics_api.h"  // This includes sokol headers safely
 #include "sokol_glue.h"
 #include "sokol_log.h"
 

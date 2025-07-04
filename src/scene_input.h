@@ -4,9 +4,13 @@
 #ifndef SCENE_INPUT_H
 #define SCENE_INPUT_H
 
-#include "sokol_app.h"
 #include "system/input_mapping.h"
 #include <stdbool.h>
+
+// Forward declarations to avoid multiple sokol includes
+#ifndef WASM_BUILD
+struct sapp_event;
+#endif
 
 // Scene-specific action IDs (start at 1000 to avoid conflicts)
 typedef enum {
@@ -40,7 +44,7 @@ void scene_input_load_derelict_profile(void);
 void scene_input_update(float delta_time);
 
 // Handle events
-bool scene_input_handle_event(const sapp_event* event);
+bool scene_input_handle_event(const struct sapp_event* event);
 
 // High-level movement queries (combines multiple inputs)
 typedef struct {

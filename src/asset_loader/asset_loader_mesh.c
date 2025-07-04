@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include "../assets.h"
+#include "../graphics_api.h"
 #include "../gpu_resources.h"
-#include "../sokol_gfx.h"
 #include "../system/memory.h"
 
 // Define the actual implementation of our opaque structs

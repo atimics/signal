@@ -1,6 +1,11 @@
 #include "look_target.h"
 #include <math.h>
 
+// Define M_PI if not available (WASM builds)
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 void look_target_init(LookTarget* look_target) {
     if (!look_target) return;
     

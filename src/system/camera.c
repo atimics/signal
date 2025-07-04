@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "../graphics_api.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -292,8 +293,19 @@ static void update_legacy_render_config(RenderConfig* render_config, struct Came
     render_config->camera.aspect_ratio = camera->aspect_ratio;
 }
 
+#ifdef WASM_BUILD
 bool camera_system_handle_input(struct World* world, RenderConfig* render_config, const sapp_event* ev)
+#else
+bool camera_system_handle_input(struct World* world, RenderConfig* render_config, const struct sapp_event* ev)
+#endif
 {
+#ifdef TEST_MODE
+    // In test mode, we don't have access to Sokol app event types
+    (void)world;
+    (void)render_config;
+    (void)ev;
+    return false;
+#else
     if (!world || !ev) return false;
     
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN)
@@ -364,4 +376,5 @@ bool camera_system_handle_input(struct World* world, RenderConfig* render_config
     }
     
     return false; // Not handled
+#endif
 }

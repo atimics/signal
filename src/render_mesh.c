@@ -12,7 +12,6 @@
 #include "render.h"
 #include "render_camera.h"
 #include "render_lighting.h"
-#include "sokol_gfx.h"  // ONLY in the .c file
 
 // Define the implementation struct
 struct MeshRendererGpuResources

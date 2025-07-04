@@ -4,9 +4,16 @@
 #ifndef INPUT_MAPPING_H
 #define INPUT_MAPPING_H
 
-#include "../sokol_app.h"
 #include <stdbool.h>
 #include <stdint.h>
+
+// Forward declarations to avoid multiple sokol includes
+#ifndef WASM_BUILD
+typedef int sapp_keycode;
+struct sapp_event;
+// Constants that were in sokol_app.h
+#define SAPP_MAX_KEYCODES 512
+#endif
 
 // Maximum number of actions and bindings
 #define MAX_INPUT_ACTIONS 64
@@ -173,7 +180,7 @@ void input_mapping_clear_bindings(InputAction action);
 void input_mapping_update(float delta_time);
 
 // Event handling
-bool input_mapping_handle_event(const sapp_event* event);
+bool input_mapping_handle_event(const struct sapp_event* event);
 
 // Query actions
 bool input_mapping_is_pressed(InputAction action);

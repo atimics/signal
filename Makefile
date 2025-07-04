@@ -63,8 +63,8 @@ PYTHON = ./.venv/bin/python3
 ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
-# Source files
-SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c system/thrusters.c system/thruster_points_system.c system/control.c system/scripted_flight.c component/look_target.c component/thruster_points_component.c thruster_points.c render_thrust_cones.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c  ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c hud_system.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c entity_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c scripts/ship_launch_test_scene.c config.c hidapi_mac.c main.c
+# Source files - now includes Microui instead of Nuklear
+SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c input_processing.c system/thrusters.c system/thruster_points_system.c system/control.c system/scripted_flight.c component/look_target.c component/thruster_points_component.c thruster_points.c render_thrust_cones.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c microui/microui.c ui_microui.c ui_microui_adapter.c ui.c ui_api.c ui_scene.c ui_components_stubs.c ui_adaptive_controls_stubs.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c entity_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c scripts/ship_launch_test_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -229,8 +229,8 @@ release: CFLAGS += -DNDEBUG -O3
 release: clean $(TARGET)
 
 # WebAssembly build (requires Emscripten)
-# Filter out platform-specific files for WASM
-WASM_SOURCES = $(filter-out hidapi_mac.c, $(SOURCES))
+# Filter out platform-specific, ODE, YAML files for WASM (UI now works with Microui!)
+WASM_SOURCES = $(filter-out hidapi_mac.c system/ode_physics.c input_processing.c scene_yaml_loader.c entity_yaml_loader.c scripts/ode_test_scene.c, $(SOURCES))
 wasm: assets-wasm | $(BUILD_DIR)
 	@echo "🌐 Building for WebAssembly..."
 	@echo "📋 Note: This requires Emscripten SDK to be installed and activated"
@@ -239,9 +239,9 @@ wasm: assets-wasm | $(BUILD_DIR)
 	emcc $(addprefix $(SRC_DIR)/,$(WASM_SOURCES)) \
 		-std=c99 -O2 -Isrc \
 		-DSOKOL_GLES3 \
-		-DSOKOL_IMPL \
 		-DEMSCRIPTEN \
 		-DWASM_BUILD \
+		-D_USE_MATH_DEFINES \
 		-Wno-unused-function \
 		-Wno-unused-variable \
 		-Wno-unused-parameter \
@@ -431,7 +431,7 @@ $(TEST_CONTROL_TARGET): $(TEST_CONTROL_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_CONTROL_SRC) src/core.c src/system/control.c src/system/thrusters.c src/system/physics.c src/system/input.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_CONTROL_SRC) src/core.c src/system/control.c src/system/thrusters.c src/system/physics.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build camera system tests
 $(TEST_CAMERA_TARGET): $(TEST_CAMERA_SRC) | $(BUILD_DIR)
@@ -447,7 +447,7 @@ $(TEST_INPUT_TARGET): $(TEST_INPUT_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_INPUT_SRC) src/core.c src/system/input.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_INPUT_SRC) src/core.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build flight integration tests
 $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
@@ -455,7 +455,7 @@ $(TEST_FLIGHT_INTEGRATION_TARGET): $(TEST_FLIGHT_INTEGRATION_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
+		-o $@ $(TEST_FLIGHT_INTEGRATION_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/input_processing.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
 
 # Build critical input system tests
 $(TEST_INPUT_CRITICAL_TARGET): $(TEST_INPUT_CRITICAL_SRC) | $(BUILD_DIR)
@@ -463,7 +463,7 @@ $(TEST_INPUT_CRITICAL_TARGET): $(TEST_INPUT_CRITICAL_SRC) | $(BUILD_DIR)
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_INPUT_CRITICAL_SRC) src/core.c src/system/input.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+		-o $@ $(TEST_INPUT_CRITICAL_SRC) src/core.c src/system/input.c src/input_processing.c src/component/look_target.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
 # Build critical flight scene tests
 $(TEST_FLIGHT_SCENE_CRITICAL_TARGET): $(TEST_FLIGHT_SCENE_CRITICAL_SRC) | $(BUILD_DIR)
@@ -471,7 +471,7 @@ $(TEST_FLIGHT_SCENE_CRITICAL_TARGET): $(TEST_FLIGHT_SCENE_CRITICAL_SRC) | $(BUIL
 	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
 		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
 		-Wno-error=unused-function -Wno-error=unused-variable \
-		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c src/scene_state.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
+		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/input_processing.c src/system/gamepad.c src/hidapi_mac.c src/component/look_target.c src/scene_state.c tests/stubs/graphics_api_test_stub.c $(LIBS) -lm
 
 # ============================================================================
 # MEMORY TESTING TARGETS

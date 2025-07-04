@@ -1,9 +1,17 @@
 #include "control.h"
 #include "input.h"
 #include "thrusters.h"
+#include "physics.h"
 #include "../component/look_target.h"
 #include <stdio.h>
 #include <math.h>
+
+// Control system constants
+#define AUTO_STOP_STRENGTH 0.05f      // Gentle auto-stop to prevent oscillations
+#define VELOCITY_THRESHOLD 1.0f       // Minimum velocity for auto-stop
+#define AUTO_STOP_LIMIT 0.5f          // Maximum auto-stop force
+#define INPUT_DEADZONE 0.15f          // Input deadzone threshold
+#define BOOST_MULTIPLIER 2.0f         // Boost factor (3x total with base)
 
 // Global player entity for input processing
 static EntityID g_player_entity = INVALID_ENTITY;
@@ -25,8 +33,8 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
                                           const Quaternion* ship_orientation,
                                           const Vector3* current_velocity,
                                           const Quaternion* ship_rotation) {
-    (void)ship_position; // Unused for now
-    (void)ship_orientation; // Unused for now
+    (void)ship_position;
+    (void)ship_orientation;
     if (!input || !control) return (Vector3){0, 0, 0};
     
     Vector3 linear_commands = {0, 0, 0};
@@ -44,7 +52,7 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
         
         // Apply boost
         if (input->boost > 0.0f) {
-            float boost_factor = 1.0f + input->boost * 2.0f; // 3x boost (reduced from 4x)
+            float boost_factor = 1.0f + input->boost * BOOST_MULTIPLIER;
             linear_commands = vector3_multiply_scalar(linear_commands, boost_factor);
         }
     } else if (current_velocity && ship_rotation) {
@@ -59,25 +67,22 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
         float right_velocity = vector3_dot(*current_velocity, ship_right);
         float up_velocity = vector3_dot(*current_velocity, ship_up);
         
-        // Auto-stop parameters - extremely gentle to eliminate jittering
-        float auto_stop_strength = 0.05f; // Extremely gentle auto-stop to prevent oscillations
-        float velocity_threshold = 1.0f; // Much higher threshold to prevent micro-corrections
         
         // Apply counter-thrust proportional to velocity
-        if (fabsf(forward_velocity) > velocity_threshold) {
-            linear_commands.z = -forward_velocity * auto_stop_strength;
+        if (fabsf(forward_velocity) > VELOCITY_THRESHOLD) {
+            linear_commands.z = -forward_velocity * AUTO_STOP_STRENGTH;
         }
-        if (fabsf(right_velocity) > velocity_threshold) {
-            linear_commands.x = -right_velocity * auto_stop_strength;
+        if (fabsf(right_velocity) > VELOCITY_THRESHOLD) {
+            linear_commands.x = -right_velocity * AUTO_STOP_STRENGTH;
         }
-        if (fabsf(up_velocity) > velocity_threshold) {
-            linear_commands.y = -up_velocity * auto_stop_strength;
+        if (fabsf(up_velocity) > VELOCITY_THRESHOLD) {
+            linear_commands.y = -up_velocity * AUTO_STOP_STRENGTH;
         }
         
         // Clamp auto-stop forces to reasonable limits
-        linear_commands.x = fmaxf(-0.5f, fminf(0.5f, linear_commands.x));
-        linear_commands.y = fmaxf(-0.5f, fminf(0.5f, linear_commands.y));
-        linear_commands.z = fmaxf(-0.5f, fminf(0.5f, linear_commands.z));
+        linear_commands.x = fmaxf(-AUTO_STOP_LIMIT, fminf(AUTO_STOP_LIMIT, linear_commands.x));
+        linear_commands.y = fmaxf(-AUTO_STOP_LIMIT, fminf(AUTO_STOP_LIMIT, linear_commands.y));
+        linear_commands.z = fmaxf(-AUTO_STOP_LIMIT, fminf(AUTO_STOP_LIMIT, linear_commands.z));
     }
     
     // Apply brake with intensity (overrides auto-stop)
@@ -211,22 +216,17 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
         if (is_player_controlled) {
             control_updates++;
             
-            // Debug output
-            static int entity_debug_counter = 0;
-            if (++entity_debug_counter % 60 == 0) {
-                printf("🎮 DEBUG: Control processing entity %d (player=%d, controlled_by=%d)\n", 
-                       entity->id, g_player_entity, control->controlled_by);
-            }
             
             // Check if we have any actual input to process (including zero-g controls)
-            bool has_input = (input->thrust != 0.0f || 
-                            input->pitch != 0.0f || 
-                            input->yaw != 0.0f || 
-                            input->roll != 0.0f ||
+            // Use deadzone threshold to prevent gamepad drift from being detected as input
+            bool has_input = (fabsf(input->thrust) > INPUT_DEADZONE || 
+                            fabsf(input->pitch) > INPUT_DEADZONE || 
+                            fabsf(input->yaw) > INPUT_DEADZONE || 
+                            fabsf(input->roll) > INPUT_DEADZONE ||
                             input->brake ||
-                            input->boost > 0.0f ||
-                            input->strafe_left > 0.0f ||
-                            input->strafe_right > 0.0f);
+                            input->boost > INPUT_DEADZONE ||
+                            input->strafe_left > INPUT_DEADZONE ||
+                            input->strafe_right > INPUT_DEADZONE);
             
             // Only override thrust commands if there's actual player input
             // This allows scripted flight to work when player isn't providing input
@@ -263,34 +263,8 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                 control->input_boost = input->boost;
                 control->input_brake = input->brake;
                 
-                // Debug output
-                static uint32_t debug_counter = 0;
-                if (++debug_counter % 60 == 0 && 
-                    (input->thrust != 0.0f || fabsf(angular_commands.x) > 0.1f || 
-                     fabsf(angular_commands.y) > 0.1f || fabsf(angular_commands.z) > 0.1f)) {
-                    
-                    printf("🏎️ Canyon Control: ");
-                    if (input->look_based_thrust) {
-                        printf("LOOK-THRUST ");
-                    }
-                    if (input->auto_level > 0.0f) {
-                        printf("AUTO-LEVEL(%.1f) ", input->auto_level);
-                    }
-                    printf("Lin:(%.2f,%.2f,%.2f) Ang:(%.2f,%.2f,%.2f)\n",
-                           linear_commands.x, linear_commands.y, linear_commands.z,
-                           angular_commands.x, angular_commands.y, angular_commands.z);
-                }
             } else {
-                // No player input - log this
-                static int no_input_counter = 0;
-                if (++no_input_counter % 60 == 0) {
-                    printf("🎮 No player input - scripted flight can control entity %d\n", entity->id);
-                    // Check current thruster state
-                    printf("  Current thrust: [%.2f,%.2f,%.2f]\n",
-                           thrusters->current_linear_thrust.x,
-                           thrusters->current_linear_thrust.y,
-                           thrusters->current_linear_thrust.z);
-                }
+                // No player input - scripted flight can control
             }
         } else {
             // For non-player entities, DO NOT clear thrust commands
@@ -397,6 +371,9 @@ void control_configure_ship(struct World* world, EntityID ship_id, ShipConfigPre
     
     // Always enable 6DOF physics
     physics->has_6dof = true;
+    
+    // Enable gravity alignment for spatial orientation
+    physics_set_gravity_alignment(physics, true, 10.0f);
     
     // Always set control to be self-controlled by default
     control->controlled_by = ship_id;

@@ -10,14 +10,17 @@
 #include "../system/control.h"
 #include "../system/thrusters.h"
 #include "../system/scripted_flight.h"
-#include "../hud_system.h"
 #include "../hidapi.h"
-#include "../sokol_app.h"
+#include "../graphics_api.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // Flight test state
 static bool flight_test_initialized = false;
@@ -415,9 +418,7 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
             const char* mode_names[] = {"COCKPIT", "CHASE_NEAR", "CHASE_FAR"};
             printf("📷 Flight camera mode: %s\n", mode_names[current_camera_mode]);
             
-            // Sync HUD system with camera mode
-            HUDCameraMode hud_mode = (HUDCameraMode)current_camera_mode;
-            hud_system_set_camera_mode(hud_mode);
+            // HUD system removed - camera mode tracking handled locally
             
             // Apply camera changes immediately
             update_flight_camera_system(world, 0.0f);

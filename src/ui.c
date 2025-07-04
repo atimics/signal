@@ -1,21 +1,14 @@
 /**
  * @file ui.c
- * @brief Core UI system - coordinates modular scene UI and global overlays
+ * @brief Core UI system using Microui
  */
 
 #include "ui.h"
 #include "ui_api.h"
-#include "ui_scene.h"
-#include "ui_components.h"
-#include "ui_adaptive_controls.h"
-#include "hud_system.h"
+#include "ui_microui.h"
+#include "ui_microui_adapter.h"
 #include "graphics_api.h"
-#include "sokol_app.h"
-#include "system/input.h"
-#include "component/look_target.h"
 #include <stdio.h>
-#include <string.h>
-#include <math.h>
 
 // ============================================================================
 // GLOBAL UI STATE
@@ -30,71 +23,58 @@ static bool g_debug_ui_visible = false;
 
 void ui_init(void)
 {
-    // Initialize Nuklear
-    snk_setup(&(snk_desc_t){ 0 });
+    // Initialize Microui
+    ui_microui_init();
     
-    // Initialize scene UI system
-    scene_ui_init();
-    
-    // Initialize adaptive controls
-    ui_adaptive_controls_init();
-    
-    // Initialize modular HUD system
-    hud_system_init();
-    
-    printf("✅ Core UI system initialized\n");
+    printf("✅ Core UI system initialized with Microui\n");
 }
 
 void ui_shutdown(void)
 {
-    // Shutdown modular HUD system
-    hud_system_shutdown();
-    
-    // Shutdown scene UI system
-    scene_ui_shutdown();
-    
-    // Shutdown Nuklear
-    snk_shutdown();
+    // Shutdown Microui
+    ui_microui_shutdown();
     
     printf("✅ Core UI system shut down\n");
 }
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
 {
-    // Update adaptive controls
-    ui_adaptive_controls_update(delta_time);
-    
-    // Update modular HUD system
-    hud_system_update(delta_time);
-    
     // Early exit if UI is not visible
     if (!g_ui_visible) return;
     
-    // Get new frame context from sokol_nuklear
-    struct nk_context* ctx = snk_new_frame();
+    // Get Microui context
+    UIContext* ui_ctx = ui_microui_get_context();
+    if (!ui_ctx) return;
     
-    // Render scene-specific UI
-    scene_ui_render(ctx, current_scene, world, scheduler, delta_time);
+    mu_Context* ctx = ui_microui_get_mu_context();
     
-    // Render modular HUD for flight_test scene - must be rendered LAST to be on top
-    if (current_scene && strcmp(current_scene, "flight_test") == 0) {
-        hud_system_render(ctx, world);
-    }
+    // Begin Microui frame
+    ui_microui_begin_frame();
+    
+    // Render scene-specific UI using Microui adapter
+    scene_ui_render_microui(ctx, current_scene, world, scheduler, delta_time);
     
     // Render debug overlay if enabled
     if (g_debug_ui_visible) {
-        scene_ui_render(ctx, "debug", world, scheduler, delta_time);
+        // TODO: Implement debug UI with Microui
+        // For now, just show a simple debug panel
+        if (mu_begin_window(ctx, "Debug", mu_rect(10, 10, 200, 100))) {
+            mu_layout_row(ctx, 1, (int[]){-1}, 0);
+            mu_label(ctx, "Debug Mode Active");
+            mu_end_window(ctx);
+        }
     }
     
-    // Render the UI
-    snk_render(sapp_width(), sapp_height());
+    // End frame and render
+    ui_microui_end_frame();
+    ui_microui_render(sapp_width(), sapp_height());
 }
 
 bool ui_handle_event(const void* ev)
 {
     const sapp_event* event = (const sapp_event*)ev;
     
-    // Handle global UI hotkeys before passing to scene UI or Nuklear
+    // Handle global UI hotkeys before passing to Microui
     if (event->type == SAPP_EVENTTYPE_KEY_DOWN) {
         switch (event->key_code) {
             case SAPP_KEYCODE_F1:
@@ -115,46 +95,8 @@ bool ui_handle_event(const void* ev)
         }
     }
     
-    // Try scene-specific UI event handling first
-    // Note: current_scene would need to be passed here in a real implementation
-    // For now, we'll skip scene-specific event handling
-    
-    // Only pass mouse and touch events to Nuklear
-    // Keyboard events should go to the game unless Nuklear has an active text input
-    bool should_pass_to_nuklear = false;
-    
-    switch (event->type) {
-        case SAPP_EVENTTYPE_MOUSE_DOWN:
-        case SAPP_EVENTTYPE_MOUSE_UP:
-        case SAPP_EVENTTYPE_MOUSE_MOVE:
-        case SAPP_EVENTTYPE_MOUSE_SCROLL:
-        case SAPP_EVENTTYPE_MOUSE_ENTER:
-        case SAPP_EVENTTYPE_MOUSE_LEAVE:
-        case SAPP_EVENTTYPE_TOUCHES_BEGAN:
-        case SAPP_EVENTTYPE_TOUCHES_MOVED:
-        case SAPP_EVENTTYPE_TOUCHES_ENDED:
-        case SAPP_EVENTTYPE_TOUCHES_CANCELLED:
-            should_pass_to_nuklear = true;
-            break;
-            
-        case SAPP_EVENTTYPE_KEY_DOWN:
-        case SAPP_EVENTTYPE_KEY_UP:
-        case SAPP_EVENTTYPE_CHAR:
-            // Only pass keyboard events if there's an active text input
-            // For now, we'll assume no text inputs are active in the flight test scene
-            should_pass_to_nuklear = false;
-            break;
-            
-        default:
-            should_pass_to_nuklear = false;
-            break;
-    }
-    
-    if (should_pass_to_nuklear) {
-        return snk_handle_event(event);
-    }
-    
-    return false;  // Event not captured by UI
+    // Pass event to Microui
+    return ui_microui_handle_event(event);
 }
 
 // ============================================================================
@@ -182,9 +124,8 @@ bool ui_is_debug_visible(void)
 }
 
 // ============================================================================
-// FLIGHT HUD SYSTEM (Legacy - now handled by hud_system.c)
+// LEGACY COMPATIBILITY (forwarded to ui_api.h)
 // ============================================================================
 
-// NOTE: Flight HUD rendering is now handled by the modular HUD system
-// in hud_system.c. This provides better organization and support for
-// multiple camera modes with different HUD layouts.
+// Note: These functions are now implemented in ui_api.c
+// The main application should use ui_api.h directly for new code

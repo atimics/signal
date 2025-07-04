@@ -10,7 +10,6 @@
 #include "asset_loader/asset_loader_mesh.h"
 #include "gpu_resources.h"
 #include "graphics_api.h"
-#include "sokol_gfx.h"
 #include "system/memory.h"
 
 #define STB_IMAGE_IMPLEMENTATION

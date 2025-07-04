@@ -5,8 +5,7 @@
 #include "../system/thrusters.h"
 #include "../system/physics.h"
 #include "../system/ode_physics.h"
-#include "../hud_system.h"
-#include "../sokol_app.h"
+#include "../graphics_api.h"
 #include "../scene_yaml_loader.h"
 #include <stdio.h>
 #include <math.h>
@@ -144,8 +143,7 @@ void ode_test_enter(struct World* world, SceneStateManager* state) {
     input_init();
     control_set_player_entity(world, test_ship_id);
     
-    // Set HUD mode
-    hud_system_set_camera_mode(HUD_CAMERA_MODE_CHASE_NEAR);
+    // HUD system removed - camera mode handled locally
     
     // Configure camera
     for (uint32_t i = 0; i < world->entity_count; i++) {

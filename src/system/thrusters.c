@@ -4,16 +4,19 @@
 #include <stdio.h>
 #include <math.h>
 
+// Performance constants
+#define THRUST_EPSILON 0.001f        // Minimum thrust threshold
+#define TORQUE_EPSILON 0.001f        // Minimum torque threshold
+#define VELOCITY_EPSILON 0.01f       // Minimum velocity for calculations
+
 // ============================================================================
 // THRUSTER FORCE CALCULATION
 // ============================================================================
 
-// Future enhancement: Thrust response time modeling
-// static Vector3 apply_thrust_response(Vector3 current, Vector3 target, float response_time, float delta_time)
 
 static Vector3 calculate_linear_force(struct ThrusterSystem* thrusters, struct Physics* physics, float efficiency)
 {
-    (void)physics; // Unused parameter - auto-deceleration disabled
+    (void)physics;
     
     if (!thrusters->thrusters_enabled) {
         return (Vector3){ 0.0f, 0.0f, 0.0f };
@@ -25,9 +28,6 @@ static Vector3 calculate_linear_force(struct ThrusterSystem* thrusters, struct P
         thrusters->current_linear_thrust.z * thrusters->max_linear_force.z * efficiency
     };
     
-    // DISABLED: Auto-deceleration conflicts with user control
-    // Pure manual control - user controls all thrust and braking
-    // No automatic velocity compensation
     
     return thrust_force;
 }
@@ -58,8 +58,6 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
     uint32_t thruster_updates = 0;
     uint32_t force_applications = 0;
     
-    static int sys_update_counter = 0;
-    bool debug_this_frame = (++sys_update_counter % 60 == 0);
 
     // Update all entities with thruster systems
     for (uint32_t i = 0; i < world->entity_count; i++)
@@ -81,9 +79,6 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
 
         thruster_updates++;
         
-        if (debug_this_frame) {
-            printf("⚙️ DEBUG: Processing thruster for entity %d\n", entity->id);
-        }
 
         // Calculate environmental efficiency
         float efficiency = thruster_calculate_efficiency(thrusters, physics->environment);
@@ -91,34 +86,22 @@ void thruster_system_update(struct World* world, RenderConfig* render_config, fl
         // Calculate linear forces in ship-local space
         Vector3 linear_force = calculate_linear_force(thrusters, physics, efficiency);
         
-        if (debug_this_frame) {
-            printf("  Thrust cmd: [%.2f,%.2f,%.2f], Force: [%.1f,%.1f,%.1f]\n",
-                   thrusters->current_linear_thrust.x,
-                   thrusters->current_linear_thrust.y,
-                   thrusters->current_linear_thrust.z,
-                   linear_force.x, linear_force.y, linear_force.z);
-        }
         
-        if (linear_force.x != 0.0f || linear_force.y != 0.0f || linear_force.z != 0.0f) {
+        if (fabsf(linear_force.x) > THRUST_EPSILON || 
+            fabsf(linear_force.y) > THRUST_EPSILON || 
+            fabsf(linear_force.z) > THRUST_EPSILON) {
             // Transform force from ship-local space to world space
             Vector3 world_force = quaternion_rotate_vector(transform->rotation, linear_force);
             physics_add_force(physics, world_force);
             force_applications++;
             
-            // Debug thrust direction (reduced frequency)
-            static uint32_t thrust_debug_counter = 0;
-            if (++thrust_debug_counter % 60 == 0 && (fabsf(linear_force.z) > 0.1f)) {  // Every second when thrusting
-                printf("🚀 THRUST APPLIED TO ENTITY %d:\n", entity->id);
-                printf("   Local Force: [%.1f,%.1f,%.1f]\n", linear_force.x, linear_force.y, linear_force.z);
-                printf("   World Force: [%.1f,%.1f,%.1f]\n", world_force.x, world_force.y, world_force.z);
-                printf("   Position: [%.1f,%.1f,%.1f]\n", transform->position.x, transform->position.y, transform->position.z);
-                printf("   Velocity: [%.1f,%.1f,%.1f]\n", physics->velocity.x, physics->velocity.y, physics->velocity.z);
-            }
         }
         
         // Calculate angular torques (6DOF)
         Vector3 angular_torque = calculate_angular_torque(thrusters, physics, efficiency);
-        if (angular_torque.x != 0.0f || angular_torque.y != 0.0f || angular_torque.z != 0.0f) {
+        if (fabsf(angular_torque.x) > TORQUE_EPSILON || 
+            fabsf(angular_torque.y) > TORQUE_EPSILON || 
+            fabsf(angular_torque.z) > TORQUE_EPSILON) {
             physics_add_torque(physics, angular_torque);
             force_applications++;
         }
@@ -142,31 +125,15 @@ void thruster_set_linear_command(struct ThrusterSystem* thrusters, Vector3 comma
     if (!thrusters) return;
     
     // Debug: log significant thrust commands
-    static int cmd_counter = 0;
-    if (++cmd_counter % 60 == 0 && 
-        (fabsf(command.x) > 0.1f || fabsf(command.y) > 0.1f || fabsf(command.z) > 0.1f)) {
-        printf("🚀 DEBUG: thruster_set_linear_command received: [%.2f,%.2f,%.2f]\n",
-               command.x, command.y, command.z);
-    }
     
     // Clamp command values to [-1, 1]
-    Vector3 old_thrust = thrusters->current_linear_thrust;
+    // Vector3 old_thrust = thrusters->current_linear_thrust; // Unused for now
     thrusters->current_linear_thrust = (Vector3){
         fmaxf(-1.0f, fminf(1.0f, command.x)),
         fmaxf(-1.0f, fminf(1.0f, command.y)),
         fmaxf(-1.0f, fminf(1.0f, command.z))
     };
     
-    // Log when thrust changes significantly
-    if (fabsf(old_thrust.x - thrusters->current_linear_thrust.x) > 0.1f ||
-        fabsf(old_thrust.y - thrusters->current_linear_thrust.y) > 0.1f ||
-        fabsf(old_thrust.z - thrusters->current_linear_thrust.z) > 0.1f) {
-        printf("🚀 THRUST CHANGED: [%.2f,%.2f,%.2f] → [%.2f,%.2f,%.2f]\n",
-               old_thrust.x, old_thrust.y, old_thrust.z,
-               thrusters->current_linear_thrust.x,
-               thrusters->current_linear_thrust.y,
-               thrusters->current_linear_thrust.z);
-    }
 }
 
 void thruster_set_angular_command(struct ThrusterSystem* thrusters, Vector3 command)

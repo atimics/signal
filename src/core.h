@@ -116,6 +116,10 @@ struct Physics
     bool use_ode;                // Use ODE physics instead of custom
     void* ode_body;              // ODE rigid body handle (dBodyID)
     void* ode_geom;              // ODE collision geometry (dGeomID)
+    
+    // Gravitational Alignment (for spatial orientation)
+    bool enable_gravity_alignment;   // Enable "up/down" orientation relative to gravity
+    float gravity_alignment_strength; // Strength of gravitational alignment torque
 };
 
 /** @brief Defines an entity's collision shape and properties. */

@@ -7,6 +7,10 @@
 #include <stdio.h>
 #include <math.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // ============================================================================
 // PHYSICS UTILITY FUNCTIONS
 // ============================================================================
@@ -224,17 +228,65 @@ void physics_integrate_angular(struct Physics* physics, struct Transform* transf
 }
 
 // ============================================================================
+// GRAVITY REFERENCE SYSTEM
+// ============================================================================
+
+// Calculate gravity direction based on nearest mass or default reference
+static Vector3 calculate_gravity_reference(const Vector3* position) {
+    (void)position;  // Unused parameter - will be used for celestial body detection
+    // For now, use simple downward gravity as reference
+    // In a real space game, this would find the nearest planet/station
+    // TODO: Add proper celestial body detection
+    return (Vector3){ 0.0f, -1.0f, 0.0f };  // World "down" direction
+}
+
+// Apply gravitational alignment force for spatial orientation
+static void apply_gravitational_alignment(struct Physics* physics, struct Transform* transform, float delta_time) {
+    (void)delta_time;  // Unused parameter for now
+    if (!physics->has_6dof || !physics->enable_gravity_alignment) return;
+    
+    // Get gravity reference direction
+    Vector3 gravity_down = calculate_gravity_reference(&transform->position);
+    
+    // Get ship's current "down" direction (negative Y in ship space)
+    Vector3 ship_down = quaternion_rotate_vector(transform->rotation, (Vector3){0.0f, -1.0f, 0.0f});
+    
+    // Calculate alignment torque to orient ship "down" with gravity
+    Vector3 cross = vector3_cross_product(ship_down, gravity_down);
+    float dot = vector3_dot(ship_down, gravity_down);
+    
+    // Only apply alignment if ship is significantly misaligned
+    if (dot < 0.95f && vector3_length(cross) > 0.1f) {
+        Vector3 alignment_axis = vector3_normalize(cross);
+        float misalignment = acosf(fmaxf(-1.0f, fminf(1.0f, dot)));
+        
+        // Gentle alignment torque proportional to misalignment
+        float alignment_strength = physics->gravity_alignment_strength * misalignment;
+        Vector3 alignment_torque = vector3_multiply_scalar(alignment_axis, alignment_strength);
+        
+        // Apply the torque
+        physics_add_torque(physics, alignment_torque);
+        
+        // Debug output
+        static uint32_t alignment_debug_counter = 0;
+        if (++alignment_debug_counter % 180 == 0) {  // Every 3 seconds
+            printf("🧭 GRAVITY ALIGNMENT: Misalignment=%.2f° Torque=[%.2f,%.2f,%.2f]\n", 
+                   misalignment * 180.0f / M_PI,
+                   alignment_torque.x, alignment_torque.y, alignment_torque.z);
+        }
+    }
+}
+
+// ============================================================================
 // ENVIRONMENTAL PHYSICS
 // ============================================================================
 
 static void physics_apply_environmental_effects(struct Physics* physics, struct Transform* transform, float delta_time)
 {
-    (void)transform;  // Unused parameter
-    (void)delta_time;  // Unused parameter
-    
     switch (physics->environment) {
         case PHYSICS_SPACE:
-            // No environmental forces in space
+            // Apply gravitational alignment for spatial orientation
+            apply_gravitational_alignment(physics, transform, delta_time);
             break;
             
         case PHYSICS_ATMOSPHERE:
@@ -242,6 +294,9 @@ static void physics_apply_environmental_effects(struct Physics* physics, struct 
                 // Apply reduced gravity for better flight feel (space station or low gravity)
                 Vector3 gravity = { 0.0f, -3.0f * physics->mass, 0.0f };  // Much lighter gravity
                 physics->force_accumulator = vector3_add(physics->force_accumulator, gravity);
+                
+                // Also apply gravitational alignment in atmosphere
+                apply_gravitational_alignment(physics, transform, delta_time);
                 
                 // Debug gravity application
                 static uint32_t gravity_debug_counter = 0;
@@ -388,6 +443,16 @@ void physics_set_6dof_enabled(struct Physics* physics, bool enabled)
         physics->angular_acceleration = (Vector3){ 0.0f, 0.0f, 0.0f };
         physics->torque_accumulator = (Vector3){ 0.0f, 0.0f, 0.0f };
     }
+}
+
+void physics_set_gravity_alignment(struct Physics* physics, bool enabled, float strength)
+{
+    if (!physics) return;
+    physics->enable_gravity_alignment = enabled;
+    physics->gravity_alignment_strength = strength;
+    
+    printf("🧭 Gravity alignment %s with strength %.2f\n", 
+           enabled ? "enabled" : "disabled", strength);
 }
 
 // ============================================================================

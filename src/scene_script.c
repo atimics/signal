@@ -4,7 +4,7 @@
  */
 
 #include "scene_script.h"
-#include "sokol_app.h"
+#include "graphics_api.h"
 #include "system/camera.h"
 #include "render.h"
 #include <stdio.h>

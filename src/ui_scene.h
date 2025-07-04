@@ -10,9 +10,9 @@
 #include "systems.h"
 
 // Forward declarations
-struct nk_context;
 struct World;
 struct SystemScheduler;
+struct mu_Context;
 
 // ============================================================================
 // SCENE UI MODULE INTERFACE
@@ -25,8 +25,8 @@ typedef struct SceneUIModule {
     void (*init)(struct World* world);
     void (*shutdown)(struct World* world);
     
-    // Rendering function
-    void (*render)(struct nk_context* ctx, struct World* world, 
+    // Rendering function (using void* for UI context - Microui or test stub)
+    void (*render)(void* ctx, struct World* world, 
                    struct SystemScheduler* scheduler, float delta_time);
     
     // Event handling (optional)
@@ -55,9 +55,9 @@ void scene_ui_init(void);
 // Shutdown scene UI system
 void scene_ui_shutdown(void);
 
-// Render UI for the current scene
-void scene_ui_render(struct nk_context* ctx, const char* current_scene, 
-                     struct World* world, struct SystemScheduler* scheduler, float delta_time);
+// Render UI for the current scene using Microui
+void scene_ui_render_microui(struct mu_Context* ctx, const char* current_scene, 
+                            struct World* world, struct SystemScheduler* scheduler, float delta_time);
 
 // Handle events for the current scene
 bool scene_ui_handle_event(const void* event, const char* current_scene, struct World* world);
@@ -77,5 +77,14 @@ SceneUIModule* create_logo_ui_module(void);
 
 // Navigation menu UI module
 SceneUIModule* create_navigation_menu_ui_module(void);
+
+// ============================================================================
+// MICROUI COMPATIBILITY FUNCTIONS
+// ============================================================================
+
+// Render UI for current scene using Microui
+void scene_ui_render_microui(struct mu_Context* ctx, const char* current_scene, 
+                           struct World* world, struct SystemScheduler* scheduler, 
+                           float delta_time);
 
 #endif // UI_SCENE_H

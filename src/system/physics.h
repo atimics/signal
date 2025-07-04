@@ -22,6 +22,9 @@ void physics_add_force_at_point(struct Physics* physics, Vector3 force, Vector3 
 // 6DOF control
 void physics_set_6dof_enabled(struct Physics* physics, bool enabled);
 
+// Gravity alignment control (for spatial orientation)
+void physics_set_gravity_alignment(struct Physics* physics, bool enabled, float strength);
+
 // ODE integration control
 void physics_set_use_ode(struct Physics* physics, bool use_ode);
 bool physics_is_using_ode(const struct Physics* physics);

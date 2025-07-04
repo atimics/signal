@@ -13,7 +13,6 @@
 #include "render_mesh.h"
 #include "scene_script.h"  // For find_entity_by_name function
 #include "system/material.h"  // For material properties
-#include "sokol_gfx.h"  // Direct inclusion for rendering implementation
 #include "ui.h"
 
 // Internal conversion functions for PIMPL pattern

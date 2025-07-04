@@ -5,8 +5,6 @@
 // compiled only once, preventing linker errors.
 
 #define SOKOL_IMPL
-#define SOKOL_NUKLEAR_IMPL
-typedef int nk_bool;  // Define nk_bool for sokol_nuklear.h implementation
 #include "graphics_api.h"
 
 #include <stdio.h>

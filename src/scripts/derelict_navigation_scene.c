@@ -8,7 +8,7 @@
 #include "../system/material.h"
 #include "../system/input.h"
 #include "../hidapi.h"
-#include "../sokol_app.h"
+#include "../graphics_api.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>

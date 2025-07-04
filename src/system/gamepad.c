@@ -14,7 +14,7 @@
 // Static gamepad state array
 static GamepadState gamepads[MAX_GAMEPADS];
 static bool gamepad_system_initialized = false;
-static float axis_deadzone = 0.20f;  // Increased to handle stick drift
+static float axis_deadzone = 0.08f;  // Lower deadzone for AAA input processing
 
 // hidapi device handles
 static hid_device* devices[MAX_GAMEPADS];

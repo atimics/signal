@@ -7,9 +7,15 @@
 #include "ui_api.h"
 #include "ui_scene.h"
 #include "ui_components.h"
+#include "ui_adaptive_controls.h"
+#include "hud_system.h"
 #include "graphics_api.h"
 #include "sokol_app.h"
+#include "system/input.h"
+#include "component/look_target.h"
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 // ============================================================================
 // GLOBAL UI STATE
@@ -30,11 +36,20 @@ void ui_init(void)
     // Initialize scene UI system
     scene_ui_init();
     
+    // Initialize adaptive controls
+    ui_adaptive_controls_init();
+    
+    // Initialize modular HUD system
+    hud_system_init();
+    
     printf("✅ Core UI system initialized\n");
 }
 
 void ui_shutdown(void)
 {
+    // Shutdown modular HUD system
+    hud_system_shutdown();
+    
     // Shutdown scene UI system
     scene_ui_shutdown();
     
@@ -46,6 +61,12 @@ void ui_shutdown(void)
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
 {
+    // Update adaptive controls
+    ui_adaptive_controls_update(delta_time);
+    
+    // Update modular HUD system
+    hud_system_update(delta_time);
+    
     // Early exit if UI is not visible
     if (!g_ui_visible) return;
     
@@ -54,6 +75,11 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     
     // Render scene-specific UI
     scene_ui_render(ctx, current_scene, world, scheduler, delta_time);
+    
+    // Render modular HUD for flight_test scene - must be rendered LAST to be on top
+    if (current_scene && strcmp(current_scene, "flight_test") == 0) {
+        hud_system_render(ctx, world);
+    }
     
     // Render debug overlay if enabled
     if (g_debug_ui_visible) {
@@ -93,8 +119,42 @@ bool ui_handle_event(const void* ev)
     // Note: current_scene would need to be passed here in a real implementation
     // For now, we'll skip scene-specific event handling
     
-    // Pass event to Nuklear and return whether it was captured
-    return snk_handle_event(event);
+    // Only pass mouse and touch events to Nuklear
+    // Keyboard events should go to the game unless Nuklear has an active text input
+    bool should_pass_to_nuklear = false;
+    
+    switch (event->type) {
+        case SAPP_EVENTTYPE_MOUSE_DOWN:
+        case SAPP_EVENTTYPE_MOUSE_UP:
+        case SAPP_EVENTTYPE_MOUSE_MOVE:
+        case SAPP_EVENTTYPE_MOUSE_SCROLL:
+        case SAPP_EVENTTYPE_MOUSE_ENTER:
+        case SAPP_EVENTTYPE_MOUSE_LEAVE:
+        case SAPP_EVENTTYPE_TOUCHES_BEGAN:
+        case SAPP_EVENTTYPE_TOUCHES_MOVED:
+        case SAPP_EVENTTYPE_TOUCHES_ENDED:
+        case SAPP_EVENTTYPE_TOUCHES_CANCELLED:
+            should_pass_to_nuklear = true;
+            break;
+            
+        case SAPP_EVENTTYPE_KEY_DOWN:
+        case SAPP_EVENTTYPE_KEY_UP:
+        case SAPP_EVENTTYPE_CHAR:
+            // Only pass keyboard events if there's an active text input
+            // For now, we'll assume no text inputs are active in the flight test scene
+            should_pass_to_nuklear = false;
+            break;
+            
+        default:
+            should_pass_to_nuklear = false;
+            break;
+    }
+    
+    if (should_pass_to_nuklear) {
+        return snk_handle_event(event);
+    }
+    
+    return false;  // Event not captured by UI
 }
 
 // ============================================================================
@@ -122,8 +182,9 @@ bool ui_is_debug_visible(void)
 }
 
 // ============================================================================
-// LEGACY COMPATIBILITY (forwarded to ui_api.h)
+// FLIGHT HUD SYSTEM (Legacy - now handled by hud_system.c)
 // ============================================================================
 
-// Note: These functions are now implemented in ui_api.c
-// The main application should use ui_api.h directly for new code
+// NOTE: Flight HUD rendering is now handled by the modular HUD system
+// in hud_system.c. This provides better organization and support for
+// multiple camera modes with different HUD layouts.

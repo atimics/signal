@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Define M_PI if not available (WASM builds)
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // Global flight components (simple array for now)
 #define MAX_SCRIPTED_ENTITIES 16
 static struct {

@@ -1,5 +1,6 @@
 #include "thruster_points_component.h"
 #include "../system/physics.h"
+#include "../wasm_defs.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

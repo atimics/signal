@@ -12,26 +12,14 @@
 #include "sokol_gfx.h"
 
 // Only include app layer if not running dummy backend for tests
-#ifndef SOKOL_DUMMY_BACKEND
+#if !defined(SOKOL_DUMMY_BACKEND)
 #include "sokol_app.h"
 #include "sokol_glue.h"
+#endif
 
-// Nuklear UI library requires specific definitions before include
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#include <stdarg.h>
-#define NK_INCLUDE_STANDARD_VARARGS
-#include "nuklear.h"
-#include "sokol_nuklear.h"
-#else
-// Test mode: include minimal nuklear definitions
+// Test mode: include minimal UI definitions
 #ifdef TEST_MODE
 #include "../tests/stubs/ui_test_stubs.h"
-#endif
 #endif
 
 #include "sokol_log.h"

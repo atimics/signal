@@ -7,6 +7,7 @@
 #include "graphics_api.h"
 #include "gpu_resources.h"
 #include "assets.h"
+#include "wasm_defs.h"
 #include <math.h>
 #include <stdlib.h>
 

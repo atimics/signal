@@ -24,10 +24,10 @@
 
 // Utility functions
 uint64_t get_current_time_microseconds(void) {
-    // Platform-specific high-resolution timer
-    // This would need platform-specific implementation
+    // Platform-specific high-resolution timer implementation needed
     static uint64_t counter = 0;
-    return counter++; // Placeholder - replace with actual high-res timer
+    counter += 16667; // ~60 FPS worth of microseconds
+    return counter;
 }
 
 Vector6 vector6_add(Vector6 a, Vector6 b) {
@@ -507,7 +507,6 @@ void production_input_processor_init(ProductionInputProcessor* processor) {
     processor->calibration_state = CALIBRATION_STATE_WAITING;
     processor->initialized = true;
     
-    printf("Production input processor initialized\n");
 }
 
 // Main processing function
@@ -599,7 +598,6 @@ void update_calibration_state_machine(ProductionInputProcessor* processor,
             // Check if we have consistent input (controller connected)
             if (sqrtf(raw_input.x * raw_input.x + raw_input.y * raw_input.y) > 0.001f ||
                 processor->calibrator.sample_count > 10) {
-                printf("Controller detected! Starting statistical calibration...\n");
                 processor->calibration_state = CALIBRATION_STATE_STATISTICAL;
                 processor->calibration_timer = 0.0f;
             }
@@ -608,8 +606,6 @@ void update_calibration_state_machine(ProductionInputProcessor* processor,
         case CALIBRATION_STATE_STATISTICAL:
             // Build statistical foundation for 5 seconds
             if (processor->calibration_timer >= 5.0f && processor->calibrator.confidence_level > 0.8f) {
-                printf("Statistical calibration complete (%.2f confidence). Ready for neural processing.\n", 
-                       processor->calibrator.confidence_level);
                 processor->calibration_state = CALIBRATION_STATE_PRODUCTION;
                 processor->config.enable_neural_processing = true;
                 processor->calibration_timer = 0.0f;
@@ -619,7 +615,6 @@ void update_calibration_state_machine(ProductionInputProcessor* processor,
         case CALIBRATION_STATE_PRODUCTION:
             // Normal operation with drift monitoring
             if (processor->calibrator.drift_detected) {
-                printf("Drift detected, enabling continual learning\n");
                 processor->calibration_state = CALIBRATION_STATE_CONTINUAL;
             }
             break;
@@ -627,7 +622,6 @@ void update_calibration_state_machine(ProductionInputProcessor* processor,
         case CALIBRATION_STATE_CONTINUAL:
             // Background drift adaptation
             if (!processor->calibrator.drift_detected) {
-                printf("Drift compensation complete\n");
                 processor->calibration_state = CALIBRATION_STATE_PRODUCTION;
             }
             break;

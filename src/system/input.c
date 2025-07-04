@@ -1,30 +1,24 @@
-// Canyon Racing Input System - Simplified and Direct
-// This replaces the overly complex neural network input processing
+// Canyon Racing Input System
+// Integrates advanced input processing for smooth gamepad handling
 
 #include "input.h"
 #include "gamepad.h"
 #include "../component/look_target.h"
+#include "../input_processing.h"
 #include "../sokol_app.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 
-// Zero-G Input configuration - STABILITY FOCUSED
-#define GAMEPAD_DEADZONE 0.15f          // 15% deadzone for stability
-#define LOOK_SENSITIVITY 2.0f           // Camera rotation speed (reduced)
-#define PITCH_YAW_SENSITIVITY 0.2f      // Ship rotation speed (extremely low for stability)
+// Input configuration 
+#define LOOK_SENSITIVITY 2.0f           // Camera rotation speed
 #define MOUSE_SENSITIVITY 0.003f        // Mouse look sensitivity 
 #define AUTO_LEVEL_STRENGTH 2.0f        // How fast ship auto-levels
-#define THRUST_SENSITIVITY 0.4f         // Thrust responsiveness (further reduced)
-#define INPUT_SMOOTHING 0.92f           // Input smoothing factor (higher smoothing to prevent jittering)
 
-// Zero-G input state with smoothing
+// Input State with Advanced Processing
 typedef struct CanyonRacingInput {
     // Current processed input
     InputState current_state;
-    
-    // Previous input for smoothing
-    InputState previous_state;
     
     // Look target for camera
     LookTarget look_target;
@@ -41,6 +35,10 @@ typedef struct CanyonRacingInput {
     // Device state
     InputDeviceType last_device;
     bool initialized;
+    
+    // Sprint 22 Advanced Input Processing
+    ProductionInputProcessor processor;
+    bool processor_enabled;
 } CanyonRacingInput;
 
 // Global state
@@ -61,9 +59,9 @@ static float apply_deadzone(float value, float deadzone) {
 bool input_init(void) {
     // Initialize gamepad system
     if (!gamepad_init()) {
-        printf("⚠️  Canyon Racing Input: Gamepad initialization failed - keyboard/mouse only\n");
+        printf("⚠️  AAA Input: Gamepad initialization failed - keyboard/mouse only\n");
     } else {
-        printf("🎮 Canyon Racing Input: Gamepad system ready\n");
+        printf("🎮 AAA Input: Gamepad system ready\n");
     }
     
     // Clear input state
@@ -73,8 +71,12 @@ bool input_init(void) {
     // Initialize look target
     look_target_init(&canyon_input.look_target);
     
+    // Initialize Sprint 22 advanced input processor
+    production_input_processor_init(&canyon_input.processor);
+    canyon_input.processor_enabled = false;  // Temporarily disable for debugging
+    
     canyon_input.initialized = true;
-    printf("✅ Canyon Racing Input system initialized\n");
+    printf("✅ AAA Input system initialized with statistical processing\n");
     return true;
 }
 
@@ -91,9 +93,6 @@ void input_update(void) {
     
     // Poll gamepad
     gamepad_poll();
-    
-    // Store previous input for smoothing
-    canyon_input.previous_state = canyon_input.current_state;
     
     // Clear current input - IMPORTANT: Reset all values to prevent accumulation
     memset(&canyon_input.current_state, 0, sizeof(InputState));
@@ -134,79 +133,107 @@ void input_update(void) {
         }
     }
     
-    // Process gamepad input for ZERO-G FLIGHT
-    if (using_gamepad) {
-        // ZERO-G CONTROLS OPTIMIZED FOR XBOX CONTROLLER:
-        // Left stick: Primary flight control (pitch/yaw) with response curve
-        float left_x = apply_deadzone(gamepad->left_stick_x, GAMEPAD_DEADZONE);
-        float left_y = apply_deadzone(gamepad->left_stick_y, GAMEPAD_DEADZONE);
+    // Process gamepad input with AAA Statistical Processing
+    if (using_gamepad && canyon_input.processor_enabled) {
+        // Get raw left stick input - pass unfiltered values to let advanced processor handle filtering
+        InputVector2 raw_stick = {gamepad->left_stick_x, gamepad->left_stick_y};
         
-        if (left_x != 0.0f || left_y != 0.0f) {
-            // Linear response for more predictable control in zero-g
-            float raw_yaw = left_x * PITCH_YAW_SENSITIVITY;
-            float raw_pitch = -left_y * PITCH_YAW_SENSITIVITY; // Inverted for flight
+        // Only process if we have meaningful input (avoid processing pure noise)
+        float stick_magnitude = sqrtf(raw_stick.x * raw_stick.x + raw_stick.y * raw_stick.y);
+        
+        if (stick_magnitude > 0.05f) { // Only process if stick is moved beyond minimal threshold
+            // Process through Sprint 22 advanced pipeline
+            Vector6 processed_output = production_input_process(&canyon_input.processor, raw_stick, 0.016f);
             
-            // Apply input smoothing to reduce oscillations
-            canyon_input.current_state.yaw = canyon_input.previous_state.yaw * INPUT_SMOOTHING + 
-                                            raw_yaw * (1.0f - INPUT_SMOOTHING);
-            canyon_input.current_state.pitch = canyon_input.previous_state.pitch * INPUT_SMOOTHING + 
-                                              raw_pitch * (1.0f - INPUT_SMOOTHING);
+            // Extract processed input values - much smoother than raw gamepad
+            canyon_input.current_state.yaw = processed_output.yaw;     // Processed yaw from left stick X
+            canyon_input.current_state.pitch = -processed_output.pitch; // Invert pitch for flight (negative Y = nose down)
             
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
             
-            // Debug output
+            // Debug output for processed values
             static int stick_debug_counter = 0;
-            if (++stick_debug_counter % 60 == 0) { // Reduced debug frequency
-                printf("🎮 ZERO-G STICK: Raw(%.3f,%.3f) → Smoothed Pitch:%.3f Yaw:%.3f\n", 
-                       left_x, left_y, canyon_input.current_state.pitch, canyon_input.current_state.yaw);
+            if (++stick_debug_counter % 60 == 0) { // Show processed vs raw
+                printf("🎮 AAA STICK: Raw(%.3f,%.3f) → Processed Pitch:%.3f Yaw:%.3f\n", 
+                       raw_stick.x, raw_stick.y, canyon_input.current_state.pitch, canyon_input.current_state.yaw);
             }
+        } else {
+            // Stick at rest - let advanced processor calibrate but don't use output for control
+            production_input_process(&canyon_input.processor, raw_stick, 0.016f);
         }
+    }
+    else if (using_gamepad) {
+        // Fallback to simple processing if advanced processor is disabled
+        float left_x = apply_deadzone(gamepad->left_stick_x, 0.08f);
+        float left_y = apply_deadzone(gamepad->left_stick_y, 0.08f);
         
+        canyon_input.current_state.yaw = left_x * 0.5f;     // Increased sensitivity
+        canyon_input.current_state.pitch = -left_y * 0.5f;  // Inverted for flight
+        
+        canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+        
+    }
+    
+    // Common gamepad processing (for both advanced and fallback modes)
+    if (using_gamepad) {
         // Right stick: Targeting reticle control (where you want to fly)
-        float right_x = apply_deadzone(gamepad->right_stick_x, GAMEPAD_DEADZONE);
-        float right_y = apply_deadzone(gamepad->right_stick_y, GAMEPAD_DEADZONE);
+        float right_x = apply_deadzone(gamepad->right_stick_x, 0.15f);
+        float right_y = apply_deadzone(gamepad->right_stick_y, 0.15f);
         
         if (right_x != 0.0f || right_y != 0.0f) {
             float delta_azimuth = right_x * LOOK_SENSITIVITY * 0.016f;
-            float delta_elevation = -right_y * LOOK_SENSITIVITY * 0.016f; // Invert Y
+            float delta_elevation = right_y * LOOK_SENSITIVITY * 0.016f; // Remove inversion - let user control naturally
             
             look_target_update(&canyon_input.look_target, &player_position,
                              delta_azimuth, delta_elevation, 0.0f);
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
-        // Right trigger for forward thrust with smoothing
-        float right_trigger = apply_deadzone(gamepad->right_trigger, GAMEPAD_DEADZONE * 0.6f); // Slightly higher deadzone
+        // Right trigger for forward thrust (smooth, reliable processing)
+        float right_trigger = apply_deadzone(gamepad->right_trigger, 0.08f); // Lower deadzone for responsiveness
+        
+        // Debug thrust input more frequently
+        static int thrust_debug_counter = 0;
+        if (++thrust_debug_counter % 30 == 0) { // Show every half second
+            printf("🚀 THRUST DEBUG: Raw RT=%.3f, Processed RT=%.3f, Final thrust=%.3f\n", 
+                   gamepad->right_trigger, right_trigger, 
+                   right_trigger > 0.0f ? right_trigger * 0.8f : 0.0f);
+        }
+        
         if (right_trigger > 0.0f) {
-            // Apply smoothing to thrust for stability
-            float raw_thrust = right_trigger * THRUST_SENSITIVITY;
-            canyon_input.current_state.thrust = canyon_input.previous_state.thrust * INPUT_SMOOTHING + 
-                                               raw_thrust * (1.0f - INPUT_SMOOTHING);
+            // Direct thrust mapping with gentle scaling
+            canyon_input.current_state.thrust = right_trigger * 0.8f; // Slightly reduced maximum thrust for control
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+        } else {
+            // Ensure thrust is cleared when trigger not pressed
+            canyon_input.current_state.thrust = 0.0f;
         }
         
         // Left trigger for braking with enhanced zero-g stopping
-        float left_trigger = apply_deadzone(gamepad->left_trigger, GAMEPAD_DEADZONE * 0.5f);
+        float left_trigger = apply_deadzone(gamepad->left_trigger, 0.05f);
         if (left_trigger > 0.0f) {
             // Proportional braking based on trigger pressure
             canyon_input.current_state.brake = true;
             canyon_input.current_state.brake_intensity = left_trigger; // Store brake intensity
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
+            
+        } else {
+            // Ensure brake is cleared when not pressed
+            canyon_input.current_state.brake = false;
+            canyon_input.current_state.brake_intensity = 0.0f;
         }
         
         // Bumpers for roll (gentle zero-g roll control)
         float roll_input = 0.0f;
         if (gamepad->buttons[GAMEPAD_BUTTON_RB]) {
-            roll_input += 0.4f; // Much more gentle
+            roll_input += 0.5f; // Gentle roll
         }
         if (gamepad->buttons[GAMEPAD_BUTTON_LB]) {
-            roll_input -= 0.4f; // Much more gentle
+            roll_input -= 0.5f; // Gentle roll
         }
         
         if (roll_input != 0.0f) {
-            // Apply smoothing to roll for stability
-            canyon_input.current_state.roll = canyon_input.previous_state.roll * INPUT_SMOOTHING + 
-                                             roll_input * (1.0f - INPUT_SMOOTHING);
+            canyon_input.current_state.roll = roll_input;
             canyon_input.last_device = INPUT_DEVICE_GAMEPAD;
         }
         
@@ -270,32 +297,6 @@ void input_update(void) {
     canyon_input.current_state.strafe_right = fmaxf(0.0f, fminf(1.0f, canyon_input.current_state.strafe_right));
     
     // Debug output
-    static int debug_counter = 0;
-    if (++debug_counter % 60 == 0) { // Every second
-        if (canyon_input.current_state.thrust > 0.0f || 
-            fabsf(canyon_input.current_state.pitch) > 0.05f ||
-            fabsf(canyon_input.current_state.yaw) > 0.05f ||
-            canyon_input.current_state.brake) {
-            
-            printf("🚀 Zero-G Input: T:%.2f P:%.2f Y:%.2f R:%.2f ",
-                   canyon_input.current_state.thrust,
-                   canyon_input.current_state.pitch,
-                   canyon_input.current_state.yaw,
-                   canyon_input.current_state.roll);
-            
-            if (canyon_input.current_state.brake) {
-                printf("Brake:%.2f ", canyon_input.current_state.brake_intensity);
-            }
-            if (canyon_input.current_state.strafe_left > 0.0f || canyon_input.current_state.strafe_right > 0.0f) {
-                printf("Strafe L:%.2f R:%.2f ", canyon_input.current_state.strafe_left, canyon_input.current_state.strafe_right);
-            }
-            
-            printf("Look: Az:%.2f El:%.2f Dist:%.1f\n",
-                   canyon_input.look_target.azimuth,
-                   canyon_input.look_target.elevation,
-                   canyon_input.look_target.distance);
-        }
-    }
 }
 
 bool input_handle_keyboard(int key_code, bool is_pressed) {
@@ -430,8 +431,20 @@ void input_print_debug(void) {
            canyon_input.last_device == INPUT_DEVICE_GAMEPAD ? "GAMEPAD" : "KB/MOUSE");
 }
 
-// Stub functions for compatibility
-ProductionInputProcessor* input_get_processor(void) { return NULL; }
+// Production input processor access
+ProductionInputProcessor* input_get_processor(void) { 
+    return canyon_input.initialized ? &canyon_input.processor : NULL; 
+}
+
 void input_set_processing_config(bool enable_neural, bool enable_mrac, bool enable_kalman) {
-    (void)enable_neural; (void)enable_mrac; (void)enable_kalman;
+    if (!canyon_input.initialized) return;
+    
+    canyon_input.processor.config.enable_neural_processing = enable_neural;
+    canyon_input.processor.config.enable_mrac_safety = enable_mrac;
+    canyon_input.processor.config.enable_kalman_filtering = enable_kalman;
+    
+    printf("🎮 Input Processing Config: Neural=%s MRAC=%s Kalman=%s\n",
+           enable_neural ? "ON" : "OFF",
+           enable_mrac ? "ON" : "OFF", 
+           enable_kalman ? "ON" : "OFF");
 }

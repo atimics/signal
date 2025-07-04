@@ -5,7 +5,7 @@
 #include "../core.h"
 #include "../render.h"
 #include "../system/material.h"
-#include "../sokol_app.h"
+#include "../graphics_api.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
