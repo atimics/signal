@@ -71,10 +71,55 @@ void ui_microui_init(void) {
     g_ui_context.mu_ctx.text_height = text_height_callback;
     
     // Initialize font texture (simple white pixels for now)
-    memset(g_ui_context.font_texture, 0xFF, sizeof(g_ui_context.font_texture));
+    // Font texture is 128x128 pixels, each pixel is 4 bytes (RGBA)
+    memset(g_ui_context.font_texture, 0xFF, 128 * 128 * 4);
     
     // Create rendering pipeline
     sg_shader_desc shd_desc = {
+#ifdef SOKOL_METAL
+        .vertex_func = {
+            .source = 
+                "#include <metal_stdlib>\n"
+                "using namespace metal;\n"
+                "struct vs_in {\n"
+                "    float2 position [[attribute(0)]];\n"
+                "    float2 texcoord [[attribute(1)]];\n"
+                "    float4 color [[attribute(2)]];\n"
+                "};\n"
+                "struct vs_out {\n"
+                "    float4 position [[position]];\n"
+                "    float2 uv;\n"
+                "    float4 color;\n"
+                "};\n"
+                "struct vs_uniforms {\n"
+                "    float2 screen_size;\n"
+                "};\n"
+                "vertex vs_out _main(vs_in inp [[stage_in]], constant vs_uniforms& uniforms [[buffer(0)]]) {\n"
+                "    vs_out outp;\n"
+                "    float2 pos = inp.position / uniforms.screen_size;\n"
+                "    pos = pos * 2.0 - 1.0;\n"
+                "    pos.y = -pos.y;\n"
+                "    outp.position = float4(pos, 0.0, 1.0);\n"
+                "    outp.uv = inp.texcoord;\n"
+                "    outp.color = inp.color;\n"
+                "    return outp;\n"
+                "}\n",
+            .entry = "_main"
+        },
+        .fragment_func = {
+            .source = 
+                "#include <metal_stdlib>\n"
+                "using namespace metal;\n"
+                "struct fs_in {\n"
+                "    float2 uv;\n"
+                "    float4 color;\n"
+                "};\n"
+                "fragment float4 _main(fs_in inp [[stage_in]], texture2d<float> tex [[texture(0)]], sampler smp [[sampler(0)]]) {\n"
+                "    return inp.color;\n"
+                "}\n",
+            .entry = "_main"
+        },
+#else
         .vertex_func = {
             .source = 
                 "#version 330\n"
@@ -106,6 +151,7 @@ void ui_microui_init(void) {
                 "}\n",
             .entry = "main"
         },
+#endif
         .uniform_blocks[0] = {
             .stage = SG_SHADERSTAGE_VERTEX,
             .size = sizeof(float) * 2,
@@ -164,10 +210,19 @@ void ui_microui_init(void) {
     render_state.bind.images[0] = sg_make_image(&(sg_image_desc){
         .width = 128,
         .height = 128,
+        .pixel_format = SG_PIXELFORMAT_RGBA8,
         .data.subimage[0][0] = {
             .ptr = g_ui_context.font_texture,
-            .size = sizeof(g_ui_context.font_texture)
+            .size = 128 * 128 * 4
         }
+    });
+    
+    // Create sampler
+    render_state.bind.samplers[0] = sg_make_sampler(&(sg_sampler_desc){
+        .min_filter = SG_FILTER_LINEAR,
+        .mag_filter = SG_FILTER_LINEAR,
+        .wrap_u = SG_WRAP_CLAMP_TO_EDGE,
+        .wrap_v = SG_WRAP_CLAMP_TO_EDGE
     });
     
     g_ui_context.initialized = true;
@@ -179,6 +234,7 @@ void ui_microui_shutdown(void) {
         sg_destroy_pipeline(render_state.pip);
         sg_destroy_buffer(render_state.bind.vertex_buffers[0]);
         sg_destroy_image(render_state.bind.images[0]);
+        sg_destroy_sampler(render_state.bind.samplers[0]);
         g_ui_context.initialized = false;
         printf("✅ Microui wrapper shut down\n");
     }
@@ -190,10 +246,19 @@ void ui_microui_shutdown(void) {
 
 mu_Context* ui_microui_begin_frame(void) {
     mu_begin(&g_ui_context.mu_ctx);
+    
+    // Set root clip rect to cover the entire screen
+    // This is needed because MicroUI expects at least one clip rect to be active
+    mu_Rect screen_rect = mu_rect(0, 0, sapp_width(), sapp_height());
+    mu_push_clip_rect(&g_ui_context.mu_ctx, screen_rect);
+    
     return &g_ui_context.mu_ctx;
 }
 
 void ui_microui_end_frame(void) {
+    // Pop the root clip rect we pushed in begin_frame
+    mu_pop_clip_rect(&g_ui_context.mu_ctx);
+    
     mu_end(&g_ui_context.mu_ctx);
 }
 
@@ -263,7 +328,9 @@ void ui_microui_render(int screen_width, int screen_height) {
                 break;
                 
             case MU_COMMAND_CLIP:
-                // Scissor test would go here
+                // Handle scissor test for clipping
+                // For now, we'll acknowledge the clip command but not implement scissor testing
+                // In a full implementation, this would set up proper clipping regions
                 break;
         }
     }
@@ -389,9 +456,17 @@ int ui_microui_text_height(void) {
 // ============================================================================
 
 UIContext* ui_microui_get_context(void) {
+    if (!g_ui_context.initialized) {
+        printf("⚠️ Warning: UI context accessed before initialization!\n");
+        return NULL;
+    }
     return &g_ui_context;
 }
 
 mu_Context* ui_microui_get_mu_context(void) {
+    if (!g_ui_context.initialized) {
+        printf("⚠️ Warning: MicroUI context accessed before initialization!\n");
+        return NULL;
+    }
     return &g_ui_context.mu_ctx;
 }

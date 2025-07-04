@@ -5,7 +5,11 @@
 #include "gamepad.h"
 #include "gamepad_hotplug.h"
 #include "input.h"  // For input_get_last_device_type
+
+#ifndef WASM_BUILD
 #include "../hidapi.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

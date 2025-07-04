@@ -4,6 +4,7 @@
  */
 
 #include "scene_state.h"
+#include "ui.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -89,6 +90,9 @@ void scene_state_set_ui_visible(SceneStateManager* manager, bool visible)
 {
     if (!manager) return;
     manager->ui_visible = visible;
+    
+    // Also update the core UI system
+    ui_set_visible(visible);
 }
 
 void scene_state_set_debug_ui_visible(SceneStateManager* manager, bool visible)

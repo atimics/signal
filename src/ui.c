@@ -44,9 +44,16 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     
     // Get Microui context
     UIContext* ui_ctx = ui_microui_get_context();
-    if (!ui_ctx) return;
+    if (!ui_ctx) {
+        printf("⚠️ Warning: Cannot render UI - context not initialized\n");
+        return;
+    }
     
     mu_Context* ctx = ui_microui_get_mu_context();
+    if (!ctx) {
+        printf("⚠️ Warning: Cannot render UI - MicroUI context not initialized\n");
+        return;
+    }
     
     // Begin Microui frame
     ui_microui_begin_frame();
@@ -56,8 +63,7 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     
     // Render debug overlay if enabled
     if (g_debug_ui_visible) {
-        // TODO: Implement debug UI with Microui
-        // For now, just show a simple debug panel
+        // Debug UI with Microui
         if (mu_begin_window(ctx, "Debug", mu_rect(10, 10, 200, 100))) {
             mu_layout_row(ctx, 1, (int[]){-1}, 0);
             mu_label(ctx, "Debug Mode Active");

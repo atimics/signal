@@ -11,6 +11,7 @@
 #include "gpu_resources.h"
 #include "graphics_api.h"
 #include "system/memory.h"
+#include "shader_sources.h"  // For embedded shader sources
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -444,6 +445,30 @@ const char* get_shader_path(const char* base_name, const char* stage)
 
 char* load_shader_source(const char* filepath)
 {
+#ifdef WASM_BUILD
+    // For WASM builds, use embedded shader sources
+    const char* embedded_source = NULL;
+    
+    if (strstr(filepath, "basic_3d.vert")) {
+        embedded_source = basic_3d_vert_glsl;
+    } else if (strstr(filepath, "basic_3d.frag")) {
+        embedded_source = basic_3d_frag_glsl;
+    }
+    
+    if (embedded_source) {
+        size_t len = strlen(embedded_source);
+        char* source = (char*)malloc(len + 1);
+        if (source) {
+            strcpy(source, embedded_source);
+            printf("📋 Using embedded shader source for: %s\n", filepath);
+            return source;
+        }
+    }
+    
+    printf("❌ No embedded shader source for: %s\n", filepath);
+    return NULL;
+#else
+    // For native builds, load from filesystem
     FILE* file = fopen(filepath, "r");
     if (!file)
     {
@@ -477,6 +502,7 @@ char* load_shader_source(const char* filepath)
     fclose(file);
 
     return source;
+#endif // WASM_BUILD
 }
 
 void free_shader_source(char* source)

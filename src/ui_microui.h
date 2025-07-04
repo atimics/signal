@@ -31,7 +31,7 @@ typedef struct {
     bool keys_down[512];        // Key state tracking
     
     // Rendering data
-    unsigned char font_texture[128 * 128];  // Built-in font texture
+    unsigned char font_texture[128 * 128 * 4];  // Built-in font texture (RGBA)
 } UIContext;
 
 // ============================================================================

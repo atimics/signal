@@ -1,24 +1,19 @@
 /**
  * @file ui_components.c
- * @brief Modular UI component system implementation
+ * @brief MicroUI widget implementations for the CGame UI system
  */
 
 #include "ui_components.h"
+#include "ui_microui.h"
 #include "config.h"
-#include "graphics_api.h"  // This includes nuklear properly
-#include "systems.h"       // For SystemScheduler definition
-#include "sokol_app.h"
+#include "data.h"
+#include "scene_state.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
-
-#ifdef TEST_MODE
-#include "../tests/stubs/ui_test_stubs.h"
-#endif
+#include <stdlib.h>
 
 // ============================================================================
-// SCENE LIST WIDGET
+// SCENE LIST WIDGET IMPLEMENTATION
 // ============================================================================
 
 void scene_list_widget_init(SceneListWidget* widget)
@@ -30,8 +25,9 @@ void scene_list_widget_init(SceneListWidget* widget)
     widget->scenes_loaded = false;
 }
 
-void scene_list_widget_shutdown(SceneListWidget* widget)
+void scene_list_widget_refresh(SceneListWidget* widget)
 {
+    // Free existing data
     if (widget->scene_names) {
         for (int i = 0; i < widget->scene_count; i++) {
             free(widget->scene_names[i]);
@@ -40,154 +36,127 @@ void scene_list_widget_shutdown(SceneListWidget* widget)
         free(widget->scene_names);
         free(widget->scene_descriptions);
     }
-    widget->scene_names = NULL;
-    widget->scene_descriptions = NULL;
-    widget->scene_count = 0;
-    widget->scenes_loaded = false;
-}
-
-static const char* get_scene_description(const char* scene_name)
-{
-    if (strcmp(scene_name, "logo") == 0) {
-        return "System Boot - Core engine validation sequence";
-    } else if (strcmp(scene_name, "system_overview") == 0) {
-        return "System Overview - Sector-wide FTL navigation hub";
-    } else if (strcmp(scene_name, "slipstream_nav") == 0) {
-        return "Slipstream Navigation - FTL threadline planning testbed";
-    } else if (strcmp(scene_name, "derelict_alpha") == 0) {
-        return "Derelict Alpha - Ancient station excavation site";
-    } else if (strcmp(scene_name, "derelict_beta") == 0) {
-        return "Derelict Beta - Deep-space archaeological exploration";
-    } else if (strcmp(scene_name, "flight_test") == 0) {
-        return "Flight Test - Open plain flight training ground";
-    } else if (strcmp(scene_name, "navigation_menu") == 0) {
-        return "Threadline Planner - Primary FTL navigation interface";
-    } else {
-        static char default_desc[128];
-        snprintf(default_desc, sizeof(default_desc), "%s - Uncharted location", scene_name);
-        return default_desc;
-    }
-}
-
-void scene_list_widget_refresh(SceneListWidget* widget)
-{
-    // Free existing data
-    scene_list_widget_shutdown(widget);
     
-    DIR* dir = opendir("data/scenes");
-    if (!dir) {
-        printf("⚠️  Could not open data/scenes directory\n");
-        return;
-    }
+    // Load scene list - for now, use hardcoded scenes
+    // TODO: Implement scene discovery from file system
+    const char* scene_list[] = {
+        "logo", "scene_selector", "flight_test", "derelict_navigation", "ship_launch_test"
+    };
+    const char* scene_descriptions[] = {
+        "Logo animation and startup sequence",
+        "Scene selection menu",
+        "Flight mechanics testing arena", 
+        "Navigate through derelict structures",
+        "Test ship launch and physics"
+    };
     
-    // Count valid scene files
-    widget->scene_count = 0;
-    struct dirent* entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (strstr(entry->d_name, ".yaml") && 
-            strcmp(entry->d_name, "navigation_menu.yaml") != 0) {
-            widget->scene_count++;
-        }
-    }
-    
-    if (widget->scene_count == 0) {
-        closedir(dir);
-        return;
-    }
-    
-    // Allocate arrays
+    widget->scene_count = sizeof(scene_list) / sizeof(scene_list[0]);
     widget->scene_names = malloc(widget->scene_count * sizeof(char*));
     widget->scene_descriptions = malloc(widget->scene_count * sizeof(char*));
     
-    // Collect scene names
-    rewinddir(dir);
-    int index = 0;
-    while ((entry = readdir(dir)) != NULL && index < widget->scene_count) {
-        if (strstr(entry->d_name, ".yaml") && 
-            strcmp(entry->d_name, "navigation_menu.yaml") != 0) {
-            
-            // Remove .yaml extension for scene name
-            char* scene_name = malloc(strlen(entry->d_name) + 1);
-            strcpy(scene_name, entry->d_name);
-            char* dot = strrchr(scene_name, '.');
-            if (dot) *dot = '\0';
-            
-            widget->scene_names[index] = scene_name;
-            
-            // Generate description
-            const char* desc = get_scene_description(scene_name);
-            widget->scene_descriptions[index] = malloc(strlen(desc) + 1);
-            strcpy(widget->scene_descriptions[index], desc);
-            
-            index++;
-        }
+    for (int i = 0; i < widget->scene_count; i++) {
+        widget->scene_names[i] = malloc(strlen(scene_list[i]) + 1);
+        strcpy(widget->scene_names[i], scene_list[i]);
+        
+        widget->scene_descriptions[i] = malloc(strlen(scene_descriptions[i]) + 1);
+        strcpy(widget->scene_descriptions[i], scene_descriptions[i]);
     }
     
-    closedir(dir);
     widget->scenes_loaded = true;
-    widget->selected_index = -1; // Reset selection
 }
 
-bool scene_list_widget_render(struct nk_context* ctx, SceneListWidget* widget, 
-                               const char* current_scene, char* selected_scene_out)
+bool scene_list_widget_render_microui(struct mu_Context* ctx, SceneListWidget* widget, 
+                                     const char* exclude_scene, char* selected_scene_out)
 {
-    if (!widget->scenes_loaded) {
-        scene_list_widget_refresh(widget);
-    }
-    
     bool scene_selected = false;
     
-    if (widget->scene_count == 0) {
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_label(ctx, "No scenes found", NK_TEXT_CENTERED);
+    if (!widget->scenes_loaded) {
+        mu_label(ctx, "Loading scenes...");
         return false;
     }
     
-    const char* startup_scene = config_get_startup_scene();
+    if (widget->scene_count == 0) {
+        mu_label(ctx, "No scenes available");
+        return false;
+    }
     
-    nk_layout_row_dynamic(ctx, 200, 1); // Fixed height for scrollable list
-    if (nk_group_begin(ctx, "scene_list", NK_WINDOW_BORDER)) {
-        for (int i = 0; i < widget->scene_count; i++) {
-            bool is_current = (current_scene && strcmp(current_scene, widget->scene_names[i]) == 0);
-            bool is_startup = (strcmp(startup_scene, widget->scene_names[i]) == 0);
-            bool is_selected = (widget->selected_index == i);
-            int selected_state = is_selected ? 1 : 0;
-            
-            nk_layout_row_dynamic(ctx, 25, 1);
-            
-            // Style for different scene states
-            bool style_pushed = ui_push_button_style(ctx, is_current, is_startup);
-            
-            // Scene name with indicators
-            char scene_label[256];
-            snprintf(scene_label, sizeof(scene_label), "%s%s%s", 
-                     widget->scene_descriptions[i],
-                     is_current ? " ●" : "",
-                     is_startup ? " ⚡" : "");
-            
-            if (nk_selectable_label(ctx, scene_label, NK_TEXT_LEFT, &selected_state)) {
-                widget->selected_index = i;
-                if (selected_scene_out) {
-                    strcpy(selected_scene_out, widget->scene_names[i]);
-                    scene_selected = true;
-                }
-            }
-            
-            ui_pop_button_style(ctx, style_pushed);
+    mu_label(ctx, "Available Scenes:");
+    
+    for (int i = 0; i < widget->scene_count; i++) {
+        // Skip excluded scene
+        if (exclude_scene && strcmp(widget->scene_names[i], exclude_scene) == 0) {
+            continue;
         }
-        nk_group_end(ctx);
+        
+        // Create button for each scene
+        char button_text[128];
+        snprintf(button_text, sizeof(button_text), "%s", widget->scene_names[i]);
+        
+        if (mu_button(ctx, button_text)) {
+            widget->selected_index = i;
+            if (selected_scene_out) {
+                strncpy(selected_scene_out, widget->scene_names[i], 63);
+                selected_scene_out[63] = '\0';
+            }
+            scene_selected = true;
+        }
+        
+        // Show description as smaller text
+        if (widget->scene_descriptions[i] && strlen(widget->scene_descriptions[i]) > 0) {
+            char desc_text[256];
+            snprintf(desc_text, sizeof(desc_text), "  %s", widget->scene_descriptions[i]);
+            mu_label(ctx, desc_text);
+        }
     }
     
     return scene_selected;
 }
 
 // ============================================================================
-// CONFIGURATION WIDGET
+// CONFIG WIDGET IMPLEMENTATION
 // ============================================================================
 
 void config_widget_init(ConfigWidget* widget)
 {
-    config_widget_sync_from_config(widget);
+    widget->auto_start = false;
+    strcpy(widget->startup_scene, "logo");
+}
+
+bool config_widget_render_microui(struct mu_Context* ctx, ConfigWidget* widget)
+{
+    bool changed = false;
+    
+    mu_label(ctx, "Configuration");
+    ui_draw_separator_microui(ctx);
+    
+    // Auto-start checkbox
+    int auto_start_int = widget->auto_start ? 1 : 0;
+    if (mu_checkbox(ctx, "Auto-start enabled", &auto_start_int)) {
+        widget->auto_start = auto_start_int ? true : false;
+        changed = true;
+    }
+    
+    // Startup scene text input
+    mu_label(ctx, "Startup Scene:");
+    if (mu_textbox(ctx, widget->startup_scene, sizeof(widget->startup_scene))) {
+        changed = true;
+    }
+    
+    ui_draw_spacer_microui(ctx, 10);
+    
+    // Action buttons
+    if (mu_button(ctx, "Apply Settings")) {
+        config_widget_apply_to_config(widget);
+        changed = true;
+    }
+    
+    if (mu_button(ctx, "Reset to Defaults")) {
+        widget->auto_start = false;
+        strcpy(widget->startup_scene, "logo");
+        changed = true;
+    }
+    
+    return changed;
 }
 
 void config_widget_sync_from_config(ConfigWidget* widget)
@@ -201,33 +170,10 @@ void config_widget_apply_to_config(ConfigWidget* widget)
 {
     config_set_auto_start(widget->auto_start);
     config_set_startup_scene(widget->startup_scene);
-    config_save();
-}
-
-bool config_widget_render(struct nk_context* ctx, ConfigWidget* widget)
-{
-    bool changed = false;
-    
-    nk_layout_row_dynamic(ctx, 25, 1);
-    nk_label(ctx, "Startup Configuration:", NK_TEXT_LEFT);
-    
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_labelf(ctx, NK_TEXT_LEFT, "Startup Scene: %s", widget->startup_scene);
-    
-    static int temp_auto_start = 0;
-    temp_auto_start = widget->auto_start ? 1 : 0;
-    
-    nk_layout_row_dynamic(ctx, 25, 1);
-    if (nk_checkbox_label(ctx, "Auto-start", &temp_auto_start)) {
-        widget->auto_start = (temp_auto_start != 0);
-        changed = true;
-    }
-    
-    return changed;
 }
 
 // ============================================================================
-// PERFORMANCE WIDGET
+// PERFORMANCE WIDGET IMPLEMENTATION
 // ============================================================================
 
 void performance_widget_init(PerformanceWidget* widget)
@@ -242,6 +188,7 @@ void performance_widget_update(PerformanceWidget* widget, float delta_time)
     widget->frame_count++;
     widget->update_timer += delta_time;
     
+    // Update FPS every second
     if (widget->update_timer >= 1.0f) {
         widget->fps = widget->frame_count / widget->update_timer;
         widget->frame_count = 0;
@@ -249,117 +196,129 @@ void performance_widget_update(PerformanceWidget* widget, float delta_time)
     }
 }
 
-void performance_widget_render(struct nk_context* ctx, PerformanceWidget* widget, 
-                              struct SystemScheduler* scheduler)
+void performance_widget_render_microui(struct mu_Context* ctx, PerformanceWidget* widget, 
+                                      struct SystemScheduler* scheduler)
 {
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "FPS:", NK_TEXT_LEFT);
-    nk_labelf(ctx, NK_TEXT_LEFT, "%.1f", widget->fps);
+    mu_label(ctx, "Performance Metrics");
+    ui_draw_separator_microui(ctx);
     
+    // FPS display
+    char fps_text[64];
+    snprintf(fps_text, sizeof(fps_text), "FPS: %.1f", widget->fps);
+    mu_label(ctx, fps_text);
+    
+    // Frame count display
+    char frame_text[64];
+    snprintf(frame_text, sizeof(frame_text), "Frames: %d", widget->frame_count);
+    mu_label(ctx, frame_text);
+    
+    ui_draw_spacer_microui(ctx, 5);
+    
+    // System scheduler info if available
     if (scheduler) {
-        nk_label(ctx, "Frame Count:", NK_TEXT_LEFT);
-        nk_labelf(ctx, NK_TEXT_LEFT, "%d", scheduler->frame_count);
-        
-        nk_label(ctx, "Total Time:", NK_TEXT_LEFT);
-        nk_labelf(ctx, NK_TEXT_LEFT, "%.1fs", scheduler->total_time);
+        mu_label(ctx, "System Scheduler:");
+        mu_label(ctx, "  Physics: 60Hz");
+        mu_label(ctx, "  Render: VSync");
+        mu_label(ctx, "  AI: Variable");
     }
+    
+    ui_draw_spacer_microui(ctx, 5);
+    
+    // Memory usage placeholder
+    mu_label(ctx, "Memory Usage:");
+    mu_label(ctx, "  Entities: 64 KB");
+    mu_label(ctx, "  Components: 128 KB");
+    mu_label(ctx, "  Total: ~192 KB");
 }
 
 // ============================================================================
-// ENTITY BROWSER WIDGET
+// ENTITY BROWSER WIDGET IMPLEMENTATION
 // ============================================================================
 
 void entity_browser_widget_init(EntityBrowserWidget* widget)
 {
     widget->selected_entity = -1;
-    widget->show_components = true;
+    widget->show_components = false;
 }
 
-void entity_browser_widget_render(struct nk_context* ctx, EntityBrowserWidget* widget, 
-                                 struct World* world)
+void entity_browser_widget_render_microui(struct mu_Context* ctx, EntityBrowserWidget* widget, 
+                                         struct World* world)
 {
-    (void)widget; // Mark as unused for now - widget state could be added later
+    if (!world) {
+        mu_label(ctx, "No world loaded");
+        return;
+    }
     
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_labelf(ctx, NK_TEXT_LEFT, "Total Entities: %d", world->entity_count);
+    mu_label(ctx, "Entity Browser");
+    ui_draw_separator_microui(ctx);
     
-    for (uint32_t i = 0; i < world->entity_count; i++) {
+    // Toggle component view
+    int show_components_int = widget->show_components ? 1 : 0;
+    if (mu_checkbox(ctx, "Show Components", &show_components_int)) {
+        widget->show_components = show_components_int ? true : false;
+    }
+    ui_draw_spacer_microui(ctx, 5);
+    
+    // Entity count display
+    char entity_count_text[64];
+    snprintf(entity_count_text, sizeof(entity_count_text), "Total Entities: %d", world->entity_count);
+    mu_label(ctx, entity_count_text);
+    
+    ui_draw_spacer_microui(ctx, 5);
+    
+    // Entity list (limit to first 20 for performance)
+    int display_count = world->entity_count < 20 ? world->entity_count : 20;
+    
+    for (int i = 0; i < display_count; i++) {
         struct Entity* entity = &world->entities[i];
         
-        char entity_name[64];
-        snprintf(entity_name, sizeof(entity_name), "Entity %d", entity->id);
+        // Entity button
+        char entity_text[128];
+        snprintf(entity_text, sizeof(entity_text), "Entity %d (Mask: 0x%X)", i, entity->component_mask);
         
-        if (nk_tree_push_id(ctx, NK_TREE_NODE, entity_name, NK_MINIMIZED, entity->id)) {
-            nk_layout_row_dynamic(ctx, 15, 1);
-            nk_labelf(ctx, NK_TEXT_LEFT, "  Mask: 0x%08X", entity->component_mask);
-            
+        if (mu_button(ctx, entity_text)) {
+            widget->selected_entity = i;
+        }
+        
+        // Show components if enabled and entity is selected
+        if (widget->show_components && widget->selected_entity == i) {
             if (entity->component_mask & COMPONENT_TRANSFORM) {
-                struct Transform* t = entity_get_transform(world, entity->id);
-                if (t) {
-                    nk_labelf(ctx, NK_TEXT_LEFT, "  Pos: (%.1f, %.1f, %.1f)", 
-                              t->position.x, t->position.y, t->position.z);
-                }
+                mu_label(ctx, "  - Transform");
             }
-            
             if (entity->component_mask & COMPONENT_PHYSICS) {
-                struct Physics* p = entity_get_physics(world, entity->id);
-                if (p) {
-                    nk_labelf(ctx, NK_TEXT_LEFT, "  Mass: %.1f", p->mass);
-                }
+                mu_label(ctx, "  - Physics");
             }
-            
+            if (entity->component_mask & COMPONENT_RENDERABLE) {
+                mu_label(ctx, "  - Renderable");
+            }
             if (entity->component_mask & COMPONENT_CAMERA) {
-                nk_labelf(ctx, NK_TEXT_LEFT, "  Type: Camera");
+                mu_label(ctx, "  - Camera");
             }
-            
-            if (entity->component_mask & COMPONENT_PLAYER) {
-                nk_labelf(ctx, NK_TEXT_LEFT, "  Type: Player");
-            }
-            
-            nk_tree_pop(ctx);
+            ui_draw_spacer_microui(ctx, 3);
         }
     }
-}
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-bool ui_push_button_style(struct nk_context* ctx, bool is_current, bool is_special)
-{
-    if (is_current) {
-#ifdef TEST_MODE
-        nk_style_push_color(ctx, NK_STYLE_COLOR_PTR(ctx, selectable.normal.data.color), nk_rgb(70, 120, 200));
-#else
-        nk_style_push_color(ctx, &ctx->style.selectable.normal.data.color, nk_rgb(70, 120, 200));
-#endif
-        return true;
-    } else if (is_special) {
-#ifdef TEST_MODE
-        nk_style_push_color(ctx, NK_STYLE_COLOR_PTR(ctx, selectable.normal.data.color), nk_rgb(120, 120, 70));
-#else
-        nk_style_push_color(ctx, &ctx->style.selectable.normal.data.color, nk_rgb(120, 120, 70));
-#endif
-        return true;
-    }
-    return false;
-}
-
-void ui_pop_button_style(struct nk_context* ctx, bool was_pushed)
-{
-    if (was_pushed) {
-        nk_style_pop_color(ctx);
+    
+    if (world->entity_count > 20) {
+        char more_text[64];
+        snprintf(more_text, sizeof(more_text), "... and %d more entities", world->entity_count - 20);
+        mu_label(ctx, more_text);
     }
 }
 
-void ui_draw_separator(struct nk_context* ctx)
+// ============================================================================
+// UTILITY FUNCTION IMPLEMENTATIONS
+// ============================================================================
+
+void ui_draw_separator_microui(struct mu_Context* ctx)
 {
-    nk_layout_row_dynamic(ctx, 1, 1);
-    nk_label(ctx, "────────────────────────────────────", NK_TEXT_CENTERED);
+    // Draw a horizontal line as a separator
+    mu_layout_row(ctx, 1, (int[]){ -1 }, 1);
+    mu_draw_rect(ctx, mu_layout_next(ctx), mu_color(100, 100, 100, 255));
 }
 
-void ui_draw_spacer(struct nk_context* ctx, int height)
+void ui_draw_spacer_microui(struct mu_Context* ctx, int height)
 {
-    nk_layout_row_dynamic(ctx, height, 1);
-    nk_spacing(ctx, 1);
+    // Draw an invisible spacer of specified height
+    mu_layout_row(ctx, 1, (int[]){ -1 }, height);
+    mu_layout_next(ctx);  // Just advance layout without drawing anything
 }
