@@ -1,18 +1,19 @@
 # CGame Project Status
 
-*Last Updated: July 3, 2025*
+*Last Updated: July 4, 2025*
 
 ## Current Development Status
 
 ### Active Sprint
-- **Sprint 25**: UI Framework Migration (Critical)
-- **Duration**: 3-5 days
-- **Goal**: Complete Nuklear → MicroUI migration for WASM compatibility
+- **Sprint 24**: MicroUI System Improvements (Critical)
+- **Duration**: July 4-18, 2025 (2 weeks)
+- **Status**: Day 1 of 14 - Diagnosis Phase
+- **Goal**: Fix MicroUI zero vertex generation blocking all UI development
 
 ### Previous Sprint
-- **Sprint 24**: Canyon Racing Prototype (Paused)
-- **Status**: Paused to prioritize UI migration
-- **Reason**: WASM compatibility required before content development
+- **Sprint 23**: Technical Excellence & Foundation Consolidation
+- **Status**: ✅ Complete (July 3, 2025 - Same day!)
+- **Achievement**: 98% test coverage, bulletproof build system, scripted flight
 
 ## Technical Metrics
 
@@ -43,29 +44,32 @@
 - Scripted flight paths
 - Basic rendering pipeline
 - Input handling system
+- Build system (bulletproof as of Sprint 23)
+- Test infrastructure (98% coverage)
 
-### 🚧 In Progress (UI Migration Sprint)
-- Nuklear → MicroUI migration
-- Scene UI system conversion
-- UI components widget migration
-- Build system cleanup
+### 🚧 In Progress (Sprint 24)
+- MicroUI vertex generation debugging
+- UI command pipeline fixes
+- Core widget implementation
+- UI test suite creation
 
-### ⏳ Planned for Removal
-- Legacy HUD system (Nuklear-dependent)
-- Complex UI components requiring custom drawing
-- Sokol-Nuklear integration layer
+### ⚠️ Known Issues
+- MicroUI generates 0 vertices (blocking all UI)
+- Events skipped outside active frames
+- Visual thruster rendering (cosmetic, from Sprint 21)
 
-### 🎯 Next Sprint Goals
-- Canyon track generation (after UI migration)
-- Racing checkpoint system
-- Time trial mechanics
-- Ghost replay system
+### 🎯 Next Sprint (Sprint 25)
+- Canyon Racing Prototype
+- Procedural canyon generation
+- Racing mechanics (checkpoints, timing)
+- Environmental hazards
+- 3 complete tracks
 
-### 📅 Planned
-- Procedural terrain
-- Advanced visual effects
-- Multiplayer support
-- Track editor
+### 📅 Future Sprints
+- Sprint 26: Multi-Camera HUD System
+- Sprint 27: Advanced Flight Mechanics
+- Sprint 28: Ship Systems & Customization
+- Sprint 29: Multiplayer Foundation
 
 ## Platform Support
 
@@ -82,21 +86,24 @@
 
 ## Documentation Status
 
-### Recently Added (July 3, 2025)
-- [ECS Architecture Guide](guides/ECS_ARCHITECTURE.md) - Complete ECS patterns
-- [Component Reference](guides/COMPONENT_REFERENCE.md) - All 12+ components documented
-- [System Reference](guides/SYSTEM_REFERENCE.md) - All 15+ systems documented
-- [YAML Scene Format](guides/YAML_SCENE_FORMAT.md) - Scene definition guide
-- [Scripted Flight Guide](guides/SCRIPTED_FLIGHT_GUIDE.md) - Autonomous flight
-- [Updated Player Manual](manual/PLAYER_MANUAL.md) - Canyon racing gameplay
+### Recently Updated (July 4, 2025)
+- [Sprint 24 Plan](sprints/active/SPRINT_24_MICROUI_IMPROVEMENTS.md) - MicroUI improvements
+- [Current Sprint Status](sprints/active/CURRENT_SPRINT_STATUS.md) - Live progress tracking
+- [Sprint Overview](sprints/README.md) - Complete sprint management
+- [CLAUDE.md](../CLAUDE.md) - AI assistant guide updated
 
 ### Documentation Coverage
 - **User Documentation**: 95% complete ✅
 - **Developer Guides**: 95% complete ✅
 - **API Reference**: 85% complete ✅
 - **Code Comments**: 85% coverage
+- **Sprint Documentation**: 100% up-to-date ✅
 
 ## Known Issues
+
+### Critical (Sprint 24 Focus)
+- MicroUI rendering pipeline produces no visible output
+- UI event handling timing issues
 
 ### Minor
 - Visual thruster effects not rendering (cosmetic)
@@ -111,6 +118,7 @@
 
 | Sprint | Name | Status | Key Achievement |
 |--------|------|--------|-----------------|
+| 24 | MicroUI Improvements | 🚀 Active | Fixing critical UI issues |
 | 23 | Technical Excellence | ✅ Complete | 98% test coverage, scripted flight |
 | 22 | Advanced Input | ✅ Complete | Gamepad support, strategic pivot |
 | 21 | Flight Mechanics | ✅ Complete | 6DOF physics, intuitive controls |
@@ -119,11 +127,26 @@
 
 ## Resource Links
 
-- **Repository**: [GitHub/CGame](https://github.com/cgame)
-- **Issue Tracker**: [GitHub Issues](https://github.com/cgame/issues)
-- **Documentation**: [This directory](/)
-- **Community**: [Discord/Forums]
+- **Repository**: [GitHub/CGame](https://github.com/ratimics/cgame)
+- **Issue Tracker**: [GitHub Issues](https://github.com/ratimics/cgame/issues)
+- **Documentation Hub**: [docs/README.md](README.md)
+- **Sprint Management**: [docs/sprints/](sprints/)
+- **Claude Guide**: [CLAUDE.md](../CLAUDE.md)
+
+## Development Highlights
+
+### Sprint 24 Critical Issue
+The MicroUI system is properly initialized and processing frames, but generates zero vertices for rendering. This completely blocks all UI development and must be resolved before gameplay features can have proper interfaces.
+
+### Recent Achievements (Sprint 23)
+- Same-day sprint completion (July 3, 2025)
+- 98% test coverage achieved
+- Build system issues completely resolved
+- Bonus scripted flight system implemented
+
+### Strategic Pivot
+Sprint 24 was originally planned as Canyon Racing Prototype but pivoted to address critical UI issues discovered through log analysis. Canyon Racing moved to Sprint 25.
 
 ---
 
-*This status document is the authoritative source for project metrics. Update after each sprint completion.*
+*This status document is the authoritative source for project metrics. Update after each sprint completion or major milestone.*

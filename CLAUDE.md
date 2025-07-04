@@ -1,17 +1,24 @@
 # CGame Project Guide for Claude
 
-## � CURRENT SPRINT: Technical Excellence & Foundation Consolidation
-**Sprint 23** - Bulletproof Foundation Development (July 3-17, 2025)
-- **Status**: ACTIVE 🚀 - Ready to start
-- **Goal**: Transform excellent 93% test coverage into bulletproof 100% platform
-- **Scope**: Fix 4 graphics stub tests, establish performance monitoring
-- **Strategic Objective**: Enable accelerated gameplay development
+## 🔥 CURRENT SPRINT: MicroUI System Improvements
+**Sprint 24** - Critical UI Rendering Fix (July 4-18, 2025)
+- **Status**: ACTIVE 🚀 - Day 1 of 14
+- **Goal**: Fix MicroUI zero vertex generation blocking all UI development
+- **Scope**: Diagnose rendering issue, implement core widgets, establish UI foundation
+- **Strategic Objective**: Unblock gameplay UI development
 
-### Sprint 23 Progress
-- **Week 1**: Technical excellence (graphics stubs, performance monitoring)
-- **Week 2**: Development workflow optimization and Sprint 24 preparation
-- **Foundation**: Already excellent (53/57 tests passing)
-- **Target**: Unshakeable platform for rapid content development
+### Sprint 24 Progress
+- **Week 1**: Diagnosis and core fixes (vertex generation, command pipeline)
+- **Week 2**: Widget implementation and comprehensive testing
+- **Critical Issue**: MicroUI processes frames but generates 0 vertices
+- **Target**: Functional UI system with visible elements
+
+## ✅ Sprint 23 Complete - Technical Excellence Achieved!
+**98% Test Coverage & Same-Day Completion**
+- **Achievement**: 56/57 tests passing, bulletproof build system
+- **Bonus Feature**: Scripted flight system for cinematic paths
+- **Completion**: July 3, 2025 (single day sprint!)
+- **Status**: Archived to `docs/sprints/completed/sprint_23/`
 
 ## ✅ Sprint 22 Complete - Strategic Pivot Success!
 **Advanced Input Processing → Gameplay Vertical Slice Focus**
@@ -30,14 +37,14 @@
 ## Essential Documentation Links
 
 ### Must Read First
-1. **[Current Sprint Status](docs/sprints/CURRENT_SPRINT_STATUS.md)** - Sprint 23 technical excellence progress
-2. **[Sprint 23 Plan](docs/sprints/active/SPRINT_23_TECHNICAL_EXCELLENCE.md)** - Technical excellence & foundation consolidation
-3. **[Sprint 22 Complete](docs/sprints/completed/sprint_22/SPRINT_22_COMPLETE.md)** - Strategic pivot success
+1. **[Current Sprint Status](docs/sprints/active/CURRENT_SPRINT_STATUS.md)** - Sprint 24 MicroUI improvements
+2. **[Sprint 24 Plan](docs/sprints/active/SPRINT_24_MICROUI_IMPROVEMENTS.md)** - UI system fixes and improvements
+3. **[Sprint 23 Complete](docs/sprints/completed/sprint_23/CURRENT_SPRINT_STATUS.md)** - Technical excellence achieved
 4. **[Sprint Backlog & History](docs/sprints/README.md)** - All sprint status and priorities
 
 ### Quick Reference
 - **Build**: `make clean && make test && make`
-- **Run Tests**: `make test` (53/57 tests passing - 93% excellent foundation)
+- **Run Tests**: `make test` (56/57 tests passing - 98% coverage)
 - **Run Game**: `./build/cgame`
 - **Test Flight**: `./build/cgame --test-flight`
 
@@ -84,7 +91,7 @@ Input → ControlAuthority → ThrusterSystem → Physics → Transform → Rend
 
 ### Before Making Changes
 1. **Check Sprint Status**: Read [Sprint Backlog](docs/sprints/README.md)
-2. **Run Tests**: `make test` - Ensure all 375+ tests pass
+2. **Run Tests**: `make test` - Ensure all tests pass (currently 56/57)
 3. **Read Active Sprint**: Understand current goals and blockers
 4. **Use TodoWrite**: Track all tasks and changes
 
@@ -102,16 +109,20 @@ Input → ControlAuthority → ThrusterSystem → Physics → Transform → Rend
 
 ## Current Sprint Context
 
-### Sprint 22: Advanced Input Processing
-- **Goal**: 3-layer input processing with neural network enhancement
-- **Status**: Phase 1 complete (40% overall), Phase 2 in progress
-- **Definition of Done**: <0.5ms processing overhead with measurable precision improvement
-- **Latest**: Statistical filtering operational, neural network implementation underway
+### Sprint 24: MicroUI System Improvements
+- **Goal**: Fix critical UI rendering issues preventing any interface visibility
+- **Status**: Day 1 of 14 - Diagnosis phase
+- **Problem**: MicroUI generates 0 vertices despite proper frame processing
+- **Latest**: Comprehensive logging being added to trace issue
 
-### Recently Completed: Sprint 21
-- **Result**: 98% complete - 6DOF flight mechanics fully functional
-- **Achievement**: All physics bugs fixed, controls intuitive, Xbox support working
-- **Remaining**: Only visual thruster rendering (cosmetic)
+### Recently Completed: Sprint 23
+- **Result**: 98% test coverage achieved same day!
+- **Achievement**: Build system fixed, tests passing, scripted flight added
+- **Remaining**: 1 physics test for 100% coverage
+
+### Previously: Sprint 22
+- **Result**: Strategic pivot successful - removed neural network complexity
+- **Achievement**: 93% test foundation with focus on gameplay
 
 ### What's Working
 - ✅ ECS architecture with component composition
@@ -125,14 +136,15 @@ Input → ControlAuthority → ThrusterSystem → Physics → Transform → Rend
 - ✅ Performance (60+ FPS)
 
 ### What's In Progress
-- 🚧 Neural network inference engine (C implementation)
-- 🚧 Python model training pipeline
-- 🚧 Weight loading system
+- 🚧 MicroUI vertex generation diagnosis
+- 🚧 UI command pipeline debugging
+- 🚧 Core widget implementation
 
 ### Known Issues
-- ⚠️ 60% test failure rate (Sprint 23 will address)
+- ⚠️ MicroUI generates 0 vertices (blocking all UI)
+- ⚠️ Events skipped outside active frames
 - ⚠️ Visual thruster rendering from Sprint 21
-- ℹ️ Both are non-blocking for Sprint 22
+- ℹ️ 1 physics test remaining for 100% coverage
 
 ## Command Reference
 
@@ -251,16 +263,16 @@ their orientation.
 
 ## Next Steps
 
-### Immediate (Sprint 22 Phase 2)
-1. Complete neural network C implementation
-2. Create Python training pipeline
-3. Collect diverse gamepad training data
-4. Test end-to-end ML pipeline
+### Immediate (Sprint 24)
+1. Add comprehensive UI logging to trace issue
+2. Create minimal test case (single button)
+3. Debug command generation pipeline
+4. Fix vertex generation and rendering
 
-### After Sprint 22
-1. Sprint 23: Technical Debt Remediation (CRITICAL)
-   - Fix 60% test failure rate
-   - Address component system issues
-   - Standardize APIs
-2. Sprint 24: Advanced Flight Mechanics
-3. Sprint 25: Ship Systems & Customization
+### After Sprint 24
+1. Sprint 25: Canyon Racing Prototype
+   - Originally planned as Sprint 24
+   - Deferred due to UI system issues
+   - First gameplay vertical slice
+2. Sprint 26: Multi-Camera HUD System
+3. Sprint 27: Advanced Flight Mechanics

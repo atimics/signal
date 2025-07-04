@@ -7,7 +7,7 @@
 
 **SIGNAL** is a high-performance, data-oriented 3D game engine and the foundation for a single-player space exploration game. It is written in C99, features a pure Entity-Component-System (ECS) architecture, and uses the modern, cross-platform **Sokol** graphics API for rendering.
 
-**[📊 Project Status](docs/PROJECT_STATUS.md)**: 98% test coverage | 60+ FPS | Sprint 24 (Canyon Racing) Starting
+**[📊 Project Status](docs/PROJECT_STATUS.md)**: 98% test coverage | 60+ FPS | Sprint 24 (MicroUI Improvements) Active
 
 ### 🎮 Current Features
 
@@ -46,7 +46,7 @@ The project uses a simple Makefile. The first build will automatically compile t
 # Clean, build, and run the engine
 make clean && make && make run
 
-# Run the automated test suite (93% pass rate - excellent foundation)
+# Run the automated test suite (98% pass rate - near perfect!)
 make test
 
 # Run specific test suites
