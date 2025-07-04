@@ -64,7 +64,7 @@ ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
 BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
 
 # Source files - now includes Microui instead of Nuklear
-SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c input_processing.c system/thrusters.c system/thruster_points_system.c system/control.c system/scripted_flight.c component/look_target.c component/thruster_points_component.c thruster_points.c render_thrust_cones.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c microui/microui.c ui_microui.c ui_microui_adapter.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c ui_navigation_menu_impl.c ui_navigation_menu_microui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c entity_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c scripts/navigation_menu_scene.c scripts/ship_launch_test_scene.c config.c hidapi_mac.c main.c
+SOURCES = core.c systems.c system/physics.c system/ode_physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c system/material.c system/gamepad.c system/input.c input_processing.c system/thrusters.c system/thruster_points_system.c system/control.c system/scripted_flight.c component/look_target.c component/thruster_points_component.c thruster_points.c render_thrust_cones.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c microui/microui.c ui_microui.c ui_microui_adapter.c ui.c ui_api.c ui_scene.c ui_components.c ui_adaptive_controls.c ui_menu_system.c ui_navigation_menu_impl.c ui_navigation_menu_microui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scene_yaml_loader.c entity_yaml_loader.c scripts/logo_scene.c scripts/derelict_navigation_scene.c scripts/flight_test_scene.c scripts/ode_test_scene.c scripts/scene_selector_scene.c scripts/navigation_menu_scene.c scripts/ship_launch_test_scene.c config.c hidapi_mac.c main.c
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
@@ -94,6 +94,11 @@ help:
 	@echo ""
 	@echo "🧪 TEST TARGETS:"
 	@echo "  test             - Run comprehensive test suite (math, UI, performance, physics, thrusters, control, camera, input, flight integration)"
+	@echo "  test-all         - Run all tests with comprehensive reporting and aggregation"
+	@echo "  test-report      - Generate HTML test report with detailed results"
+	@echo "  test-ci          - Generate JUnit XML for CI integration"
+	@echo "  test-coverage    - Run tests with code coverage analysis"
+	@echo "  test-filter      - Run filtered tests (use PATTERN=name)"
 	@echo "  test-leaks       - Run memory leak detection using logo scene (macOS)"
 	@echo "  memory-test      - Run Valgrind memory leak detection (Linux)"
 	@echo "  memory-check     - Run Valgrind memory error detection (Linux)"
@@ -316,6 +321,16 @@ TEST_CAMERA_TARGET = $(BUILD_DIR)/test_camera
 TEST_INPUT_TARGET = $(BUILD_DIR)/test_input
 TEST_FLIGHT_INTEGRATION_TARGET = $(BUILD_DIR)/test_flight_integration
 
+# UI test targets
+TEST_MICROUI_RENDERING_TARGET = $(BUILD_DIR)/test_microui_rendering
+TEST_UI_VISIBILITY_TARGET = $(BUILD_DIR)/test_ui_visibility
+TEST_BITMAP_FONT_TARGET = $(BUILD_DIR)/test_bitmap_font
+TEST_UI_EVENTS_TARGET = $(BUILD_DIR)/test_ui_events
+TEST_UI_PERFORMANCE_TARGET = $(BUILD_DIR)/test_ui_performance
+TEST_MICROUI_DIAGNOSTICS_TARGET = $(BUILD_DIR)/test_microui_diagnostics
+TEST_MICROUI_PIPELINE_TARGET = $(BUILD_DIR)/test_microui_pipeline
+TEST_MICROUI_MINIMAL_TARGET = $(BUILD_DIR)/test_microui_minimal
+
 # Test source files for systems - corrected paths
 TEST_PHYSICS_SRC = tests/systems/test_physics_6dof.c tests/vendor/unity.c
 TEST_THRUSTERS_SRC = tests/systems/test_thrusters.c tests/vendor/unity.c
@@ -323,6 +338,16 @@ TEST_CONTROL_SRC = tests/systems/test_control.c tests/vendor/unity.c
 TEST_CAMERA_SRC = tests/systems/test_camera.c tests/vendor/unity.c
 TEST_INPUT_SRC = tests/systems/test_input.c tests/vendor/unity.c
 TEST_FLIGHT_INTEGRATION_SRC = tests/integration/test_flight_integration.c tests/vendor/unity.c
+
+# UI test source files
+TEST_MICROUI_RENDERING_SRC = tests/microui/test_microui_rendering.c tests/vendor/unity.c
+TEST_UI_VISIBILITY_SRC = tests/ui/test_ui_visibility.c tests/vendor/unity.c
+TEST_BITMAP_FONT_SRC = tests/ui/test_bitmap_font.c tests/vendor/unity.c
+TEST_UI_EVENTS_SRC = tests/ui/test_ui_events.c tests/vendor/unity.c
+TEST_UI_PERFORMANCE_SRC = tests/ui/test_ui_performance.c tests/vendor/unity.c
+TEST_MICROUI_DIAGNOSTICS_SRC = tests/microui/test_microui_diagnostics.c tests/vendor/unity.c
+TEST_MICROUI_PIPELINE_SRC = tests/microui/test_microui_pipeline.c tests/vendor/unity.c
+TEST_MICROUI_MINIMAL_SRC = tests/microui/test_microui_minimal.c tests/vendor/unity.c
 
 # Critical physics tests for Sprint 21 velocity integration bug
 PHYSICS_TEST_SOURCES = tests/vendor/unity.c src/core.c src/gpu_resources.c src/system/physics.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c
@@ -334,7 +359,7 @@ build/test_physics_critical: tests/systems/test_physics_critical.c $(PHYSICS_TES
 		-o $@ tests/systems/test_physics_critical.c $(PHYSICS_TEST_SOURCES) -lm
 
 # Main test target - runs all essential tests including new comprehensive tests
-test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET)
+test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_TARGET) $(TEST_UI_TARGET) $(TEST_RENDERING_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET) $(TEST_INPUT_CRITICAL_TARGET) $(TEST_FLIGHT_SCENE_CRITICAL_TARGET) $(TEST_MICROUI_RENDERING_TARGET) $(TEST_UI_VISIBILITY_TARGET) $(TEST_BITMAP_FONT_TARGET) $(TEST_UI_EVENTS_TARGET) $(TEST_UI_PERFORMANCE_TARGET)
 	@echo "🧪 Running Comprehensive CGame Test Suite"
 	@echo "=========================================="
 	@echo "📐 Core Math Tests..."
@@ -376,7 +401,53 @@ test: $(TEST_CORE_MATH_TARGET) $(TEST_CORE_COMPONENTS_TARGET) $(TEST_CORE_WORLD_
 	@echo "✈️ Critical Flight Scene Tests..."
 	./$(TEST_FLIGHT_SCENE_CRITICAL_TARGET)
 	@echo ""
+	@echo "🎨 MicroUI Rendering Tests..."
+	./$(TEST_MICROUI_RENDERING_TARGET)
+	@echo ""
+	@echo "👁️ UI Visibility Tests..."
+	./$(TEST_UI_VISIBILITY_TARGET)
+	@echo ""
+	@echo "🔤 Bitmap Font Tests..."
+	./$(TEST_BITMAP_FONT_TARGET)
+	@echo ""
+	@echo "🖱️ UI Event Tests..."
+	./$(TEST_UI_EVENTS_TARGET)
+	@echo ""
+	@echo "⚡ UI Performance Tests..."
+	./$(TEST_UI_PERFORMANCE_TARGET)
+	@echo ""
 	@echo "✅ All tests completed successfully!"
+
+# UI-specific test target (separate due to known vertex generation issue)
+test-ui-all: $(TEST_MICROUI_RENDERING_TARGET) $(TEST_UI_VISIBILITY_TARGET) $(TEST_BITMAP_FONT_TARGET) $(TEST_UI_EVENTS_TARGET) $(TEST_UI_PERFORMANCE_TARGET) $(TEST_MICROUI_DIAGNOSTICS_TARGET) $(TEST_MICROUI_PIPELINE_TARGET) $(TEST_MICROUI_MINIMAL_TARGET)
+	@echo "🎨 Running UI-specific tests (known vertex generation issue)..."
+	@echo "============================================================"
+	@echo ""
+	@echo "🎨 MicroUI Rendering Tests..."
+	-./$(TEST_MICROUI_RENDERING_TARGET)
+	@echo ""
+	@echo "👁️ UI Visibility Tests..."
+	-./$(TEST_UI_VISIBILITY_TARGET)
+	@echo ""
+	@echo "🔤 Bitmap Font Tests..."
+	-./$(TEST_BITMAP_FONT_TARGET)
+	@echo ""
+	@echo "🖱️ UI Event Tests..."
+	-./$(TEST_UI_EVENTS_TARGET)
+	@echo ""
+	@echo "⚡ UI Performance Tests..."
+	-./$(TEST_UI_PERFORMANCE_TARGET)
+	@echo ""
+	@echo "🔬 MicroUI Diagnostics Tests..."
+	-./$(TEST_MICROUI_DIAGNOSTICS_TARGET)
+	@echo ""
+	@echo "🔧 MicroUI Pipeline Tests..."
+	-./$(TEST_MICROUI_PIPELINE_TARGET)
+	@echo ""
+	@echo "📌 MicroUI Minimal Tests..."
+	-./$(TEST_MICROUI_MINIMAL_TARGET)
+	@echo ""
+	@echo "⚠️ Note: These tests are expected to fail due to Sprint 24's known vertex generation issue."
 
 # Memory leak test for macOS using the logo scene
 test-leaks: $(TARGET)
@@ -501,6 +572,70 @@ $(TEST_FLIGHT_SCENE_CRITICAL_TARGET): $(TEST_FLIGHT_SCENE_CRITICAL_SRC) | $(BUIL
 		-Wno-error=unused-function -Wno-error=unused-variable \
 		-o $@ $(TEST_FLIGHT_SCENE_CRITICAL_SRC) src/core.c src/gpu_resources.c src/system/physics.c src/system/thrusters.c src/system/control.c src/system/input.c src/input_processing.c src/component/look_target.c src/scene_state.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
 
+# Build MicroUI rendering tests
+$(TEST_MICROUI_RENDERING_TARGET): $(TEST_MICROUI_RENDERING_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building MicroUI rendering tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_MICROUI_RENDERING_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build UI visibility tests
+$(TEST_UI_VISIBILITY_TARGET): $(TEST_UI_VISIBILITY_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building UI visibility tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_UI_VISIBILITY_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build bitmap font tests
+$(TEST_BITMAP_FONT_TARGET): $(TEST_BITMAP_FONT_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building bitmap font tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_BITMAP_FONT_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build UI event tests
+$(TEST_UI_EVENTS_TARGET): $(TEST_UI_EVENTS_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building UI event tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_UI_EVENTS_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build UI performance tests
+$(TEST_UI_PERFORMANCE_TARGET): $(TEST_UI_PERFORMANCE_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building UI performance tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_UI_PERFORMANCE_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build MicroUI diagnostics tests
+$(TEST_MICROUI_DIAGNOSTICS_TARGET): $(TEST_MICROUI_DIAGNOSTICS_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building MicroUI diagnostics tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_MICROUI_DIAGNOSTICS_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build MicroUI pipeline tests
+$(TEST_MICROUI_PIPELINE_TARGET): $(TEST_MICROUI_PIPELINE_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building MicroUI pipeline tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_MICROUI_PIPELINE_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
+# Build MicroUI minimal tests
+$(TEST_MICROUI_MINIMAL_TARGET): $(TEST_MICROUI_MINIMAL_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building MicroUI minimal tests..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -Itests/stubs \
+		-DUNITY_TESTING -DTEST_MODE -DSOKOL_DUMMY_BACKEND \
+		-Wno-error=unused-function -Wno-error=unused-variable \
+		-o $@ $(TEST_MICROUI_MINIMAL_SRC) tests/stubs/ui_microui_test_utils.c src/ui_microui.c src/microui/microui.c src/core.c src/gpu_resources.c tests/stubs/graphics_api_test_stub.c tests/stubs/engine_test_stubs.c -lm
+
 # ============================================================================
 # MEMORY TESTING TARGETS
 # ============================================================================
@@ -557,4 +692,40 @@ test-microui: | $(BUILD_DIR)
 	@echo "🧪 Running MicroUI tests..."
 	./$(BUILD_DIR)/test_microui_core
 
-.PHONY: all build-only with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test-leaks test-microui help docs memory-test memory-check asan-test tsan-test ubsan-test memory-suite
+# Test runner with aggregation and reporting
+TEST_RUNNER_TARGET = $(BUILD_DIR)/test_runner
+TEST_RUNNER_SRC = tests/test_runner.c
+
+$(TEST_RUNNER_TARGET): $(TEST_RUNNER_SRC) | $(BUILD_DIR)
+	@echo "🔨 Building comprehensive test runner..."
+	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests \
+		-o $@ $(TEST_RUNNER_SRC) -lm
+
+# Run all tests with comprehensive reporting
+test-all: $(TEST_RUNNER_TARGET)
+	@echo "🚀 Running comprehensive test suite with reporting..."
+	./$(TEST_RUNNER_TARGET)
+
+# Run tests with HTML report
+test-report: $(TEST_RUNNER_TARGET)
+	@echo "🚀 Running tests with HTML report generation..."
+	./$(TEST_RUNNER_TARGET) --html
+
+# Run tests with JUnit XML for CI
+test-ci: $(TEST_RUNNER_TARGET)
+	@echo "🚀 Running tests for CI with JUnit XML..."
+	./$(TEST_RUNNER_TARGET) --xml
+
+# Run tests with coverage analysis
+test-coverage: $(TEST_RUNNER_TARGET)
+	@echo "🚀 Running tests with coverage analysis..."
+	./$(TEST_RUNNER_TARGET) --coverage
+
+# Run filtered tests (e.g., make test-filter PATTERN=ui)
+test-filter: $(TEST_RUNNER_TARGET)
+	@echo "🚀 Running filtered tests (pattern: $(PATTERN))..."
+	./$(TEST_RUNNER_TARGET) --filter $(PATTERN)
+
+.PHONY: all build-only with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test-leaks test-microui test-all test-report test-ci test-coverage test-filter help docs memory-test memory-check asan-test tsan-test ubsan-test memory-suite
+run: build/cgame
+	./build/cgame

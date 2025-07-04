@@ -305,6 +305,8 @@ static void init(void)
     printf("Press ESC to exit, C to cycle cameras, W for wireframe\n");
 }
 
+static bool app_shutting_down = false;
+
 static void frame(void)
 {
     // Begin performance frame timing
@@ -314,8 +316,13 @@ static void frame(void)
     app_state.simulation_time += dt;
     app_state.frame_count++;
 
-    // Skip rendering if not initialized
-    if (!app_state.initialized) {
+    // Check if app is shutting down or invalid
+    if (!sapp_isvalid()) {
+        app_shutting_down = true;
+    }
+
+    // Skip rendering if not initialized or app is shutting down
+    if (!app_state.initialized || app_shutting_down) {
         performance_frame_end();
         return;
     }
@@ -367,7 +374,13 @@ static void frame(void)
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
 
-    // Render frame (3D entities)
+    // Render frame (3D entities) - check graphics context primarily
+    // Note: App context may be invalid when minimized/tabbed out, but we should still try to render
+    if (!sg_isvalid()) {
+        printf("⚠️ Skipping 3D rendering - Graphics context invalid\n");
+        performance_frame_end();
+        return;
+    }
     sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = app_state.pass_action });
 
     // Render entities
@@ -379,7 +392,12 @@ static void frame(void)
     // The ui_render function will handle visibility internally
     ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
 
-    sg_commit();
+    // Commit if graphics context is valid (app context can be invalid when minimized/unfocused)
+    if (sg_isvalid()) {
+        sg_commit();
+    } else {
+        printf("⚠️ Skipping sg_commit - Graphics context invalid\n");
+    }
 
     // End performance frame timing
     performance_frame_end();

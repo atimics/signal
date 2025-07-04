@@ -5,6 +5,7 @@
 #include "ui_adaptive_controls.h"
 #include "ui_api.h"
 #include "ui_microui.h"
+#include "ui_menu_system.h"
 #include "scene_state.h"
 #include "microui/microui.h"
 #include <stdio.h>
@@ -28,11 +29,31 @@ typedef struct {
     int destination_count;
     
     ControlHint nav_hints[3];
+    
+    // New menu system
+    Menu main_menu;
+    bool menu_initialized;
 } NavigationMenuData;
 
-void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) {
-    (void)delta_time;
+// Menu selection callback
+void navigation_menu_on_select(int item_index, void* user_data) {
+    NavigationMenuData* data = (NavigationMenuData*)user_data;
     
+    printf("🎮 Menu item selected: %s (index %d)\n", data->destinations[item_index], item_index);
+    
+    const char* scene_names[] = {
+        "ship_launch_test",
+        "flight_test", 
+        "thruster_test"
+    };
+    
+    if (item_index < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {
+        printf("🎮 Requesting scene transition to: %s\n", scene_names[item_index]);
+        ui_request_scene_change(scene_names[item_index]);
+    }
+}
+
+void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) {
     // Get MicroUI context
     mu_Context* ctx = ui_microui_get_mu_context();
     if (!ctx) {
@@ -40,119 +61,32 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
         return;
     }
     
-    // TODO: Integrate with input mapping system
-    // For now, keyboard navigation is handled through mouse hover on menu items
-    
-    // printf("🎨 Navigation menu: Attempting to create window (commands before: %d)\n", ctx->command_list.idx);
-    
-    // Main window - terminal style with no title bar
-    int window_opts = MU_OPT_NOTITLE | MU_OPT_NORESIZE | MU_OPT_NOCLOSE;
-    if (mu_begin_window_ex(ctx, "FTL Navigation Interface", mu_rect(50, 50, 700, 500), window_opts)) {
-        // printf("🎨 Navigation menu: Window created successfully\n");
+    // Initialize menu system on first call
+    if (!data->menu_initialized) {
+        menu_init(&data->main_menu, "FTL NAVIGATION SYSTEM");
         
-        // Terminal header with ASCII art
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, "╔════════════════════════════════════════════════════════════════╗");
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, "║            FTL NAVIGATION SYSTEM v3.14.159                     ║");
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, "╠════════════════════════════════════════════════════════════════╣");
-        mu_layout_row(ctx, 1, (int[]){-1}, 30);
-        mu_label(ctx, "║ SELECT DESTINATION:                                            ║");
-        
-        // Show connection status
-        if (ui_adaptive_should_show_gamepad()) {
-            mu_layout_row(ctx, 1, (int[]){-1}, 20);
-            mu_label(ctx, "Gamepad Connected");
-        }
-        
-        // Spacer
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, "");
-        
-        // Menu items with terminal style
+        // Add menu items from existing data
         for (int i = 0; i < data->destination_count; i++) {
-            mu_layout_row(ctx, 1, (int[]){-1}, 35);
-            
-            // Create terminal-style menu item with prefix
-            char menu_text[256];
-            if (i == data->selected_index) {
-                // Selected item with arrow indicator
-                snprintf(menu_text, sizeof(menu_text), " > [%d] %s", i + 1, data->destinations[i]);
-                
-                // Draw selection highlight
-                mu_Rect item_rect = mu_layout_next(ctx);
-                mu_draw_rect(ctx, item_rect, mu_color(0, 40, 0, 255));
-            } else {
-                // Normal item
-                snprintf(menu_text, sizeof(menu_text), "   [%d] %s", i + 1, data->destinations[i]);
-            }
-            
-            // Use label instead of button for terminal aesthetic
-            mu_label(ctx, menu_text);
-            
-            // Also update mouse hover detection
-            if (mu_mouse_over(ctx, mu_layout_next(ctx))) {
-                data->selected_index = i;
-                
-                // Handle mouse clicks
-                if (ctx->mouse_pressed == MU_MOUSE_LEFT) {
-                    printf("🎮 Menu item clicked: %s (index %d)\n", data->destinations[i], i);
-                    // Handle selection
-                    const char* scene_names[] = {
-                        "ship_launch_test",
-                        "flight_test",
-                        "thruster_test"
-                    };
-                    
-                    if (i < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {
-                        printf("🎮 Requesting scene transition to: %s\n", scene_names[i]);
-                        ui_request_scene_change(scene_names[i]);
-                    }
-                }
-            }
-            
-            // Show description for selected item
-            if (i == data->selected_index && data->descriptions[i]) {
-                mu_layout_row(ctx, 1, (int[]){-1}, 20);
-                mu_label(ctx, data->descriptions[i]);
-            }
+            menu_add_item(&data->main_menu, data->destinations[i], data->descriptions[i], NULL);
         }
         
-        // Terminal footer
-        mu_layout_row(ctx, 1, (int[]){-1}, 40);
-        mu_label(ctx, "");  // Spacer
+        // Set up callbacks and style
+        menu_set_callbacks(&data->main_menu, navigation_menu_on_select, NULL, data);
+        menu_set_style(&data->main_menu, true, true, true);  // descriptions, cursor, terminal style
         
-        // Control hints with terminal border
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, "╠════════════════════════════════════════════════════════════════╣");
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, "║ CONTROLS:                                                      ║");
-        
-        // Show controls in terminal format
-        char control_line[256];
-        snprintf(control_line, sizeof(control_line), "║ %-15s: %-45s ║", 
-                 "Navigate", ui_adaptive_should_show_gamepad() ? "D-Pad / Left Stick" : "↑↓ Arrow Keys");
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, control_line);
-        
-        snprintf(control_line, sizeof(control_line), "║ %-15s: %-45s ║", 
-                 "Select", ui_adaptive_should_show_gamepad() ? "A Button" : "Enter");
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, control_line);
-        
-        snprintf(control_line, sizeof(control_line), "║ %-15s: %-45s ║", 
-                 "Exit", ui_adaptive_should_show_gamepad() ? "B Button" : "Escape");
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, control_line);
-        
-        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-        mu_label(ctx, "╚════════════════════════════════════════════════════════════════╝");
-        
-        mu_end_window(ctx);
+        data->menu_initialized = true;
+        printf("🎮 Navigation menu initialized with %d items\n", data->destination_count);
     }
     
-    // printf("🎨 Navigation menu: Commands after rendering: %d\n", ctx->command_list.idx);
+    // Sync selection state
+    data->main_menu.selected_index = data->selected_index;
+    
+    // Render using the general menu system
+    menu_render(&data->main_menu, ctx, delta_time);
+    
+    // Sync back the selection state
+    data->selected_index = data->main_menu.selected_index;
+    data->animation_timer = data->main_menu.animation_timer;
 }
 
 // External render function called from navigation_menu_render

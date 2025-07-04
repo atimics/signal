@@ -165,14 +165,14 @@ void ui_microui_init(void) {
     g_ui_context.mu_ctx.text_height = text_height_callback;
     
     // Set up brighter color scheme for better visibility
-    // Terminal-style green phosphor aesthetic
-    g_ui_context.mu_ctx.style->colors[MU_COLOR_WINDOWBG] = (mu_Color){ 0, 0, 0, 250 };      // Nearly black background
-    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTON] = (mu_Color){ 0, 0, 0, 0 };          // Transparent buttons
-    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTONHOVER] = (mu_Color){ 0, 40, 0, 100 };  // Subtle green glow on hover
-    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTONFOCUS] = (mu_Color){ 0, 60, 0, 150 };  // Stronger green glow when focused
+    // Terminal-style green phosphor aesthetic - minimal visual elements
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_WINDOWBG] = (mu_Color){ 0, 0, 0, 200 };      // Semi-transparent black
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTON] = (mu_Color){ 0, 0, 0, 0 };          // Completely transparent
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTONHOVER] = (mu_Color){ 0, 0, 0, 0 };     // No hover effect
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BUTTONFOCUS] = (mu_Color){ 0, 0, 0, 0 };     // No focus effect
     g_ui_context.mu_ctx.style->colors[MU_COLOR_TEXT] = (mu_Color){ 0, 255, 0, 255 };        // Bright green text
-    g_ui_context.mu_ctx.style->colors[MU_COLOR_BORDER] = (mu_Color){ 0, 100, 0, 255 };      // Dark green border
-    g_ui_context.mu_ctx.style->colors[MU_COLOR_PANELBG] = (mu_Color){ 0, 10, 0, 200 };      // Very dark green panel
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_BORDER] = (mu_Color){ 0, 0, 0, 0 };          // No borders
+    g_ui_context.mu_ctx.style->colors[MU_COLOR_PANELBG] = (mu_Color){ 0, 0, 0, 0 };         // Transparent panels
     
     // Initialize font texture with bitmap font data
     // Font texture is 128x128 pixels, each pixel is 4 bytes (RGBA)

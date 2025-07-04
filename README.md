@@ -7,7 +7,9 @@
 
 **SIGNAL** is a high-performance, data-oriented 3D game engine and the foundation for a single-player space exploration game. It is written in C99, features a pure Entity-Component-System (ECS) architecture, and uses the modern, cross-platform **Sokol** graphics API for rendering.
 
-**[📊 Project Status](docs/PROJECT_STATUS.md)**: 98% test coverage | 60+ FPS | Sprint 24 (MicroUI Improvements) Active
+**[📊 Project Status](docs/PROJECT_STATUS.md)**: 98% test coverage | 60+ FPS | Sprint 24 (MicroUI System Improvements) Active
+
+**[📝 Engineering Report](docs/sprints/active/engineering_report.md)** | **[✅ Sprint 24 Plan](docs/sprints/active/SPRINT_24_PLAN.md)**
 
 ### 🎮 Current Features
 

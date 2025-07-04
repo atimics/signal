@@ -78,4 +78,4 @@ docs/
 
 ---
 
-*Last Updated: July 3, 2025 - Documentation overhaul complete*
+*Last Updated: July 4, 2025*

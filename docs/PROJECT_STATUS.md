@@ -87,7 +87,8 @@
 ## Documentation Status
 
 ### Recently Updated (July 4, 2025)
-- [Sprint 24 Plan](sprints/active/SPRINT_24_MICROUI_IMPROVEMENTS.md) - MicroUI improvements
+- [Engineering Report](sprints/active/engineering_report.md) - Architectural analysis of the CGame engine
+- [Sprint 24 Plan](sprints/active/SPRINT_24_PLAN.md) - MicroUI improvements
 - [Current Sprint Status](sprints/active/CURRENT_SPRINT_STATUS.md) - Live progress tracking
 - [Sprint Overview](sprints/README.md) - Complete sprint management
 - [CLAUDE.md](../CLAUDE.md) - AI assistant guide updated

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="CGame Tests" tests="77" failures="13" time="0.014">
+  <testsuite name="test_ui_system" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_ui_system" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_ui_visibility" tests="10" failures="0" time="0.002">
+    <testcase name="test_1" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_2" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_3" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_4" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_5" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_6" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_7" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_8" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_9" classname="test_ui_visibility" time="0.000" />
+    <testcase name="test_10" classname="test_ui_visibility" time="0.000" />
+  </testsuite>
+  <testsuite name="test_bitmap_font" tests="13" failures="0" time="0.002">
+    <testcase name="test_1" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_2" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_3" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_4" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_5" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_6" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_7" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_8" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_9" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_10" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_11" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_12" classname="test_bitmap_font" time="0.000" />
+    <testcase name="test_13" classname="test_bitmap_font" time="0.000" />
+  </testsuite>
+  <testsuite name="test_ui_events" tests="12" failures="0" time="0.002">
+    <testcase name="test_1" classname="test_ui_events" time="0.000" />
+    <testcase name="test_2" classname="test_ui_events" time="0.000" />
+    <testcase name="test_3" classname="test_ui_events" time="0.000" />
+    <testcase name="test_4" classname="test_ui_events" time="0.000" />
+    <testcase name="test_5" classname="test_ui_events" time="0.000" />
+    <testcase name="test_6" classname="test_ui_events" time="0.000" />
+    <testcase name="test_7" classname="test_ui_events" time="0.000" />
+    <testcase name="test_8" classname="test_ui_events" time="0.000" />
+    <testcase name="test_9" classname="test_ui_events" time="0.000" />
+    <testcase name="test_10" classname="test_ui_events" time="0.000" />
+    <testcase name="test_11" classname="test_ui_events" time="0.000" />
+    <testcase name="test_12" classname="test_ui_events" time="0.000" />
+  </testsuite>
+  <testsuite name="test_ui_performance" tests="10" failures="0" time="0.005">
+    <testcase name="test_1" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_2" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_3" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_4" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_5" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_6" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_7" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_8" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_9" classname="test_ui_performance" time="0.001" />
+    <testcase name="test_10" classname="test_ui_performance" time="0.001" />
+  </testsuite>
+  <testsuite name="test_microui_diagnostics" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_microui_diagnostics" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_microui_pipeline" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_microui_pipeline" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_microui_minimal" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_microui_minimal" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_thrusters" tests="19" failures="0" time="0.003">
+    <testcase name="test_1" classname="test_thrusters" time="0.000" />
+    <testcase name="test_2" classname="test_thrusters" time="0.000" />
+    <testcase name="test_3" classname="test_thrusters" time="0.000" />
+    <testcase name="test_4" classname="test_thrusters" time="0.000" />
+    <testcase name="test_5" classname="test_thrusters" time="0.000" />
+    <testcase name="test_6" classname="test_thrusters" time="0.000" />
+    <testcase name="test_7" classname="test_thrusters" time="0.000" />
+    <testcase name="test_8" classname="test_thrusters" time="0.000" />
+    <testcase name="test_9" classname="test_thrusters" time="0.000" />
+    <testcase name="test_10" classname="test_thrusters" time="0.000" />
+    <testcase name="test_11" classname="test_thrusters" time="0.000" />
+    <testcase name="test_12" classname="test_thrusters" time="0.000" />
+    <testcase name="test_13" classname="test_thrusters" time="0.000" />
+    <testcase name="test_14" classname="test_thrusters" time="0.000" />
+    <testcase name="test_15" classname="test_thrusters" time="0.000" />
+    <testcase name="test_16" classname="test_thrusters" time="0.000" />
+    <testcase name="test_17" classname="test_thrusters" time="0.000" />
+    <testcase name="test_18" classname="test_thrusters" time="0.000" />
+    <testcase name="test_19" classname="test_thrusters" time="0.000" />
+  </testsuite>
+  <testsuite name="test_physics" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_physics" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_transform" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_transform" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_entity_manager" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_entity_manager" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_component_registry" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_component_registry" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_input_calibration" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_input_calibration" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_input_filtering" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_input_filtering" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_scene_management" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_scene_management" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_flight_controls" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_flight_controls" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="test_performance" tests="1" failures="1" time="0.000">
+    <testcase name="test_1" classname="test_performance" time="0.000">
+      <failure message="Test failed">Executable not found</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

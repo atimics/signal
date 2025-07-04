@@ -62,6 +62,8 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         return;
     }
     
+    // Allow UI rendering even if app context is temporarily invalid during scene transitions
+    
     // TEMPORARY: Ensure navigation menu module exists when in navigation_menu scene
     if (current_scene && strcmp(current_scene, "navigation_menu") == 0) {
         SceneUIModule* nav_module = scene_ui_get_module("navigation_menu");
@@ -124,8 +126,17 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         }
     };
     
+    // Check both app and graphics context validity before swapchain access
+    if (!sapp_isvalid() || !sg_isvalid()) {
+        return;
+    }
     sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = ui_pass_action });
-    ui_microui_render(sapp_width(), sapp_height());
+    
+    // Get dimensions safely since app context is valid at this point
+    float width = sapp_width();
+    float height = sapp_height();
+    ui_microui_render(width, height);
+    
     sg_end_pass();
 }
 

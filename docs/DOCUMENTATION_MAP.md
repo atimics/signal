@@ -22,7 +22,9 @@ cgame/
 │   │   ├── README.md              # Sprint overview & history
 │   │   ├── active/                # Current sprint work
 │   │   │   ├── CURRENT_SPRINT_STATUS.md
-│   │   │   └── SPRINT_24_MICROUI_IMPROVEMENTS.md
+│   │   │   ├── SPRINT_24_MICROUI_IMPROVEMENTS.md
+│   │   │   ├── engineering_report.md
+│   │   │   └── SPRINT_24_PLAN.md
 │   │   ├── completed/             # Historical sprints
 │   │   │   ├── sprint_23/         # Technical Excellence
 │   │   │   ├── sprint_22/         # Advanced Input
