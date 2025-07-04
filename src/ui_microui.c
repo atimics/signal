@@ -244,7 +244,9 @@ void ui_microui_shutdown(void) {
 // FRAME MANAGEMENT
 // ============================================================================
 
-mu_Context* ui_microui_begin_frame(void) {
+void ui_microui_begin_frame(void) {
+    printf("🔍 DEBUG: MicroUI begin_frame called\n");
+    
     mu_begin(&g_ui_context.mu_ctx);
     
     // Set root clip rect to cover the entire screen
@@ -252,14 +254,18 @@ mu_Context* ui_microui_begin_frame(void) {
     mu_Rect screen_rect = mu_rect(0, 0, sapp_width(), sapp_height());
     mu_push_clip_rect(&g_ui_context.mu_ctx, screen_rect);
     
-    return &g_ui_context.mu_ctx;
+    printf("🔍 DEBUG: MicroUI begin_frame completed, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
 }
 
 void ui_microui_end_frame(void) {
+    printf("🔍 DEBUG: MicroUI end_frame called, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
+    
     // Pop the root clip rect we pushed in begin_frame
     mu_pop_clip_rect(&g_ui_context.mu_ctx);
     
     mu_end(&g_ui_context.mu_ctx);
+    
+    printf("🔍 DEBUG: MicroUI end_frame completed, clip_stack.idx=%d\n", g_ui_context.mu_ctx.clip_stack.idx);
 }
 
 // ============================================================================

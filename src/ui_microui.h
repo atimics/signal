@@ -49,7 +49,7 @@ void ui_microui_shutdown(void);
 // ============================================================================
 
 // Begin a new UI frame
-mu_Context* ui_microui_begin_frame(void);
+void ui_microui_begin_frame(void);
 
 // End the current UI frame and prepare for rendering
 void ui_microui_end_frame(void);
