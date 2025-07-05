@@ -54,10 +54,13 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     // DEBUG: Always log ui_render calls to track the navigation menu issue
     static int ui_render_call_count = 0;
     ui_render_call_count++;
-    printf("🎨 UI Render #%d: scene='%s', visible=%s, debug_visible=%s, screen=%dx%d\n", 
-           ui_render_call_count, current_scene ? current_scene : "null", 
-           g_ui_visible ? "yes" : "no", g_debug_ui_visible ? "yes" : "no", 
-           screen_width, screen_height);
+    // Only log occasionally
+    if (ui_render_call_count % 300 == 1) {
+        printf("🎨 UI Render #%d: scene='%s', visible=%s, debug_visible=%s, screen=%dx%d\n", 
+               ui_render_call_count, current_scene ? current_scene : "null", 
+               g_ui_visible ? "yes" : "no", g_debug_ui_visible ? "yes" : "no", 
+               screen_width, screen_height);
+    }
     
     // Store current scene for event handling
     if (current_scene) {
@@ -67,9 +70,17 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     
     // Early exit if UI is not visible - absolutely no UI calls should happen
     if (!g_ui_visible) {
-        printf("🎨 UI: Skipping render - UI not visible\n");
+        // printf("🎨 UI: Skipping render - UI not visible\n");
         return;
     }
+    
+    // Guard against multiple UI processing per frame
+    static int last_frame_processed = -1;
+    if (ui_render_call_count == last_frame_processed) {
+        printf("⚠️ UI: Duplicate ui_render call in same frame %d - skipping\n", ui_render_call_count);
+        return;
+    }
+    last_frame_processed = ui_render_call_count;
     
     // TEMPORARY: Ensure navigation menu module exists when in navigation_menu scene
     if (current_scene && strcmp(current_scene, "navigation_menu") == 0) {
@@ -101,7 +112,7 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     }
     
     // Begin Microui frame (this sets up the clip stack)
-    printf("🎨 UI: Calling ui_microui_begin_frame()...\n");
+    // printf("🎨 UI: Calling ui_microui_begin_frame()...\n");
     ui_microui_begin_frame();
     
     // Additional safety check: ensure clip stack is properly set up
@@ -111,10 +122,10 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         return;
     }
     
-    printf("🎨 UI: MicroUI frame begun successfully, clip_stack.idx=%d\n", ctx->clip_stack.idx);
+    // printf("🎨 UI: MicroUI frame begun successfully, clip_stack.idx=%d\n", ctx->clip_stack.idx);
     
     // Render scene-specific UI using Microui adapter
-    printf("🎨 UI: Rendering scene-specific UI for '%s'...\n", current_scene ? current_scene : "null");
+    // printf("🎨 UI: Rendering scene-specific UI for '%s'...\n", current_scene ? current_scene : "null");
     scene_ui_render_microui(ctx, current_scene, world, scheduler, delta_time, screen_width, screen_height);
     
     // Render debug overlay if enabled
@@ -129,9 +140,9 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     }
     
     // End frame and process commands
-    printf("🎨 UI: Calling ui_microui_end_frame()...\n");
+    // printf("🎨 UI: Calling ui_microui_end_frame()...\n");
     ui_microui_end_frame();
-    printf("🎨 UI: MicroUI frame ended successfully\n");
+    // printf("🎨 UI: MicroUI frame ended successfully\n");
     
     // UI rendering is now handled within the main render pass in main.c
     // This function only manages MicroUI context and prepares vertices

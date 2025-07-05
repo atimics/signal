@@ -124,6 +124,7 @@ static const unsigned char font_data[95][8] = {
 // ============================================================================
 
 static struct {
+    sg_shader shader;          // Shader for both pipelines
     sg_pipeline pip;
     sg_pipeline offscreen_pip;  // Pipeline for offscreen rendering
     sg_bindings bind;
@@ -135,7 +136,45 @@ static struct {
     } vertices[8192];
     int vertex_count;
     int command_count;
+    size_t vbuf_size;         // Current vertex buffer size in bytes
 } render_state;
+
+// ============================================================================
+// DYNAMIC BUFFER MANAGEMENT
+// ============================================================================
+
+static void ensure_ui_vbuf(size_t needed_bytes) {
+    // If we have enough space, nothing to do
+    if (needed_bytes <= render_state.vbuf_size) {
+        return;
+    }
+    
+    // Calculate new size with headroom (2x growth)
+    size_t new_size = needed_bytes * 2;
+    
+    // Ensure minimum size
+    if (new_size < sizeof(render_state.vertices)) {
+        new_size = sizeof(render_state.vertices);
+    }
+    
+    printf("🎨 MicroUI: Growing vertex buffer from %zu to %zu bytes\n", 
+           render_state.vbuf_size, new_size);
+    
+    // Destroy old buffer if it exists
+    if (render_state.bind.vertex_buffers[0].id != SG_INVALID_ID) {
+        sg_destroy_buffer(render_state.bind.vertex_buffers[0]);
+    }
+    
+    // Create new buffer with increased size
+    render_state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
+        .size = new_size,
+        .usage = { .vertex_buffer = true, .dynamic_update = true },
+        .label = "microui_vertex_buffer"
+    });
+    
+    // Update recorded size
+    render_state.vbuf_size = new_size;
+}
 
 // ============================================================================
 // MICROUI CALLBACKS
@@ -323,8 +362,11 @@ void ui_microui_init(void) {
         .label = "microui_shader"
     };
     
+    // Create shader that will be shared by both pipelines
+    render_state.shader = sg_make_shader(&shd_desc);
+    
     sg_pipeline_desc pip_desc = {
-        .shader = sg_make_shader(&shd_desc),
+        .shader = render_state.shader,
         .layout = {
             .attrs = {
                 [0] = { .format = SG_VERTEXFORMAT_FLOAT2 },  // position
@@ -347,7 +389,7 @@ void ui_microui_init(void) {
             .compare = SG_COMPAREFUNC_ALWAYS
             // Don't specify pixel_format - let it default to match swapchain
         },
-        // Don't specify sample_count - let it default to match swapchain
+        .sample_count = 1,  // CRITICAL: Must be 1 to match both swapchain and offscreen targets
         .cull_mode = SG_CULLMODE_NONE,
         .face_winding = SG_FACEWINDING_CCW,
         .label = "microui_pipeline"
@@ -355,16 +397,63 @@ void ui_microui_init(void) {
     
     render_state.pip = sg_make_pipeline(&pip_desc);
     
-    // Create offscreen pipeline with explicit RGBA8 color and depth stencil format
-    pip_desc.colors[0].pixel_format = SG_PIXELFORMAT_RGBA8;
-    pip_desc.depth.pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL;
-    pip_desc.label = "microui_offscreen_pipeline";
-    render_state.offscreen_pip = sg_make_pipeline(&pip_desc);
+    // Validate on-screen pipeline
+    sg_resource_state pip_state = sg_query_pipeline_state(render_state.pip);
+    if (pip_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ ERROR: MicroUI on-screen pipeline invalid! State: %d\n", pip_state);
+    } else {
+        printf("✅ MicroUI on-screen pipeline created successfully\n");
+    }
     
-    // Create vertex buffer
+    // Create offscreen pipeline with proper settings
+    // CRITICAL: All fields must match the render target configuration
+    sg_pipeline_desc offscreen_pip_desc = {
+        .shader = render_state.shader,  // Reuse the same shader
+        .layout = {
+            .attrs = {
+                [0] = { .format = SG_VERTEXFORMAT_FLOAT2 },  // position
+                [1] = { .format = SG_VERTEXFORMAT_FLOAT2 },  // texcoord
+                [2] = { .format = SG_VERTEXFORMAT_UBYTE4N }  // color
+            }
+        },
+        .colors[0] = {
+            .pixel_format = SG_PIXELFORMAT_RGBA8,      // Must match layer config
+            .write_mask = SG_COLORMASK_RGBA,          // Write all channels
+            .blend = {
+                .enabled = true,
+                .src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA,
+                .dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,
+                .src_factor_alpha = SG_BLENDFACTOR_SRC_ALPHA,
+                .dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA
+            }
+        },
+        .depth = {
+            .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL,  // Match layer config
+            .write_enabled = false,
+            .compare = SG_COMPAREFUNC_ALWAYS
+        },
+        .sample_count = 1,  // CRITICAL: Must match UI layer sample_count
+        .cull_mode = SG_CULLMODE_NONE,
+        .face_winding = SG_FACEWINDING_CCW,
+        .label = "microui_offscreen_pipeline"
+    };
+    
+    render_state.offscreen_pip = sg_make_pipeline(&offscreen_pip_desc);
+    
+    // Validate the offscreen pipeline state
+    pip_state = sg_query_pipeline_state(render_state.offscreen_pip);
+    if (pip_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ ERROR: MicroUI offscreen pipeline invalid! State: %d\n", pip_state);
+    } else {
+        printf("✅ MicroUI offscreen pipeline created successfully\n");
+    }
+    
+    // Create vertex buffer with initial size
+    render_state.vbuf_size = sizeof(render_state.vertices);
     render_state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
-        .size = sizeof(render_state.vertices),
-        .usage = { .vertex_buffer = true, .dynamic_update = true }
+        .size = render_state.vbuf_size,
+        .usage = { .vertex_buffer = true, .dynamic_update = true },
+        .label = "microui_vertex_buffer"
     });
     
     // Create font texture
@@ -396,6 +485,8 @@ void ui_microui_init(void) {
 void ui_microui_shutdown(void) {
     if (g_ui_context.initialized) {
         sg_destroy_pipeline(render_state.pip);
+        sg_destroy_pipeline(render_state.offscreen_pip);
+        sg_destroy_shader(render_state.shader);
         sg_destroy_buffer(render_state.bind.vertex_buffers[0]);
         sg_destroy_image(render_state.bind.images[0]);
         sg_destroy_sampler(render_state.bind.samplers[0]);
@@ -539,7 +630,14 @@ void ui_microui_end_frame(void) {
 // ============================================================================
 
 static void push_vertex(float x, float y, float u, float v, mu_Color color) {
-    if (render_state.vertex_count >= 8192) return;
+    if (render_state.vertex_count >= 8192) {
+        static int overflow_logged = 0;
+        if (!overflow_logged) {
+            printf("❌ ERROR: MicroUI vertex buffer full! Cannot add more vertices.\n");
+            overflow_logged = 1;
+        }
+        return;
+    }
     
     render_state.vertices[render_state.vertex_count].x = x;
     render_state.vertices[render_state.vertex_count].y = y;
@@ -638,17 +736,36 @@ void ui_microui_upload_vertices(void) {
         return;
     }
     
-    printf("🎨 MicroUI: Uploading %d vertices to GPU...\n", render_state.vertex_count);
+    // Calculate upload size
+    const size_t upload_size = render_state.vertex_count * sizeof(render_state.vertices[0]);
+    
+    // CRITICAL: Ensure buffer is large enough for the data
+    ensure_ui_vbuf(upload_size);
+    
+    // CRITICAL: Bounds check to prevent buffer overflow in static array
+    const size_t max_vertices = sizeof(render_state.vertices) / sizeof(render_state.vertices[0]);
+    if ((size_t)render_state.vertex_count > max_vertices) {
+        printf("❌ ERROR: MicroUI vertex count %d exceeds static array capacity %zu!\n", 
+               render_state.vertex_count, max_vertices);
+        render_state.vertex_count = (int)max_vertices;  // Clamp to prevent overflow
+    }
+    
+    // Log upload details periodically for debugging
+    static int upload_counter = 0;
+    if (upload_counter++ % 60 == 0) {  // Once per second
+        printf("🎨 MicroUI: Uploading %d vertices (%zu bytes to %zu byte buffer)\n", 
+               render_state.vertex_count, upload_size, render_state.vbuf_size);
+    }
     
     // Upload vertex data to GPU (MUST be called outside any render pass)
     sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
         .ptr = render_state.vertices,
-        .size = render_state.vertex_count * sizeof(render_state.vertices[0])
+        .size = upload_size
     });
     
     // Verify context is still valid after upload
     if (!sg_isvalid()) {
-        printf("❌ CRITICAL: MicroUI Upload corrupted Sokol context!\n");
+        printf("❌ CRITICAL: MicroUI Upload corrupted Sokol context! Upload size was %zu bytes\n", upload_size);
     }
 }
 
@@ -665,14 +782,18 @@ void ui_microui_render(int screen_width, int screen_height) {
     // DEBUG: Always log render calls to track the issue
     static int render_call_count = 0;
     render_call_count++;
-    printf("🎨 MicroUI Render #%d: vertex_count=%d, commands=%d, screen=%dx%d, offscreen=%s\n", 
-           render_call_count, render_state.vertex_count, render_state.command_count, 
-           screen_width, screen_height, render_is_offscreen_mode() ? "yes" : "no");
+    // Commented out for less spam
+    // printf("🎨 MicroUI Render #%d: vertex_count=%d, commands=%d, screen=%dx%d, offscreen=%s\n", 
+    //        render_call_count, render_state.vertex_count, render_state.command_count, 
+    //        screen_width, screen_height, render_is_offscreen_mode() ? "yes" : "no");
     
     // CRITICAL FIX: Don't call any Sokol render functions if we have no vertices
     // This prevents corrupting the graphics context with empty draw calls
     if (render_state.vertex_count == 0) {
-        printf("🎨 MicroUI: No vertices to render - skipping all Sokol calls\n");
+        // Only log occasionally to avoid spam
+        if (render_call_count % 60 == 1) {
+            printf("🎨 MicroUI: No vertices to render (frame %d)\n", render_call_count);
+        }
         return;
     }
     
@@ -686,28 +807,36 @@ void ui_microui_render(int screen_width, int screen_height) {
     float screen_size[2] = { (float)screen_width, (float)screen_height };
     
     // Apply appropriate pipeline based on render target
-    printf("🎨 MicroUI: Applying %s pipeline...\n", 
-           render_is_offscreen_mode() ? "offscreen" : "swapchain");
-    if (render_is_offscreen_mode()) {
-        sg_apply_pipeline(render_state.offscreen_pip);
-    } else {
-        sg_apply_pipeline(render_state.pip);
+    sg_pipeline pip_to_use = render_is_offscreen_mode() ? render_state.offscreen_pip : render_state.pip;
+    
+    // Validate pipeline before applying
+    sg_resource_state pip_state = sg_query_pipeline_state(pip_to_use);
+    if (pip_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ ERROR: MicroUI pipeline invalid before apply! State: %d, offscreen: %s\n", 
+               pip_state, render_is_offscreen_mode() ? "yes" : "no");
+        return;
     }
     
-    printf("🎨 MicroUI: Applying bindings and uniforms...\n");
+    // Log occasionally to reduce spam
+    static int apply_counter = 0;
+    if (apply_counter++ % 60 == 0) {  // Once per second
+        printf("🎨 MicroUI: Applying %s pipeline (vertices=%d)...\n", 
+               render_is_offscreen_mode() ? "offscreen" : "swapchain", render_state.vertex_count);
+    }
+    
+    sg_apply_pipeline(pip_to_use);
+    
+    // Check if context is still valid after applying pipeline
+    if (!sg_isvalid()) {
+        printf("❌ CRITICAL: sg_apply_pipeline corrupted Sokol context!\n");
+        return;
+    }
+    
     sg_apply_bindings(&render_state.bind);
     sg_apply_uniforms(0, &SG_RANGE(screen_size));
     
     // Draw
-    printf("🎨 MicroUI: Drawing %d vertices...\n", render_state.vertex_count);
     sg_draw(0, render_state.vertex_count, 1);
-    
-    // Verify context is still valid after our operations
-    if (!sg_isvalid()) {
-        printf("❌ CRITICAL: MicroUI render corrupted Sokol context!\n");
-    } else {
-        printf("✅ MicroUI: Render completed successfully\n");
-    }
 }
 
 // ============================================================================
@@ -731,19 +860,52 @@ bool ui_microui_handle_event(const void* event) {
         return false;
     }
     
-    // Queue the event instead of processing it immediately
-    // This fixes the timing issue where events arrive outside of active frames
+    // CRITICAL: Don't process events if Sokol context is invalid
+    // This can happen during scene transitions or other state changes
+    if (!sg_isvalid()) {
+        return false;
+    }
+    
+    // Check if queue is getting full (>80% capacity)
+    float queue_usage = (float)g_ui_context.event_queue.count / UI_EVENT_QUEUE_SIZE;
+    if (queue_usage > 0.8f) {
+        static int overflow_warning_count = 0;
+        if (overflow_warning_count++ < 5) {  // Limit spam
+            printf("⚠️ MicroUI: Event queue at %.0f%% capacity, processing immediately\n", 
+                   queue_usage * 100);
+        }
+        
+        // Process events immediately to prevent overflow
+        for (int i = 0; i < g_ui_context.event_queue.count; i++) {
+            ui_microui_process_event(&g_ui_context.event_queue.events[i]);
+        }
+        g_ui_context.event_queue.count = 0;
+        
+        // Process the current event too
+        ui_microui_process_event(ev);
+        return true;
+    }
+    
+    // Queue the event for processing during frame
     if (g_ui_context.event_queue.count < UI_EVENT_QUEUE_SIZE) {
         g_ui_context.event_queue.events[g_ui_context.event_queue.count++] = *ev;
         // Log only important events (not mouse moves which are very frequent)
         if (ev->type != SAPP_EVENTTYPE_MOUSE_MOVE) {
-            printf("🎨 MicroUI: Queued event type %d (queue size: %d)\n", ev->type, g_ui_context.event_queue.count);
+            static int event_log_counter = 0;
+            if (event_log_counter++ % 10 == 0) {  // Reduce spam
+                printf("🎨 MicroUI: Queue size: %d/%d (%.0f%%)\n", 
+                       g_ui_context.event_queue.count, UI_EVENT_QUEUE_SIZE, queue_usage * 100);
+            }
         }
         return true;  // Event queued successfully
     }
     
-    // Queue is full, drop the event
-    printf("🎨 MicroUI: WARNING - Event queue full, dropping event\n");
+    // Queue is full, track overflow
+    static int overflow_count = 0;
+    overflow_count++;
+    if (overflow_count % 100 == 1) {  // Report every 100 dropped events
+        printf("❌ MicroUI: Event queue overflow! Total dropped: %d\n", overflow_count);
+    }
     return false;
 }
 

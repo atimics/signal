@@ -400,13 +400,10 @@ static void frame(void)
     }
 
     // Handle scene transitions (only when not actively rendering)
-    bool scene_transition_occurred = false;
     if (scene_state_has_pending_transition(&app_state.scene_state) && !frame_rendering_active)
     {
         const char* next_scene = scene_state_get_next_scene(&app_state.scene_state);
         printf("🎬 Executing scene transition: %s -> %s\n", app_state.scene_state.current_scene_name, next_scene);
-        
-        scene_transition_occurred = true;
         
         // Reset camera system before clearing world
         camera_system_reset();
@@ -472,19 +469,42 @@ static void frame(void)
     }
     
     if (scene_layer && should_update) {
-        render_set_offscreen_mode(true);  // Switch to offscreen pipeline
-        layer_begin_render(scene_layer);
-        
-        // Render 3D entities to offscreen target
-        render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
-        
-        layer_end_render();
-        render_set_offscreen_mode(false);  // Switch back to default pipeline
+        // Ensure context is valid before rendering
+        if (sg_isvalid()) {
+            printf("🎨 Context valid before 3D scene render\n");
+            render_set_offscreen_mode(true);  // Switch to offscreen pipeline
+            if (!sg_isvalid()) {
+                printf("❌ Context invalid after render_set_offscreen_mode(true)!\n");
+            }
+            layer_begin_render(scene_layer);
+            if (!sg_isvalid()) {
+                printf("❌ Context invalid after layer_begin_render!\n");
+            }
+            
+            // Render 3D entities to offscreen target
+            render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
+            if (!sg_isvalid()) {
+                printf("❌ Context invalid after render_frame!\n");
+            }
+            
+            layer_end_render();
+            if (!sg_isvalid()) {
+                printf("❌ Context invalid after layer_end_render!\n");
+            }
+            render_set_offscreen_mode(false);  // Switch back to default pipeline
+        } else {
+            printf("⚠️ Skipping 3D scene render - context already invalid\n");
+        }
     }
     
     // === RENDER TO UI LAYER ===
     RenderLayer* ui_layer = layer_manager_get_layer(app_state.layer_manager, "ui");
     bool ui_visible = ui_is_visible();
+    
+    // Update UI layer enabled state BEFORE render attempt
+    if (ui_layer) {
+        layer_set_enabled(ui_layer, ui_visible);
+    }
     
     // DEBUG: Log UI visibility state periodically
     static int ui_debug_counter = 0;
@@ -505,23 +525,32 @@ static void frame(void)
         
         // CRITICAL FIX: Upload vertex data BEFORE starting the render pass
         // sg_update_buffer() cannot be called inside an active render pass
-        ui_microui_upload_vertices();
+        // Ensure context is valid before upload
+        if (sg_isvalid()) {
+            printf("🎨 Context valid before UI vertex upload\n");
+            ui_microui_upload_vertices();
+            if (!sg_isvalid()) {
+                printf("❌ Context became invalid after UI vertex upload!\n");
+            }
+        } else {
+            printf("⚠️ Skipping UI vertex upload - context already invalid\n");
+        }
         
-        layer_begin_render(ui_layer);
-        
-        // Render UI to offscreen target (now only applies state and draws)
-        ui_microui_render(screen_width, screen_height);
-        
-        layer_end_render();
+        // Only begin render if context is still valid
+        if (sg_isvalid()) {
+            layer_begin_render(ui_layer);
+            
+            // Render UI to offscreen target (now only applies state and draws)
+            ui_microui_render(screen_width, screen_height);
+            
+            layer_end_render();
+        } else {
+            printf("⚠️ Skipping UI layer render - context invalid\n");
+        }
         render_set_offscreen_mode(false);  // Switch back to default pipeline
     }
     
-    // Mark UI layer as disabled when not visible to prevent compositor from processing it
-    if (ui_layer && !ui_visible) {
-        layer_set_enabled(ui_layer, false);
-    } else if (ui_layer && ui_visible) {
-        layer_set_enabled(ui_layer, true);
-    }
+    // UI layer enable/disable is now handled before render attempt
     
     // === COMPOSITE LAYERS TO SWAPCHAIN ===
     // Validate context before final composite pass
@@ -606,15 +635,6 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
-    // CRITICAL FIX: Don't process events during frame rendering
-    // Events can arrive at any time, including during render passes
-    // Processing UI events during rendering can cause sg_update_buffer to be called
-    // inside an active render pass, which crashes Sokol
-    if (frame_rendering_active) {
-        // Skip all event processing during rendering
-        return;
-    }
-    
     // Handle UI events first - if UI captures the event, don't process it further
     if (ui_handle_event(ev))
     {
@@ -793,7 +813,7 @@ sapp_desc sokol_main(int argc, char* argv[])
         .event_cb = event,
         .width = 1280,
         .height = 720,
-        .sample_count = 4,
+        .sample_count = 1,  // Must match render layer sample counts
         .window_title = "CGame - Entity-Component-System Engine (Sokol)",
         .icon.sokol_default = true,
         .logger.func = slog_func,

@@ -22,7 +22,8 @@ struct SystemScheduler;
 // ============================================================================
 
 // Event queue for buffering input events
-#define UI_EVENT_QUEUE_SIZE 64
+// Increased from 64 to 512 to handle burst inputs (key-repeat + mouse move)
+#define UI_EVENT_QUEUE_SIZE 512
 
 typedef struct {
     sapp_event events[UI_EVENT_QUEUE_SIZE];

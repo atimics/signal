@@ -504,7 +504,7 @@ void layer_begin_render(RenderLayer* layer) {
         return;
     }
     
-    printf("🎨 LAYER DEBUG: Beginning render for layer '%s'...\n", layer->name);
+    // printf("🎨 LAYER DEBUG: Beginning render for layer '%s'...\n", layer->name);
     
     if (!sg_isvalid()) {
         printf("❌ CRITICAL: layer_begin_render - Sokol context invalid before starting layer '%s'\n", layer->name);
@@ -517,14 +517,14 @@ void layer_begin_render(RenderLayer* layer) {
         return;
     }
     
-    printf("🎨 LAYER DEBUG: Context valid, setting up pass state for '%s'\n", layer->name);
+    // printf("🎨 LAYER DEBUG: Context valid, setting up pass state for '%s'\n", layer->name);
     g_pass_state.pass_active = true;
     g_pass_state.layer_name = layer->name;
     
-    printf("🎨 LAYER DEBUG: About to call sg_begin_pass for layer '%s'...\n", layer->name);
-    printf("🎨 LAYER DEBUG: Layer attachments valid: color=%s, depth=%s\n", 
-           layer->color_target.id != SG_INVALID_ID ? "yes" : "no",
-           layer->depth_target.id != SG_INVALID_ID ? "yes" : "no");
+    // printf("🎨 LAYER DEBUG: About to call sg_begin_pass for layer '%s'...\n", layer->name);
+    // printf("🎨 LAYER DEBUG: Layer attachments valid: color=%s, depth=%s\n", 
+    //        layer->color_target.id != SG_INVALID_ID ? "yes" : "no",
+    //        layer->depth_target.id != SG_INVALID_ID ? "yes" : "no");
     
     sg_begin_pass(&(sg_pass){
         .attachments = layer->attachments,
@@ -544,7 +544,7 @@ void layer_begin_render(RenderLayer* layer) {
         }
     });
     
-    printf("🎨 LAYER DEBUG: sg_begin_pass completed for layer '%s'\n", layer->name);
+    // printf("🎨 LAYER DEBUG: sg_begin_pass completed for layer '%s'\n", layer->name);
     
     // Verify context is still valid after sg_begin_pass
     if (!sg_isvalid()) {
@@ -554,7 +554,7 @@ void layer_begin_render(RenderLayer* layer) {
         return;
     }
     
-    printf("🎨 LAYER DEBUG: Context still valid after sg_begin_pass for layer '%s'\n", layer->name);
+    // printf("🎨 LAYER DEBUG: Context still valid after sg_begin_pass for layer '%s'\n", layer->name);
     
     layer->last_update_frame = layer->last_update_frame + 1;  // Track updates
     layer->dirty = false;
@@ -586,7 +586,7 @@ void layer_manager_composite(LayerManager* manager) {
     
     // DEBUG: Log layer states before compositing
     static int debug_counter = 0;
-    if (debug_counter++ % 60 == 0) { // Log once per second at 60fps
+    if (debug_counter++ % 600 == 0) { // Log once per 10 seconds at 60fps
         printf("🎨 LAYER DEBUG: Compositing %d layers:\n", manager->layer_count);
         for (int i = 0; i < manager->layer_count; i++) {
             RenderLayer* layer = &manager->layers[i];
