@@ -46,7 +46,7 @@ cgame_add_test_suite(
     NAME cmake-ui
     SOURCES ui/test_ui_system.c
     LIBS core ui ui_api ui_scene ui_components
-    STUBS graphics_api_test_stub nuklear_test_stubs engine_test_stubs
+    STUBS graphics_api_test_stub engine_test_stubs
 )
 
 # Integration Tests
@@ -76,7 +76,7 @@ cgame_add_test_suite(
     NAME cmake-performance_test_performance_critical
     SOURCES performance/test_performance_critical.c
     LIBS core performance memory systems ui ui_api ui_scene hidapi gamepad
-    STUBS graphics_api_test_stub integration_test_stubs nuklear_test_stubs
+    STUBS graphics_api_test_stub integration_test_stubs
 )
 
 cgame_add_test_suite(

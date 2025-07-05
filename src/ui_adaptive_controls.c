@@ -9,9 +9,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// Forward declaration to avoid including nuklear.h
-struct nk_context;
-
 // State tracking
 static struct {
     int forced_device_type;  // -1 for auto, or INPUT_DEVICE_* value
