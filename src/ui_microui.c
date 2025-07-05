@@ -632,6 +632,12 @@ void ui_microui_upload_vertices(void) {
         return;
     }
     
+    // CRITICAL: Check if context is valid before calling sg_update_buffer
+    if (!sg_isvalid()) {
+        printf("❌ CRITICAL: MicroUI Upload: Sokol context invalid! Cannot upload vertices.\n");
+        return;
+    }
+    
     printf("🎨 MicroUI: Uploading %d vertices to GPU...\n", render_state.vertex_count);
     
     // Upload vertex data to GPU (MUST be called outside any render pass)
@@ -639,6 +645,11 @@ void ui_microui_upload_vertices(void) {
         .ptr = render_state.vertices,
         .size = render_state.vertex_count * sizeof(render_state.vertices[0])
     });
+    
+    // Verify context is still valid after upload
+    if (!sg_isvalid()) {
+        printf("❌ CRITICAL: MicroUI Upload corrupted Sokol context!\n");
+    }
 }
 
 void ui_microui_render(int screen_width, int screen_height) {

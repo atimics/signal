@@ -606,6 +606,15 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
+    // CRITICAL FIX: Don't process events during frame rendering
+    // Events can arrive at any time, including during render passes
+    // Processing UI events during rendering can cause sg_update_buffer to be called
+    // inside an active render pass, which crashes Sokol
+    if (frame_rendering_active) {
+        // Skip all event processing during rendering
+        return;
+    }
+    
     // Handle UI events first - if UI captures the event, don't process it further
     if (ui_handle_event(ev))
     {
