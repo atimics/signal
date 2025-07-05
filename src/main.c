@@ -16,6 +16,7 @@
 #include "system/input.h"  // For canyon racing input handling
 #include "ui.h"
 #include "ui_api.h"
+#include "ui_microui.h"
 #include "scene_state.h"
 #include "scene_script.h"
 
@@ -374,27 +375,55 @@ static void frame(void)
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
 
-    // Render frame (3D entities) - check graphics context primarily
-    // Note: App context may be invalid when minimized/tabbed out, but we should still try to render
+    // Render frame using separate passes for 3D and UI to avoid pipeline state conflicts
     if (!sg_isvalid()) {
-        printf("⚠️ Skipping 3D rendering - Graphics context invalid\n");
+        printf("⚠️ Skipping rendering - Graphics context invalid\n");
         performance_frame_end();
         return;
     }
+    
+    // === PASS 1: 3D Rendering ===
     sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = app_state.pass_action });
-
-    // Render entities
     render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
-
     sg_end_pass();
 
-    // Always render UI to maintain MicroUI context state, even during transitions
-    // The ui_render function will handle visibility internally
+    // === PASS 2: UI Rendering ===
+    // First prepare UI context and vertices (outside of any render pass)
     ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
+    
+    // Then render UI in a separate pass if contexts are valid
+    if (sg_isvalid() && sapp_isvalid()) {
+        // Begin UI pass with LOAD action to preserve 3D content and blend UI on top
+        sg_pass_action ui_pass_action = {
+            .colors[0] = { 
+                .load_action = SG_LOADACTION_LOAD,  // Preserve existing 3D content
+                .store_action = SG_STOREACTION_STORE 
+            },
+            .depth = { 
+                .load_action = SG_LOADACTION_LOAD,  // Preserve depth buffer
+                .store_action = SG_STOREACTION_STORE 
+            }
+        };
+        
+        sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = ui_pass_action });
+        ui_microui_render(sapp_width(), sapp_height());
+        sg_end_pass();
+    }
 
-    // Commit if graphics context is valid (app context can be invalid when minimized/unfocused)
+    // Commit frame - validate context immediately before commit
     if (sg_isvalid()) {
-        sg_commit();
+        // Final validation before commit to catch any last-minute issues
+        bool context_valid = sg_isvalid();
+        if (context_valid) {
+            sg_commit();
+            
+            // Verify commit succeeded (context should still be valid after commit)
+            if (!sg_isvalid()) {
+                printf("⚠️ Graphics context became invalid after sg_commit()\n");
+            }
+        } else {
+            printf("⚠️ Graphics context became invalid before sg_commit() call\n");
+        }
     } else {
         printf("⚠️ Skipping sg_commit - Graphics context invalid\n");
     }

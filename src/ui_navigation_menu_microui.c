@@ -8,6 +8,7 @@
 #include "ui_menu_system.h"
 #include "scene_state.h"
 #include "microui/microui.h"
+#include "sokol_gfx.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>

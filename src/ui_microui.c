@@ -609,26 +609,37 @@ void ui_microui_render(int screen_width, int screen_height) {
     // Commands have already been processed in end_frame
     // Just upload and render the vertices
     
-    // Upload vertex data
+    printf("🔍 MicroUI: Starting render - screen: %dx%d, vertices: %d\n", 
+           screen_width, screen_height, render_state.vertex_count);
+    
+    // Quick context validity check
+    if (!sg_isvalid()) {
+        printf("❌ MicroUI: Sokol graphics context invalid, skipping render\n");
+        return;
+    }
+    
+    // Upload vertex data and render if we have vertices
     if (render_state.vertex_count > 0) {
-        // printf("🎨 MicroUI: Uploading %d vertices to GPU\n", render_state.vertex_count);
+        printf("🔍 MicroUI: Uploading %d vertices and rendering...\n", render_state.vertex_count);
+        
+        // Upload vertex data to GPU
         sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
             .ptr = render_state.vertices,
             .size = render_state.vertex_count * sizeof(render_state.vertices[0])
         });
         
-        // Set up uniforms
+        // Set up screen size uniforms
         float screen_size[2] = { (float)screen_width, (float)screen_height };
-        // printf("🎨 MicroUI: Screen size: %fx%f\n", screen_size[0], screen_size[1]);
         
-        // Draw
+        // Apply pipeline, bindings, uniforms and draw
         sg_apply_pipeline(render_state.pip);
         sg_apply_bindings(&render_state.bind);
         sg_apply_uniforms(0, &SG_RANGE(screen_size));
         sg_draw(0, render_state.vertex_count, 1);
-        // printf("🎨 MicroUI: Drew %d vertices\n", render_state.vertex_count);
+        
+        printf("✅ MicroUI: Rendered %d vertices successfully\n", render_state.vertex_count);
     } else {
-        // printf("🎨 MicroUI: No vertices to render\n");
+        printf("🔍 MicroUI: No vertices to render\n");
     }
 }
 

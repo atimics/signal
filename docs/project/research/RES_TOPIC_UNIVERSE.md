@@ -1,11 +1,38 @@
-Here’s a **deep‐dive design** for fully procedural planet and asteroid mesh generation—**integrated** into your **Sokol/C** engine—with **performance** front and center.
+# Procedural Universe Generation Research
+
+**STATUS: FUTURE VISION DOCUMENT**  
+**CURRENT IMPLEMENTATION: See `RES_CANYON_RACING_UNIVERSE.md` for aligned current state**
+
+This document explores procedural generation concepts for the aspirational **Ghost Signal** universe as described in the lore documents. The current game implementation is a canyon racing experience - this document represents a potential future evolution of the project.
 
 ---
 
-## 1. High‐Level Architecture
+## Context: Current vs. Future Vision
 
-```
-┌──────────────────┐      ┌───────────────────┐      ┌───────────────────┐
+**Current Game (Implemented):**
+- High-speed canyon racing with checkpoints and time trials
+- Precision flying controls optimized for racing
+- Progressive difficulty through medal-based track unlocking
+- Environmental challenges (wind, fog, narrow passages)
+
+**Future Vision (This Document):**
+- The Ghost Signal: atmospheric survival exploration  
+- Symbiotic ship requiring "fuel" from mysterious broadcasts
+- Vast derelict ships (Aethelian Fleet) as exploration environments
+- A-Drive surface-skimming mechanics for traversal
+
+---
+
+## 1. High‐Level ArchiteBelow is a **procedural derelict design philosophy** aligned with **The Ghost Signal** game vision—creating the atmospheric Aethelian Fleet Graveyard where the player's symbiotic ship must navigate to survive.
+
+---
+
+# 1. Vision & Goals (Aligned with Ghost Signal Lore)
+
+* **The Graveyard as Setting:** Procedurally generate the colossal Aethelian Ark-Ships that form the primary environment—massive derelicts floating in a haunted debris field.
+* **A-Drive Focused Traversal:** Derelicts are designed for the **Attraction Drive** mechanic—vast hulls and corridor systems perfect for high-speed surface-skimming navigation.
+* **Atmospheric Exploration:** Each derelict contains **Resonance Locks** hiding Echoes (lore fragments and schematics), creating natural exploration goals within the tense survival framework.
+* **The Five Factions:** Procedural generation must support encounters with Drifters, Chrome-Barons, Echo-Scribes, Wardens, and evidence of the fallen Aethelians—each with distinct architectural signatures.─────────────────┐      ┌───────────────────┐      ┌───────────────────┐
 │  Scene Config    │─┐    │  Generation Module│─┐    │   Render Module   │
 │ (JSON/C structs) │ │    │   (C code)        │ │    │  (Sokol pipelines)│
 └──────────────────┘ │    └───────────────────┘ │    └───────────────────┘
@@ -198,195 +225,167 @@ By **procedurally generating**:
 * **Asteroids** via randomized icospheres, instanced in a belt
 
 …you achieve **maximal variety**, **minimal asset footprint**, and **top performance** on modern hardware—all driven by **scene-level data** and realized with **Sokol’s lightweight C API**.
-Below is a **fully procedural derelict design philosophy**—covering everything from **huge, canyon-racing megastructures** to **maze-like FPS dungeons**, all built as part of a data-driven, infinite universe pipeline in a Sokol/C engine.
+Below is a **procedural derelict design philosophy** aligned with **The Ghost Signal** game vision—creating the atmospheric Aethelian Fleet Graveyard where the player's symbiotic ship must navigate to survive.
 
 ---
 
-# 1. Vision & Goals
+# 1. Vision & Goals (Aligned with Ghost Signal Lore)
 
-* **Derelicts as Worlds:** Every wreck is a self-contained “level” you can race through, dogfight around, or explore on foot.
-* **Multi-Mode Gameplay:** Same geometry supports:
-
-  * **High-speed surface racing** (canyon runs, narrow chases).
-  * **FPS-style exploration** (maze puzzles, loot rooms).
-* **Infinite Variety:** Artists/configs define **module libraries** and **generation rules**—the engine seeds each scene for endless unique derelicts.
-* **Seamless Universe:** Derelicts slot into a larger system alongside stars, planets, and asteroid belts, sharing the same procedural pipeline.
+* **The Graveyard as Setting:** Procedurally generate the colossal Aethelian Ark-Ships that form the primary environment—massive derelicts floating in a haunted debris field.
+* **A-Drive Focused Traversal:** Derelicts are designed for the **Attraction Drive** mechanic—vast hulls and corridor systems perfect for high-speed surface-skimming navigation.
+* **Atmospheric Exploration:** Each derelict contains **Resonance Locks** hiding Echoes (lore fragments and schematics), creating natural exploration goals within the tense survival framework.
+* **The Five Factions:** Procedural generation must support encounters with Drifters, Chrome-Barons, Echo-Scribes, Wardens, and evidence of the fallen Aethelians—each with distinct architectural signatures.
 
 ---
 
-# 2. Core Principles
+# 2. Core Principles (Ghost Signal Aligned)
 
-1. **Data-Driven & Seeded**
+1. **Symbiotic Ship Survival**
 
-   * All parameters (size, shape, layout style) come from a small JSON/C struct with a seed.
-   * Changing the seed or ruleset yields completely new wrecks.
+   * The player's failing ship needs the **Ghost Signal** to repair its alien core—this drives all exploration.
+   * Derelicts must contain **Resonance Locks** that yield Echoes when cracked.
 
-2. **Modular, Hierarchical Generation**
+2. **Aethelian Aesthetic**
 
-   * **Macro:** Determine wreck envelope (bounding shell, overall shape).
-   * **Meso:** Lay out main “spine” corridors and branching veins.
-   * **Micro:** Snap together predefined modules (tunnels, chambers, open arenas).
+   * **Organic-Mechanical Fusion:** Curved corridors, crystalline growths, bio-mechanical interfaces.
+   * **Corruption Patterns:** Original pristine Aethelian design corrupted by the Ghost Signal collapse.
 
-3. **Dual-Path Support**
+3. **A-Drive Traversal Design**
 
-   * **Racing Lines:** Identify 1–3 fast, flowing paths for vehicles.
-   * **Dungeon Mesh:** Intersect with a graph of branching corridors and rooms for on-foot play.
+   * **Macro:** Vast external hulls perfect for surface-skimming at high speed.
+   * **Meso:** Internal corridor networks with enough scale for A-Drive navigation.
+   * **Micro:** Resonance Lock chambers and Echo repositories requiring careful approach.
 
-4. **Streaming & LOD**
+4. **Faction Signatures**
 
-   * Derelicts can be vast—stream in chunks based on player position.
-   * Use instanced meshes and GPU frustum culling to keep performance high.
+   * **Warden zones:** Pristine military hardware sections with active defenses.
+   * **Chrome-Baron salvage:** Crude industrial modifications and scavenged sections.
+   * **Echo-Scribe nodes:** Organic AI growths with glowing glyphs and data conduits.
 
 ---
 
-# 3. Macro-Scale: Wreck Envelope & Profile
+# 3. Aethelian Ark-Ship Generation
 
-* **Shape Templates:** Box, cylinder, ring, composite.
-* **Size Parameters:**
+### 3.1. Ship Class Templates
 
-  * `radius_x/y/z` (scale can be non-uniform for “flattened” or “elongated” wrecks).
-  * `complexity` (number of main corridors, branch density).
-* **Carve-Outs & Ruptures:** Random planes or spheres cut holes to expose “canyon” walls.
+* **Philosophy-Ships:** Massive cathedral-like structures with curved organic forms, perfect for A-Drive surfing
+* **Research Vessels:** Modular, crystalline growths housing laboratories and data cores
+* **Habitat Arks:** Residential cylinders with parkland sections now overgrown with corrupted bio-tech
+* **Military Escorts:** Warden-controlled ships with geometric, pristine military architecture
 
-**Algorithm:**
+### 3.2. Corruption Patterns
 
-```pseudocode
-envelope = choose_template(seed)
-envelope.apply_noise_displacement(amplitude, frequency)
-envelope.carve_out(seed2, plane_count, sphere_count)
+The Ghost Signal collapse ~600 years ago left distinctive marks:
+
+* **Signal Crystals:** Jagged growths emanating from failed digital immortality nodes
+* **Bio-mechanical Fusion:** Original Aethelian organic tech run wild and corrupted
+* **Void Rifts:** Sections where the hull has been torn open, exposing the structure to space
+* **Resonance Wells:** Deep chambers where the Ghost Signal pools strongest
+
+### 3.3. A-Drive Surface Design
+
+Each derelict must support high-speed surface skimming:
+
+```c
+// Hull curvature optimized for A-Drive physics
+hull_surface = smooth_spline_with_rails(ark_template);
+navigation_channels = carve_racing_lines(hull_surface, complexity);
+anchor_points = place_magnetic_tethers(navigation_channels);
 ```
 
-This gives you a giant, broken shell with dramatic openings and overhangs.
+---
+
+# 4. The Resonance Cascade Integration
+
+### 4.1. Echo Placement Strategy
+
+Based on the **Resonance Cascade** core loop:
+
+1. **Plan (Resonance Map)**: Player identifies derelict signatures from safe distance
+2. **Travel (Fusion Torch)**: Approach the massive Ark-Ship structure  
+3. **Infiltrate (A-Drive)**: Use surface-skimming to navigate hull and corridors
+4. **Exploit (Resonance Cracking)**: Find and crack Resonance Locks for Echoes
+5. **Upgrade (Schematic Fragmentation)**: Return to safe zone to craft ship improvements
+
+### 4.2. Resonance Lock Distribution
+
+* **Hull Locks:** Accessible via A-Drive surfing, contain navigation and structural Echoes
+* **Core Locks:** Deep within ship superstructure, hold critical lore and advanced schematics
+* **Faction Locks:** Modified by Chrome-Barons, Wardens, or Echo-Scribes—dangerous but valuable
 
 ---
 
-# 4. Meso-Scale: Spine & Vein Layout
+# 5. Faction Environmental Storytelling
 
-1. **Spine Graph**
+### 5.1. Warden Presence
+* **Visual:** Pristine, angular military geometry overlaid on organic Aethelian base
+* **Audio:** Electronic chirping, scanning sounds, patrol alert tones
+* **Mechanics:** Active defense systems, patrol routes to avoid
 
-   * A central spline tracing a “race loop”: a closed path hugging the envelope interior.
-   * Control points seeded for difficulty (tighter turns, vertical drops).
+### 5.2. Chrome-Baron Salvage
+* **Visual:** Crude industrial modifications, welded scrap, jury-rigged systems
+* **Audio:** Industrial grinding, sparking electronics, rough mechanical sounds
+* **Mechanics:** Scavenged resources, booby traps, territorial markers
 
-2. **Branch Generation**
-
-   * At intervals along the spine, spawn branching corridors that dead-end or rejoin later.
-   * Use **L-systems** or **branching noise** to vary length and angle.
-
-3. **Dungeon Graph**
-
-   * Overlay a **maze graph** (e.g. recursive backtracker) inside unused volume.
-   * Ensure connectivity: at least one path from spawn to boss room.
-
-4. **Intersection Rules**
-
-   * Allow spine & maze to interconnect at designated “junction modules” so you can switch modes.
+### 5.3. Echo-Scribe Nodes
+* **Visual:** Organic AI growths, flowing glyphs, data-stream visualizations
+* **Audio:** Digital whispers, harmonic resonances, data transmission sounds
+* **Mechanics:** Information brokers, encrypted data caches, AI communion points
 
 ---
 
-# 5. Micro-Scale: Module Library
+# 6. Technical Implementation
 
-* **Corridor Modules:**
+### 6.1. Derelict Scene Descriptor
+```jsonc
+{
+  "type": "aethelian_ark",
+  "ship_class": "philosophy_vessel",
+  "corruption_level": 0.7,
+  "faction_presence": ["warden_patrol", "chrome_baron_salvage"],
+  "resonance_locks": {
+    "hull_locks": 12,
+    "core_locks": 3,
+    "faction_locks": 2
+  },
+  "scale": [2000, 800, 2000],
+  "ghost_signal_intensity": 0.85
+}
+```
 
-  * Straight, curved, sloped, vertical shafts.
-* **Chamber Modules:**
+### 6.2. A-Drive Navigation Mesh
+* **Surface Rails:** Procedural splines following hull curvature for optimal A-Drive performance
+* **Anchor Points:** Magnetic attachment zones for precise maneuvering  
+* **Transition Gates:** Entry/exit points between external surfing and internal corridor navigation
 
-  * Open arenas (for racing overtakes), dead-end rooms (FPS loot), puzzle rooms.
-* **Transition Modules:**
-
-  * Broken floors (gaps you must jump/drive through), grated catwalks, tunneled breaches.
-* **Surface Detail Props:**
-
-  * Debris, cables, pipes, catwalk rails—placed procedurally to sell scale.
-
-**Module Specs:**
-
-* Snap points on a uniform grid (e.g., 5m increments).
-* Metadata tags: `race_path`, `fps_only`, `hazard_zone`, `secret_entrance`.
-
----
-
-# 6. Dual Gameplay Paths
-
-### A. Racing Paths
-
-* **Extract** the fastest route by sampling the spine and branches: maximize length while minimizing sharp angles.
-* **Tag** modules on that path with `race_path=true`.
-* **Spawn** speed-boost pickups or shortcuts on these edges.
-
-### B. Dungeon Crawls
-
-* **Use** the maze graph to place key rooms (security locks, lore Echoes).
-* **Procedural puzzles:** lockable doors requiring “Resonance” keys found along racing path (encourages dual-mode play).
+### 6.3. Ghost Signal Visualization
+* **Signal Intensity Fields:** Visual representation of Ghost Signal strength for navigation
+* **Resonance Hotspots:** Glowing areas indicating nearby Resonance Locks
+* **Corruption Shaders:** Dynamic corruption effects on surfaces affected by the signal
 
 ---
 
-# 7. Integration into Universe Pipeline
+# 7. Performance Considerations for The Graveyard
 
-* **Scene Descriptor:**
+### 7.1. Massive Scale Management
+* **Streaming:** Load derelict sections as player approaches via A-Drive navigation
+* **LOD System:** Simplify distant Ark-Ships while maintaining visual grandeur
+* **Culling:** Aggressive frustum culling for interior spaces and hull details
 
-  ```jsonc
-  {
-    "type":"derelict",
-    "envelope_template":"cylinder",
-    "seed": 12345,
-    "size":[200,100,200],
-    "corridor_density":0.3,
-    "maze_complexity":0.2
-  }
-  ```
-* **Scene Loader:**
-
-  1. Parse descriptor.
-  2. Call `generate_envelope()`.
-  3. Build spine & maze graphs.
-  4. Place modules & props.
-  5. Create instance buffers & collision meshes.
-* **Streaming:** Divide volume into chunks (e.g. 50m³). Generate and upload chunks on demand as the player moves.
+### 7.2. Sokol Integration
+* **Instanced Debris:** Use instancing for small debris fields around each derelict
+* **Modular Rendering:** Separate pipelines for hull surfing vs. interior exploration
+* **Ghost Signal Effects:** Efficient particle systems for atmospheric corruption
 
 ---
 
-# 8. Procedural Techniques & Algorithms
+# 8. Alignment with Player Experience
 
-| Layer       | Technique                                  |
-| ----------- | ------------------------------------------ |
-| Envelope    | 3D noise (Perlin/fBM) + CSG carve          |
-| Spine       | Catmull-Rom spline seeded + random offsets |
-| Maze        | Recursive backtracker or BSP partition     |
-| Module Snap | Grid snap + collision check                |
-| Props       | Poisson disk sampling in corridor volumes  |
+This procedural system directly supports the **Ghost Signal** core experience:
 
----
+* **Survival Tension:** The failing ship creates urgency in every exploration decision
+* **A-Drive Mastery:** Derelict geometry rewards skillful surface-skimming navigation  
+* **Mystery & Discovery:** Each Echo found deepens the lore and provides concrete ship upgrades
+* **Atmospheric Horror:** The corrupted Aethelian aesthetic reinforces the haunted, dangerous setting
 
-# 9. Performance Considerations
-
-* **Pre-Generation:**
-
-  * Generate meshes once at scene load (or offline).
-* **Instancing:**
-
-  * Use Sokol’s instanced draws for modules/props to minimize draw calls.
-* **Frustum & Distance Culling:**
-
-  * Cull distant chunks & modules.
-* **LOD Switching:**
-
-  * Simplify envelope geometry for far distances.
-* **Memory Pools:**
-
-  * Reuse vertex/index buffers across scenes.
-
----
-
-# 10. Extensibility & Narrative Hooks
-
-* **Tag modules** with lore events (e.g. `echo_spawn`, `warden_ambush`).
-* **Dynamic events:** spawn NPC patrols on racing paths to threaten FPS players.
-* **Secret branches** unlock with mechanical achievements, blending both modes.
-
----
-
-**By combining**
-• **Macro envelope shaping**,
-• **Meso spine/maze graph algorithms**,
-• **Micro modular snap-together prefabs**,
-all driven by **data and seeds**, you create an **infinite array of derelict megastructures**—from super-highway canyon races to claustrophobic FPS dungeons—seamlessly integrated into your Sokol/C universe.
+The procedural generation ensures that while the core experience remains consistent, each journey into the Graveyard offers new derelicts to explore and new dangers to face—supporting the game's focus on **exploration, survival, and the gradual unraveling of the Aethelian civilization's tragic fate**.

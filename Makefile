@@ -727,5 +727,3 @@ test-filter: $(TEST_RUNNER_TARGET)
 	./$(TEST_RUNNER_TARGET) --filter $(PATTERN)
 
 .PHONY: all build-only with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test-leaks test-microui test-all test-report test-ci test-coverage test-filter help docs memory-test memory-check asan-test tsan-test ubsan-test memory-suite
-run: build/cgame
-	./build/cgame
