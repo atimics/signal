@@ -5,6 +5,7 @@
 
 #include "ui_microui.h"
 #include "graphics_api.h"
+#include "render.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -628,6 +629,11 @@ void ui_microui_render(int screen_width, int screen_height) {
     
     // Upload vertex data and render if we have vertices
     if (render_state.vertex_count > 0) {
+        // Ensure buffer is valid before updating
+        if (render_state.bind.vertex_buffers[0].id == SG_INVALID_ID) {
+            return;
+        }
+        
         // Upload vertex data to GPU
         sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
             .ptr = render_state.vertices,

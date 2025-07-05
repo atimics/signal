@@ -6,6 +6,7 @@
 #ifdef TEST_MODE
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -176,5 +177,20 @@ typedef struct {
 
 // NOTE: physics_system_update is NOT included here since integration tests
 // will link with the real physics library
+
+// ============================================================================
+// OFFSCREEN RENDERING STUBS
+// ============================================================================
+
+// Stub for tests that don't link render_3d.c
+bool render_is_offscreen_mode(void) {
+    return false;  // Tests always render to default
+}
+
+// ============================================================================
+// SHADER LOADING STUBS
+// ============================================================================
+
+// Note: shader loading functions are implemented in assets.c
 
 #endif // TEST_MODE

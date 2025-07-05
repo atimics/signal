@@ -374,16 +374,20 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                             
                             // Add basic components
                             entity_add_component(world, state.current_entity, COMPONENT_TRANSFORM);
-                            entity_add_component(world, state.current_entity, COMPONENT_RENDERABLE);
                             
-                            // Initialize renderable with empty resources
-                            struct Renderable* renderable = entity_get_renderable(world, state.current_entity);
-                            if (renderable) {
-                                renderable->gpu_resources = gpu_resources_create();
-                                renderable->visible = true;
-                                renderable->material_id = 0; // Default material
-                                renderable->index_count = 0; // Will be set when mesh loads
-                                printf("   Initialized renderable component (awaiting mesh)\n");
+                            // Only add renderable component to non-camera entities
+                            if (strcmp(value, "camera") != 0) {
+                                entity_add_component(world, state.current_entity, COMPONENT_RENDERABLE);
+                                
+                                // Initialize renderable with empty resources
+                                struct Renderable* renderable = entity_get_renderable(world, state.current_entity);
+                                if (renderable) {
+                                    renderable->gpu_resources = gpu_resources_create();
+                                    renderable->visible = true;
+                                    renderable->material_id = 0; // Default material
+                                    renderable->index_count = 0; // Will be set when mesh loads
+                                    printf("   Initialized renderable component (awaiting mesh)\n");
+                                }
                             }
                             
                             // Add player component for player ships

@@ -4,6 +4,8 @@
 // By defining SOKOL_IMPL here, we ensure that the implementation is
 // compiled only once, preventing linker errors.
 
+// Backend is now defined via compiler flags
+
 #define SOKOL_IMPL
 #include "graphics_api.h"
 

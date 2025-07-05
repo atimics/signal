@@ -21,8 +21,7 @@
 #define TEST_SCREEN_WIDTH 800
 #define TEST_SCREEN_HEIGHT 600
 
-// Mock Sokol backend for testing
-#define SOKOL_DUMMY_BACKEND
+// Sokol backend for testing (defined in build system)
 #include "../../src/sokol_gfx.h"
 
 // Global test state
@@ -530,6 +529,7 @@ void test_invalid_layer_config(void) {
     };
     
     RenderLayer* null_name_layer = layer_manager_add_layer(test_manager, &null_name_config);
+    (void)null_name_layer; // Suppress unused variable warning
     // Implementation should handle this gracefully (may or may not create layer)
     // Just test that it doesn't crash
 }

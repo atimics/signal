@@ -838,7 +838,9 @@ void render_set_offscreen_mode(bool offscreen)
     render_state.rendering_offscreen = offscreen;
 }
 
+#ifndef TEST_MODE
 bool render_is_offscreen_mode(void)
 {
     return render_state.rendering_offscreen;
 }
+#endif

@@ -8,44 +8,17 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Include centralized stub registry
+#include "stub_registry.h"
 
 // Include the test nuklear definitions
 #include "ui_test_stubs.h"
 
-// Forward declarations for types used in stubs (some already in engine_test_stubs.c)
-typedef struct { uint32_t id; } sg_shader;
-typedef struct { uint32_t id; } sg_pipeline;
-typedef struct { uint32_t id; } sg_sampler;
-typedef struct { uint32_t id; } sg_bindings;
-typedef struct { uint32_t id; } sg_buffer;
-typedef struct { uint32_t id; } sg_image;
-
-// Resource state enum (from engine_test_stubs.c)
-typedef enum {
-    SG_RESOURCESTATE_INITIAL,
-    SG_RESOURCESTATE_ALLOC,
-    SG_RESOURCESTATE_VALID,
-    SG_RESOURCESTATE_FAILED,
-    SG_RESOURCESTATE_INVALID
-} sg_resource_state;
-
-// Range type for buffer updates
-typedef struct {
-    const void* ptr;
-    size_t size;
-} sg_range;
-
 // Sokol constants
 #define SG_INVALID_ID 0
-
-// Dummy material type for stubs
-typedef struct {
-    uint32_t id;
-    float ambient[3];
-    float diffuse[3];
-    float specular[3];
-    float shininess;
-} MaterialProperties;
 
 // Static dummy resources for testing
 static MaterialProperties dummy_material = {
@@ -142,13 +115,13 @@ void sg_apply_pipeline(sg_pipeline pip) {
     // No-op in test mode
 }
 
-void sg_apply_bindings(sg_bindings* bindings) {
+void sg_apply_bindings(const sg_bindings* bindings) {
     (void)bindings;
     // No-op in test mode
 }
 
-void sg_apply_uniforms(int stage, int ub_index, void* data, int size) {
-    (void)stage; (void)ub_index; (void)data; (void)size;
+void sg_apply_uniforms(int stage, int uniform_slot, const sg_range* data) {
+    (void)stage; (void)uniform_slot; (void)data;
     // No-op in test mode
 }
 
@@ -177,10 +150,38 @@ sg_resource_state sg_query_sampler_state(sg_sampler smp) {
     return SG_RESOURCESTATE_VALID;
 }
 
-void sg_update_buffer(sg_buffer buf, const sg_range* data) {
-    (void)buf;
-    (void)data;
+// Sokol attachments functions
+sg_attachments sg_make_attachments(void* desc) {
+    (void)desc;
+    return (sg_attachments){.id = 42}; // Return dummy valid ID
 }
+
+void sg_destroy_attachments(sg_attachments attachments) {
+    (void)attachments;
+    // No-op in test mode
+}
+
+// Sokol pass functions  
+void sg_begin_pass(void* pass) {
+    (void)pass;
+    // No-op in test mode
+}
+
+void sg_end_pass(void) {
+    // No-op in test mode
+}
+
+// Sokol setup and shutdown
+void sg_setup(void* desc) {
+    (void)desc;
+    // No-op in test mode
+}
+
+void sg_shutdown(void) {
+    // No-op in test mode
+}
+
+// Note: Shader system stubs moved to asset_stubs.c to avoid conflicts
 
 // ==== ASSET SYSTEM STUBS ====
 

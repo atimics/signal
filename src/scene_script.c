@@ -16,7 +16,6 @@ extern const SceneScript scene_selector_script;
 extern const SceneScript navigation_menu_script;
 extern const SceneScript derelict_navigation_script;
 extern const SceneScript flight_test_script;
-extern const SceneScript ode_test_script;
 extern const SceneScript ship_launch_test_script;
 
 // ============================================================================
@@ -29,7 +28,6 @@ static const SceneScript* scene_scripts[] = {
     &navigation_menu_script,
     &derelict_navigation_script,
     &flight_test_script,
-    &ode_test_script,
     &ship_launch_test_script,
     // Add more scene scripts here as they are created
 };

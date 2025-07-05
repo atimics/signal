@@ -448,6 +448,7 @@ static void frame(void)
     // === RENDER TO UI LAYER ===
     RenderLayer* ui_layer = layer_manager_get_layer(app_state.layer_manager, "ui");
     if (ui_layer && ui_is_visible() && layer_should_update(app_state.layer_manager, ui_layer)) {
+        render_set_offscreen_mode(true);  // Switch to offscreen pipeline
         layer_begin_render(ui_layer);
         
         // Prepare UI (this generates vertices)
@@ -458,6 +459,7 @@ static void frame(void)
         ui_microui_render(screen_width, screen_height);
         
         layer_end_render();
+        render_set_offscreen_mode(false);  // Switch back to default pipeline
     }
     
     // === COMPOSITE LAYERS TO SWAPCHAIN ===
