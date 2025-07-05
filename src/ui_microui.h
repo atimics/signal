@@ -70,7 +70,10 @@ void ui_microui_end_frame(void);
 // MICROUI RENDERING
 // ============================================================================
 
-// Render the UI to screen using Sokol
+// Upload vertex data to GPU (must be called outside any render pass)
+void ui_microui_upload_vertices(void);
+
+// Render the UI to screen using Sokol (called within an active render pass)
 void ui_microui_render(int screen_width, int screen_height);
 
 // ============================================================================

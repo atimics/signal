@@ -106,6 +106,18 @@ static void load_scene_by_name(struct World* world, const char* scene_name, Enti
     printf("💡 Scene lighting configured\n");
 
     printf("🌍 Scene loaded with %d entities\n", world->entity_count);
+    
+    // DEBUG: Log all entities and their components for debugging
+    printf("🔍 Entity debug after scene load:\n");
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        printf("  Entity %d: mask=0x%X (T:%d R:%d C:%d P:%d)\n", 
+               entity->id, entity->component_mask,
+               !!(entity->component_mask & COMPONENT_TRANSFORM),
+               !!(entity->component_mask & COMPONENT_RENDERABLE),
+               !!(entity->component_mask & COMPONENT_CAMERA),
+               !!(entity->component_mask & COMPONENT_PHYSICS));
+    }
 }
 
 static void list_available_cameras(struct World* world)
@@ -292,6 +304,10 @@ static void init(void)
     RenderLayer* scene_layer = layer_manager_add_layer(app_state.layer_manager, &scene_layer_config);
     layer_set_order(scene_layer, 0);  // Render first
     
+    // CRITICAL FIX: Set opaque clear color for 3D scene layer
+    // Transparent clear color (0,0,0,0) makes rendered content invisible in compositor
+    scene_layer->clear_color = (sg_color){ 0.0f, 0.05f, 0.1f, 1.0f }; // Match main clear color
+    
     RenderLayerConfig ui_layer_config = {
         .name = "ui",
         .width = app_state.render_config.screen_width,
@@ -343,6 +359,12 @@ static void init(void)
 }
 
 static bool app_shutting_down = false;
+static bool frame_rendering_active = false;
+
+// Function to check if frame rendering is active (for UI safety)
+bool is_frame_rendering_active(void) {
+    return frame_rendering_active;
+}
 
 static void frame(void)
 {
@@ -368,8 +390,8 @@ static void frame(void)
     scene_state_update(&app_state.scene_state, dt);
     scene_script_execute_update(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, dt);
     
-    // Handle UI scene change requests
-    if (ui_has_scene_change_request())
+    // Handle UI scene change requests (only when not actively rendering)
+    if (ui_has_scene_change_request() && !frame_rendering_active)
     {
         const char* requested_scene = ui_get_requested_scene();
         printf("🎬 UI scene change request: %s -> %s\n", app_state.scene_state.current_scene_name, requested_scene);
@@ -377,9 +399,9 @@ static void frame(void)
         ui_clear_scene_change_request();
     }
 
-    // Handle scene transitions
+    // Handle scene transitions (only when not actively rendering)
     bool scene_transition_occurred = false;
-    if (scene_state_has_pending_transition(&app_state.scene_state))
+    if (scene_state_has_pending_transition(&app_state.scene_state) && !frame_rendering_active)
     {
         const char* next_scene = scene_state_get_next_scene(&app_state.scene_state);
         printf("🎬 Executing scene transition: %s -> %s\n", app_state.scene_state.current_scene_name, next_scene);
@@ -433,9 +455,23 @@ static void frame(void)
         layer_manager_resize(app_state.layer_manager, screen_width, screen_height);
     }
     
+    // === START ACTIVE RENDERING PHASE ===
+    // Set flag to prevent scene transitions during rendering
+    frame_rendering_active = true;
+    
     // === RENDER TO 3D SCENE LAYER ===
     RenderLayer* scene_layer = layer_manager_get_layer(app_state.layer_manager, "3d_scene");
-    if (scene_layer && layer_should_update(app_state.layer_manager, scene_layer)) {
+    bool should_update = layer_should_update(app_state.layer_manager, scene_layer);
+    
+    // DEBUG: Log 3D scene layer state periodically
+    static int scene_debug_counter = 0;
+    if (scene_debug_counter++ % 180 == 0) { // Log every 3 seconds at 60fps
+        printf("🎨 3D SCENE LAYER DEBUG: exists=%d, should_update=%d, enabled=%d, entities=%d\n", 
+               scene_layer ? 1 : 0, should_update, 
+               scene_layer ? scene_layer->enabled : -1, app_state.world.entity_count);
+    }
+    
+    if (scene_layer && should_update) {
         render_set_offscreen_mode(true);  // Switch to offscreen pipeline
         layer_begin_render(scene_layer);
         
@@ -448,25 +484,50 @@ static void frame(void)
     
     // === RENDER TO UI LAYER ===
     RenderLayer* ui_layer = layer_manager_get_layer(app_state.layer_manager, "ui");
-    if (ui_layer && ui_is_visible() && layer_should_update(app_state.layer_manager, ui_layer)) {
+    bool ui_visible = ui_is_visible();
+    
+    // DEBUG: Log UI visibility state periodically
+    static int ui_debug_counter = 0;
+    if (ui_debug_counter++ % 180 == 0) { // Log every 3 seconds at 60fps
+        printf("🎨 UI LAYER DEBUG: ui_visible=%d, scene='%s', layer_enabled=%d\n", 
+               ui_visible, app_state.scene_state.current_scene_name, 
+               ui_layer ? ui_layer->enabled : -1);
+    }
+    
+    // CRITICAL FIX: Only render UI layer if UI is actually visible
+    // This prevents empty UI context from being composited and causing magenta artifacts
+    if (ui_layer && ui_visible && layer_should_update(app_state.layer_manager, ui_layer)) {
         render_set_offscreen_mode(true);  // Switch to offscreen pipeline
-        layer_begin_render(ui_layer);
         
         // Prepare UI (this generates vertices)
         ui_render(&app_state.world, &app_state.scheduler, dt, 
                   app_state.scene_state.current_scene_name, screen_width, screen_height);
         
-        // Render UI to offscreen target
+        // CRITICAL FIX: Upload vertex data BEFORE starting the render pass
+        // sg_update_buffer() cannot be called inside an active render pass
+        ui_microui_upload_vertices();
+        
+        layer_begin_render(ui_layer);
+        
+        // Render UI to offscreen target (now only applies state and draws)
         ui_microui_render(screen_width, screen_height);
         
         layer_end_render();
         render_set_offscreen_mode(false);  // Switch back to default pipeline
     }
     
+    // Mark UI layer as disabled when not visible to prevent compositor from processing it
+    if (ui_layer && !ui_visible) {
+        layer_set_enabled(ui_layer, false);
+    } else if (ui_layer && ui_visible) {
+        layer_set_enabled(ui_layer, true);
+    }
+    
     // === COMPOSITE LAYERS TO SWAPCHAIN ===
     // Validate context before final composite pass
     if (!sg_isvalid()) {
         printf("⚠️ Graphics context invalid before composite pass - skipping frame\n");
+        frame_rendering_active = false;  // Clear flag before early return
         performance_frame_end();
         return;
     }
@@ -474,11 +535,17 @@ static void frame(void)
     // Ensure app is still valid
     if (!sapp_isvalid()) {
         printf("⚠️ Sokol app context invalid - skipping frame\n");
+        frame_rendering_active = false;  // Clear flag before early return
         performance_frame_end();
         return;
     }
     
-    printf("🎨 Beginning swapchain composite pass...\n");
+    // DEBUG: Log composite pass periodically
+    static int composite_debug_counter = 0;
+    if (composite_debug_counter++ % 180 == 0) { // Log every 3 seconds
+        printf("🎨 COMPOSITE DEBUG: Beginning swapchain pass...\n");
+    }
+    
     sg_begin_pass(&(sg_pass){ 
         .swapchain = sglue_swapchain(), 
         .action = app_state.pass_action 
@@ -487,11 +554,17 @@ static void frame(void)
     // Composite all layers
     layer_manager_composite(app_state.layer_manager);
     
-    printf("🎨 Ending swapchain composite pass...\n");
+    if ((composite_debug_counter-1) % 180 == 0) { // Log every 3 seconds
+        printf("🎨 COMPOSITE DEBUG: Ending swapchain pass...\n");
+    }
     sg_end_pass();
     
     // Commit frame
     sg_commit();
+    
+    // === END ACTIVE RENDERING PHASE ===
+    // Clear flag to allow scene transitions for next frame
+    frame_rendering_active = false;
 
     // End performance frame timing
     performance_frame_end();

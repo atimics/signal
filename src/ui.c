@@ -51,6 +51,14 @@ void ui_shutdown(void)
 
 void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene, int screen_width, int screen_height)
 {
+    // DEBUG: Always log ui_render calls to track the navigation menu issue
+    static int ui_render_call_count = 0;
+    ui_render_call_count++;
+    printf("🎨 UI Render #%d: scene='%s', visible=%s, debug_visible=%s, screen=%dx%d\n", 
+           ui_render_call_count, current_scene ? current_scene : "null", 
+           g_ui_visible ? "yes" : "no", g_debug_ui_visible ? "yes" : "no", 
+           screen_width, screen_height);
+    
     // Store current scene for event handling
     if (current_scene) {
         strncpy(g_current_scene, current_scene, sizeof(g_current_scene) - 1);
@@ -59,6 +67,7 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     
     // Early exit if UI is not visible - absolutely no UI calls should happen
     if (!g_ui_visible) {
+        printf("🎨 UI: Skipping render - UI not visible\n");
         return;
     }
     
@@ -92,6 +101,7 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     }
     
     // Begin Microui frame (this sets up the clip stack)
+    printf("🎨 UI: Calling ui_microui_begin_frame()...\n");
     ui_microui_begin_frame();
     
     // Additional safety check: ensure clip stack is properly set up
@@ -101,11 +111,15 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         return;
     }
     
+    printf("🎨 UI: MicroUI frame begun successfully, clip_stack.idx=%d\n", ctx->clip_stack.idx);
+    
     // Render scene-specific UI using Microui adapter
+    printf("🎨 UI: Rendering scene-specific UI for '%s'...\n", current_scene ? current_scene : "null");
     scene_ui_render_microui(ctx, current_scene, world, scheduler, delta_time, screen_width, screen_height);
     
     // Render debug overlay if enabled
     if (g_debug_ui_visible) {
+        printf("🎨 UI: Rendering debug overlay...\n");
         // Debug UI with Microui
         if (mu_begin_window(ctx, "Debug", mu_rect(10, 10, 200, 100))) {
             mu_layout_row(ctx, 1, (int[]){-1}, 0);
@@ -114,8 +128,10 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         }
     }
     
-    // End frame
+    // End frame and process commands
+    printf("🎨 UI: Calling ui_microui_end_frame()...\n");
     ui_microui_end_frame();
+    printf("🎨 UI: MicroUI frame ended successfully\n");
     
     // UI rendering is now handled within the main render pass in main.c
     // This function only manages MicroUI context and prepares vertices

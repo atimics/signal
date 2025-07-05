@@ -41,6 +41,24 @@ static void logo_on_update(struct World* world, SceneStateManager* state, float 
     
     // Spin the logo cube
     EntityID logo_cube = find_entity_by_name(world, "logo_cube");
+    
+    // DEBUG: Log entity search results
+    static int debug_counter = 0;
+    if (debug_counter++ % 180 == 0) { // Log every 3 seconds
+        printf("🎬 Logo scene DEBUG: World has %d entities\n", world->entity_count);
+        printf("🎬 Logo scene DEBUG: find_entity_by_name returned %d for 'logo_cube'\n", logo_cube);
+        
+        // Debug: List all entities and their components
+        for (uint32_t i = 0; i < world->entity_count; i++) {
+            struct Entity* entity = &world->entities[i];
+            printf("  Entity %d: mask=0x%X (T:%d R:%d C:%d)\n", 
+                   entity->id, entity->component_mask,
+                   !!(entity->component_mask & COMPONENT_TRANSFORM),
+                   !!(entity->component_mask & COMPONENT_RENDERABLE),
+                   !!(entity->component_mask & COMPONENT_CAMERA));
+        }
+    }
+    
     if (logo_cube != INVALID_ENTITY)
     {
         struct Transform* transform = entity_get_transform(world, logo_cube);
