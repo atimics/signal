@@ -24,24 +24,17 @@ include makefiles/tests.mk
 include makefiles/targets.mk
 
 # ============================================================================
-# DEFAULT BEHAVIOR
-# ============================================================================
-
-# Default target is defined in targets.mk
-# Make test the default behavior instead of build-only
-test: test-parallel
-
-# ============================================================================
 # BUILD INFORMATION
 # ============================================================================
 
 $(info )
-$(info CGame Engine - Modular Build System)
-$(info ===================================)
+$(info CGame Engine - Focused Test Build System)
+$(info =========================================)
 $(info Platform: $(PLATFORM))
 $(info Build Type: $(BUILD_TYPE))
 $(info Compiler: $(CC))
-$(info Targets: $(words $(ALL_TEST_TARGETS)) tests, main executable)
+$(info Primary Target: test ($(words $(ALL_TEST_TARGETS)) tests))
 $(info )
+$(info Use 'make' or 'make test' to run tests)
 $(info Use 'make help' for available targets)
 $(info )

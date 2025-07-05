@@ -296,9 +296,9 @@ static void init(void)
         .name = "ui",
         .width = app_state.render_config.screen_width,
         .height = app_state.render_config.screen_height,
-        .needs_depth = false,
+        .needs_depth = true,
         .color_format = SG_PIXELFORMAT_RGBA8,
-        .depth_format = 0,
+        .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL,
         .sample_count = 1,
         .update_frequency = UPDATE_DYNAMIC
     };
@@ -412,6 +412,7 @@ static void frame(void)
     // Update world and systems
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
+    
 
     // === OFFSCREEN RENDERING SOLUTION ===
     // Render to separate offscreen targets to avoid pipeline conflicts
@@ -463,6 +464,21 @@ static void frame(void)
     }
     
     // === COMPOSITE LAYERS TO SWAPCHAIN ===
+    // Validate context before final composite pass
+    if (!sg_isvalid()) {
+        printf("⚠️ Graphics context invalid before composite pass - skipping frame\n");
+        performance_frame_end();
+        return;
+    }
+    
+    // Ensure app is still valid
+    if (!sapp_isvalid()) {
+        printf("⚠️ Sokol app context invalid - skipping frame\n");
+        performance_frame_end();
+        return;
+    }
+    
+    printf("🎨 Beginning swapchain composite pass...\n");
     sg_begin_pass(&(sg_pass){ 
         .swapchain = sglue_swapchain(), 
         .action = app_state.pass_action 
@@ -471,6 +487,7 @@ static void frame(void)
     // Composite all layers
     layer_manager_composite(app_state.layer_manager);
     
+    printf("🎨 Ending swapchain composite pass...\n");
     sg_end_pass();
     
     // Commit frame

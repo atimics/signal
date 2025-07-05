@@ -58,18 +58,11 @@ static const char* compositor_fs_source =
     "void main() {\n"
     "    vec4 src = texture(layer_texture, uv);\n"
     "    float opacity = compositor_params.x;\n"
-    "    int blend_mode = int(compositor_params.y);\n"
     "    \n"
-    "    // Since we're rendering to a fresh framebuffer, dst is always transparent black\n"
-    "    vec4 dst = vec4(0.0);\n"
-    "    \n"
-    "    switch(blend_mode) {\n"
-    "        case 0: frag_color = blend_normal(src, dst, opacity); break;\n"
-    "        case 1: frag_color = blend_additive(src, dst, opacity); break;\n"
-    "        case 2: frag_color = blend_multiply(src, dst, opacity); break;\n"
-    "        case 3: frag_color = blend_screen(src, dst, opacity); break;\n"
-    "        default: frag_color = src;\n"
-    "    }\n"
+    "    // Apply opacity and return\n"
+    "    src.rgb *= src.a;  // Premultiply alpha\n"
+    "    src *= opacity;\n"
+    "    frag_color = src;\n"
     "}\n";
 #endif
 
@@ -113,18 +106,10 @@ static const char* compositor_fs_source_metal =
     "    float opacity = compositor_params.x;\n"
     "    int blend_mode = int(compositor_params.y);\n"
     "    \n"
-    "    float4 dst = float4(0.0);\n"
-    "    \n"
-    "    switch(blend_mode) {\n"
-    "        case 0: return mix(dst, src, src.a * opacity);\n"
-    "        case 1: return dst + src * opacity;\n"
-    "        case 2: return mix(dst, dst * src, opacity);\n"
-    "        case 3: {\n"
-    "            float4 result = float4(1.0) - (float4(1.0) - dst) * (float4(1.0) - src);\n"
-    "            return mix(dst, result, opacity);\n"
-    "        }\n"
-    "        default: return src;\n"
-    "    }\n"
+    "    // Apply opacity and return\n"
+    "    src.rgb *= src.a;  // Premultiply alpha\n"
+    "    src *= opacity;\n"
+    "    return src;\n"
     "}\n";
 #endif
 
@@ -190,6 +175,13 @@ static void create_compositor_resources(LayerManager* manager) {
     
     manager->compositor_shader = sg_make_shader(&shader_desc);
     
+    if (manager->compositor_shader.id == SG_INVALID_ID) {
+        printf("❌ ERROR: Failed to create compositor shader!\n");
+        return;
+    }
+    
+    printf("✅ Created compositor shader (id=%u)\n", manager->compositor_shader.id);
+    
     // Create compositor pipeline
     manager->compositor_pipeline = sg_make_pipeline(&(sg_pipeline_desc){
         .shader = manager->compositor_shader,
@@ -207,6 +199,13 @@ static void create_compositor_resources(LayerManager* manager) {
         },
         .label = "compositor_pipeline"
     });
+    
+    if (manager->compositor_pipeline.id == SG_INVALID_ID) {
+        printf("❌ ERROR: Failed to create compositor pipeline!\n");
+        return;
+    }
+    
+    printf("✅ Created compositor pipeline (id=%u)\n", manager->compositor_pipeline.id);
     
     // Create fullscreen quad vertex buffer (empty - we generate vertices in shader)
     float dummy_data[6] = {0};  // Dummy data for immutable buffer
@@ -489,8 +488,28 @@ void layer_manager_mark_dirty(LayerManager* manager, const char* layer_name) {
 // RENDERING
 // ============================================================================
 
+// Track render pass state
+static struct {
+    bool pass_active;
+    const char* layer_name;
+} g_pass_state = {false, NULL};
+
 void layer_begin_render(RenderLayer* layer) {
     if (!layer || !layer->enabled) return;
+    
+    if (!sg_isvalid()) {
+        printf("⚠️ WARNING: Skipping layer_begin_render - context invalid\n");
+        return;
+    }
+    
+    if (g_pass_state.pass_active) {
+        printf("⚠️ ERROR: Attempting to begin pass for layer '%s' while pass for '%s' is active!\n", 
+               layer->name, g_pass_state.layer_name ? g_pass_state.layer_name : "unknown");
+        return;
+    }
+    
+    g_pass_state.pass_active = true;
+    g_pass_state.layer_name = layer->name;
     
     sg_begin_pass(&(sg_pass){
         .attachments = layer->attachments,
@@ -515,11 +534,28 @@ void layer_begin_render(RenderLayer* layer) {
 }
 
 void layer_end_render(void) {
-    sg_end_pass();
+    if (!g_pass_state.pass_active) {
+        printf("⚠️ ERROR: layer_end_render called but no pass is active!\n");
+        return;
+    }
+    
+    if (sg_isvalid()) {
+        sg_end_pass();
+    } else {
+        printf("⚠️ WARNING: Context became invalid during rendering of '%s' - NOT calling sg_end_pass\n",
+               g_pass_state.layer_name ? g_pass_state.layer_name : "unknown");
+    }
+    
+    // Clear the state
+    g_pass_state.pass_active = false;
+    g_pass_state.layer_name = NULL;
 }
 
 void layer_manager_composite(LayerManager* manager) {
-    if (!manager || manager->layer_count == 0) return;
+    if (!manager || manager->layer_count == 0) {
+        printf("⚠️ layer_manager_composite: No manager or no layers\n");
+        return;
+    }
     
     // Sort layers by order
     qsort(manager->layers, manager->layer_count, sizeof(RenderLayer), compare_layer_order);
@@ -527,10 +563,27 @@ void layer_manager_composite(LayerManager* manager) {
     // Apply compositor pipeline
     sg_apply_pipeline(manager->compositor_pipeline);
     
+    // Track if any layers were composited
+    int layers_composited = 0;
+    
     // Composite each layer
     for (int i = 0; i < manager->layer_count; i++) {
         RenderLayer* layer = &manager->layers[i];
-        if (!layer->enabled || layer->opacity <= 0.0f) continue;
+        if (!layer->enabled || layer->opacity <= 0.0f) {
+            printf("🔍 Layer '%s': skipped (enabled=%d, opacity=%.2f)\n", 
+                   layer->name, layer->enabled, layer->opacity);
+            continue;
+        }
+        
+        // Debug: Compositing layer (commented out to reduce spam)
+        // printf("🎨 Compositing layer '%s': order=%d, opacity=%.2f, blend=%d\n",
+        //        layer->name, layer->order, layer->opacity, layer->blend_mode);
+        
+        // Validate layer texture
+        if (layer->color_target.id == SG_INVALID_ID) {
+            printf("❌ ERROR: Layer '%s' has invalid color target!\n", layer->name);
+            continue;
+        }
         
         // Bind layer texture
         sg_bindings binds = {
@@ -550,6 +603,11 @@ void layer_manager_composite(LayerManager* manager) {
         
         // Draw fullscreen quad
         sg_draw(0, 6, 1);
+        layers_composited++;
+    }
+    
+    if (layers_composited == 0) {
+        printf("⚠️ WARNING: No layers were composited!\n");
     }
 }
 

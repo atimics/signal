@@ -91,9 +91,7 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
 }
 
 // External render function called from navigation_menu_render
-void navigation_menu_render_nuklear(struct nk_context* ctx, NavigationMenuData* data, float delta_time) {
-    (void)ctx;  // Unused - we use MicroUI instead
-    
+void navigation_menu_render(NavigationMenuData* data, float delta_time) {
     // Delegate to MicroUI implementation
     navigation_menu_render_microui(data, delta_time);
 }

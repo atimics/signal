@@ -10,7 +10,7 @@ ifeq ($(OS),Darwin)
     PLATFORM := macOS
     
     # Sokol Graphics Backend
-    CFLAGS += -DSOKOL_METAL
+    PLATFORM_GRAPHICS = -DSOKOL_METAL
     
     # System Frameworks
     PLATFORM_LIBS = -framework Metal -framework MetalKit -framework AppKit -framework QuartzCore
@@ -32,7 +32,7 @@ else ifeq ($(OS),Linux)
     PLATFORM := Linux
     
     # Sokol Graphics Backend
-    CFLAGS += -DSOKOL_GLCORE -D_POSIX_C_SOURCE=199309L
+    PLATFORM_GRAPHICS = -DSOKOL_GLCORE -D_POSIX_C_SOURCE=199309L
     
     # System Libraries
     PLATFORM_LIBS = -lGL -lX11 -lXi -lXcursor -lXrandr -ludev -lrt -lpthread
@@ -45,20 +45,13 @@ else ifeq ($(OS),Linux)
     YAML_INCLUDE = 
     YAML_LIB = -lyaml
     
-    # Linux-specific warning suppressions
-    CFLAGS += -Wno-error=implicit-function-declaration
-    CFLAGS += -Wno-error=missing-field-initializers
-    CFLAGS += -Wno-error=unused-but-set-variable
-    CFLAGS += -Wno-error=null-pointer-subtraction
-    CFLAGS += -Wno-error=implicit-int
-    
 else
     $(error Unsupported platform: $(OS))
 endif
 
 # Apply platform-specific includes and libraries
 CFLAGS += $(ODE_INCLUDE) $(YAML_INCLUDE) -DUSE_ODE_PHYSICS
-LIBS += $(ODE_LIB) $(YAML_LIB) $(PLATFORM_LIBS)
+PLATFORM_ALL_LIBS = $(ODE_LIB) $(YAML_LIB) $(PLATFORM_LIBS)
 
 # Platform information
 $(info Building for platform: $(PLATFORM))

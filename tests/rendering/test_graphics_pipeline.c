@@ -11,16 +11,13 @@
  */
 
 #include "../vendor/unity.h"
-#include "../../src/graphics_api.h"
-#include "../../src/render_3d.h"
-#include "../../src/render.h"
+#include "../stubs/stub_registry.h"
+#include "../../src/core.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// Mock backend for testing
-#define SOKOL_DUMMY_BACKEND
-#include "../../src/sokol_gfx.h"
+// Graphics pipeline stubs are handled by the stub registry
 
 // Test constants
 #define TEST_BUFFER_SIZE 1024

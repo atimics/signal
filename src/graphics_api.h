@@ -34,7 +34,7 @@ bool graphics_capture_screenshot(const char* filename);
 
 // Test mode function declarations
 #ifdef TEST_MODE
-struct nk_context* get_nuklear_context(void);
+// Legacy Nuklear context removed - using MicroUI now
 void graphics_begin_frame(void);
 void graphics_end_frame(void);
 bool graphics_init(int width, int height);
