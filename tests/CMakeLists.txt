@@ -41,6 +41,50 @@ cgame_add_test_suite(
     STUBS graphics_api_test_stub engine_test_stubs
 )
 
+# New Comprehensive Rendering Tests
+cgame_add_test_suite(
+    NAME cmake-render_layers
+    SOURCES rendering/test_render_layers.c
+    LIBS core render_layers gpu_resources graphics_api
+    STUBS graphics_api_test_stub engine_test_stubs
+)
+
+cgame_add_test_suite(
+    NAME cmake-ui_rendering_pipeline
+    SOURCES rendering/test_ui_rendering_pipeline.c
+    LIBS core ui ui_microui graphics_api ui_api
+    STUBS graphics_api_test_stub engine_test_stubs
+)
+
+cgame_add_test_suite(
+    NAME cmake-graphics_pipeline
+    SOURCES rendering/test_graphics_pipeline.c
+    LIBS core graphics_api render_3d gpu_resources
+    STUBS graphics_api_test_stub engine_test_stubs
+)
+
+cgame_add_test_suite(
+    NAME cmake-render_3d_pipeline
+    SOURCES rendering/test_render_3d_pipeline.c
+    LIBS core render_3d graphics_api component systems
+    STUBS graphics_api_test_stub engine_test_stubs
+)
+
+cgame_add_test_suite(
+    NAME cmake-rendering_integration
+    SOURCES rendering/test_rendering_integration.c
+    LIBS core render_layers render_3d ui graphics_api systems
+    STUBS graphics_api_test_stub engine_test_stubs
+)
+
+# Comprehensive Rendering Test Runner
+cgame_add_test_suite(
+    NAME cmake-rendering_comprehensive
+    SOURCES test_rendering_comprehensive.c
+    LIBS core render_layers render_3d ui graphics_api systems ui_microui
+    STUBS graphics_api_test_stub engine_test_stubs
+)
+
 # UI System Tests
 cgame_add_test_suite(
     NAME cmake-ui

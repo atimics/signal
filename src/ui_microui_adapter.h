@@ -16,6 +16,6 @@ struct SystemScheduler;
 // Render scene-specific UI using Microui
 void scene_ui_render_microui(struct mu_Context* ctx, const char* scene_name, 
                             struct World* world, struct SystemScheduler* scheduler, 
-                            float delta_time);
+                            float delta_time, int screen_width, int screen_height);
 
 #endif // UI_MICROUI_ADAPTER_H

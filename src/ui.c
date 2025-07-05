@@ -49,7 +49,7 @@ void ui_shutdown(void)
     printf("✅ Core UI system shut down\n");
 }
 
-void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
+void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene, int screen_width, int screen_height)
 {
     // Store current scene for event handling
     if (current_scene) {
@@ -62,10 +62,6 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         return;
     }
     
-    printf("🔍 UI Debug: Graphics context at UI render start: %s\n", sg_isvalid() ? "VALID" : "INVALID");
-    
-    // Allow UI rendering even if app context is temporarily invalid during scene transitions
-    
     // TEMPORARY: Ensure navigation menu module exists when in navigation_menu scene
     if (current_scene && strcmp(current_scene, "navigation_menu") == 0) {
         SceneUIModule* nav_module = scene_ui_get_module("navigation_menu");
@@ -75,10 +71,8 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
             SceneUIModule* new_module = create_navigation_menu_ui_module();
             if (new_module) {
                 scene_ui_register(new_module);
-                printf("🔍 UI Debug: Graphics context after scene_ui_register: %s\n", sg_isvalid() ? "VALID" : "INVALID");
                 if (new_module->init) {
                     new_module->init(world);
-                    printf("🔍 UI Debug: Graphics context after module init: %s\n", sg_isvalid() ? "VALID" : "INVALID");
                 }
             }
         }
@@ -97,12 +91,8 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         return;
     }
     
-    printf("🔍 UI Debug: Graphics context before ui_microui_begin_frame: %s\n", sg_isvalid() ? "VALID" : "INVALID");
-
     // Begin Microui frame (this sets up the clip stack)
     ui_microui_begin_frame();
-    
-    printf("🔍 UI Debug: Graphics context after ui_microui_begin_frame: %s\n", sg_isvalid() ? "VALID" : "INVALID");
     
     // Additional safety check: ensure clip stack is properly set up
     if (ctx->clip_stack.idx <= 0) {
@@ -111,31 +101,21 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
         return;
     }
     
-    printf("🔍 UI Debug: Graphics context before scene_ui_render_microui: %s\n", sg_isvalid() ? "VALID" : "INVALID");
-    
     // Render scene-specific UI using Microui adapter
-    scene_ui_render_microui(ctx, current_scene, world, scheduler, delta_time);
-    
-    printf("🔍 UI Debug: Graphics context after scene_ui_render_microui: %s\n", sg_isvalid() ? "VALID" : "INVALID");
+    scene_ui_render_microui(ctx, current_scene, world, scheduler, delta_time, screen_width, screen_height);
     
     // Render debug overlay if enabled
     if (g_debug_ui_visible) {
-        printf("🔍 UI Debug: Graphics context before debug UI: %s\n", sg_isvalid() ? "VALID" : "INVALID");
         // Debug UI with Microui
         if (mu_begin_window(ctx, "Debug", mu_rect(10, 10, 200, 100))) {
             mu_layout_row(ctx, 1, (int[]){-1}, 0);
             mu_label(ctx, "Debug Mode Active");
             mu_end_window(ctx);
         }
-        printf("🔍 UI Debug: Graphics context after debug UI: %s\n", sg_isvalid() ? "VALID" : "INVALID");
     }
-    
-    printf("🔍 UI Debug: Graphics context before ui_microui_end_frame: %s\n", sg_isvalid() ? "VALID" : "INVALID");
     
     // End frame
     ui_microui_end_frame();
-    
-    printf("🔍 UI Debug: Graphics context after ui_microui_end_frame: %s\n", sg_isvalid() ? "VALID" : "INVALID");
     
     // UI rendering is now handled within the main render pass in main.c
     // This function only manages MicroUI context and prepares vertices

@@ -124,6 +124,7 @@ static const unsigned char font_data[95][8] = {
 
 static struct {
     sg_pipeline pip;
+    sg_pipeline offscreen_pip;  // Pipeline for offscreen rendering
     sg_bindings bind;
     sg_pass_action pass_action;
     struct {
@@ -338,14 +339,25 @@ void ui_microui_init(void) {
                 .src_factor_alpha = SG_BLENDFACTOR_SRC_ALPHA,
                 .dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA
             }
+            // Don't specify pixel_format - let it default to match swapchain
         },
         .depth = {
             .write_enabled = false,
             .compare = SG_COMPAREFUNC_ALWAYS
-        }
+            // Don't specify pixel_format - let it default to match swapchain
+        },
+        // Don't specify sample_count - let it default to match swapchain
+        .cull_mode = SG_CULLMODE_NONE,
+        .face_winding = SG_FACEWINDING_CCW,
+        .label = "microui_pipeline"
     };
     
     render_state.pip = sg_make_pipeline(&pip_desc);
+    
+    // Create offscreen pipeline with explicit RGBA8 format
+    pip_desc.colors[0].pixel_format = SG_PIXELFORMAT_RGBA8;
+    pip_desc.label = "microui_offscreen_pipeline";
+    render_state.offscreen_pip = sg_make_pipeline(&pip_desc);
     
     // Create vertex buffer
     render_state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
@@ -609,19 +621,13 @@ void ui_microui_render(int screen_width, int screen_height) {
     // Commands have already been processed in end_frame
     // Just upload and render the vertices
     
-    printf("🔍 MicroUI: Starting render - screen: %dx%d, vertices: %d\n", 
-           screen_width, screen_height, render_state.vertex_count);
-    
     // Quick context validity check
     if (!sg_isvalid()) {
-        printf("❌ MicroUI: Sokol graphics context invalid, skipping render\n");
         return;
     }
     
     // Upload vertex data and render if we have vertices
     if (render_state.vertex_count > 0) {
-        printf("🔍 MicroUI: Uploading %d vertices and rendering...\n", render_state.vertex_count);
-        
         // Upload vertex data to GPU
         sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
             .ptr = render_state.vertices,
@@ -631,15 +637,17 @@ void ui_microui_render(int screen_width, int screen_height) {
         // Set up screen size uniforms
         float screen_size[2] = { (float)screen_width, (float)screen_height };
         
-        // Apply pipeline, bindings, uniforms and draw
-        sg_apply_pipeline(render_state.pip);
+        // Apply appropriate pipeline based on render target
+        if (render_is_offscreen_mode()) {
+            sg_apply_pipeline(render_state.offscreen_pip);
+        } else {
+            sg_apply_pipeline(render_state.pip);
+        }
         sg_apply_bindings(&render_state.bind);
         sg_apply_uniforms(0, &SG_RANGE(screen_size));
-        sg_draw(0, render_state.vertex_count, 1);
         
-        printf("✅ MicroUI: Rendered %d vertices successfully\n", render_state.vertex_count);
-    } else {
-        printf("🔍 MicroUI: No vertices to render\n");
+        // Draw
+        sg_draw(0, render_state.vertex_count, 1);
     }
 }
 

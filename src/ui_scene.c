@@ -128,7 +128,7 @@ SceneUIModule* scene_ui_get_module(const char* scene_name)
 
 void scene_ui_render_microui(mu_Context* ctx, const char* scene_name, 
                             struct World* world, struct SystemScheduler* scheduler, 
-                            float delta_time)
+                            float delta_time, int screen_width, int screen_height)
 {
     if (!ctx || !scene_name) return;
     
@@ -267,9 +267,6 @@ void scene_ui_render_microui(mu_Context* ctx, const char* scene_name,
         }
         
         // Debug overlay (bottom right)
-        int screen_width = sapp_width();
-        int screen_height = sapp_height();
-        
         if (mu_begin_window(ctx, "Debug Info", mu_rect(screen_width - 210, screen_height - 110, 200, 100))) {
             mu_layout_row(ctx, 1, (int[]){-1}, 0);
             mu_label(ctx, "Press ~ to toggle debug");
@@ -280,9 +277,6 @@ void scene_ui_render_microui(mu_Context* ctx, const char* scene_name,
     }
     // Logo scene
     else if (strcmp(scene_name, "logo") == 0) {
-        int screen_width = sapp_width();
-        int screen_height = sapp_height();
-        
         int overlay_width = 300;
         int overlay_height = 80;
         int x = (screen_width - overlay_width) / 2;

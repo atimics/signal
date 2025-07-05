@@ -19,6 +19,7 @@
 #include "ui_microui.h"
 #include "scene_state.h"
 #include "scene_script.h"
+#include "render_layers.h"  // Offscreen rendering system
 
 // UI system includes
 
@@ -50,6 +51,7 @@ static struct
     // Render state
     RenderConfig render_config;
     sg_pass_action pass_action;
+    LayerManager* layer_manager;  // Offscreen rendering layers
 
     // Scene management
     char current_scene[64];
@@ -270,6 +272,40 @@ static void init(void)
     scene_state_init(&app_state.scene_state);
     strcpy(app_state.scene_state.current_scene_name, scene_to_load);
     
+    // Initialize offscreen rendering layers
+    app_state.layer_manager = layer_manager_create(
+        app_state.render_config.screen_width, 
+        app_state.render_config.screen_height
+    );
+    
+    // Create render layers
+    RenderLayerConfig scene_layer_config = {
+        .name = "3d_scene",
+        .width = app_state.render_config.screen_width,
+        .height = app_state.render_config.screen_height,
+        .needs_depth = true,
+        .color_format = SG_PIXELFORMAT_RGBA8,
+        .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL,
+        .sample_count = 1,
+        .update_frequency = UPDATE_DYNAMIC
+    };
+    RenderLayer* scene_layer = layer_manager_add_layer(app_state.layer_manager, &scene_layer_config);
+    layer_set_order(scene_layer, 0);  // Render first
+    
+    RenderLayerConfig ui_layer_config = {
+        .name = "ui",
+        .width = app_state.render_config.screen_width,
+        .height = app_state.render_config.screen_height,
+        .needs_depth = false,
+        .color_format = SG_PIXELFORMAT_RGBA8,
+        .depth_format = 0,
+        .sample_count = 1,
+        .update_frequency = UPDATE_DYNAMIC
+    };
+    RenderLayer* ui_layer = layer_manager_add_layer(app_state.layer_manager, &ui_layer_config);
+    layer_set_order(ui_layer, 1);  // Render on top
+    layer_set_blend_mode(ui_layer, BLEND_MODE_NORMAL);
+    
     // Initialize UI system first before any UI calls
     ui_init();
     
@@ -377,61 +413,66 @@ static void frame(void)
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
 
-    // Render frame using separate passes for 3D and UI to avoid pipeline state conflicts
+    // === OFFSCREEN RENDERING SOLUTION ===
+    // Render to separate offscreen targets to avoid pipeline conflicts
+    
     if (!sg_isvalid()) {
         printf("⚠️ Skipping rendering - Graphics context invalid\n");
         performance_frame_end();
         return;
     }
     
-    // Get swapchain once and reuse for both passes
-    sg_swapchain swapchain = sglue_swapchain();
+    // Get screen dimensions
+    const int screen_width = sapp_width();
+    const int screen_height = sapp_height();
     
-    // === PASS 1: 3D Rendering ===
-    sg_begin_pass(&(sg_pass){ .swapchain = swapchain, .action = app_state.pass_action });
-    render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
-    sg_end_pass();
-
-    // === PASS 2: UI Rendering ===
-    // First prepare UI context and vertices (outside of any render pass)
-    ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
+    // Update layer manager resolution if needed
+    if (screen_width != app_state.layer_manager->screen_width || 
+        screen_height != app_state.layer_manager->screen_height) {
+        layer_manager_resize(app_state.layer_manager, screen_width, screen_height);
+    }
     
-    // Then render UI in a separate pass if contexts are valid
-    if (sg_isvalid() && sapp_isvalid()) {
-        // Begin UI pass with LOAD action to preserve 3D content and blend UI on top
-        sg_pass_action ui_pass_action = {
-            .colors[0] = { 
-                .load_action = SG_LOADACTION_LOAD,  // Preserve existing 3D content
-                .store_action = SG_STOREACTION_STORE 
-            },
-            .depth = { 
-                .load_action = SG_LOADACTION_LOAD,  // Preserve depth buffer
-                .store_action = SG_STOREACTION_STORE 
-            }
-        };
+    // === RENDER TO 3D SCENE LAYER ===
+    RenderLayer* scene_layer = layer_manager_get_layer(app_state.layer_manager, "3d_scene");
+    if (scene_layer && layer_should_update(app_state.layer_manager, scene_layer)) {
+        render_set_offscreen_mode(true);  // Switch to offscreen pipeline
+        layer_begin_render(scene_layer);
         
-        sg_begin_pass(&(sg_pass){ .swapchain = swapchain, .action = ui_pass_action });
-        ui_microui_render(sapp_width(), sapp_height());
-        sg_end_pass();
+        // Render 3D entities to offscreen target
+        render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
+        
+        layer_end_render();
+        render_set_offscreen_mode(false);  // Switch back to default pipeline
     }
-
-    // Commit frame - validate context immediately before commit
-    if (sg_isvalid()) {
-        // Final validation before commit to catch any last-minute issues
-        bool context_valid = sg_isvalid();
-        if (context_valid) {
-            sg_commit();
-            
-            // Verify commit succeeded (context should still be valid after commit)
-            if (!sg_isvalid()) {
-                printf("⚠️ Graphics context became invalid after sg_commit()\n");
-            }
-        } else {
-            printf("⚠️ Graphics context became invalid before sg_commit() call\n");
-        }
-    } else {
-        printf("⚠️ Skipping sg_commit - Graphics context invalid\n");
+    
+    // === RENDER TO UI LAYER ===
+    RenderLayer* ui_layer = layer_manager_get_layer(app_state.layer_manager, "ui");
+    if (ui_layer && ui_is_visible() && layer_should_update(app_state.layer_manager, ui_layer)) {
+        layer_begin_render(ui_layer);
+        
+        // Prepare UI (this generates vertices)
+        ui_render(&app_state.world, &app_state.scheduler, dt, 
+                  app_state.scene_state.current_scene_name, screen_width, screen_height);
+        
+        // Render UI to offscreen target
+        ui_microui_render(screen_width, screen_height);
+        
+        layer_end_render();
     }
+    
+    // === COMPOSITE LAYERS TO SWAPCHAIN ===
+    sg_begin_pass(&(sg_pass){ 
+        .swapchain = sglue_swapchain(), 
+        .action = app_state.pass_action 
+    });
+    
+    // Composite all layers
+    layer_manager_composite(app_state.layer_manager);
+    
+    sg_end_pass();
+    
+    // Commit frame
+    sg_commit();
 
     // End performance frame timing
     performance_frame_end();
@@ -452,6 +493,13 @@ static void cleanup(void)
     printf("\n🏁 Simulation complete!\n");
 
     ui_shutdown();
+    
+    // Destroy layer manager and all offscreen targets
+    if (app_state.layer_manager) {
+        layer_manager_destroy(app_state.layer_manager);
+        app_state.layer_manager = NULL;
+    }
+    
     render_cleanup(&app_state.render_config);
     // Assets are cleaned up by the scheduler
     scheduler_destroy(&app_state.scheduler, &app_state.render_config);

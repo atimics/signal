@@ -13,7 +13,7 @@ struct nk_context;
 
 void ui_init(void);
 void ui_shutdown(void);
-void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene);
+void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene, int screen_width, int screen_height);
 bool ui_handle_event(const void* ev);  // Returns true if UI captured the event
 
 // UI visibility control

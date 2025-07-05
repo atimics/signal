@@ -78,11 +78,13 @@ typedef struct
 static struct
 {
     sg_pipeline pipeline;
+    sg_pipeline offscreen_pipeline;  // Pipeline for offscreen rendering
     sg_shader shader;
     sg_sampler sampler;
     sg_buffer uniform_buffer;  // Uniform buffer for dynamic updates
     sg_image default_texture;
     bool initialized;
+    bool rendering_offscreen;  // Track if we're rendering to offscreen target
     char* vertex_shader_source;
     char* fragment_shader_source;
 } render_state = { 0 };
@@ -216,6 +218,40 @@ static bool render_sokol_init(void)
     }
 
     printf("🔍 Pipeline created with default formats\n");
+    
+    // Create offscreen pipeline with explicit RGBA8 format
+    render_state.offscreen_pipeline = sg_make_pipeline(&(sg_pipeline_desc){
+        .shader = render_state.shader,
+        .layout = {
+            // Vertex layout matching our vertex structure
+            .attrs = {
+                [0] = { .format = SG_VERTEXFORMAT_FLOAT3 },  // position
+                [1] = { .format = SG_VERTEXFORMAT_FLOAT3 },  // normal
+                [2] = { .format = SG_VERTEXFORMAT_FLOAT2 },  // texcoord
+            }
+        },
+        .index_type = SG_INDEXTYPE_UINT32,
+        .primitive_type = SG_PRIMITIVETYPE_TRIANGLES,
+        .depth = {
+            .compare = SG_COMPAREFUNC_LESS_EQUAL,
+            .write_enabled = true,
+            .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL
+        },
+        .colors[0] = {
+            .pixel_format = SG_PIXELFORMAT_RGBA8  // Explicit format for offscreen
+        },
+        .cull_mode = SG_CULLMODE_NONE,
+        .face_winding = SG_FACEWINDING_CCW,
+        .label = "basic_3d_offscreen_pipeline"
+    });
+    
+    if (render_state.offscreen_pipeline.id == SG_INVALID_ID)
+    {
+        printf("❌ Failed to create offscreen pipeline\n");
+        return false;
+    }
+    
+    printf("🔍 Offscreen pipeline created with RGBA8 format\n");
 
     // Create uniform buffer (dynamic to allow updates)
     render_state.uniform_buffer = sg_make_buffer(
@@ -372,8 +408,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
     // Pipeline is already set up in main.c render pass
     // Just apply the rendering pipeline here
 
-    // Apply the rendering pipeline
-    sg_apply_pipeline(render_state.pipeline);
+    // Apply the appropriate pipeline based on render target
+    if (render_state.rendering_offscreen) {
+        sg_apply_pipeline(render_state.offscreen_pipeline);
+    } else {
+        sg_apply_pipeline(render_state.pipeline);
+    }
 
     // Count entities to render
     int renderable_count = 0;
@@ -790,4 +830,15 @@ void set_render_config(RenderConfig* config)
 RenderConfig* get_render_config(void)
 {
     return g_render_config_ptr;
+}
+
+// Offscreen rendering control
+void render_set_offscreen_mode(bool offscreen)
+{
+    render_state.rendering_offscreen = offscreen;
+}
+
+bool render_is_offscreen_mode(void)
+{
+    return render_state.rendering_offscreen;
 }

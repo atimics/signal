@@ -57,7 +57,8 @@ void scene_ui_shutdown(void);
 
 // Render UI for the current scene using Microui
 void scene_ui_render_microui(struct mu_Context* ctx, const char* current_scene, 
-                            struct World* world, struct SystemScheduler* scheduler, float delta_time);
+                            struct World* world, struct SystemScheduler* scheduler, float delta_time,
+                            int screen_width, int screen_height);
 
 // Handle events for the current scene
 bool scene_ui_handle_event(const void* event, const char* current_scene, struct World* world);
@@ -85,6 +86,6 @@ SceneUIModule* create_navigation_menu_ui_module(void);
 // Render UI for current scene using Microui
 void scene_ui_render_microui(struct mu_Context* ctx, const char* current_scene, 
                            struct World* world, struct SystemScheduler* scheduler, 
-                           float delta_time);
+                           float delta_time, int screen_width, int screen_height);
 
 #endif // UI_SCENE_H
