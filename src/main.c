@@ -339,7 +339,9 @@ static void frame(void)
         printf("🎬 UI scene change request: %s -> %s\n", app_state.scene_state.current_scene_name, requested_scene);
         scene_state_request_transition(&app_state.scene_state, requested_scene);
         ui_clear_scene_change_request();
-    }        // Handle scene transitions
+    }
+
+    // Handle scene transitions
     bool scene_transition_occurred = false;
     if (scene_state_has_pending_transition(&app_state.scene_state))
     {
@@ -382,8 +384,11 @@ static void frame(void)
         return;
     }
     
+    // Get swapchain once and reuse for both passes
+    sg_swapchain swapchain = sglue_swapchain();
+    
     // === PASS 1: 3D Rendering ===
-    sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = app_state.pass_action });
+    sg_begin_pass(&(sg_pass){ .swapchain = swapchain, .action = app_state.pass_action });
     render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
     sg_end_pass();
 
@@ -405,7 +410,7 @@ static void frame(void)
             }
         };
         
-        sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = ui_pass_action });
+        sg_begin_pass(&(sg_pass){ .swapchain = swapchain, .action = ui_pass_action });
         ui_microui_render(sapp_width(), sapp_height());
         sg_end_pass();
     }
