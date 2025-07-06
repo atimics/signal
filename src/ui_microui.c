@@ -1084,14 +1084,7 @@ void ui_microui_upload_vertices(void) {
            render_state.bind.vertex_buffers[0].id);
     
     // CRITICAL: Assert no encoder is active before buffer update
-    #ifdef DEBUG
-    // Include the layer system header for encoder check
-    extern bool layer_is_encoder_active(void);
-    if (layer_is_encoder_active()) {
-        printf("❌ CRITICAL: Attempting sg_update_buffer while encoder is active! This will crash!\n");
-        assert(!"sg_update_buffer called while encoder is active - this will crash!");
-    }
-    #endif
+    ASSERT_NO_PASS_ACTIVE();
     
     // Upload vertex data to GPU (MUST be called outside any render pass)
     sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){

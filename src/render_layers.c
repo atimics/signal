@@ -489,10 +489,7 @@ void layer_manager_mark_dirty(LayerManager* manager, const char* layer_name) {
 // RENDERING
 // ============================================================================
 
-// Helper function to check if encoder is active (for debug builds)
-bool layer_is_encoder_active(void) {
-    return g_pass_guard.active;
-}
+// Note: layer_is_encoder_active() is now inline in render_pass_guard.h
 
 void layer_begin_render(RenderLayer* layer) {
     if (!layer || !layer->enabled) {
