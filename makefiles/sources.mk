@@ -24,7 +24,8 @@ SOURCES = core.c systems.c \
           microui/microui.c ui_microui.c ui_microui_adapter.c ui.c ui_api.c \
           ui_scene.c ui_components.c ui_adaptive_controls.c ui_menu_system.c \
           ui_navigation_menu_impl.c ui_navigation_menu_microui.c \
-          data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c \
+          data.c graphics_api.c gpu_resources.c graphics_health.c pipeline_manager.c \
+          scene_state.c scene_script.c \
           scene_yaml_loader.c entity_yaml_loader.c \
           scripts/logo_scene.c scripts/derelict_navigation_scene.c \
           scripts/flight_test_scene.c \

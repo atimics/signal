@@ -55,6 +55,12 @@ void navigation_menu_on_select(int item_index, void* user_data) {
 }
 
 void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) {
+    // Safety check
+    if (!data) {
+        printf("❌ ERROR: NavigationMenuData is NULL!\n");
+        return;
+    }
+    
     // Get MicroUI context
     mu_Context* ctx = ui_microui_get_mu_context();
     if (!ctx) {
@@ -64,10 +70,25 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
     
     // Initialize menu system on first call
     if (!data->menu_initialized) {
+        // Debug: Log when initialization happens
+        static int init_count = 0;
+        printf("⚠️ Navigation menu initialization #%d (data=%p, initialized=%d)\n", 
+               ++init_count, (void*)data, data->menu_initialized);
+        
+        // Safety check for destination data
+        if (data->destination_count <= 0 || data->destination_count > 9) {
+            printf("❌ ERROR: Invalid destination_count: %d\n", data->destination_count);
+            return;
+        }
+        
         menu_init(&data->main_menu, "FTL NAVIGATION SYSTEM");
         
         // Add menu items from existing data
         for (int i = 0; i < data->destination_count; i++) {
+            if (!data->destinations[i] || !data->descriptions[i]) {
+                printf("❌ ERROR: NULL destination/description at index %d\n", i);
+                continue;
+            }
             menu_add_item(&data->main_menu, data->destinations[i], data->descriptions[i], NULL);
         }
         
@@ -92,6 +113,13 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
 
 // External render function called from navigation_menu_render
 void navigation_menu_render(NavigationMenuData* data, float delta_time) {
+    if (!data) {
+        static int error_count = 0;
+        if (error_count++ < 5) {
+            printf("❌ ERROR: navigation_menu_render called with NULL data!\n");
+        }
+        return;
+    }
     // Delegate to MicroUI implementation
     navigation_menu_render_microui(data, delta_time);
 }

@@ -20,6 +20,7 @@
 #include "scene_state.h"
 #include "scene_script.h"
 #include "render_layers.h"  // Offscreen rendering system
+#include "graphics_health.h"  // Graphics health monitoring
 
 // UI system includes
 
@@ -204,6 +205,9 @@ static void init(void)
         sapp_quit();
         return;
     }
+    
+    // Initialize graphics health monitoring
+    gfx_health_init();
 
     printf("🌍 Setting up world...\n");
 
@@ -594,6 +598,9 @@ static void frame(void)
     // === END ACTIVE RENDERING PHASE ===
     // Clear flag to allow scene transitions for next frame
     frame_rendering_active = false;
+    
+    // Process any deferred UI jobs (safe to create/destroy resources now)
+    ui_microui_process_deferred_jobs();
 
     // End performance frame timing
     performance_frame_end();

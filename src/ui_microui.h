@@ -77,6 +77,9 @@ void ui_microui_upload_vertices(void);
 // Render the UI to screen using Sokol (called within an active render pass)
 void ui_microui_render(int screen_width, int screen_height);
 
+// Process any deferred jobs (must be called AFTER sg_commit)
+void ui_microui_process_deferred_jobs(void);
+
 // ============================================================================
 // MICROUI INPUT HANDLING
 // ============================================================================

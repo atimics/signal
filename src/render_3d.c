@@ -14,6 +14,7 @@
 #include "scene_script.h"  // For find_entity_by_name function
 #include "system/material.h"  // For material properties
 #include "ui.h"
+#include "graphics_health.h"  // For health monitoring
 
 // Internal conversion functions for PIMPL pattern
 // These are only used within the rendering implementation
@@ -676,7 +677,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             printf("   [%.2f %.2f %.2f %.2f]\n", mvp[12], mvp[13], mvp[14], mvp[15]);
         }
 
-        // Draw
+        // Draw with health tracking
+        char draw_desc[128];
+        snprintf(draw_desc, sizeof(draw_desc), "Entity %d (%d indices)", 
+                 entity->id, renderable->index_count);
+        gfx_health_log_draw_call(draw_desc, renderable->index_count);
+        
         sg_draw(0, renderable->index_count, 1);
         render_performance.draw_calls++;
         render_performance.entities_rendered++;
@@ -699,6 +705,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
 
     // Performance reporting (Sprint 08 Review Action Item)
     report_render_performance();
+    
+    // Health check after rendering
+    if (!gfx_health_check("3D render_frame")) {
+        printf("⚠️ Graphics health check failed after 3D rendering\n");
+        gfx_health_dump_diagnostics();
+    }
 
     // Render pass is ended in main.c
 }

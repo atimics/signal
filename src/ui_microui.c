@@ -17,6 +17,22 @@
 static UIContext g_ui_context = { 0 };
 
 // ============================================================================
+// DEFERRED JOB SYSTEM
+// ============================================================================
+
+typedef enum {
+    JOB_NONE,
+    JOB_RECREATE_UI_BUFFERS
+} deferred_job_t;
+
+static deferred_job_t g_deferred_job = JOB_NONE;
+
+static void request_ui_buffer_recreate(void) {
+    g_deferred_job = JOB_RECREATE_UI_BUFFERS;
+    printf("🔧 Requested deferred UI buffer recreation\n");
+}
+
+// ============================================================================
 // FONT DATA (8x8 bitmap font)
 // ============================================================================
 
@@ -123,25 +139,112 @@ static const unsigned char font_data[95][8] = {
 // RENDERING RESOURCES
 // ============================================================================
 
+typedef struct {
+    float x, y;        // position
+    float u, v;        // texcoord
+    uint32_t color;    // color as packed RGBA bytes
+} ui_vertex_t;
+
 static struct {
+    bool ready;                // Set to true ONLY after all resources are valid
     sg_shader shader;          // Shader for both pipelines
     sg_pipeline pip;
     sg_pipeline offscreen_pip;  // Pipeline for offscreen rendering
     sg_bindings bind;
     sg_pass_action pass_action;
-    struct {
-        float x, y;        // position
-        float u, v;        // texcoord
-        uint32_t color;    // color as packed RGBA bytes
-    } vertices[8192];
+    ui_vertex_t* vertices;     // Dynamic heap buffer
     int vertex_count;
+    int vertex_capacity;       // Current capacity
     int command_count;
     size_t vbuf_size;         // Current vertex buffer size in bytes
+    sg_resource_state vbuf_state;  // Track buffer state
+    bool graphics_context_valid;   // Track if we can safely use graphics
+    bool need_resize;         // Request for buffer resize
+    int requested_capacity;   // New capacity requested
 } render_state;
 
 // ============================================================================
 // DYNAMIC BUFFER MANAGEMENT
 // ============================================================================
+
+// Check if buffers are valid (called during render pass)
+static bool check_buffers_valid(void) {
+    // Check if we have a valid graphics context
+    if (!sg_isvalid()) {
+        printf("❌ Cannot check buffers - Sokol context invalid\n");
+        return false;
+    }
+    
+    // Check if buffer ID is valid first
+    if (render_state.bind.vertex_buffers[0].id == SG_INVALID_ID || 
+        render_state.bind.vertex_buffers[0].id == 0) {
+        printf("⚠️ UI vertex buffer has invalid ID %u, requesting deferred recreation\n", 
+               render_state.bind.vertex_buffers[0].id);
+        render_state.vbuf_state = SG_RESOURCESTATE_INVALID;
+        request_ui_buffer_recreate();
+        return false;
+    }
+    
+    // Query the buffer state
+    render_state.vbuf_state = sg_query_buffer_state(render_state.bind.vertex_buffers[0]);
+    
+    // If buffer is invalid, request deferred recreation
+    if (render_state.vbuf_state != SG_RESOURCESTATE_VALID) {
+        printf("⚠️ UI vertex buffer invalid (state=%d, id=%u), requesting deferred recreation\n", 
+               render_state.vbuf_state, render_state.bind.vertex_buffers[0].id);
+        request_ui_buffer_recreate();
+        return false;
+    }
+    
+    return true;
+}
+
+// Recreate UI buffers (called AFTER render pass ends)
+static void recreate_ui_buffers(void) {
+    printf("🔧 Recreating UI buffers (deferred)...\n");
+    
+    // Destroy old buffer if it exists
+    if (render_state.bind.vertex_buffers[0].id != SG_INVALID_ID) {
+        sg_destroy_buffer(render_state.bind.vertex_buffers[0]);
+        printf("   Destroyed old buffer id=%u\n", render_state.bind.vertex_buffers[0].id);
+    }
+    
+    // Create new buffer with sufficient size based on current vertex capacity
+    // Use at least 2x the current capacity for headroom
+    size_t min_capacity = render_state.vertex_capacity > 0 ? render_state.vertex_capacity : 8192;
+    render_state.vbuf_size = min_capacity * sizeof(ui_vertex_t) * 2;
+    
+    printf("   Creating buffer for %zu vertices (%zu bytes)\n", min_capacity, render_state.vbuf_size);
+    
+    render_state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
+        .size = render_state.vbuf_size,
+        .usage = { .vertex_buffer = true, .dynamic_update = true },
+        .label = "microui_vertex_buffer_recreated"
+    });
+    
+    // Update state
+    render_state.vbuf_state = sg_query_buffer_state(render_state.bind.vertex_buffers[0]);
+    
+    // If in ALLOC state, do initial update to make it VALID
+    if (render_state.vbuf_state == SG_RESOURCESTATE_ALLOC) {
+        struct {
+            float x, y, u, v;
+            uint32_t color;
+        } dummy_vertex = {0};
+        sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
+            .ptr = &dummy_vertex,
+            .size = sizeof(dummy_vertex)
+        });
+        render_state.vbuf_state = sg_query_buffer_state(render_state.bind.vertex_buffers[0]);
+    }
+    
+    if (render_state.vbuf_state == SG_RESOURCESTATE_VALID) {
+        printf("✅ UI vertex buffer recreated successfully (id=%u, size=%zu)\n", 
+               render_state.bind.vertex_buffers[0].id, render_state.vbuf_size);
+    } else {
+        printf("❌ Failed to create valid UI vertex buffer (state=%d)\n", render_state.vbuf_state);
+    }
+}
 
 static void ensure_ui_vbuf(size_t needed_bytes) {
     // If we have enough space, nothing to do
@@ -149,31 +252,21 @@ static void ensure_ui_vbuf(size_t needed_bytes) {
         return;
     }
     
-    // Calculate new size with headroom (2x growth)
-    size_t new_size = needed_bytes * 2;
+    // CRITICAL: On Metal, we cannot destroy/recreate buffers during a frame
+    // Request deferred recreation instead
+    printf("❌ CRITICAL: UI vertex buffer too small! Need %zu bytes but only have %zu\n", 
+           needed_bytes, render_state.vbuf_size);
+    printf("❌ Requesting deferred buffer recreation\n");
     
-    // Ensure minimum size
-    if (new_size < sizeof(render_state.vertices)) {
-        new_size = sizeof(render_state.vertices);
+    request_ui_buffer_recreate();
+    
+    // For now, clamp the vertex count to avoid overflow
+    size_t max_vertices = render_state.vbuf_size / sizeof(ui_vertex_t);
+    if (render_state.vertex_count > (int)max_vertices) {
+        printf("⚠️ Clamping vertex count from %d to %zu\n", 
+               render_state.vertex_count, max_vertices);
+        render_state.vertex_count = (int)max_vertices;
     }
-    
-    printf("🎨 MicroUI: Growing vertex buffer from %zu to %zu bytes\n", 
-           render_state.vbuf_size, new_size);
-    
-    // Destroy old buffer if it exists
-    if (render_state.bind.vertex_buffers[0].id != SG_INVALID_ID) {
-        sg_destroy_buffer(render_state.bind.vertex_buffers[0]);
-    }
-    
-    // Create new buffer with increased size
-    render_state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
-        .size = new_size,
-        .usage = { .vertex_buffer = true, .dynamic_update = true },
-        .label = "microui_vertex_buffer"
-    });
-    
-    // Update recorded size
-    render_state.vbuf_size = new_size;
 }
 
 // ============================================================================
@@ -192,11 +285,83 @@ static int text_height_callback(mu_Font font) {
 }
 
 // ============================================================================
+// DEFERRED JOB PROCESSING
+// ============================================================================
+
+// Forward declaration - defined later
+static void ui_apply_vertex_resize(void);
+
+void ui_microui_process_deferred_jobs(void) {
+    // First handle vertex array resize if needed
+    ui_apply_vertex_resize();
+    
+    if (g_deferred_job == JOB_NONE) {
+        return;
+    }
+    
+    printf("🔧 Processing deferred UI jobs...\n");
+    
+    switch (g_deferred_job) {
+        case JOB_RECREATE_UI_BUFFERS:
+            recreate_ui_buffers();
+            break;
+        default:
+            break;
+    }
+    
+    g_deferred_job = JOB_NONE;
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
+// Apply deferred vertex array resize (called after sg_commit)
+static void ui_apply_vertex_resize(void) {
+    if (!render_state.need_resize) return;
+    
+    printf("🔧 Resizing vertex array from %d to %d vertices\n", 
+           render_state.vertex_capacity, render_state.requested_capacity);
+    
+    // Reallocate the vertex array
+    ui_vertex_t* new_vertices = realloc(render_state.vertices, 
+                                      render_state.requested_capacity * sizeof(ui_vertex_t));
+    if (!new_vertices) {
+        printf("❌ ERROR: Failed to allocate vertex array for %d vertices\n", 
+               render_state.requested_capacity);
+        return;
+    }
+    
+    render_state.vertices = new_vertices;
+    render_state.vertex_capacity = render_state.requested_capacity;
+    render_state.need_resize = false;
+    
+    // Update the buffer size to match new capacity
+    size_t new_buffer_size = render_state.vertex_capacity * sizeof(ui_vertex_t) * 2;
+    if (new_buffer_size > render_state.vbuf_size) {
+        render_state.vbuf_size = new_buffer_size;
+        // Also recreate the GPU buffer with new size  
+        request_ui_buffer_recreate();
+    }
+    
+    printf("✅ Vertex array resized successfully (capacity=%d, buffer_size=%zu)\n",
+           render_state.vertex_capacity, render_state.vbuf_size);
+}
+
 void ui_microui_init(void) {
     printf("🎨 Initializing Microui wrapper...\n");
+    
+    // Clear the render state to ensure clean initialization
+    memset(&render_state, 0, sizeof(render_state));
+    
+    // Allocate initial vertex array with larger capacity for complex UIs
+    render_state.vertex_capacity = 16384;  // Increased from 8192 to handle navigation menu
+    render_state.vertices = malloc(render_state.vertex_capacity * sizeof(ui_vertex_t));
+    if (!render_state.vertices) {
+        printf("❌ ERROR: Failed to allocate initial vertex array\n");
+        return;
+    }
+    printf("🔧 Allocated vertex array with capacity for %d vertices\n", render_state.vertex_capacity);
     
     // Initialize Microui context
     mu_init(&g_ui_context.mu_ctx);
@@ -449,12 +614,65 @@ void ui_microui_init(void) {
     }
     
     // Create vertex buffer with initial size
-    render_state.vbuf_size = sizeof(render_state.vertices);
+    // CRITICAL: For Metal, allocate a large buffer upfront to avoid recreation
+    // Start with capacity * sizeof(vertex) * 2 for headroom
+    render_state.vbuf_size = render_state.vertex_capacity * sizeof(ui_vertex_t) * 2;
+    
+    // Ensure buffer size is valid
+    if (render_state.vbuf_size == 0) {
+        printf("❌ ERROR: MicroUI vertex buffer size is 0! sizeof(vertices)=%zu\n", 
+               sizeof(render_state.vertices));
+        render_state.vbuf_size = 4 * 1024 * 1024; // 4MB fallback
+    }
+    
+    printf("🔧 Creating MicroUI vertex buffer: size=%zu bytes (%.1f MB)\n", 
+           render_state.vbuf_size, render_state.vbuf_size / (1024.0 * 1024.0));
+    
     render_state.bind.vertex_buffers[0] = sg_make_buffer(&(sg_buffer_desc){
         .size = render_state.vbuf_size,
-        .usage = { .vertex_buffer = true, .dynamic_update = true },
+        .usage = { .vertex_buffer = true, .dynamic_update = true },  // Dynamic buffer for frequent updates
         .label = "microui_vertex_buffer"
     });
+    
+    // Validate the vertex buffer was created successfully
+    if (render_state.bind.vertex_buffers[0].id == SG_INVALID_ID) {
+        printf("❌ ERROR: Failed to create MicroUI vertex buffer!\n");
+    } else {
+        sg_resource_state vbuf_state = sg_query_buffer_state(render_state.bind.vertex_buffers[0]);
+        printf("🔧 MicroUI vertex buffer created with id=%u, initial state=%d\n", 
+               render_state.bind.vertex_buffers[0].id, vbuf_state);
+        
+        // Store the initial state
+        render_state.vbuf_state = vbuf_state;
+        
+        // CRITICAL: Dynamic buffers start in ALLOC state and need an initial update to become VALID
+        if (vbuf_state == SG_RESOURCESTATE_ALLOC) {
+            printf("🔧 Performing initial buffer update to transition from ALLOC to VALID state...\n");
+            
+            // Create a small dummy vertex to initialize the buffer
+            struct {
+                float x, y;
+                float u, v;
+                uint32_t color;
+            } dummy_vertex = {0};
+            sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
+                .ptr = &dummy_vertex,
+                .size = sizeof(dummy_vertex)
+            });
+            
+            // Check state after update
+            render_state.vbuf_state = sg_query_buffer_state(render_state.bind.vertex_buffers[0]);
+            if (render_state.vbuf_state == SG_RESOURCESTATE_VALID) {
+                printf("✅ MicroUI vertex buffer now VALID after initial update (id=%u, size=%zu)\n", 
+                       render_state.bind.vertex_buffers[0].id, render_state.vbuf_size);
+            } else {
+                printf("❌ ERROR: MicroUI vertex buffer still in state %d after update!\n", render_state.vbuf_state);
+            }
+        } else if (vbuf_state != SG_RESOURCESTATE_VALID) {
+            printf("❌ ERROR: MicroUI vertex buffer created but in unexpected state %d!\n", vbuf_state);
+            printf("   State meanings: 0=INITIAL, 1=ALLOC, 2=VALID, 3=FAILED, 4=INVALID\n");
+        }
+    }
     
     // Create font texture
     render_state.bind.images[0] = sg_make_image(&(sg_image_desc){
@@ -478,8 +696,48 @@ void ui_microui_init(void) {
     // Initialize event queue
     g_ui_context.event_queue.count = 0;
     
-    g_ui_context.initialized = true;
-    printf("✅ Microui wrapper initialized with event queue\n");
+    // Validate all required resources are created successfully
+    bool all_resources_valid = true;
+    
+    // Check vertex buffer
+    if (render_state.bind.vertex_buffers[0].id == SG_INVALID_ID ||
+        render_state.vbuf_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ Vertex buffer not valid for UI rendering\n");
+        all_resources_valid = false;
+    }
+    
+    // Check pipelines
+    if (sg_query_pipeline_state(render_state.pip) != SG_RESOURCESTATE_VALID) {
+        printf("❌ Main pipeline not valid for UI rendering\n");
+        all_resources_valid = false;
+    }
+    
+    if (sg_query_pipeline_state(render_state.offscreen_pip) != SG_RESOURCESTATE_VALID) {
+        printf("❌ Offscreen pipeline not valid for UI rendering\n");
+        all_resources_valid = false;
+    }
+    
+    // Check shader
+    if (sg_query_shader_state(render_state.shader) != SG_RESOURCESTATE_VALID) {
+        printf("❌ Shader not valid for UI rendering\n");
+        all_resources_valid = false;
+    }
+    
+    // Check font texture
+    if (sg_query_image_state(render_state.bind.images[0]) != SG_RESOURCESTATE_VALID) {
+        printf("❌ Font texture not valid for UI rendering\n");
+        all_resources_valid = false;
+    }
+    
+    // Only mark as ready if ALL resources are valid
+    render_state.ready = all_resources_valid;
+    
+    if (render_state.ready) {
+        g_ui_context.initialized = true;
+        printf("✅ Microui wrapper initialized successfully - renderer ready\n");
+    } else {
+        printf("❌ Microui wrapper initialization incomplete - renderer NOT ready\n");
+    }
 }
 
 void ui_microui_shutdown(void) {
@@ -490,6 +748,13 @@ void ui_microui_shutdown(void) {
         sg_destroy_buffer(render_state.bind.vertex_buffers[0]);
         sg_destroy_image(render_state.bind.images[0]);
         sg_destroy_sampler(render_state.bind.samplers[0]);
+        
+        // Free the dynamic vertex array
+        if (render_state.vertices) {
+            free(render_state.vertices);
+            render_state.vertices = NULL;
+        }
+        
         g_ui_context.initialized = false;
         printf("✅ Microui wrapper shut down\n");
     }
@@ -630,12 +895,27 @@ void ui_microui_end_frame(void) {
 // ============================================================================
 
 static void push_vertex(float x, float y, float u, float v, mu_Color color) {
-    if (render_state.vertex_count >= 8192) {
-        static int overflow_logged = 0;
-        if (!overflow_logged) {
-            printf("❌ ERROR: MicroUI vertex buffer full! Cannot add more vertices.\n");
-            overflow_logged = 1;
+    // Safety check - ensure we have allocated vertex memory
+    if (!render_state.vertices) {
+        static int error_logged = 0;
+        if (!error_logged) {
+            printf("❌ ERROR: MicroUI vertex array is NULL!\n");
+            error_logged = 1;
         }
+        return;
+    }
+    
+    // Check if we need more capacity
+    if (render_state.vertex_count >= render_state.vertex_capacity) {
+        // Request resize for next frame (double the capacity)
+        int new_capacity = render_state.vertex_capacity ? render_state.vertex_capacity * 2 : 8192;
+        if (new_capacity > render_state.requested_capacity) {
+            render_state.requested_capacity = new_capacity;
+            render_state.need_resize = true;
+            printf("⚠️ UI: Vertex capacity exhausted (%d), requesting resize to %d for next frame\n",
+                   render_state.vertex_capacity, new_capacity);
+        }
+        // Skip this vertex to avoid overflow
         return;
     }
     
@@ -719,16 +999,26 @@ static void render_rect(mu_Rect rect, mu_Color color) {
 
 // Upload vertex data outside of any render pass
 void ui_microui_upload_vertices(void) {
+    // CRITICAL: Don't do anything if renderer isn't ready
+    if (!render_state.ready) {
+        static int skip_count = 0;
+        if (skip_count++ % 60 == 0) {  // Log once per second
+            printf("⚠️ UI: Upload skipped - renderer not ready\n");
+        }
+        return;
+    }
+    
     // Don't upload if we have no vertices
     if (render_state.vertex_count == 0) {
         return;
     }
     
-    // Ensure buffer is valid before updating
-    if (render_state.bind.vertex_buffers[0].id == SG_INVALID_ID) {
-        printf("❌ MicroUI Upload: Invalid vertex buffer\n");
-        return;
-    }
+    // Calculate upload size first
+    const size_t upload_size = render_state.vertex_count * sizeof(ui_vertex_t);
+    
+    // CRITICAL: Ensure buffer is large enough BEFORE any validation
+    // This way if we need to recreate, we do it before checking validity
+    ensure_ui_vbuf(upload_size);
     
     // CRITICAL: Check if context is valid before calling sg_update_buffer
     if (!sg_isvalid()) {
@@ -736,31 +1026,35 @@ void ui_microui_upload_vertices(void) {
         return;
     }
     
-    // Calculate upload size
-    const size_t upload_size = render_state.vertex_count * sizeof(render_state.vertices[0]);
+    // Check if buffers are valid (will request deferred recreation if needed)
+    if (!check_buffers_valid()) {
+        printf("⚠️ UI buffers not valid, skipping upload this frame\n");
+        return;
+    }
     
-    // CRITICAL: Ensure buffer is large enough for the data
-    ensure_ui_vbuf(upload_size);
+    // Bounds check is no longer needed as push_vertex already handles capacity
+    // and prevents overflow by requesting resize
     
-    // CRITICAL: Bounds check to prevent buffer overflow in static array
-    const size_t max_vertices = sizeof(render_state.vertices) / sizeof(render_state.vertices[0]);
-    if ((size_t)render_state.vertex_count > max_vertices) {
-        printf("❌ ERROR: MicroUI vertex count %d exceeds static array capacity %zu!\n", 
-               render_state.vertex_count, max_vertices);
-        render_state.vertex_count = (int)max_vertices;  // Clamp to prevent overflow
+    // Recalculate upload size after potential clamping
+    const size_t final_upload_size = render_state.vertex_count * sizeof(render_state.vertices[0]);
+    if (final_upload_size > render_state.vbuf_size) {
+        printf("❌ ERROR: Final upload size %zu exceeds buffer size %zu\n", 
+               final_upload_size, render_state.vbuf_size);
+        return;
     }
     
     // Log upload details periodically for debugging
     static int upload_counter = 0;
     if (upload_counter++ % 60 == 0) {  // Once per second
-        printf("🎨 MicroUI: Uploading %d vertices (%zu bytes to %zu byte buffer)\n", 
-               render_state.vertex_count, upload_size, render_state.vbuf_size);
+        printf("🎨 MicroUI: Uploading %d vertices (%zu bytes to %zu byte buffer, id=%u)\n", 
+               render_state.vertex_count, final_upload_size, render_state.vbuf_size,
+               render_state.bind.vertex_buffers[0].id);
     }
     
     // Upload vertex data to GPU (MUST be called outside any render pass)
     sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
         .ptr = render_state.vertices,
-        .size = upload_size
+        .size = final_upload_size
     });
     
     // Verify context is still valid after upload
@@ -770,6 +1064,11 @@ void ui_microui_upload_vertices(void) {
 }
 
 void ui_microui_render(int screen_width, int screen_height) {
+    // CRITICAL: Don't render if renderer isn't ready
+    if (!render_state.ready) {
+        return;
+    }
+    
     // Commands have already been processed in end_frame
     // Just apply state and draw the vertices (buffer upload happens separately)
     
@@ -871,19 +1170,15 @@ bool ui_microui_handle_event(const void* event) {
     if (queue_usage > 0.8f) {
         static int overflow_warning_count = 0;
         if (overflow_warning_count++ < 5) {  // Limit spam
-            printf("⚠️ MicroUI: Event queue at %.0f%% capacity, processing immediately\n", 
-                   queue_usage * 100);
+            printf("⚠️ MicroUI: Event queue at %.0f%% capacity, dropping old events\n", queue_usage * 100);
         }
         
-        // Process events immediately to prevent overflow
-        for (int i = 0; i < g_ui_context.event_queue.count; i++) {
-            ui_microui_process_event(&g_ui_context.event_queue.events[i]);
-        }
-        g_ui_context.event_queue.count = 0;
-        
-        // Process the current event too
-        ui_microui_process_event(ev);
-        return true;
+        // Drop oldest events to make room
+        int events_to_drop = g_ui_context.event_queue.count / 4;  // Drop 25% of queue
+        memmove(&g_ui_context.event_queue.events[0], 
+                &g_ui_context.event_queue.events[events_to_drop],
+                (g_ui_context.event_queue.count - events_to_drop) * sizeof(sapp_event));
+        g_ui_context.event_queue.count -= events_to_drop;
     }
     
     // Queue the event for processing during frame
@@ -925,6 +1220,10 @@ static void ui_microui_process_event(const sapp_event* ev) {
         case SAPP_EVENTTYPE_MOUSE_DOWN:
             g_ui_context.mouse_buttons |= (1 << ev->mouse_button);
             mu_input_mousedown(ctx, ev->mouse_x, ev->mouse_y, 1 << ev->mouse_button);
+            
+            // NOTE: Pointer capture disabled - causes Metal context invalidation
+            // sapp_lock_mouse(true);
+            
             printf("🎨 MicroUI: Mouse down at (%.0f,%.0f) button=%d mu_button=%d\n", 
                    ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
             break;
@@ -932,6 +1231,12 @@ static void ui_microui_process_event(const sapp_event* ev) {
         case SAPP_EVENTTYPE_MOUSE_UP:
             g_ui_context.mouse_buttons &= ~(1 << ev->mouse_button);
             mu_input_mouseup(ctx, ev->mouse_x, ev->mouse_y, 1 << ev->mouse_button);
+            
+            // NOTE: Pointer capture disabled - causes Metal context invalidation
+            // if (g_ui_context.mouse_buttons == 0) {
+            //     sapp_lock_mouse(false);
+            // }
+            
             printf("🎨 MicroUI: Mouse up at (%.0f,%.0f) button=%d mu_button=%d\n", 
                    ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
             break;
@@ -1061,6 +1366,6 @@ bool ui_microui_is_font_texture_bound(void) {
 
 size_t ui_microui_get_memory_usage(void) {
     // Basic memory usage calculation
-    return sizeof(g_ui_context) + sizeof(render_state) + 
-           (render_state.vertex_count * sizeof(render_state.vertices[0]));
+    size_t vertex_memory = render_state.vertex_capacity * sizeof(ui_vertex_t);
+    return sizeof(g_ui_context) + sizeof(render_state) + vertex_memory;
 }
