@@ -6,9 +6,8 @@
 .PHONY: default all clean test help run
 
 # Default target builds everything
-default: assets all
-	@echo "✅ Build complete: assets compiled, game built"
-	@echo "ℹ️  Run 'make test' separately to run tests"
+default: assets test all
+	@echo "✅ Build complete: assets compiled, tests passed, game built"
 
 # Build just the game executable (depends on assets)
 all: assets $(TARGET)
@@ -58,7 +57,7 @@ help:
 	@echo "CGame Build System"
 	@echo "=================="
 	@echo "Available targets:"
-	@echo "  make          - Build everything (assets, tests, game)"
+	@echo "  make          - Build everything (assets, run tests, build game)"
 	@echo "  make test     - Run all tests"
 	@echo "  make all      - Build the game executable (with assets)"
 	@echo "  make run      - Build everything and run the game"

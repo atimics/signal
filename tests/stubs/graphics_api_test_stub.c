@@ -20,6 +20,26 @@
 // Sokol constants
 #define SG_INVALID_ID 0
 
+// Sokol backend enum
+typedef enum sg_backend {
+    SG_BACKEND_GLCORE33,
+    SG_BACKEND_GLES3,
+    SG_BACKEND_D3D11,
+    SG_BACKEND_METAL_IOS,
+    SG_BACKEND_METAL_MACOS,
+    SG_BACKEND_METAL_SIMULATOR,
+    SG_BACKEND_WGPU,
+    SG_BACKEND_DUMMY,
+} sg_backend;
+
+// Sokol features struct
+typedef struct sg_features {
+    bool origin_top_left;
+    bool image_clamp_to_border;
+    bool mrt_independent_blend_state;
+    bool mrt_independent_write_mask;
+} sg_features;
+
 // Static dummy resources for testing
 static MaterialProperties dummy_material = {
     .id = 1,
@@ -179,6 +199,20 @@ void sg_setup(void* desc) {
 
 void sg_shutdown(void) {
     // No-op in test mode
+}
+
+// Sokol query functions for graphics_health.c
+sg_backend sg_query_backend(void) {
+    return SG_BACKEND_DUMMY;
+}
+
+sg_features sg_query_features(void) {
+    sg_features features = {0};
+    features.origin_top_left = true;
+    features.image_clamp_to_border = true;
+    features.mrt_independent_blend_state = true;
+    features.mrt_independent_write_mask = true;
+    return features;
 }
 
 // Note: Shader system stubs moved to asset_stubs.c to avoid conflicts

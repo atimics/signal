@@ -1,6 +1,8 @@
 #pragma once
 #include "sokol_gfx.h"
+#ifndef TEST_MODE
 #include "sokol_app.h"
+#endif
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>

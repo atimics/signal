@@ -17,7 +17,7 @@ TEST_UTILITIES = $(TEST_SUPPORT_DIR)/test_utilities.c
 # Core engine dependencies for tests
 CORE_TEST_DEPS = src/core.c src/gpu_resources.c
 PHYSICS_TEST_DEPS = $(CORE_TEST_DEPS) src/system/physics.c
-RENDERING_TEST_DEPS = $(CORE_TEST_DEPS) src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c src/graphics_health.c
+RENDERING_TEST_DEPS = $(CORE_TEST_DEPS) src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c src/graphics_health.c src/render_pass_guard.c
 RENDERING_WITH_ASSETS_DEPS = $(RENDERING_TEST_DEPS) src/assets.c
 
 # Test compilation template
@@ -49,7 +49,7 @@ $(eval $(call COMPILE_TEST,test_core_world,tests/core/test_world.c,-DTEST_STANDA
 $(eval $(call COMPILE_TEST,test_rendering,tests/rendering/test_rendering.c,-DTEST_STANDALONE,$(RENDERING_TEST_DEPS) $(TEST_STUBS_WITH_ASSETS)))
 
 # NEW: Comprehensive render layers tests (without assets.c to avoid symbol conflicts)
-$(eval $(call COMPILE_TEST,test_render_layers,tests/rendering/test_render_layers.c,-DTEST_STANDALONE,src/render_layers.c $(CORE_TEST_DEPS) src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c $(TEST_STUBS_WITH_ASSETS)))
+$(eval $(call COMPILE_TEST,test_render_layers,tests/rendering/test_render_layers.c,-DTEST_STANDALONE,src/render_layers.c src/render_pass_guard.c $(CORE_TEST_DEPS) src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c src/graphics_health.c $(TEST_STUBS_WITH_ASSETS)))
 
 # NEW: UI rendering pipeline tests (use UI function stubs instead of real UI source)
 $(eval $(call COMPILE_TEST,test_ui_rendering_pipeline,tests/rendering/test_ui_rendering_pipeline.c,-DTEST_STANDALONE,$(CORE_TEST_DEPS) $(TEST_STUBS) $(TEST_STUBS_DIR)/ui_function_stubs.c))

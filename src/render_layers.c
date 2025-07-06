@@ -292,9 +292,13 @@ void layer_manager_resize(LayerManager* manager, int screen_width, int screen_he
     for (int i = 0; i < manager->layer_count; i++) {
         RenderLayer* layer = &manager->layers[i];
         
-        // Store layer config
+        // Store layer config (copy name to avoid overlap)
+        char name_copy[LAYER_NAME_MAX_LEN];
+        strncpy(name_copy, layer->name, LAYER_NAME_MAX_LEN - 1);
+        name_copy[LAYER_NAME_MAX_LEN - 1] = '\0';
+        
         RenderLayerConfig config = {
-            .name = layer->name,
+            .name = name_copy,
             .width = screen_width,
             .height = screen_height,
             .needs_depth = (layer->depth_target.id != SG_INVALID_ID),
