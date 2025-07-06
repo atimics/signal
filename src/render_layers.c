@@ -514,27 +514,8 @@ void layer_begin_render(RenderLayer* layer) {
     // CRITICAL: Assert no encoder is already active
     ASSERT_NO_PASS_ACTIVE();
     
-    // Create pass descriptor first to avoid macro issues
-    sg_pass pass_desc = {
-        .attachments = layer->attachments,
-        .action = {
-            .colors[0] = {
-                .load_action = SG_LOADACTION_CLEAR,
-                .clear_value = layer->clear_color
-            },
-            .depth = {
-                .load_action = layer->depth_target.id != SG_INVALID_ID ? SG_LOADACTION_CLEAR : SG_LOADACTION_DONTCARE,
-                .clear_value = layer->clear_depth
-            },
-            .stencil = {
-                .load_action = layer->depth_target.id != SG_INVALID_ID ? SG_LOADACTION_CLEAR : SG_LOADACTION_DONTCARE,
-                .clear_value = layer->clear_stencil
-            }
-        }
-    };
-    
-    // Use PASS_BEGIN macro for safe pass management
-    PASS_BEGIN(layer->name, &pass_desc);
+    // Use unified layer pass helper
+    BEGIN_LAYER_PASS(layer);
     
     // printf("🎨 LAYER DEBUG: sg_begin_pass completed for layer '%s'\n", layer->name);
     

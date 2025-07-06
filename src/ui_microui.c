@@ -251,27 +251,22 @@ static void recreate_ui_buffers(void) {
     }
 }
 
-static void ensure_ui_vbuf(size_t needed_bytes) {
+static bool ensure_ui_vbuf(size_t needed_bytes) {
     // If we have enough space, nothing to do
     if (needed_bytes <= render_state.vbuf_size) {
-        return;
+        return true;
     }
     
     // CRITICAL: On Metal, we cannot destroy/recreate buffers during a frame
     // Request deferred recreation instead
     printf("❌ CRITICAL: UI vertex buffer too small! Need %zu bytes but only have %zu\n", 
            needed_bytes, render_state.vbuf_size);
-    printf("❌ Requesting deferred buffer recreation\n");
     
     request_ui_buffer_recreate();
     
-    // For now, clamp the vertex count to avoid overflow
-    size_t max_vertices = render_state.vbuf_size / sizeof(ui_vertex_t);
-    if (render_state.vertex_count > (int)max_vertices) {
-        printf("⚠️ Clamping vertex count from %d to %zu\n", 
-               render_state.vertex_count, max_vertices);
-        render_state.vertex_count = (int)max_vertices;
-    }
+    // Abort upload this frame to prevent buffer overflow
+    printf("⚠️ Aborting UI upload this frame (buffer too small)\n");
+    return false;  // Caller must skip sg_update_buffer()
 }
 
 // ============================================================================
@@ -1043,7 +1038,9 @@ void ui_microui_upload_vertices(void) {
     
     // CRITICAL: Ensure buffer is large enough BEFORE any validation
     // This way if we need to recreate, we do it before checking validity
-    ensure_ui_vbuf(upload_size);
+    if (!ensure_ui_vbuf(upload_size)) {
+        return;  // Buffer too small, skip upload this frame
+    }
     
     // CRITICAL: Check if context is valid before calling sg_update_buffer
     if (!sg_isvalid()) {

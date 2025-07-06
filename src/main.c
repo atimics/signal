@@ -524,13 +524,11 @@ static void frame(void)
             printf("🎨 Context valid before UI vertex upload\n");
             
             // CRITICAL: Ensure no encoder is active before vertex upload
-            #ifdef DEBUG
             if (layer_is_encoder_active()) {
                 printf("❌ CRITICAL: Encoder still active before UI vertex upload! This indicates a missing layer_end_render()!\n");
                 // Force-end any active encoder to prevent crash
                 layer_end_render();
             }
-            #endif
             
             ui_microui_upload_vertices();
             ui_rendered = true;
