@@ -56,6 +56,11 @@ static void navigation_menu_init(struct World* world)
     
     nav_data.destination_count = 2;
     
+    printf("🧭 Navigation Menu UI: Initialized with %d destinations\n", nav_data.destination_count);
+    for (int i = 0; i < nav_data.destination_count; i++) {
+        printf("  [%d] %s - %s\n", i, nav_data.destinations[i], nav_data.descriptions[i]);
+    }
+    
     // Initialize control hints
     nav_data.nav_hints[0].action_name = "Navigate";
     nav_data.nav_hints[0].keyboard_hint = "↑↓ Arrow Keys";
