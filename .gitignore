@@ -130,6 +130,14 @@ tests/cmake_install.cmake
 tests/Makefile
 tests/CTestTestfile.cmake
 
+# Ignore files without extensions (except specific allowed ones)
+*
+!*/
+!*.*
+!Makefile
+!LICENSE
+!Doxyfile
+
 # Test artifacts and binary outputs
 tests/artifacts/*.bmp
 tests/artifacts/*.png
