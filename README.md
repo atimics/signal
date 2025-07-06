@@ -79,6 +79,21 @@ make test-thrusters
 - Left Trigger - Reverse thrust
 - Bumpers - Roll control
 
+## 🏗️ Codebase Structure
+
+The engine is organized into the following key directories:
+
+- **`src/`**: Core engine source code.
+  - **`core/`**: Entity-Component-System (ECS), math, and memory management.
+  - **`systems/`**: Gameplay logic (physics, AI, controls).
+  - **`render/`**: Rendering pipeline and graphics abstraction.
+  - **`asset/`**: Asset loading and management.
+  - **`ui/`**: User interface systems.
+- **`assets/`**: Game assets (meshes, textures, materials).
+- **`data/`**: Data-driven game content (scenes, entity templates).
+- **`docs/`**: All project documentation.
+- **`tests/`**: Unit and integration tests.
+
 ## 📚 Documentation
 
 For all technical documentation, development guides, and project management resources, please see the main **[Documentation Hub](./docs/README.md)**.
