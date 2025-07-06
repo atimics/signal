@@ -1,0 +1,81 @@
+# Asset Pipeline Configuration
+# ============================================================================
+
+# Find Python for asset compilation
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+# Asset directories
+set(CGAME_ASSET_SOURCE_DIR ${CMAKE_SOURCE_DIR}/assets)
+set(CGAME_ASSET_BUILD_DIR ${CMAKE_BINARY_DIR}/assets)
+
+# Asset pipeline script
+set(CGAME_ASSET_PIPELINE_SCRIPT ${CMAKE_SOURCE_DIR}/tools/build_pipeline.py)
+
+# Collect asset sources
+file(GLOB_RECURSE ASSET_SOURCES
+    ${CGAME_ASSET_SOURCE_DIR}/meshes/*.obj
+    ${CGAME_ASSET_SOURCE_DIR}/meshes/*.mtl
+    ${CGAME_ASSET_SOURCE_DIR}/meshes/*.png
+    ${CGAME_ASSET_SOURCE_DIR}/meshes/*.jpg
+    ${CGAME_ASSET_SOURCE_DIR}/meshes/*.json
+)
+
+# Create asset build directory
+file(MAKE_DIRECTORY ${CGAME_ASSET_BUILD_DIR})
+
+# Asset compilation command
+add_custom_command(
+    OUTPUT ${CGAME_ASSET_BUILD_DIR}/meshes/index.json
+    COMMAND ${Python3_EXECUTABLE} ${CGAME_ASSET_PIPELINE_SCRIPT}
+    DEPENDS ${ASSET_SOURCES} ${CGAME_ASSET_PIPELINE_SCRIPT}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "🔨 Compiling assets to binary format..."
+    VERBATIM
+)
+
+# Asset compilation target
+add_custom_target(assets ALL
+    DEPENDS ${CGAME_ASSET_BUILD_DIR}/meshes/index.json
+)
+
+# Ensure assets are built before the main executable
+add_dependencies(cgame assets)
+
+# Asset cleaning
+add_custom_target(clean-assets
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CGAME_ASSET_BUILD_DIR}
+    COMMENT "Cleaning asset build directory..."
+)
+
+# Development asset targets
+add_custom_target(rebuild-assets
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CGAME_ASSET_BUILD_DIR}
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target assets
+    COMMENT "Rebuilding all assets..."
+)
+
+# Watch assets (for development)
+if(UNIX AND NOT APPLE)
+    find_program(INOTIFYWAIT inotifywait)
+    if(INOTIFYWAIT)
+        add_custom_target(watch-assets
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/watch_assets.sh
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Watching assets for changes..."
+        )
+    endif()
+elseif(APPLE)
+    find_program(FSWATCH fswatch)
+    if(FSWATCH)
+        add_custom_target(watch-assets
+            COMMAND ${FSWATCH} -o ${CGAME_ASSET_SOURCE_DIR} | xargs -n1 -I{} ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target assets
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            COMMENT "Watching assets for changes..."
+        )
+    endif()
+endif()
+
+message(STATUS "Asset Pipeline Configuration:")
+message(STATUS "  Source Dir: ${CGAME_ASSET_SOURCE_DIR}")
+message(STATUS "  Build Dir: ${CGAME_ASSET_BUILD_DIR}")
+message(STATUS "  Pipeline Script: ${CGAME_ASSET_PIPELINE_SCRIPT}")

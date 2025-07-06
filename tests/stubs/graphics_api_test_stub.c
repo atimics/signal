@@ -17,6 +17,59 @@
 // Include the test nuklear definitions
 #include "ui_test_stubs.h"
 
+// GPU Resources stubs
+void gpu_resources_destroy(void* resources) {
+    (void)resources; // Unused in tests
+}
+
+void gpu_resources_init(void* resources) {
+    (void)resources; // Unused in tests
+}
+
+// Additional GPU resource stubs for rendering tests
+void* gpu_resources_get_vertex_buffer(void* resources) {
+    (void)resources;
+    return NULL;
+}
+
+void* gpu_resources_get_index_buffer(void* resources) {
+    (void)resources;
+    return NULL;
+}
+
+void* gpu_resources_get_texture(void* resources) {
+    (void)resources;
+    return NULL;
+}
+
+bool gpu_resources_is_vertex_buffer_valid(void* resources) {
+    (void)resources;
+    return false; // Invalid for tests
+}
+
+bool gpu_resources_is_index_buffer_valid(void* resources) {
+    (void)resources;
+    return false; // Invalid for tests
+}
+
+bool gpu_resources_is_texture_valid(void* resources) {
+    (void)resources;
+    return false; // Invalid for tests
+}
+
+// Graphics health stubs
+void gfx_health_check(void) {
+    // No-op for tests
+}
+
+void gfx_health_dump_diagnostics(void) {
+    // No-op for tests  
+}
+
+void gfx_health_log_draw_call(void) {
+    // No-op for tests
+}
+
 // Sokol constants
 #define SG_INVALID_ID 0
 

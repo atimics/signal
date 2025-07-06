@@ -1,0 +1,88 @@
+# Compiler Flags Configuration
+# ============================================================================
+
+# Common flags for all configurations
+set(CGAME_COMMON_FLAGS "")
+set(CGAME_C_FLAGS "")
+set(CGAME_CXX_FLAGS "")
+
+# Warning flags
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    list(APPEND CGAME_COMMON_FLAGS
+        -Wall
+        -Wextra
+        -Werror
+        -Wno-error=unused-but-set-variable
+        -Wno-error=null-pointer-subtraction
+    )
+    
+    # Development build flags
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        list(APPEND CGAME_COMMON_FLAGS
+            -g
+            -O0
+            -DDEBUG
+        )
+    endif()
+    
+    # Test mode flags
+    if(CGAME_BUILD_TESTS)
+        list(APPEND CGAME_COMMON_FLAGS
+            -DTEST_MODE
+            -DUNITY_TESTING
+            -Wno-error=unused-function
+            -Wno-error=unused-variable
+        )
+    endif()
+    
+elseif(MSVC)
+    list(APPEND CGAME_COMMON_FLAGS
+        /W4
+        /WX
+    )
+    
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        list(APPEND CGAME_COMMON_FLAGS
+            /Od
+            /DEBUG
+            /DDEBUG
+        )
+    endif()
+endif()
+
+# Sanitizer configuration
+if(CGAME_ENABLE_ASAN)
+    list(APPEND CGAME_COMMON_FLAGS -fsanitize=address -fno-omit-frame-pointer)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+endif()
+
+if(CGAME_ENABLE_TSAN)
+    list(APPEND CGAME_COMMON_FLAGS -fsanitize=thread)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
+endif()
+
+if(CGAME_ENABLE_UBSAN)
+    list(APPEND CGAME_COMMON_FLAGS -fsanitize=undefined)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+endif()
+
+# Apply flags
+string(REPLACE ";" " " CGAME_C_FLAGS_STR "${CGAME_COMMON_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CGAME_C_FLAGS_STR}")
+
+# Platform-specific flags
+if(CGAME_PLATFORM_MACOS)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSOKOL_METAL")
+elseif(CGAME_PLATFORM_LINUX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSOKOL_GLCORE33")
+elseif(CGAME_PLATFORM_WEB)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DSOKOL_GLES3")
+endif()
+
+# Output configuration
+message(STATUS "Compiler Configuration:")
+message(STATUS "  Compiler: ${CMAKE_C_COMPILER_ID}")
+message(STATUS "  C Flags: ${CMAKE_C_FLAGS}")
+if(CGAME_ENABLE_ASAN OR CGAME_ENABLE_TSAN OR CGAME_ENABLE_UBSAN)
+    message(STATUS "  Sanitizers: Enabled")
+endif()

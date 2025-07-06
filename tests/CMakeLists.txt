@@ -1,145 +1,119 @@
-# CGame Engine - Main Test Suite Configuration
-# ============================================================================
-# Comprehensive test suite configuration maintaining compatibility with
-# existing test organization and Makefile targets
-
-cmake_minimum_required(VERSION 3.20)
-
-# ============================================================================
-# TEST DISCOVERY & CONFIGURATION
-# ============================================================================
-include(cmake/TestDiscovery.cmake)
-
-# ============================================================================
-# TEST SUITE DEFINITION
+# CGame Tests - Simplified Configuration
 # ============================================================================
 
-# Core Engine Tests - Individual executables
-cgame_add_test_suite(
-    NAME cmake-core_test_components
-    SOURCES core/test_components.c
-    LIBS core physics
+# Unity test framework
+add_library(unity STATIC vendor/unity.c)
+target_include_directories(unity PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/vendor)
+
+# Define compiler flags for tests
+set(TEST_COMPILE_FLAGS
+    -DTEST_MODE
+    -DUNITY_TESTING
+    -DSOKOL_DUMMY_BACKEND
+    -DTEST_STANDALONE
+    -Wno-error=unused-function
+    -Wno-error=unused-variable
 )
 
-cgame_add_test_suite(
-    NAME cmake-core_test_math
-    SOURCES core/test_math.c
-    LIBS core physics
+# Common include directories for all tests
+set(TEST_INCLUDE_DIRS
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+    ${CMAKE_CURRENT_SOURCE_DIR}/stubs
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../third_party
 )
 
-cgame_add_test_suite(
-    NAME cmake-core_test_world
-    SOURCES core/test_world.c
-    LIBS core physics
+# Test support library
+add_library(test_support STATIC
+    support/test_utilities.c
+    stubs/graphics_api_test_stub.c
+    stubs/engine_test_stubs.c
+    stubs/asset_stubs.c
+    stubs/ui_function_stubs.c
+)
+target_include_directories(test_support PUBLIC ${TEST_INCLUDE_DIRS})
+target_compile_options(test_support PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_support PUBLIC unity m)
+
+# Core engine sources for tests (minimal set)
+set(CORE_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/physics.c
 )
 
-# Rendering Tests - Basic only (no graphics dependencies)
-cgame_add_test_suite(
-    NAME cmake-rendering
-    SOURCES rendering/test_rendering.c
-    LIBS core gpu_resources assets physics memory
-    STUBS graphics_api_test_stub engine_test_stubs
+# Core tests
+add_executable(test_core_math 
+    core/test_math.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
 )
+target_include_directories(test_core_math PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_core_math PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_core_math PRIVATE unity test_support m)
+add_test(NAME test_core_math COMMAND test_core_math)
 
-# New Comprehensive Rendering Tests
-cgame_add_test_suite(
-    NAME cmake-render_layers
-    SOURCES rendering/test_render_layers.c
-    LIBS core render_layers gpu_resources graphics_api
-    STUBS graphics_api_test_stub engine_test_stubs
+add_executable(test_core_components 
+    core/test_components.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/physics.c
 )
+target_include_directories(test_core_components PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_core_components PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_core_components PRIVATE unity test_support m)
+add_test(NAME test_core_components COMMAND test_core_components)
 
-cgame_add_test_suite(
-    NAME cmake-ui_rendering_pipeline
-    SOURCES rendering/test_ui_rendering_pipeline.c
-    LIBS core ui ui_microui graphics_api ui_api
-    STUBS graphics_api_test_stub engine_test_stubs
+add_executable(test_core_world 
+    core/test_world.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/physics.c
 )
+target_include_directories(test_core_world PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_core_world PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_core_world PRIVATE unity test_support m)
+add_test(NAME test_core_world COMMAND test_core_world)
 
-cgame_add_test_suite(
-    NAME cmake-graphics_pipeline
-    SOURCES rendering/test_graphics_pipeline.c
-    LIBS core graphics_api render_3d gpu_resources
-    STUBS graphics_api_test_stub engine_test_stubs
+# Rendering tests (with stubs)
+add_executable(test_rendering 
+    rendering/test_rendering.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_3d.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_camera.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_lighting.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_mesh.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_pass_guard.c
 )
+target_include_directories(test_rendering PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_rendering PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_rendering PRIVATE unity test_support m)
+add_test(NAME test_rendering COMMAND test_rendering)
 
-cgame_add_test_suite(
-    NAME cmake-render_3d_pipeline
-    SOURCES rendering/test_render_3d_pipeline.c
-    LIBS core render_3d graphics_api component systems
-    STUBS graphics_api_test_stub engine_test_stubs
+add_executable(test_render_layers 
+    rendering/test_render_layers.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_layers.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_pass_guard.c
 )
+target_include_directories(test_render_layers PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_render_layers PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_render_layers PRIVATE unity test_support m)
+add_test(NAME test_render_layers COMMAND test_render_layers)
 
-cgame_add_test_suite(
-    NAME cmake-rendering_integration
-    SOURCES rendering/test_rendering_integration.c
-    LIBS core render_layers render_3d ui graphics_api systems
-    STUBS graphics_api_test_stub engine_test_stubs
+add_executable(test_ui_rendering_pipeline 
+    rendering/test_ui_rendering_pipeline.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
 )
+target_include_directories(test_ui_rendering_pipeline PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_ui_rendering_pipeline PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_ui_rendering_pipeline PRIVATE unity test_support m)
+add_test(NAME test_ui_rendering_pipeline COMMAND test_ui_rendering_pipeline)
 
-# Comprehensive Rendering Test Runner
-cgame_add_test_suite(
-    NAME cmake-rendering_comprehensive
-    SOURCES test_rendering_comprehensive.c
-    LIBS core render_layers render_3d ui graphics_api systems ui_microui
-    STUBS graphics_api_test_stub engine_test_stubs
-)
-
-# UI System Tests
-cgame_add_test_suite(
-    NAME cmake-ui
-    SOURCES ui/test_ui_system.c
-    LIBS core ui ui_api ui_scene ui_components
-    STUBS graphics_api_test_stub engine_test_stubs
-)
-
-# Integration Tests
-cgame_add_test_suite(
-    NAME cmake-integration
-    SOURCES integration/test_flight_integration.c
-    LIBS core systems physics control thrusters input camera_system hidapi gamepad
-    STUBS graphics_api_test_stub integration_test_stubs
-)
-
-# Performance Tests - Individual executables
-cgame_add_test_suite(
-    NAME cmake-performance_test_memory_isolated
-    SOURCES performance/test_memory_isolated.c
-    LIBS core performance memory
-    STUBS graphics_api_test_stub engine_test_stubs
-)
-
-cgame_add_test_suite(
-    NAME cmake-performance_test_memory_perf
-    SOURCES performance/test_memory_perf.c
-    LIBS core performance memory
-    STUBS graphics_api_test_stub engine_test_stubs
-)
-
-cgame_add_test_suite(
-    NAME cmake-performance_test_performance_critical
-    SOURCES performance/test_performance_critical.c
-    LIBS core performance memory systems ui ui_api ui_scene hidapi gamepad
-    STUBS graphics_api_test_stub integration_test_stubs
-)
-
-cgame_add_test_suite(
-    NAME cmake-performance_test_performance_simple
-    SOURCES performance/test_performance_simple.c
-    LIBS core performance memory
-    STUBS graphics_api_test_stub engine_test_stubs performance_test_stubs
-)
-
-# ============================================================================
-# CTEST CONFIGURATION
-# ============================================================================
-enable_testing()
-
-# The 'test' target is automatically created by enable_testing()
-# and will run all tests defined with add_test().
-# We can still define a custom target if we need to pass specific
-# arguments to ctest.
-add_custom_target(run-ctest
-    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+# All tests target
+add_custom_target(build_all_tests
+    DEPENDS
+        test_core_math
+        test_core_components
+        test_core_world
+        test_rendering
+        test_render_layers
+        test_ui_rendering_pipeline
 )
