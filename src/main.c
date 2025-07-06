@@ -208,6 +208,9 @@ static void init(void)
     
     // Initialize graphics health monitoring
     gfx_health_init();
+    
+    // Initialize UI renderer early (before any scenes load)
+    ui_microui_init_renderer();
 
     printf("🌍 Setting up world...\n");
 
@@ -521,37 +524,26 @@ static void frame(void)
     // CRITICAL FIX: Only render UI layer if UI is actually visible
     // This prevents empty UI context from being composited and causing magenta artifacts
     if (ui_layer && ui_visible && layer_should_update(app_state.layer_manager, ui_layer)) {
-        render_set_offscreen_mode(true);  // Switch to offscreen pipeline
-        
-        // Prepare UI (this generates vertices)
+        // 1. Build MicroUI command list (generates vertices)
         ui_render(&app_state.world, &app_state.scheduler, dt, 
                   app_state.scene_state.current_scene_name, screen_width, screen_height);
         
-        // CRITICAL FIX: Upload vertex data BEFORE starting the render pass
-        // sg_update_buffer() cannot be called inside an active render pass
-        // Ensure context is valid before upload
-        if (sg_isvalid()) {
+        // 2. Upload vertices while NO encoder is open
+        if (ui_microui_ready()) {
             printf("🎨 Context valid before UI vertex upload\n");
             ui_microui_upload_vertices();
-            if (!sg_isvalid()) {
-                printf("❌ Context became invalid after UI vertex upload!\n");
-            }
         } else {
-            printf("⚠️ Skipping UI vertex upload - context already invalid\n");
+            printf("⚠️ Skipping UI upload - renderer not ready\n");
+            goto ui_layer_done;
         }
         
-        // Only begin render if context is still valid
-        if (sg_isvalid()) {
-            layer_begin_render(ui_layer);
-            
-            // Render UI to offscreen target (now only applies state and draws)
-            ui_microui_render(screen_width, screen_height);
-            
-            layer_end_render();
-        } else {
-            printf("⚠️ Skipping UI layer render - context invalid\n");
-        }
-        render_set_offscreen_mode(false);  // Switch back to default pipeline
+        // 3. Now start the off-screen encoder and draw
+        render_set_offscreen_mode(true);          // begins encoder
+        layer_begin_render(ui_layer);
+        ui_microui_render(screen_width, screen_height);
+        layer_end_render();
+        render_set_offscreen_mode(false);         // closes encoder
+ui_layer_done:;
     }
     
     // UI layer enable/disable is now handled before render attempt
@@ -599,8 +591,8 @@ static void frame(void)
     // Clear flag to allow scene transitions for next frame
     frame_rendering_active = false;
     
-    // Process any deferred UI jobs (safe to create/destroy resources now)
-    ui_microui_process_deferred_jobs();
+    // Process deferred UI operations (safe to create/destroy resources now)
+    ui_microui_end_of_frame();
 
     // End performance frame timing
     performance_frame_end();

@@ -81,6 +81,19 @@ void ui_microui_render(int screen_width, int screen_height);
 void ui_microui_process_deferred_jobs(void);
 
 // ============================================================================
+// PUBLIC HELPERS FOR MAIN LOOP
+// ============================================================================
+
+// Check if UI renderer is ready (buffers & pipeline are VALID)
+bool ui_microui_ready(void);
+
+// One-shot renderer initialization (call at boot before any scenes)
+void ui_microui_init_renderer(void);
+
+// Call after sg_commit() each frame for deferred operations
+void ui_microui_end_of_frame(void);
+
+// ============================================================================
 // MICROUI INPUT HANDLING
 // ============================================================================
 

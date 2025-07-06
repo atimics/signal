@@ -201,7 +201,7 @@ static bool check_buffers_valid(void) {
 
 // Recreate UI buffers (called AFTER render pass ends)
 static void recreate_ui_buffers(void) {
-    printf("🔧 Recreating UI buffers (deferred)...\n");
+    printf("🔧 UI BUFFER RECREATE: Starting deferred buffer recreation...\n");
     
     // Destroy old buffer if it exists
     if (render_state.bind.vertex_buffers[0].id != SG_INVALID_ID) {
@@ -320,7 +320,7 @@ void ui_microui_process_deferred_jobs(void) {
 static void ui_apply_vertex_resize(void) {
     if (!render_state.need_resize) return;
     
-    printf("🔧 Resizing vertex array from %d to %d vertices\n", 
+    printf("🔧 UI DEFERRED RESIZE: Applying resize from %d to %d vertices\n", 
            render_state.vertex_capacity, render_state.requested_capacity);
     
     // Reallocate the vertex array
@@ -349,19 +349,20 @@ static void ui_apply_vertex_resize(void) {
 }
 
 void ui_microui_init(void) {
-    printf("🎨 Initializing Microui wrapper...\n");
+    printf("🎨 UI INIT: Starting MicroUI initialization...\n");
     
     // Clear the render state to ensure clean initialization
     memset(&render_state, 0, sizeof(render_state));
     
-    // Allocate initial vertex array with larger capacity for complex UIs
-    render_state.vertex_capacity = 16384;  // Increased from 8192 to handle navigation menu
+    // Set initial capacities large enough for navigation menu (≈1000 quads)
+    render_state.vertex_capacity = 4096;  // Sufficient for first menu
     render_state.vertices = malloc(render_state.vertex_capacity * sizeof(ui_vertex_t));
     if (!render_state.vertices) {
         printf("❌ ERROR: Failed to allocate initial vertex array\n");
         return;
     }
-    printf("🔧 Allocated vertex array with capacity for %d vertices\n", render_state.vertex_capacity);
+    printf("✅ UI INIT: Allocated vertex array - capacity=%d vertices, size=%zu bytes\n", 
+           render_state.vertex_capacity, render_state.vertex_capacity * sizeof(ui_vertex_t));
     
     // Initialize Microui context
     mu_init(&g_ui_context.mu_ctx);
@@ -855,6 +856,7 @@ void ui_microui_end_frame(void) {
     // Process all Microui commands
     mu_Command *cmd = NULL;
     int rect_count = 0, text_count = 0, clip_count = 0, icon_count = 0;
+    
     while (mu_next_command(&g_ui_context.mu_ctx, &cmd)) {
         render_state.command_count++;
         switch (cmd->type) {
@@ -882,11 +884,17 @@ void ui_microui_end_frame(void) {
         }
     }
     
-    // Log command breakdown (reduced frequency)
-    static int log_counter = 0;
-    if (render_state.command_count > 0 && (log_counter++ % 60 == 0)) { // Log once per second at 60fps
-        printf("🎨 MicroUI: %d commands (%d rect, %d text, %d clip, %d icon), %d vertices\n", 
-               render_state.command_count, rect_count, text_count, clip_count, icon_count, render_state.vertex_count);
+    // Log command breakdown - ALWAYS for debugging
+    if (render_state.command_count > 0) {
+        printf("📊 UI COMMANDS: %d commands (%d rect, %d text, %d clip, %d icon) → %d vertices (capacity=%d)\n", 
+               render_state.command_count, rect_count, text_count, clip_count, icon_count, 
+               render_state.vertex_count, render_state.vertex_capacity);
+        
+        // Warn if we're getting close to capacity
+        float usage = (float)render_state.vertex_count / render_state.vertex_capacity;
+        if (usage > 0.8f) {
+            printf("⚠️ UI CAPACITY WARNING: Using %.1f%% of vertex capacity!\n", usage * 100);
+        }
     }
 }
 
@@ -912,10 +920,14 @@ static void push_vertex(float x, float y, float u, float v, mu_Color color) {
         if (new_capacity > render_state.requested_capacity) {
             render_state.requested_capacity = new_capacity;
             render_state.need_resize = true;
-            printf("⚠️ UI: Vertex capacity exhausted (%d), requesting resize to %d for next frame\n",
-                   render_state.vertex_capacity, new_capacity);
+            printf("⚠️ UI RESIZE REQUEST: vertex_count=%d >= capacity=%d, requesting new_capacity=%d\n",
+                   render_state.vertex_count, render_state.vertex_capacity, new_capacity);
         }
-        // Skip this vertex to avoid overflow
+        // CRITICAL: Abort current frame to avoid overflow
+        static int abort_logged = 0;
+        if (abort_logged++ < 5) {
+            printf("❌ UI UPLOAD ABORTED: Stopping vertex upload to prevent buffer overflow\n");
+        }
         return;
     }
     
@@ -1016,6 +1028,11 @@ void ui_microui_upload_vertices(void) {
     // Calculate upload size first
     const size_t upload_size = render_state.vertex_count * sizeof(ui_vertex_t);
     
+    // Log upload attempt
+    static int upload_id = 0;
+    printf("📤 UI UPLOAD #%d: Uploading %d vertices (%zu bytes) to GPU buffer (size=%zu)\n",
+           ++upload_id, render_state.vertex_count, upload_size, render_state.vbuf_size);
+    
     // CRITICAL: Ensure buffer is large enough BEFORE any validation
     // This way if we need to recreate, we do it before checking validity
     ensure_ui_vbuf(upload_size);
@@ -1032,24 +1049,31 @@ void ui_microui_upload_vertices(void) {
         return;
     }
     
-    // Bounds check is no longer needed as push_vertex already handles capacity
-    // and prevents overflow by requesting resize
+    // CRITICAL: Double-check we're not writing beyond array bounds
+    if (!render_state.vertices) {
+        printf("❌ CRITICAL: Vertex array is NULL before upload!\n");
+        return;
+    }
+    
+    // Paranoid check - ensure we don't read beyond allocated memory
+    if (render_state.vertex_count > render_state.vertex_capacity) {
+        printf("❌ CRITICAL: vertex_count %d exceeds capacity %d!\n", 
+               render_state.vertex_count, render_state.vertex_capacity);
+        render_state.vertex_count = render_state.vertex_capacity;
+    }
     
     // Recalculate upload size after potential clamping
-    const size_t final_upload_size = render_state.vertex_count * sizeof(render_state.vertices[0]);
+    const size_t final_upload_size = render_state.vertex_count * sizeof(ui_vertex_t);
     if (final_upload_size > render_state.vbuf_size) {
         printf("❌ ERROR: Final upload size %zu exceeds buffer size %zu\n", 
                final_upload_size, render_state.vbuf_size);
         return;
     }
     
-    // Log upload details periodically for debugging
-    static int upload_counter = 0;
-    if (upload_counter++ % 60 == 0) {  // Once per second
-        printf("🎨 MicroUI: Uploading %d vertices (%zu bytes to %zu byte buffer, id=%u)\n", 
-               render_state.vertex_count, final_upload_size, render_state.vbuf_size,
-               render_state.bind.vertex_buffers[0].id);
-    }
+    // ALWAYS log upload attempts for debugging
+    printf("📤 UI UPLOAD: Uploading %d vertices (%zu bytes to %zu byte buffer, id=%u)\n", 
+           render_state.vertex_count, final_upload_size, render_state.vbuf_size,
+           render_state.bind.vertex_buffers[0].id);
     
     // Upload vertex data to GPU (MUST be called outside any render pass)
     sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){
@@ -1368,4 +1392,23 @@ size_t ui_microui_get_memory_usage(void) {
     // Basic memory usage calculation
     size_t vertex_memory = render_state.vertex_capacity * sizeof(ui_vertex_t);
     return sizeof(g_ui_context) + sizeof(render_state) + vertex_memory;
+}
+
+// ============================================================================
+// PUBLIC HELPERS FOR MAIN LOOP
+// ============================================================================
+
+bool ui_microui_ready(void) {
+    return render_state.ready && sg_isvalid();
+}
+
+void ui_microui_init_renderer(void) {
+    if (!render_state.ready) {
+        ui_microui_init();  // Call existing init routine
+    }
+}
+
+void ui_microui_end_of_frame(void) {
+    ui_apply_vertex_resize();           // Deferred CPU array resize
+    ui_microui_process_deferred_jobs(); // Deferred GPU buffer recreate
 }

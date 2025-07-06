@@ -78,7 +78,14 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
         // Safety check for destination data
         if (data->destination_count <= 0 || data->destination_count > 9) {
             printf("❌ ERROR: Invalid destination_count: %d\n", data->destination_count);
-            return;
+            // Initialize with safe defaults
+            data->destination_count = 3;
+            data->destinations[0] = "Ship Launch Test";
+            data->destinations[1] = "Flight Test";
+            data->destinations[2] = "Thruster Test";
+            data->descriptions[0] = "Test ship launch sequence";
+            data->descriptions[1] = "Free flight test mode";
+            data->descriptions[2] = "Test thruster systems";
         }
         
         menu_init(&data->main_menu, "FTL NAVIGATION SYSTEM");
