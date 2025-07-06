@@ -19,6 +19,13 @@ bool input_mapping_just_pressed(uint32_t action);
 #define INPUT_ACTION_NAV_DOWN 60
 #define INPUT_ACTION_CONFIRM 57
 
+// Scene input system - disabled temporarily to prevent crashes
+// TODO: Re-enable once proper event-based input system is implemented
+typedef struct {
+    bool up, down, left, right;
+    bool confirm, cancel, back;
+} MenuInput;
+
 // Navigation menu data (must match ui_navigation_menu_impl.c)
 typedef struct {
     int selected_index;
@@ -39,6 +46,13 @@ typedef struct {
 // Menu selection callback
 void navigation_menu_on_select(int item_index, void* user_data) {
     NavigationMenuData* data = (NavigationMenuData*)user_data;
+    
+    // Bounds check before accessing arrays
+    if (!data || item_index < 0 || item_index >= data->destination_count) {
+        printf("❌ Menu selection out of bounds: index=%d, count=%d\n", 
+               item_index, data ? data->destination_count : -1);
+        return;
+    }
     
     printf("🎮 Menu item selected: %s (index %d)\n", data->destinations[item_index], item_index);
     
@@ -61,11 +75,25 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
         return;
     }
     
+    // Validate data integrity
+    if (data->destination_count < 0 || data->destination_count > 9) {
+        printf("❌ ERROR: Invalid destination_count: %d\n", data->destination_count);
+        return;
+    }
+    
     // Get MicroUI context
     mu_Context* ctx = ui_microui_get_mu_context();
     if (!ctx) {
         printf("❌ No MicroUI context available\n");
         return;
+    }
+    
+    // Skip input handling for now to avoid crashes
+    // TODO: Implement proper event-based input once architecture is refactored
+    
+    // Always ensure selected_index is valid before any rendering
+    if (data->selected_index < 0 || data->selected_index >= data->destination_count) {
+        data->selected_index = 0;
     }
     
     // Initialize menu system on first call
@@ -107,14 +135,32 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
         printf("🎮 Navigation menu initialized with %d items\n", data->destination_count);
     }
     
-    // Sync selection state
-    data->main_menu.selected_index = data->selected_index;
+    // Sync selection state with bounds checking
+    if (data->main_menu.item_count > 0) {
+        // Ensure selected_index is within bounds before syncing
+        if (data->selected_index >= data->main_menu.item_count) {
+            data->selected_index = data->main_menu.item_count - 1;
+        }
+        if (data->selected_index < 0) {
+            data->selected_index = 0;
+        }
+        data->main_menu.selected_index = data->selected_index;
+    }
     
     // Render using the general menu system
     menu_render(&data->main_menu, ctx, delta_time);
     
-    // Sync back the selection state
-    data->selected_index = data->main_menu.selected_index;
+    // Sync back the selection state with bounds checking
+    if (data->main_menu.item_count > 0) {
+        data->selected_index = data->main_menu.selected_index;
+        // Double-check bounds after sync
+        if (data->selected_index >= data->destination_count) {
+            data->selected_index = data->destination_count - 1;
+        }
+        if (data->selected_index < 0) {
+            data->selected_index = 0;
+        }
+    }
     data->animation_timer = data->main_menu.animation_timer;
 }
 

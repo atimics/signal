@@ -4,6 +4,34 @@
 #include "scene_input.h"
 #include <stdio.h>
 
+// Forward declarations to avoid including sokol_app.h
+#define SAPP_KEYCODE_W 87
+#define SAPP_KEYCODE_A 65
+#define SAPP_KEYCODE_S 83
+#define SAPP_KEYCODE_D 68
+#define SAPP_KEYCODE_Q 81
+#define SAPP_KEYCODE_E 69
+#define SAPP_KEYCODE_UP 262
+#define SAPP_KEYCODE_DOWN 263
+#define SAPP_KEYCODE_LEFT 260
+#define SAPP_KEYCODE_RIGHT 261
+#define SAPP_KEYCODE_SPACE 32
+#define SAPP_KEYCODE_ENTER 257
+#define SAPP_KEYCODE_ESCAPE 256
+#define SAPP_KEYCODE_TAB 258
+#define SAPP_KEYCODE_C 67
+#define SAPP_KEYCODE_R 82
+#define SAPP_KEYCODE_F 70
+#define SAPP_KEYCODE_X 88
+#define SAPP_KEYCODE_P 80
+#define SAPP_KEYCODE_0 48
+#define SAPP_KEYCODE_1 49
+#define SAPP_KEYCODE_2 50
+#define SAPP_KEYCODE_3 51
+
+// Event structure forward declaration
+struct sapp_event;
+
 static bool g_debug_overlay = false;
 
 // Initialize scene input system
@@ -114,7 +142,7 @@ void scene_input_update(float delta_time) {
 }
 
 // Handle events
-bool scene_input_handle_event(const sapp_event* event) {
+bool scene_input_handle_event(const struct sapp_event* event) {
     return input_mapping_handle_event(event);
 }
 

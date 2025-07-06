@@ -124,6 +124,14 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                     if (mu_mouse_over(ctx, item_rect)) {
                         menu->selected_index = i;
                         
+                        // Bounds check after mouse update
+                        if (menu->selected_index < 0) {
+                            menu->selected_index = 0;
+                        }
+                        if (menu->selected_index >= menu->item_count) {
+                            menu->selected_index = menu->item_count - 1;
+                        }
+                        
                         if (ctx->mouse_pressed == MU_MOUSE_LEFT) {
                             if (menu->on_select && menu->items[i].enabled) {
                                 menu->on_select(i, menu->callback_data);
@@ -160,8 +168,12 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                 mu_layout_row(ctx, 1, (int[]){-1}, 10);
                 mu_label(ctx, "");  // Spacer
                 
-                // Show description for selected item
+                // Show description for selected item  
                 if (menu->selected_index >= 0 && menu->selected_index < menu->item_count) {
+                    // Extra safety check
+                    if (menu->selected_index >= MENU_MAX_ITEMS) {
+                        menu->selected_index = menu->item_count - 1;
+                    }
                     const char* desc = menu->items[menu->selected_index].description;
                     if (desc && strlen(desc) > 0) {
                         // Word wrap description
@@ -230,6 +242,14 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                     mu_Rect item_rect = mu_layout_next(ctx);
                     if (mu_mouse_over(ctx, item_rect)) {
                         menu->selected_index = i;
+                        
+                        // Bounds check after mouse update
+                        if (menu->selected_index < 0) {
+                            menu->selected_index = 0;
+                        }
+                        if (menu->selected_index >= menu->item_count) {
+                            menu->selected_index = menu->item_count - 1;
+                        }
                         
                         if (ctx->mouse_pressed == MU_MOUSE_LEFT) {
                             if (menu->on_select && menu->items[i].enabled) {
