@@ -50,27 +50,28 @@ extern pass_guard_t g_pass_guard;
 
 /* Layer begin helper - simplified */
 #define BEGIN_LAYER_PASS(layer) \
-    PASS_BEGIN((layer)->name, &(sg_pass){ \
-        .attachments = (layer)->attachments, \
-        .action = { \
-            .colors[0] = { \
-                .load_action = SG_LOADACTION_CLEAR, \
-                .clear_value = (layer)->clear_color \
-            }, \
-            .depth = { \
-                .load_action = (layer)->depth_target.id != SG_INVALID_ID ? SG_LOADACTION_CLEAR : SG_LOADACTION_DONTCARE, \
-                .clear_value = (layer)->clear_depth \
-            }, \
-            .stencil = { \
-                .load_action = (layer)->depth_target.id != SG_INVALID_ID ? SG_LOADACTION_CLEAR : SG_LOADACTION_DONTCARE, \
-                .clear_value = (layer)->clear_stencil \
+    do { \
+        sg_pass layer_pass = { \
+            .attachments = (layer)->attachments, \
+            .action = { \
+                .colors[0] = { \
+                    .load_action = SG_LOADACTION_CLEAR, \
+                    .clear_value = (layer)->clear_color \
+                }, \
+                .depth = { \
+                    .load_action = (layer)->depth_target.id != SG_INVALID_ID ? SG_LOADACTION_CLEAR : SG_LOADACTION_DONTCARE, \
+                    .clear_value = (layer)->clear_depth \
+                }, \
+                .stencil = { \
+                    .load_action = (layer)->depth_target.id != SG_INVALID_ID ? SG_LOADACTION_CLEAR : SG_LOADACTION_DONTCARE, \
+                    .clear_value = (layer)->clear_stencil \
+                } \
             } \
-        } \
-    })
+        }; \
+        PASS_BEGIN((layer)->name, &layer_pass); \
+    } while(0)
 
 /* Helper to check if encoder is active */
 static inline bool layer_is_encoder_active(void) {
     return g_pass_guard.active;
 }
-
-#endif
