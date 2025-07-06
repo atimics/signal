@@ -32,6 +32,8 @@ SOURCES = core.c systems.c \
           scripts/flight_test_scene.c \
           scripts/scene_selector_scene.c scripts/navigation_menu_scene.c \
           scripts/ship_launch_test_scene.c \
+          game_input.c hal/input_hal_sokol.c hal/input_hal_mock.c \
+          services/input_service.c input_compat.c \
           config.c hidapi_mac.c main.c
 
 # Object files

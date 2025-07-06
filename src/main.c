@@ -22,6 +22,7 @@
 #include "render_layers.h"  // Offscreen rendering system
 #include "graphics_health.h"  // Graphics health monitoring
 #include "render_pass_guard.h"  // Encoder state management
+#include "game_input.h"  // New input system management
 
 // UI system includes
 
@@ -191,6 +192,14 @@ static void init(void)
 
     // Initialize random seed
     srand((unsigned int)time(NULL));
+    
+    // Initialize input system (new architecture)
+    printf("🎮 Initializing input system...\n");
+    if (!game_input_init()) {
+        printf("❌ Failed to initialize input system\n");
+        sapp_quit();
+        return;
+    }
 
     printf("🔧 Initializing graphics...\n");
 
@@ -436,6 +445,9 @@ static void frame(void)
         printf("🎬 Scene transition completed: now in %s\n", next_scene);
     }
 
+    // Process input first (new system)
+    game_input_process_frame(dt);
+    
     // Update world and systems
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
@@ -643,6 +655,9 @@ static void cleanup(void)
     scheduler_destroy(&app_state.scheduler, &app_state.render_config);
     world_destroy(&app_state.world);
     
+    // Shutdown input system
+    game_input_shutdown();
+    
     // Shutdown configuration system
     config_shutdown();
 
@@ -652,6 +667,13 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
+    // Forward events to the new input HAL if enabled
+    if (game_input_is_new_system_enabled()) {
+        // The Sokol HAL needs this callback
+        extern void input_hal_sokol_event_handler(const sapp_event* e);
+        input_hal_sokol_event_handler(ev);
+    }
+    
     // Handle UI events first - if UI captures the event, don't process it further
     if (ui_handle_event(ev))
     {
@@ -680,15 +702,7 @@ static void event(const sapp_event* ev)
                 }
                 // For other scenes, ESC is handled by scene scripts (return to navigation menu)
             }
-            // TAB key opens navigation menu from any scene
-            else if (ev->key_code == SAPP_KEYCODE_TAB)
-            {
-                if (strcmp(app_state.scene_state.current_scene_name, "navigation_menu") != 0)
-                {
-                    printf("🧭 TAB pressed - opening navigation menu\n");
-                    scene_state_request_transition(&app_state.scene_state, "navigation_menu");
-                }
-            }
+            // TAB key handling moved to new input system
             // Toggle debug UI with tilde (~) key
             else if (ev->key_code == SAPP_KEYCODE_GRAVE_ACCENT)
             {

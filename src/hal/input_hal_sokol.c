@@ -7,6 +7,7 @@
 #include "../sokol_app.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #define MAX_QUEUED_EVENTS 256
 
@@ -48,7 +49,9 @@ static void queue_event(SokolInputHAL* hal, const HardwareInputEvent* event) {
 
 // Sokol event handler - called by Sokol framework
 void input_hal_sokol_event_handler(const sapp_event* e) {
-    if (!g_sokol_hal) return;
+    if (!g_sokol_hal) {
+        return;  // Silently ignore if not initialized
+    }
     
     HardwareInputEvent event = {0};
     event.timestamp = g_sokol_hal->frame_count;
@@ -140,7 +143,9 @@ static bool sokol_init(InputHAL* self, void* platform_data) {
     (void)platform_data;
     
     SokolInputHAL* hal = (SokolInputHAL*)calloc(1, sizeof(SokolInputHAL));
-    if (!hal) return false;
+    if (!hal) {
+        return false;
+    }
     
     // Initialize state
     hal->mouse_visible = true;

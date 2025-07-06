@@ -6,6 +6,7 @@
 #include "input_hal.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stddef.h>  // For offsetof
 
 #define MAX_QUEUED_EVENTS 256
 
@@ -25,6 +26,7 @@ typedef struct MockInputHAL {
 
 // Implementation functions
 static bool mock_init(InputHAL* self, void* platform_data) {
+    (void)self;  // Not used in mock
     (void)platform_data;
     return true;
 }
@@ -40,7 +42,8 @@ static void mock_poll_events(InputHAL* self) {
 }
 
 static bool mock_get_next_event(InputHAL* self, HardwareInputEvent* event) {
-    MockInputHAL* mock = (MockInputHAL*)self->platform_data;
+    // Cast from InputHAL* to MockInputHAL* using container_of pattern
+    MockInputHAL* mock = (MockInputHAL*)((char*)self - offsetof(MockInputHAL, base));
     
     if (mock->event_read_pos < mock->event_count) {
         *event = mock->events[mock->event_read_pos++];
@@ -57,7 +60,8 @@ static bool mock_get_next_event(InputHAL* self, HardwareInputEvent* event) {
 }
 
 static bool mock_is_key_pressed(InputHAL* self, uint32_t key) {
-    MockInputHAL* mock = (MockInputHAL*)self->platform_data;
+    // Cast from InputHAL* to MockInputHAL* using container_of pattern
+    MockInputHAL* mock = (MockInputHAL*)((char*)self - offsetof(MockInputHAL, base));
     if (key < 512) {
         return mock->keys[key];
     }
@@ -65,13 +69,15 @@ static bool mock_is_key_pressed(InputHAL* self, uint32_t key) {
 }
 
 static void mock_get_mouse_position(InputHAL* self, float* x, float* y) {
-    MockInputHAL* mock = (MockInputHAL*)self->platform_data;
+    // Cast from InputHAL* to MockInputHAL* using container_of pattern
+    MockInputHAL* mock = (MockInputHAL*)((char*)self - offsetof(MockInputHAL, base));
     if (x) *x = mock->mouse_x;
     if (y) *y = mock->mouse_y;
 }
 
 static void mock_set_mouse_capture(InputHAL* self, bool captured) {
-    MockInputHAL* mock = (MockInputHAL*)self->platform_data;
+    // Cast from InputHAL* to MockInputHAL* using container_of pattern
+    MockInputHAL* mock = (MockInputHAL*)((char*)self - offsetof(MockInputHAL, base));
     mock->mouse_captured = captured;
 }
 
@@ -102,16 +108,18 @@ InputHAL* input_hal_create_mock(void) {
     mock->base.set_mouse_capture = mock_set_mouse_capture;
     mock->base.set_mouse_visible = mock_set_mouse_visible;
     mock->base.vibrate_gamepad = mock_vibrate_gamepad;
-    mock->base.platform_data = mock;
+    // No longer need to set platform_data since we use container_of pattern
+    mock->base.platform_data = NULL;
     
     return &mock->base;
 }
 
 // Test helper functions
 void mock_input_queue_key_event(InputHAL* hal, uint32_t key, bool pressed) {
-    if (!hal || !hal->platform_data) return;
+    if (!hal) return;
     
-    MockInputHAL* mock = (MockInputHAL*)hal->platform_data;
+    // Cast from InputHAL* to MockInputHAL* using container_of pattern
+    MockInputHAL* mock = (MockInputHAL*)((char*)hal - offsetof(MockInputHAL, base));
     if (mock->event_count < MAX_QUEUED_EVENTS) {
         HardwareInputEvent* event = &mock->events[mock->event_count++];
         event->timestamp = mock->event_count;  // Simple incrementing timestamp
@@ -128,9 +136,10 @@ void mock_input_queue_key_event(InputHAL* hal, uint32_t key, bool pressed) {
 }
 
 void mock_input_queue_mouse_move(InputHAL* hal, float x, float y) {
-    if (!hal || !hal->platform_data) return;
+    if (!hal) return;
     
-    MockInputHAL* mock = (MockInputHAL*)hal->platform_data;
+    // Cast from InputHAL* to MockInputHAL* using container_of pattern
+    MockInputHAL* mock = (MockInputHAL*)((char*)hal - offsetof(MockInputHAL, base));
     if (mock->event_count < MAX_QUEUED_EVENTS) {
         HardwareInputEvent* event = &mock->events[mock->event_count++];
         event->timestamp = mock->event_count;

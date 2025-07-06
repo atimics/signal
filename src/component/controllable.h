@@ -5,7 +5,7 @@
 #define COMPONENT_CONTROLLABLE_H
 
 #include "../core.h"
-#include "../system/input_mapping.h"
+#include "../services/input_service.h"
 #include <stdbool.h>
 
 // Forward declarations
@@ -56,7 +56,7 @@ typedef enum {
 
 // Axis configuration
 typedef struct {
-    InputAction action;          // Which input action drives this axis
+    InputActionID action;        // Which input action drives this axis
     float sensitivity;           // Sensitivity multiplier
     float dead_zone;            // Dead zone threshold
     bool inverted;              // Invert axis
@@ -80,11 +80,11 @@ typedef struct Controllable {
     AxisConfig roll_axis;
     
     // Action mappings
-    InputAction boost_action;
-    InputAction brake_action;
-    InputAction stabilize_action;
-    InputAction primary_action;
-    InputAction secondary_action;
+    InputActionID boost_action;
+    InputActionID brake_action;
+    InputActionID stabilize_action;
+    InputActionID primary_action;
+    InputActionID secondary_action;
     
     // Force multipliers (entity-specific tuning)
     float linear_force_scale;    // Overall linear force multiplier

@@ -90,8 +90,9 @@ static bool matches_binding(const HardwareInputEvent* hw_event, const InputBindi
             
         case INPUT_DEVICE_GAMEPAD:
             return hw_event->data.gamepad.id == binding->binding.gamepad.gamepad_id &&
-                   hw_event->data.gamepad.button == binding->binding.gamepad.button;
+                   (hw_event->data.gamepad.buttons & (1 << binding->binding.gamepad.button)) != 0;
             
+        case INPUT_DEVICE_TOUCH:
         default:
             return false;
     }
@@ -114,13 +115,18 @@ static float get_binding_value(const HardwareInputEvent* hw_event, const InputBi
             break;
             
         case INPUT_DEVICE_GAMEPAD:
-            if (hw_event->data.gamepad.button != 0xFF) {
-                // Digital button
-                value = hw_event->data.gamepad.pressed ? 1.0f : 0.0f;
+            // Check if this specific button is pressed
+            if (hw_event->data.gamepad.buttons & (1 << binding->binding.gamepad.button)) {
+                value = 1.0f;
             } else {
-                // Analog axis - TODO: Implement axis support
                 value = 0.0f;
             }
+            // TODO: Add analog axis support using hw_event->data.gamepad.axes[]
+            break;
+            
+        case INPUT_DEVICE_TOUCH:
+            // TODO: Implement touch support
+            value = 0.0f;
             break;
     }
     
@@ -328,7 +334,9 @@ static void input_service_process_frame(InputService* self, float delta_time) {
 }
 
 static bool input_service_get_next_event(InputService* self, InputEvent* event) {
-    if (!self || !self->internal || !event) return false;
+    if (!self || !self->internal || !event) {
+        return false;
+    }
     
     InputServiceData* data = (InputServiceData*)self->internal;
     
@@ -506,10 +514,15 @@ void input_service_setup_default_bindings(InputService* service) {
     binding.binding.keyboard.key = 27;  // Escape (SAPP_KEYCODE_ESCAPE)
     service->bind_action(service, INPUT_ACTION_UI_CANCEL, INPUT_CONTEXT_MENU, &binding);
     
+    // UI Menu: Tab key (for navigation menu)
+    binding.device = INPUT_DEVICE_KEYBOARD;
+    binding.binding.keyboard.key = 258;  // Tab (SAPP_KEYCODE_TAB)
+    service->bind_action(service, INPUT_ACTION_UI_MENU, INPUT_CONTEXT_MENU, &binding);
+    
     // Mouse bindings for UI
     binding.device = INPUT_DEVICE_MOUSE;
     binding.binding.mouse.button = 0;  // Left click for confirm
     service->bind_action(service, INPUT_ACTION_UI_CONFIRM, INPUT_CONTEXT_MENU, &binding);
     
-    printf("✅ Default input bindings configured\n");
+    printf("✅ Default input bindings configured (including Tab->UI_MENU)\n");
 }

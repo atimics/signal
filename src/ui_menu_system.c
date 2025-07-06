@@ -8,6 +8,12 @@
 #include <string.h>
 #include <math.h>
 
+// Helper function to keep selection within bounds
+static inline void menu_clamp_selection(Menu* menu) {
+    if (menu->selected_index < 0) menu->selected_index = 0;
+    if (menu->selected_index >= menu->item_count) menu->selected_index = menu->item_count - 1;
+}
+
 void menu_init(Menu* menu, const char* title) {
     memset(menu, 0, sizeof(Menu));
     strncpy(menu->title, title, MENU_MAX_TEXT_LENGTH - 1);
@@ -97,7 +103,7 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                 for (int i = 0; i < menu->item_count; i++) {
                     mu_layout_row(ctx, 1, (int[]){-1}, 25);
                     
-                    char display_text[MENU_MAX_TEXT_LENGTH + 16];
+                    static char display_text[MENU_MAX_TEXT_LENGTH + 16];
                     if (menu->terminal_style) {
                         if (i == menu->selected_index && menu->show_cursor) {
                             // Flashing cursor effect
@@ -117,20 +123,16 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                         }
                     }
                     
-                    mu_label(ctx, display_text);
+                    // Get the rect that mu_label() would use
+                    mu_Rect item_rect = mu_layout_next(ctx);
+                    
+                    // Draw label inside rect  
+                    mu_draw_control_text(ctx, display_text, item_rect, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
                     
                     // Handle mouse interaction
-                    mu_Rect item_rect = mu_layout_next(ctx);
                     if (mu_mouse_over(ctx, item_rect)) {
                         menu->selected_index = i;
-                        
-                        // Bounds check after mouse update
-                        if (menu->selected_index < 0) {
-                            menu->selected_index = 0;
-                        }
-                        if (menu->selected_index >= menu->item_count) {
-                            menu->selected_index = menu->item_count - 1;
-                        }
+                        menu_clamp_selection(menu);
                         
                         if (ctx->mouse_pressed == MU_MOUSE_LEFT) {
                             if (menu->on_select && menu->items[i].enabled) {
@@ -216,7 +218,7 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                 for (int i = 0; i < menu->item_count; i++) {
                     mu_layout_row(ctx, 1, (int[]){-1}, 25);
                     
-                    char display_text[MENU_MAX_TEXT_LENGTH + 16];
+                    static char display_text[MENU_MAX_TEXT_LENGTH + 16];
                     if (menu->terminal_style) {
                         if (i == menu->selected_index && menu->show_cursor) {
                             // Flashing cursor effect
@@ -236,20 +238,16 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                         }
                     }
                     
-                    mu_label(ctx, display_text);
+                    // Get the rect that mu_label() would use
+                    mu_Rect item_rect = mu_layout_next(ctx);
+                    
+                    // Draw label inside rect  
+                    mu_draw_control_text(ctx, display_text, item_rect, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
                     
                     // Handle mouse interaction
-                    mu_Rect item_rect = mu_layout_next(ctx);
                     if (mu_mouse_over(ctx, item_rect)) {
                         menu->selected_index = i;
-                        
-                        // Bounds check after mouse update
-                        if (menu->selected_index < 0) {
-                            menu->selected_index = 0;
-                        }
-                        if (menu->selected_index >= menu->item_count) {
-                            menu->selected_index = menu->item_count - 1;
-                        }
+                        menu_clamp_selection(menu);
                         
                         if (ctx->mouse_pressed == MU_MOUSE_LEFT) {
                             if (menu->on_select && menu->items[i].enabled) {

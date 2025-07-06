@@ -2,6 +2,7 @@
 // Implementation of controllable component
 
 #include "controllable.h"
+#include "../game_input.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -157,7 +158,8 @@ static float process_axis_input(const AxisConfig* axis) {
         return 0.0f;
     }
     
-    float value = input_mapping_get_axis(axis->action);
+    struct InputService* service = game_input_get_service();
+    float value = service->get_action_value(service, axis->action);
     
     // Apply dead zone
     value = controllable_apply_dead_zone(value, axis->dead_zone);
@@ -197,15 +199,16 @@ void controllable_update_input(Controllable* controllable, float delta_time) {
     
     // Actions
     if (controllable->boost_action != INPUT_ACTION_NONE) {
-        new_input.boost = input_mapping_is_pressed(controllable->boost_action) ? 1.0f : 0.0f;
+        struct InputService* service = game_input_get_service();
+        new_input.boost = service->is_action_pressed(service, controllable->boost_action) ? 1.0f : 0.0f;
     }
     
     if (controllable->brake_action != INPUT_ACTION_NONE) {
-        new_input.brake = input_mapping_is_pressed(controllable->brake_action) ? 1.0f : 0.0f;
+        new_input.brake = service->is_action_pressed(service, controllable->brake_action) ? 1.0f : 0.0f;
     }
     
     if (controllable->stabilize_action != INPUT_ACTION_NONE) {
-        new_input.stabilize = input_mapping_is_pressed(controllable->stabilize_action);
+        new_input.stabilize = service->is_action_pressed(service, controllable->stabilize_action);
     }
     
     // Apply smoothing if enabled
@@ -278,25 +281,15 @@ InputForceMapping controllable_get_input_forces(const Controllable* controllable
 void controllable_setup_spaceship_6dof(Controllable* controllable) {
     if (!controllable) return;
     
-    // Register and bind forward/backward
-    InputAction forward = input_mapping_register_action("thrust_forward", true);
-    input_mapping_register_action("thrust_backward", true); // Registered but not used directly
-    controllable->forward_axis.action = forward; // Will handle negative for backward
-    
-    // Strafe
-    input_mapping_register_action("strafe_left", true); // Registered but not used directly
-    InputAction strafe_right = input_mapping_register_action("strafe_right", true);
-    controllable->strafe_axis.action = strafe_right; // Will handle negative for left
-    
-    // Vertical
-    InputAction vertical_up = input_mapping_register_action("vertical_up", true);
-    input_mapping_register_action("vertical_down", true); // Registered but not used directly
-    controllable->vertical_axis.action = vertical_up; // Will handle negative for down
+    // Configure axis actions using InputService enums
+    controllable->forward_axis.action = INPUT_ACTION_MOVE_FORWARD;
+    controllable->strafe_axis.action = INPUT_ACTION_MOVE_RIGHT; // Will handle negative for left
+    controllable->vertical_axis.action = INPUT_ACTION_MOVE_UP; // Will handle negative for down
     
     // Rotation
-    controllable->pitch_axis.action = input_mapping_register_action("pitch", true);
-    controllable->yaw_axis.action = input_mapping_register_action("yaw", true);
-    controllable->roll_axis.action = input_mapping_register_action("roll", true);
+    controllable->pitch_axis.action = INPUT_ACTION_CAMERA_PITCH;
+    controllable->yaw_axis.action = INPUT_ACTION_CAMERA_YAW;
+    controllable->roll_axis.action = INPUT_ACTION_NONE; // Roll not available in basic set
     
     // Actions
     controllable->boost_action = INPUT_ACTION_BOOST;
@@ -320,9 +313,9 @@ void controllable_setup_spaceship_arcade(Controllable* controllable) {
     if (!controllable) return;
     
     // Simplified controls - forward only, banking turns
-    controllable->forward_axis.action = input_mapping_register_action("thrust_forward", true);
-    controllable->yaw_axis.action = input_mapping_register_action("yaw", true);
-    controllable->pitch_axis.action = input_mapping_register_action("pitch", true);
+    controllable->forward_axis.action = INPUT_ACTION_MOVE_FORWARD;
+    controllable->yaw_axis.action = INPUT_ACTION_CAMERA_YAW;
+    controllable->pitch_axis.action = INPUT_ACTION_CAMERA_PITCH;
     
     // Auto-roll based on yaw (banking)
     controllable->roll_axis.action = INPUT_ACTION_NONE; // Will be calculated from yaw
@@ -350,12 +343,12 @@ void controllable_setup_fps_camera(Controllable* controllable) {
     if (!controllable) return;
     
     // Movement
-    controllable->forward_axis.action = input_mapping_register_action("move_forward", true);
-    controllable->strafe_axis.action = input_mapping_register_action("move_strafe", true);
+    controllable->forward_axis.action = INPUT_ACTION_MOVE_FORWARD;
+    controllable->strafe_axis.action = INPUT_ACTION_MOVE_RIGHT;
     
     // Look (pitch/yaw only for FPS)
-    controllable->pitch_axis.action = input_mapping_register_action("look_pitch", true);
-    controllable->yaw_axis.action = input_mapping_register_action("look_yaw", true);
+    controllable->pitch_axis.action = INPUT_ACTION_CAMERA_PITCH;
+    controllable->yaw_axis.action = INPUT_ACTION_CAMERA_YAW;
     
     // FPS cameras typically have different sensitivities
     controllable->pitch_axis.sensitivity = 0.5f;
@@ -373,11 +366,11 @@ void controllable_setup_orbit_camera(Controllable* controllable) {
     if (!controllable) return;
     
     // Orbit controls
-    controllable->yaw_axis.action = input_mapping_register_action("orbit_horizontal", true);
-    controllable->pitch_axis.action = input_mapping_register_action("orbit_vertical", true);
+    controllable->yaw_axis.action = INPUT_ACTION_CAMERA_YAW;
+    controllable->pitch_axis.action = INPUT_ACTION_CAMERA_PITCH;
     
     // Zoom (using forward/backward)
-    controllable->forward_axis.action = input_mapping_register_action("camera_zoom", true);
+    controllable->forward_axis.action = INPUT_ACTION_CAMERA_ZOOM;
     
     // Orbit cameras need inverted pitch usually
     controllable->pitch_axis.inverted = true;

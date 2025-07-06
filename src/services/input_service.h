@@ -11,6 +11,8 @@
 
 // Input actions (game-specific)
 typedef enum {
+    INPUT_ACTION_NONE = 0,
+    
     // UI actions
     INPUT_ACTION_UI_UP,
     INPUT_ACTION_UI_DOWN,
@@ -27,6 +29,12 @@ typedef enum {
     INPUT_ACTION_MOVE_RIGHT,
     INPUT_ACTION_MOVE_UP,
     INPUT_ACTION_MOVE_DOWN,
+    
+    // Control actions
+    INPUT_ACTION_BOOST,
+    INPUT_ACTION_BRAKE,
+    INPUT_ACTION_PRIMARY,
+    INPUT_ACTION_SECONDARY,
     
     // Camera actions
     INPUT_ACTION_CAMERA_PITCH,
