@@ -137,6 +137,15 @@ tests/CTestTestfile.cmake
 !Makefile
 !LICENSE
 !Doxyfile
+!signal
+
+# Explicitly ignore test executables
+test_*
+!test_*.c
+!test_*.h
+
+# Claude-specific files
+.claude/
 
 # Test artifacts and binary outputs
 tests/artifacts/*.bmp
