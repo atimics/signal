@@ -487,6 +487,13 @@ static void frame(void)
             
             layer_end_render();  // CRITICAL: Always end the render pass
             render_set_offscreen_mode(false);  // Switch back to default pipeline
+            
+            // CRITICAL: Verify encoder is actually closed after 3D render
+            if (layer_is_encoder_active()) {
+                printf("❌ CRITICAL: Encoder still active after 3D scene render!\n");
+                // Force end any lingering encoder
+                PASS_END();
+            }
         } else {
             printf("⚠️ Skipping 3D scene render - context already invalid\n");
         }
@@ -521,16 +528,21 @@ static void frame(void)
         
         // 2. Upload vertices while NO encoder is open
         if (ui_microui_ready()) {
-            printf("🎨 Context valid before UI vertex upload\n");
-            
-            // CRITICAL: Ensure no encoder is active before vertex upload
+            // CRITICAL: Double-check no encoder is active before vertex upload
             if (layer_is_encoder_active()) {
-                printf("❌ CRITICAL: Encoder still active before UI vertex upload! This indicates a missing layer_end_render()!\n");
+                printf("❌ CRITICAL: Encoder still active before UI vertex upload!\n");
+                printf("   This usually means the 3D scene render pass wasn't properly closed.\n");
+                printf("   Force-ending encoder to prevent crash...\n");
                 // Force-end any active encoder to prevent crash
-                layer_end_render();
+                PASS_END();
             }
             
+            // Now safe to upload vertices
+            printf("🎨 PRE-UPLOAD: encoder_active=%d, context_valid=%d\n", 
+                   layer_is_encoder_active(), sg_isvalid());
             ui_microui_upload_vertices();
+            printf("🎨 POST-UPLOAD: encoder_active=%d, context_valid=%d\n", 
+                   layer_is_encoder_active(), sg_isvalid());
             ui_rendered = true;
         } else {
             printf("⚠️ Skipping UI upload - renderer not ready\n");

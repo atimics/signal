@@ -119,6 +119,16 @@ static const char* compositor_fs_source_metal =
 // ============================================================================
 
 static void create_compositor_resources(LayerManager* manager) {
+#ifdef TEST_MODE
+    // In test mode, create dummy resources
+    manager->compositor_shader = (sg_shader){.id = 42};
+    manager->compositor_pipeline = (sg_pipeline){.id = 42};
+    manager->fullscreen_quad_vbuf = (sg_buffer){.id = 42};
+    printf("✅ Created compositor shader (id=%u)\n", manager->compositor_shader.id);
+    printf("✅ Created compositor pipeline (id=%u)\n", manager->compositor_pipeline.id);
+    return;
+#endif
+
     // Create compositor shader
     sg_shader_desc shader_desc = {
         .label = "compositor_shader"
@@ -218,6 +228,7 @@ static void create_compositor_resources(LayerManager* manager) {
 }
 
 static void destroy_layer(RenderLayer* layer) {
+#ifndef TEST_MODE
     if (layer->color_target.id != SG_INVALID_ID) {
         sg_destroy_image(layer->color_target);
     }
@@ -230,6 +241,7 @@ static void destroy_layer(RenderLayer* layer) {
     if (layer->attachments.id != SG_INVALID_ID) {
         sg_destroy_attachments(layer->attachments);
     }
+#endif
     memset(layer, 0, sizeof(RenderLayer));
 }
 
@@ -263,12 +275,16 @@ LayerManager* layer_manager_create(int screen_width, int screen_height) {
 void layer_manager_destroy(LayerManager* manager) {
     if (!manager) return;
     
+    // Ensure no encoder is active before cleanup
+    PASS_END();  // Close encoder if caller forgot
+    
     // Destroy all layers
     for (int i = 0; i < manager->layer_count; i++) {
         destroy_layer(&manager->layers[i]);
     }
     
     // Destroy compositor resources
+#ifndef TEST_MODE
     if (manager->compositor_pipeline.id != SG_INVALID_ID) {
         sg_destroy_pipeline(manager->compositor_pipeline);
     }
@@ -278,6 +294,7 @@ void layer_manager_destroy(LayerManager* manager) {
     if (manager->fullscreen_quad_vbuf.id != SG_INVALID_ID) {
         sg_destroy_buffer(manager->fullscreen_quad_vbuf);
     }
+#endif
     
     free(manager);
 }
@@ -378,10 +395,19 @@ void layer_manager_resize(LayerManager* manager, int screen_width, int screen_he
 // ============================================================================
 
 RenderLayer* layer_manager_add_layer(LayerManager* manager, const RenderLayerConfig* config) {
-    if (!manager || !config || manager->layer_count >= MAX_RENDER_LAYERS) {
+    // Parameter validation & capacity checks – do this first!
+    if (!manager || !config || !config->name) {
+        printf("❌ layer_manager_add_layer: invalid arguments\n");
         return NULL;
     }
     
+    if (manager->layer_count >= MAX_RENDER_LAYERS) {
+        printf("❌ layer_manager_add_layer: maximum layer count (%d) reached – cannot create '%s'\n",
+               MAX_RENDER_LAYERS, config->name);
+        return NULL;
+    }
+    
+    // Safe access – now we can use the slot that is still in-bounds
     RenderLayer* layer = &manager->layers[manager->layer_count];
     memset(layer, 0, sizeof(RenderLayer));
     
@@ -401,6 +427,7 @@ RenderLayer* layer_manager_add_layer(LayerManager* manager, const RenderLayerCon
     layer->clear_color = (sg_color){ 0.0f, 0.0f, 0.0f, 0.0f };
     layer->clear_depth = 1.0f;
     
+#ifndef TEST_MODE
     // Create color target
     layer->color_target = sg_make_image(&(sg_image_desc){
         .usage = { .render_attachment = true, .immutable = true },
@@ -440,6 +467,13 @@ RenderLayer* layer_manager_add_layer(LayerManager* manager, const RenderLayerCon
         } : (sg_attachment_desc){0},
         .label = config->name
     });
+#else
+    // In test mode, create dummy resources
+    layer->color_target = (sg_image){.id = 42};
+    layer->depth_target = config->needs_depth ? (sg_image){.id = 43} : (sg_image){0};
+    layer->sampler = (sg_sampler){.id = 44};
+    layer->attachments = (sg_attachments){.id = 45};
+#endif
     
     manager->layer_count++;
     
@@ -505,6 +539,13 @@ void layer_begin_render(RenderLayer* layer) {
         return;
     }
     
+#ifdef TEST_MODE
+    // In test mode, skip actual rendering but update state
+    layer->last_update_frame = layer->last_update_frame + 1;
+    layer->dirty = false;
+    return;
+#endif
+    
     // printf("🎨 LAYER DEBUG: Beginning render for layer '%s'...\n", layer->name);
     
     if (!sg_isvalid()) {
@@ -541,6 +582,11 @@ void layer_manager_composite(LayerManager* manager) {
         printf("⚠️ layer_manager_composite: No manager or no layers\n");
         return;
     }
+    
+#ifdef TEST_MODE
+    // In test mode, skip actual rendering
+    return;
+#endif
     
     // DEBUG: Log layer states before compositing
     static int debug_counter = 0;

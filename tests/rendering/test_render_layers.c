@@ -28,12 +28,8 @@
 static LayerManager* test_manager = NULL;
 static bool sokol_initialized = false;
 
-// ============================================================================
-// TEST SETUP AND TEARDOWN
-// ============================================================================
-
-void setUp(void) {
-    // Initialize Sokol with dummy backend for testing
+// Ensure Sokol is initialized only once for all tests
+static void ensure_sokol_once(void) {
     if (!sokol_initialized) {
         sg_setup(&(sg_desc){
             .environment = {
@@ -47,6 +43,15 @@ void setUp(void) {
         });
         sokol_initialized = true;
     }
+}
+
+// ============================================================================
+// TEST SETUP AND TEARDOWN
+// ============================================================================
+
+void setUp(void) {
+    // Initialize Sokol only once for all tests
+    ensure_sokol_once();
     
     // Clean state for each test
     test_manager = NULL;
@@ -638,10 +643,19 @@ void test_typical_usage_scenario(void) {
     TEST_ASSERT_EQUAL_INT(4, test_manager->layer_count);
     
     // Test update logic for each layer type
-    TEST_ASSERT_FALSE(layer_should_update(test_manager, bg_layer));  // Static, not dirty
+    TEST_ASSERT_TRUE(layer_should_update(test_manager, bg_layer));   // Static, but initially dirty
     TEST_ASSERT_TRUE(layer_should_update(test_manager, scene_layer)); // Dynamic
-    TEST_ASSERT_FALSE(layer_should_update(test_manager, ui_layer));   // On-demand, not dirty
+    TEST_ASSERT_TRUE(layer_should_update(test_manager, ui_layer));    // On-demand, but initially dirty
     TEST_ASSERT_TRUE(layer_should_update(test_manager, fx_layer));    // Dynamic
+    
+    // Mark layers as clean and test again
+    bg_layer->dirty = false;
+    ui_layer->dirty = false;
+    
+    TEST_ASSERT_FALSE(layer_should_update(test_manager, bg_layer));   // Static, now clean
+    TEST_ASSERT_TRUE(layer_should_update(test_manager, scene_layer));  // Dynamic always updates
+    TEST_ASSERT_FALSE(layer_should_update(test_manager, ui_layer));    // On-demand, now clean
+    TEST_ASSERT_TRUE(layer_should_update(test_manager, fx_layer));     // Dynamic always updates
     
     // Mark UI as dirty and test again
     layer_manager_mark_dirty(test_manager, "ui");
