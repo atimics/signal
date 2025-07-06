@@ -480,24 +480,33 @@ void input_service_destroy(InputService* service) {
     }
 }
 
+// Helper function for cleaner binding syntax (Sprint 25)
+static void bind(InputService* service, InputActionID action, InputContextID context, uint32_t key) {
+    InputBinding binding = {0};
+    binding.device = INPUT_DEVICE_KEYBOARD;
+    binding.binding.keyboard.key = key;
+    binding.scale = 1.0f;
+    service->bind_action(service, action, context, &binding);
+}
+
 // Default bindings setup
 void input_service_setup_default_bindings(InputService* service) {
     if (!service) return;
     
-    // Menu context bindings
+    // Menu context bindings (using verbose syntax for non-flight controls)
     InputBinding binding = {0};
     binding.scale = 1.0f;
     
     // UI Up: Arrow Up, W, Gamepad D-Pad Up
     binding.device = INPUT_DEVICE_KEYBOARD;
-    binding.binding.keyboard.key = 82;  // Up arrow (SAPP_KEYCODE_UP)
+    binding.binding.keyboard.key = 265;  // Up arrow (SAPP_KEYCODE_UP)
     service->bind_action(service, INPUT_ACTION_UI_UP, INPUT_CONTEXT_MENU, &binding);
     
     binding.binding.keyboard.key = 87;  // W
     service->bind_action(service, INPUT_ACTION_UI_UP, INPUT_CONTEXT_MENU, &binding);
     
     // UI Down: Arrow Down, S, Gamepad D-Pad Down
-    binding.binding.keyboard.key = 81;  // Down arrow (SAPP_KEYCODE_DOWN)
+    binding.binding.keyboard.key = 264;  // Down arrow (SAPP_KEYCODE_DOWN)
     service->bind_action(service, INPUT_ACTION_UI_DOWN, INPUT_CONTEXT_MENU, &binding);
     
     binding.binding.keyboard.key = 83;  // S
@@ -524,5 +533,15 @@ void input_service_setup_default_bindings(InputService* service) {
     binding.binding.mouse.button = 0;  // Left click for confirm
     service->bind_action(service, INPUT_ACTION_UI_CONFIRM, INPUT_CONTEXT_MENU, &binding);
     
-    printf("✅ Default input bindings configured (including Tab->UI_MENU)\n");
+    // Flight control bindings for gameplay context (Sprint 25)
+    bind(service, INPUT_ACTION_THRUST_FORWARD, INPUT_CONTEXT_GAMEPLAY, 87);   // W
+    bind(service, INPUT_ACTION_THRUST_BACK, INPUT_CONTEXT_GAMEPLAY, 83);      // S
+    bind(service, INPUT_ACTION_YAW_LEFT, INPUT_CONTEXT_GAMEPLAY, 65);         // A
+    bind(service, INPUT_ACTION_YAW_RIGHT, INPUT_CONTEXT_GAMEPLAY, 68);        // D
+    bind(service, INPUT_ACTION_ROLL_LEFT, INPUT_CONTEXT_GAMEPLAY, 81);        // Q
+    bind(service, INPUT_ACTION_ROLL_RIGHT, INPUT_CONTEXT_GAMEPLAY, 69);       // E
+    bind(service, INPUT_ACTION_PITCH_UP, INPUT_CONTEXT_GAMEPLAY, 265);        // Up arrow
+    bind(service, INPUT_ACTION_PITCH_DOWN, INPUT_CONTEXT_GAMEPLAY, 264);      // Down arrow
+    
+    printf("✅ Default input bindings configured (including Tab->UI_MENU and flight controls)\n");
 }

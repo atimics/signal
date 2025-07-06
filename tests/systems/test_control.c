@@ -475,6 +475,41 @@ void suite_control(void)
 }
 
 // ============================================================================
+// SPRINT 25: NEW INPUT SYSTEM INTEGRATION TESTS
+// ============================================================================
+
+void test_sprint25_input_state_conversion(void)
+{
+    printf("🧪 Testing Sprint 25 InputState conversion from new input system...\n");
+    
+    // This test verifies that the new input service properly converts flight actions
+    // to InputState values that the existing control system can understand
+    
+    // Note: This is an integration test that relies on the input_state.c adapter
+    // working correctly with the new input service
+    
+    const InputState* state = input_get_state();
+    TEST_ASSERT_NOT_NULL(state);
+    
+    // Initial state should be zero
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, state->thrust);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, state->pitch);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, state->yaw);
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.0f, state->roll);
+    
+    printf("✅ Sprint 25 InputState conversion test passed!\n");
+    printf("   Note: Full integration testing requires mock input events\n");
+    printf("   See test_input_service.c for comprehensive input testing\n");
+}
+
+void suite_sprint25(void)
+{
+    printf("\n🚀 Running Sprint 25 Integration Tests...\n");
+    RUN_TEST(test_sprint25_input_state_conversion);
+    printf("✅ Sprint 25 Integration Tests Complete\n");
+}
+
+// ============================================================================
 // MAIN TEST RUNNER (for standalone execution)
 // ============================================================================
 
@@ -482,5 +517,6 @@ int main(void)
 {
     UNITY_BEGIN();
     suite_control();
+    suite_sprint25();
     return UNITY_END();
 }

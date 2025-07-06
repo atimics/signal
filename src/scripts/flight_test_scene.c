@@ -12,6 +12,8 @@
 #include "../system/scripted_flight.h"
 #include "../hidapi.h"
 #include "../graphics_api.h"
+#include "../game_input.h"
+#include "../services/input_service.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -88,6 +90,13 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
     if (flight_test_initialized) return;
     
     printf("🚀 Initializing Flight Test Scene - Open Plain Flying\n");
+    
+    // Switch to gameplay input context for flight controls (Sprint 25)
+    struct InputService* input_service = game_input_get_service();
+    if (input_service) {
+        input_service->push_context(input_service, INPUT_CONTEXT_GAMEPLAY);
+        printf("🎮 Switched to gameplay input context for flight controls\n");
+    }
     
     // Find the player ship entity
     player_ship_id = INVALID_ENTITY;
@@ -525,7 +534,13 @@ void flight_test_cleanup(struct World* world, SceneStateManager* state) {
     if (!flight_test_initialized) return;
     
     flight_test_initialized = false;
-    // Input shutdown removed - handled by game_input service
+    
+    // Pop gameplay input context when exiting flight test (Sprint 25)
+    struct InputService* input_service = game_input_get_service();
+    if (input_service) {
+        input_service->pop_context(input_service);
+        printf("🎮 Popped gameplay input context\n");
+    }
     
     printf("🚀 Flight test cleanup complete\n");
 }

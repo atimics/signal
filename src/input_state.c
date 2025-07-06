@@ -48,6 +48,32 @@ static void update_input_state(void) {
                 g_input_state.roll = event.value; // Banking turns
                 break;
                 
+            // Flight controls (Sprint 25)
+            case INPUT_ACTION_THRUST_FORWARD:
+                g_input_state.thrust = event.value;
+                break;
+            case INPUT_ACTION_THRUST_BACK:
+                g_input_state.thrust = -event.value;
+                break;
+            case INPUT_ACTION_PITCH_UP:
+                g_input_state.pitch = event.value;
+                break;
+            case INPUT_ACTION_PITCH_DOWN:
+                g_input_state.pitch = -event.value;
+                break;
+            case INPUT_ACTION_YAW_LEFT:
+                g_input_state.yaw = -event.value;
+                break;
+            case INPUT_ACTION_YAW_RIGHT:
+                g_input_state.yaw = event.value;
+                break;
+            case INPUT_ACTION_ROLL_LEFT:
+                g_input_state.roll = -event.value;
+                break;
+            case INPUT_ACTION_ROLL_RIGHT:
+                g_input_state.roll = event.value;
+                break;
+                
             // Action controls
             case INPUT_ACTION_BOOST:
                 g_input_state.boost = event.value;

@@ -7,11 +7,17 @@
 #include "../../src/hal/input_hal.h"
 #include "../../tests/test_framework.h"
 
-// Sokol keycodes for testing
-#define SAPP_KEYCODE_UP     82
-#define SAPP_KEYCODE_DOWN   81
+// Sokol keycodes for testing (corrected values - Sprint 25)
+#define SAPP_KEYCODE_UP     265
+#define SAPP_KEYCODE_DOWN   264
 #define SAPP_KEYCODE_ENTER  36
 #define SAPP_KEYCODE_ESCAPE 27
+#define SAPP_KEYCODE_W      87
+#define SAPP_KEYCODE_S      83
+#define SAPP_KEYCODE_A      65
+#define SAPP_KEYCODE_D      68
+#define SAPP_KEYCODE_Q      81
+#define SAPP_KEYCODE_E      69
 
 void test_input_service_creation(void) {
     InputService* service = input_service_create();
@@ -224,6 +230,98 @@ void test_input_service_custom_bindings(void) {
     free(hal);
 }
 
+// Sprint 25: Test flight control key mappings and context switching
+void test_sprint25_flight_controls(void) {
+    printf("🧪 Testing Sprint 25 flight controls...\n");
+    
+    // Create mock HAL
+    InputHAL* hal = input_hal_create_mock();
+    TEST_ASSERT_TRUE(hal->init(hal, NULL));
+    
+    // Create and initialize service
+    InputService* service = input_service_create();
+    InputServiceConfig config = {
+        .hal = hal,
+        .bindings_path = NULL,
+        .enable_input_logging = false
+    };
+    TEST_ASSERT_TRUE(service->init(service, &config));
+    
+    // Switch to gameplay context for flight controls
+    service->push_context(service, INPUT_CONTEXT_GAMEPLAY);
+    TEST_ASSERT_EQUAL_INT(INPUT_CONTEXT_GAMEPLAY, service->get_active_context(service));
+    
+    // Test thrust controls: W (forward) and S (backward)
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_W, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_THRUST_FORWARD));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, service->get_action_value(service, INPUT_ACTION_THRUST_FORWARD));
+    
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_W, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_S, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_FALSE(service->is_action_pressed(service, INPUT_ACTION_THRUST_FORWARD));
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_THRUST_BACK));
+    
+    // Test yaw controls: A (left) and D (right)
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_S, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_A, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_YAW_LEFT));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, service->get_action_value(service, INPUT_ACTION_YAW_LEFT));
+    
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_A, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_D, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_FALSE(service->is_action_pressed(service, INPUT_ACTION_YAW_LEFT));
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_YAW_RIGHT));
+    
+    // Test roll controls: Q (left) and E (right)
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_D, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_Q, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_ROLL_LEFT));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, service->get_action_value(service, INPUT_ACTION_ROLL_LEFT));
+    
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_Q, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_E, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_FALSE(service->is_action_pressed(service, INPUT_ACTION_ROLL_LEFT));
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_ROLL_RIGHT));
+    
+    // Test pitch controls: Up Arrow (up) and Down Arrow (down)
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_E, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_UP, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_PITCH_UP));
+    TEST_ASSERT_FLOAT_WITHIN(0.001f, 1.0f, service->get_action_value(service, INPUT_ACTION_PITCH_UP));
+    
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_UP, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_DOWN, true);
+    service->process_frame(service, 0.016f);
+    TEST_ASSERT_FALSE(service->is_action_pressed(service, INPUT_ACTION_PITCH_UP));
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_PITCH_DOWN));
+    
+    // Test that flight controls are NOT active in menu context
+    service->pop_context(service);  // Back to menu context
+    TEST_ASSERT_EQUAL_INT(INPUT_CONTEXT_MENU, service->get_active_context(service));
+    
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_DOWN, false);
+    mock_input_queue_key_event(hal, SAPP_KEYCODE_W, true);
+    service->process_frame(service, 0.016f);
+    // W should trigger UI_UP in menu context, not THRUST_FORWARD
+    TEST_ASSERT_FALSE(service->is_action_pressed(service, INPUT_ACTION_THRUST_FORWARD));
+    TEST_ASSERT_TRUE(service->is_action_pressed(service, INPUT_ACTION_UI_UP));
+    
+    printf("✅ Sprint 25 flight controls test passed!\n");
+    
+    // Cleanup
+    service->shutdown(service);
+    input_service_destroy(service);
+    hal->shutdown(hal);
+    free(hal);
+}
+
 int main(void) {
     printf("Running Input Service tests...\n\n");
     
@@ -232,6 +330,7 @@ int main(void) {
     RUN_TEST(test_input_service_context_switching);
     RUN_TEST(test_input_service_state_queries);
     RUN_TEST(test_input_service_custom_bindings);
+    RUN_TEST(test_sprint25_flight_controls);
     
     printf("\n✅ All Input Service tests passed!\n");
     return 0;
