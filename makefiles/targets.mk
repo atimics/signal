@@ -3,10 +3,15 @@
 # ============================================================================
 
 # Primary targets
-.PHONY: all clean test help run
+.PHONY: default all clean test help run
 
-# Default target is the main game executable
-all: $(TARGET)
+# Default target builds everything
+default: assets all
+	@echo "✅ Build complete: assets compiled, game built"
+	@echo "ℹ️  Run 'make test' separately to run tests"
+
+# Build just the game executable (depends on assets)
+all: assets $(TARGET)
 
 # Build the main executable
 $(TARGET): $(OBJECTS)
@@ -30,9 +35,13 @@ $(eval $(PLATFORM_COMPILE_RULES))
 # Include dependency files
 -include $(DEPS)
 
-# Run the game
+# Test target (delegate to test system)
+.PHONY: test
+test: test-sequential
+
+# Run the game (builds everything first)
 .PHONY: run
-run: $(TARGET)
+run: default
 	@echo "Running CGame..."
 	@$(TARGET)
 
@@ -49,10 +58,10 @@ help:
 	@echo "CGame Build System"
 	@echo "=================="
 	@echo "Available targets:"
-	@echo "  make          - Run all tests (default)"
+	@echo "  make          - Build everything (assets, tests, game)"
 	@echo "  make test     - Run all tests"
-	@echo "  make all      - Build the game executable"
-	@echo "  make run      - Build and run the game"
+	@echo "  make all      - Build the game executable (with assets)"
+	@echo "  make run      - Build everything and run the game"
 	@echo "  make clean    - Remove all build artifacts"
 	@echo "  make help     - Show this help message"
 	@echo ""

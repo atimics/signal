@@ -17,7 +17,7 @@ TEST_UTILITIES = $(TEST_SUPPORT_DIR)/test_utilities.c
 # Core engine dependencies for tests
 CORE_TEST_DEPS = src/core.c src/gpu_resources.c
 PHYSICS_TEST_DEPS = $(CORE_TEST_DEPS) src/system/physics.c
-RENDERING_TEST_DEPS = $(CORE_TEST_DEPS) src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c
+RENDERING_TEST_DEPS = $(CORE_TEST_DEPS) src/render_3d.c src/render_camera.c src/render_lighting.c src/render_mesh.c src/graphics_health.c
 RENDERING_WITH_ASSETS_DEPS = $(RENDERING_TEST_DEPS) src/assets.c
 
 # Test compilation template

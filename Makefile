@@ -4,8 +4,8 @@
 # Supports: macOS, Linux, WebAssembly
 # Architecture: Entity-Component-System (ECS) with scheduled systems
 
-# Set default target to build the game
-.DEFAULT_GOAL := all
+# Set default target to build everything
+.DEFAULT_GOAL := default
 
 # ============================================================================
 # CONFIGURATION
