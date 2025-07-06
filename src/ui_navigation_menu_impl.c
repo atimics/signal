@@ -6,6 +6,7 @@
 #include "ui_scene.h"
 #include "ui_adaptive_controls.h"
 #include "ui_api.h"
+#include "ui_menu_system.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,10 @@ typedef struct {
     int destination_count;
     
     ControlHint nav_hints[3];
+    
+    // New menu system
+    Menu main_menu;
+    bool menu_initialized;
 } NavigationMenuData;
 
 // Static module instance
@@ -40,6 +45,7 @@ static void navigation_menu_init(struct World* world)
     nav_data.selected_index = 0;
     nav_data.animation_timer = 0.0f;
     nav_data.gamepad_was_connected = false;
+    nav_data.menu_initialized = false;
     
     // Set up destinations
     nav_data.destinations[0] = "Launch Sequence";
