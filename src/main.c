@@ -21,6 +21,7 @@
 #include "scene_script.h"
 #include "render_layers.h"  // Offscreen rendering system
 #include "graphics_health.h"  // Graphics health monitoring
+#include "render_pass_guard.h"  // Encoder state management
 
 // UI system includes
 
@@ -478,26 +479,13 @@ static void frame(void)
     if (scene_layer && should_update) {
         // Ensure context is valid before rendering
         if (sg_isvalid()) {
-            printf("🎨 Context valid before 3D scene render\n");
             render_set_offscreen_mode(true);  // Switch to offscreen pipeline
-            if (!sg_isvalid()) {
-                printf("❌ Context invalid after render_set_offscreen_mode(true)!\n");
-            }
             layer_begin_render(scene_layer);
-            if (!sg_isvalid()) {
-                printf("❌ Context invalid after layer_begin_render!\n");
-            }
             
             // Render 3D entities to offscreen target
             render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
-            if (!sg_isvalid()) {
-                printf("❌ Context invalid after render_frame!\n");
-            }
             
-            layer_end_render();
-            if (!sg_isvalid()) {
-                printf("❌ Context invalid after layer_end_render!\n");
-            }
+            layer_end_render();  // CRITICAL: Always end the render pass
             render_set_offscreen_mode(false);  // Switch back to default pipeline
         } else {
             printf("⚠️ Skipping 3D scene render - context already invalid\n");
@@ -524,6 +512,9 @@ static void frame(void)
     // CRITICAL FIX: Only render UI layer if UI is actually visible
     // This prevents empty UI context from being composited and causing magenta artifacts
     if (ui_layer && ui_visible && layer_should_update(app_state.layer_manager, ui_layer)) {
+        // Track if we actually rendered UI
+        bool ui_rendered = false;
+        
         // 1. Build MicroUI command list (generates vertices)
         ui_render(&app_state.world, &app_state.scheduler, dt, 
                   app_state.scene_state.current_scene_name, screen_width, screen_height);
@@ -531,19 +522,30 @@ static void frame(void)
         // 2. Upload vertices while NO encoder is open
         if (ui_microui_ready()) {
             printf("🎨 Context valid before UI vertex upload\n");
+            
+            // CRITICAL: Ensure no encoder is active before vertex upload
+            #ifdef DEBUG
+            if (layer_is_encoder_active()) {
+                printf("❌ CRITICAL: Encoder still active before UI vertex upload! This indicates a missing layer_end_render()!\n");
+                // Force-end any active encoder to prevent crash
+                layer_end_render();
+            }
+            #endif
+            
             ui_microui_upload_vertices();
+            ui_rendered = true;
         } else {
             printf("⚠️ Skipping UI upload - renderer not ready\n");
-            goto ui_layer_done;
         }
         
-        // 3. Now start the off-screen encoder and draw
-        render_set_offscreen_mode(true);          // begins encoder
-        layer_begin_render(ui_layer);
-        ui_microui_render(screen_width, screen_height);
-        layer_end_render();
-        render_set_offscreen_mode(false);         // closes encoder
-ui_layer_done:;
+        // 3. Only render if we successfully uploaded vertices
+        if (ui_rendered) {
+            render_set_offscreen_mode(true);          // Set mode
+            layer_begin_render(ui_layer);             // Begin encoder
+            ui_microui_render(screen_width, screen_height);
+            layer_end_render();                       // ALWAYS end encoder
+            render_set_offscreen_mode(false);         // Reset mode
+        }
     }
     
     // UI layer enable/disable is now handled before render attempt
@@ -571,10 +573,14 @@ ui_layer_done:;
         printf("🎨 COMPOSITE DEBUG: Beginning swapchain pass...\n");
     }
     
-    sg_begin_pass(&(sg_pass){ 
+    // Create pass descriptor first to avoid macro issues
+    sg_pass swapchain_pass = { 
         .swapchain = sglue_swapchain(), 
         .action = app_state.pass_action 
-    });
+    };
+    
+    // Use PASS_BEGIN macro for safe pass management
+    PASS_BEGIN("swapchain_composite", &swapchain_pass);
     
     // Composite all layers
     layer_manager_composite(app_state.layer_manager);
@@ -582,7 +588,9 @@ ui_layer_done:;
     if ((composite_debug_counter-1) % 180 == 0) { // Log every 3 seconds
         printf("🎨 COMPOSITE DEBUG: Ending swapchain pass...\n");
     }
-    sg_end_pass();
+    
+    // Use PASS_END macro to ensure proper cleanup
+    PASS_END();
     
     // Commit frame
     sg_commit();

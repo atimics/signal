@@ -21,6 +21,7 @@ SOURCES = core.c systems.c \
           asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c \
           asset_loader/asset_loader_material.c \
           render_3d.c render_camera.c render_lighting.c render_mesh.c render_layers.c \
+          render_pass_guard.c \
           microui/microui.c ui_microui.c ui_microui_adapter.c ui.c ui_api.c \
           ui_scene.c ui_components.c ui_adaptive_controls.c ui_menu_system.c \
           ui_navigation_menu_impl.c ui_navigation_menu_microui.c \

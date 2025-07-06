@@ -6,9 +6,11 @@
 #include "ui_microui.h"
 #include "graphics_api.h"
 #include "render.h"
+#include "render_pass_guard.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 // ============================================================================
 // GLOBAL UI CONTEXT
@@ -202,6 +204,9 @@ static bool check_buffers_valid(void) {
 // Recreate UI buffers (called AFTER render pass ends)
 static void recreate_ui_buffers(void) {
     printf("🔧 UI BUFFER RECREATE: Starting deferred buffer recreation...\n");
+    
+    // CRITICAL: Assert no render pass is active
+    ASSERT_NO_PASS_ACTIVE();
     
     // Destroy old buffer if it exists
     if (render_state.bind.vertex_buffers[0].id != SG_INVALID_ID) {
@@ -650,6 +655,9 @@ void ui_microui_init(void) {
         if (vbuf_state == SG_RESOURCESTATE_ALLOC) {
             printf("🔧 Performing initial buffer update to transition from ALLOC to VALID state...\n");
             
+            // CRITICAL: Assert no render pass is active
+            ASSERT_NO_PASS_ACTIVE();
+            
             // Create a small dummy vertex to initialize the buffer
             struct {
                 float x, y;
@@ -1043,6 +1051,9 @@ void ui_microui_upload_vertices(void) {
         return;
     }
     
+    // CRITICAL: Assert no render pass is active - buffer updates must happen outside passes
+    ASSERT_NO_PASS_ACTIVE();
+    
     // Check if buffers are valid (will request deferred recreation if needed)
     if (!check_buffers_valid()) {
         printf("⚠️ UI buffers not valid, skipping upload this frame\n");
@@ -1074,6 +1085,16 @@ void ui_microui_upload_vertices(void) {
     printf("📤 UI UPLOAD: Uploading %d vertices (%zu bytes to %zu byte buffer, id=%u)\n", 
            render_state.vertex_count, final_upload_size, render_state.vbuf_size,
            render_state.bind.vertex_buffers[0].id);
+    
+    // CRITICAL: Assert no encoder is active before buffer update
+    #ifdef DEBUG
+    // Include the layer system header for encoder check
+    extern bool layer_is_encoder_active(void);
+    if (layer_is_encoder_active()) {
+        printf("❌ CRITICAL: Attempting sg_update_buffer while encoder is active! This will crash!\n");
+        assert(!"sg_update_buffer called while encoder is active - this will crash!");
+    }
+    #endif
     
     // Upload vertex data to GPU (MUST be called outside any render pass)
     sg_update_buffer(render_state.bind.vertex_buffers[0], &(sg_range){

@@ -212,4 +212,9 @@ void layer_set_order(RenderLayer* layer, int order);
  */
 bool layer_should_update(LayerManager* manager, RenderLayer* layer);
 
+/**
+ * Check if a render encoder is currently active (for debug assertions)
+ */
+bool layer_is_encoder_active(void);
+
 #endif // RENDER_LAYERS_H

@@ -4,6 +4,7 @@
  */
 
 #include "render_layers.h"
+#include "render_pass_guard.h"
 #include "sokol_app.h"
 #include <stdlib.h>
 #include <string.h>
@@ -488,11 +489,10 @@ void layer_manager_mark_dirty(LayerManager* manager, const char* layer_name) {
 // RENDERING
 // ============================================================================
 
-// Track render pass state
-static struct {
-    bool pass_active;
-    const char* layer_name;
-} g_pass_state = {false, NULL};
+// Helper function to check if encoder is active (for debug builds)
+bool layer_is_encoder_active(void) {
+    return g_pass_guard.active;
+}
 
 void layer_begin_render(RenderLayer* layer) {
     if (!layer || !layer->enabled) {
@@ -511,22 +511,11 @@ void layer_begin_render(RenderLayer* layer) {
         return;
     }
     
-    if (g_pass_state.pass_active) {
-        printf("❌ ERROR: Attempting to begin pass for layer '%s' while pass for '%s' is active!\n", 
-               layer->name, g_pass_state.layer_name ? g_pass_state.layer_name : "unknown");
-        return;
-    }
+    // CRITICAL: Assert no encoder is already active
+    ASSERT_NO_PASS_ACTIVE();
     
-    // printf("🎨 LAYER DEBUG: Context valid, setting up pass state for '%s'\n", layer->name);
-    g_pass_state.pass_active = true;
-    g_pass_state.layer_name = layer->name;
-    
-    // printf("🎨 LAYER DEBUG: About to call sg_begin_pass for layer '%s'...\n", layer->name);
-    // printf("🎨 LAYER DEBUG: Layer attachments valid: color=%s, depth=%s\n", 
-    //        layer->color_target.id != SG_INVALID_ID ? "yes" : "no",
-    //        layer->depth_target.id != SG_INVALID_ID ? "yes" : "no");
-    
-    sg_begin_pass(&(sg_pass){
+    // Create pass descriptor first to avoid macro issues
+    sg_pass pass_desc = {
         .attachments = layer->attachments,
         .action = {
             .colors[0] = {
@@ -542,40 +531,27 @@ void layer_begin_render(RenderLayer* layer) {
                 .clear_value = layer->clear_stencil
             }
         }
-    });
+    };
+    
+    // Use PASS_BEGIN macro for safe pass management
+    PASS_BEGIN(layer->name, &pass_desc);
     
     // printf("🎨 LAYER DEBUG: sg_begin_pass completed for layer '%s'\n", layer->name);
     
     // Verify context is still valid after sg_begin_pass
     if (!sg_isvalid()) {
         printf("❌ CRITICAL: Sokol context became invalid DURING sg_begin_pass for layer '%s'!\n", layer->name);
-        g_pass_state.pass_active = false;
-        g_pass_state.layer_name = NULL;
+        PASS_END();  // Clean up pass state
         return;
     }
-    
-    // printf("🎨 LAYER DEBUG: Context still valid after sg_begin_pass for layer '%s'\n", layer->name);
     
     layer->last_update_frame = layer->last_update_frame + 1;  // Track updates
     layer->dirty = false;
 }
 
 void layer_end_render(void) {
-    if (!g_pass_state.pass_active) {
-        printf("⚠️ ERROR: layer_end_render called but no pass is active!\n");
-        return;
-    }
-    
-    if (sg_isvalid()) {
-        sg_end_pass();
-    } else {
-        printf("⚠️ WARNING: Context became invalid during rendering of '%s' - NOT calling sg_end_pass\n",
-               g_pass_state.layer_name ? g_pass_state.layer_name : "unknown");
-    }
-    
-    // Clear the state
-    g_pass_state.pass_active = false;
-    g_pass_state.layer_name = NULL;
+    // Use PASS_END macro which handles all the state management
+    PASS_END();
 }
 
 void layer_manager_composite(LayerManager* manager) {
