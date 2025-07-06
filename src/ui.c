@@ -82,21 +82,8 @@ void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time
     }
     last_frame_processed = ui_render_call_count;
     
-    // TEMPORARY: Ensure navigation menu module exists when in navigation_menu scene
-    if (current_scene && strcmp(current_scene, "navigation_menu") == 0) {
-        SceneUIModule* nav_module = scene_ui_get_module("navigation_menu");
-        if (!nav_module) {
-            // Create and register the navigation menu module
-            extern SceneUIModule* create_navigation_menu_ui_module(void);
-            SceneUIModule* new_module = create_navigation_menu_ui_module();
-            if (new_module) {
-                scene_ui_register(new_module);
-                if (new_module->init) {
-                    new_module->init(world);
-                }
-            }
-        }
-    }
+    // Navigation menu module is now registered during scene entry
+    // No fallback creation needed here
     
     // Get Microui context
     UIContext* ui_ctx = ui_microui_get_context();

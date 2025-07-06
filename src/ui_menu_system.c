@@ -88,7 +88,9 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
         
         if (menu->show_descriptions) {
             // Two-panel layout: menu on left, description on right
-            mu_layout_row(ctx, 3, (int[]){350, 50, 350}, 0);
+            // Calculate proper height for panels based on number of items
+            int panel_height = menu->item_count * 25 + 80;  // 25px per item + header/spacing
+            mu_layout_row(ctx, 3, (int[]){350, 50, 350}, panel_height);
             
             // Left panel - menu items
             mu_begin_panel(ctx, "menu_items");
@@ -125,6 +127,7 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                     
                     // Get the rect that mu_label() would use
                     mu_Rect item_rect = mu_layout_next(ctx);
+                    
                     
                     // Draw label inside rect  
                     mu_draw_control_text(ctx, display_text, item_rect, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
@@ -204,7 +207,9 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
             
         } else {
             // Single panel layout - just menu items
-            mu_layout_row(ctx, 1, (int[]){-1}, 0);
+            // Calculate proper height for panel based on number of items
+            int panel_height = menu->item_count * 25 + 80;  // 25px per item + header/spacing
+            mu_layout_row(ctx, 1, (int[]){-1}, panel_height);
             
             mu_begin_panel(ctx, "menu_items");
             {
@@ -240,6 +245,7 @@ void menu_render(Menu* menu, mu_Context* ctx, float delta_time) {
                     
                     // Get the rect that mu_label() would use
                     mu_Rect item_rect = mu_layout_next(ctx);
+                    
                     
                     // Draw label inside rect  
                     mu_draw_control_text(ctx, display_text, item_rect, MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);

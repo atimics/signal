@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 // Include new input system headers
 #include "game_input.h"
@@ -110,17 +111,13 @@ static void navigation_menu_process_input(NavigationMenuData* data) {
 static void ensure_menu_built(NavigationMenuData* data) {
     if (data->menu_initialized) return;
 
-    // Safety check for destination data
+    // Assert that destination data is properly initialized
     if (data->destination_count <= 0 || data->destination_count > 9) {
-        printf("❌ ERROR: Invalid destination_count: %d\n", data->destination_count);
-        // Initialize with safe defaults
-        data->destination_count = 3;
-        data->destinations[0] = "Ship Launch Test";
-        data->destinations[1] = "Flight Test";
-        data->destinations[2] = "Thruster Test";
-        data->descriptions[0] = "Test ship launch sequence";
-        data->descriptions[1] = "Free flight test mode";
-        data->descriptions[2] = "Test thruster systems";
+        printf("❌ FATAL: NavigationMenuData not properly initialized! destination_count=%d\n", 
+               data->destination_count);
+        // This should never happen if the module is properly initialized
+        assert(data->destination_count > 0 && data->destination_count <= 9);
+        return;
     }
     
     menu_init(&data->main_menu, "FTL NAVIGATION SYSTEM");
@@ -136,7 +133,7 @@ static void ensure_menu_built(NavigationMenuData* data) {
     
     // Set up callbacks and style
     menu_set_callbacks(&data->main_menu, navigation_menu_on_select, NULL, data);
-    menu_set_style(&data->main_menu, true, true, true);  // descriptions, cursor, terminal style
+    menu_set_style(&data->main_menu, false, true, true);  // NO descriptions (single panel), cursor, terminal style
     
     data->menu_initialized = true;
 }
@@ -195,6 +192,13 @@ void navigation_menu_render_microui(NavigationMenuData* data, float delta_time) 
     
     // Ensure menu is built (only once)
     ensure_menu_built(data);
+    
+    // Debug: log menu state
+    static int frame_count = 0;
+    if (frame_count++ % 60 == 0) {  // Log every 60 frames
+        printf("🎮 Navigation Menu State: items=%d, selected=%d, destinations=%d\n", 
+               data->main_menu.item_count, data->selected_index, data->destination_count);
+    }
     
     // Sync selection state with bounds checking
     if (data->main_menu.item_count > 0) {
