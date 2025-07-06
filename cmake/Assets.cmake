@@ -1,23 +1,42 @@
 # Asset Pipeline Configuration
 # ============================================================================
 
-if(NOT Python3_FOUND)
+# Try to use virtual environment Python if available
+set(VENV_PYTHON_EXECUTABLE "")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.venv/bin/python3")
+    set(VENV_PYTHON_EXECUTABLE "${CMAKE_SOURCE_DIR}/.venv/bin/python3")
+    message(STATUS "Found virtual environment Python: ${VENV_PYTHON_EXECUTABLE}")
+elseif(EXISTS "${CMAKE_SOURCE_DIR}/.venv/Scripts/python.exe")
+    set(VENV_PYTHON_EXECUTABLE "${CMAKE_SOURCE_DIR}/.venv/Scripts/python.exe")
+    message(STATUS "Found virtual environment Python: ${VENV_PYTHON_EXECUTABLE}")
+endif()
+
+# Use venv Python if available, otherwise fall back to system Python
+if(VENV_PYTHON_EXECUTABLE)
+    set(ASSET_PYTHON_EXECUTABLE ${VENV_PYTHON_EXECUTABLE})
+    message(STATUS "Using virtual environment Python for assets")
+elseif(Python3_FOUND)
+    set(ASSET_PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    message(STATUS "Using system Python for assets: ${Python3_EXECUTABLE}")
+else()
     message(WARNING "Python3 not found - skipping asset pipeline")
     return()
 endif()
 
-# Check for numpy and install if needed
+# Check for numpy with the selected Python
 execute_process(
-    COMMAND ${Python3_EXECUTABLE} -c "import numpy"
+    COMMAND ${ASSET_PYTHON_EXECUTABLE} -c "import numpy; print('NumPy', numpy.__version__, 'available')"
     RESULT_VARIABLE NUMPY_RESULT
-    OUTPUT_QUIET
+    OUTPUT_VARIABLE NUMPY_OUTPUT
     ERROR_QUIET
 )
 
-if(NOT NUMPY_RESULT EQUAL 0)
+if(NUMPY_RESULT EQUAL 0)
+    message(STATUS "NumPy check: ${NUMPY_OUTPUT}")
+else()
     message(STATUS "NumPy not found, attempting to install...")
     execute_process(
-        COMMAND ${Python3_EXECUTABLE} -m pip install numpy
+        COMMAND ${ASSET_PYTHON_EXECUTABLE} -m pip install numpy
         RESULT_VARIABLE PIP_RESULT
         OUTPUT_VARIABLE PIP_OUTPUT
         ERROR_VARIABLE PIP_ERROR
@@ -25,13 +44,14 @@ if(NOT NUMPY_RESULT EQUAL 0)
     
     if(NOT PIP_RESULT EQUAL 0)
         message(WARNING "Failed to install NumPy automatically. Please install manually:")
-        message(WARNING "  ${Python3_EXECUTABLE} -m pip install numpy")
+        message(WARNING "  ${ASSET_PYTHON_EXECUTABLE} -m pip install numpy")
         message(WARNING "Skipping asset pipeline.")
         return()
     else()
         message(STATUS "NumPy installed successfully")
     endif()
 endif()
+
 
 # Asset directories
 set(CGAME_ASSET_SOURCE_DIR ${CMAKE_SOURCE_DIR}/assets)
@@ -72,7 +92,7 @@ add_custom_command(
     OUTPUT ${CGAME_ASSET_BUILD_DIR}/meshes/index.json
     COMMAND ${CMAKE_COMMAND} -E echo "🔨 Compiling assets to binary format..."
     COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${CMAKE_SOURCE_DIR} 
-            ${Python3_EXECUTABLE} ${CGAME_ASSET_PIPELINE_SCRIPT}
+            ${ASSET_PYTHON_EXECUTABLE} ${CGAME_ASSET_PIPELINE_SCRIPT}
     DEPENDS ${ASSET_SOURCES} ${CGAME_ASSET_PIPELINE_SCRIPT}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Building game assets..."
@@ -103,8 +123,9 @@ add_custom_command(
 )
 
 message(STATUS "Asset Pipeline Configuration:")
-message(STATUS "  Python: ${Python3_EXECUTABLE}")
+message(STATUS "  Python: ${ASSET_PYTHON_EXECUTABLE}")
 message(STATUS "  Source Dir: ${CGAME_ASSET_SOURCE_DIR}")
 message(STATUS "  Build Dir: ${CGAME_ASSET_BUILD_DIR}")
 message(STATUS "  Pipeline Script: ${CGAME_ASSET_PIPELINE_SCRIPT}")
-message(STATUS "  Asset Count: ${CMAKE_MATCH_1} meshes")
+list(LENGTH ASSET_MESH_SOURCES MESH_COUNT)
+message(STATUS "  Asset Count: ${MESH_COUNT} meshes")
