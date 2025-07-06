@@ -13,7 +13,7 @@ TOOLS_DIR = tools
 SOURCES = core.c systems.c \
           system/physics.c system/collision.c system/ai.c \
           system/camera.c system/lod.c system/performance.c system/memory.c \
-          system/material.c system/gamepad.c system/input.c input_processing.c \
+          system/material.c \
           system/thrusters.c system/thruster_points_system.c system/control.c \
           system/scripted_flight.c \
           component/look_target.c component/thruster_points_component.c \
@@ -28,12 +28,10 @@ SOURCES = core.c systems.c \
           data.c graphics_api.c gpu_resources.c graphics_health.c pipeline_manager.c \
           scene_state.c scene_script.c \
           scene_yaml_loader.c entity_yaml_loader.c \
-          scripts/logo_scene.c scripts/derelict_navigation_scene.c \
-          scripts/flight_test_scene.c \
-          scripts/scene_selector_scene.c scripts/navigation_menu_scene.c \
-          scripts/ship_launch_test_scene.c \
+          scripts/logo_scene.c scripts/navigation_menu_scene.c \
+          scripts/flight_test_scene.c scripts/template_scene.c \
           game_input.c hal/input_hal_sokol.c hal/input_hal_mock.c \
-          services/input_service.c input_compat.c \
+          services/input_service.c input_state.c \
           config.c hidapi_mac.c main.c
 
 # Object files

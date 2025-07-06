@@ -1,5 +1,5 @@
 #include "control.h"
-#include "input.h"
+#include "../input_state.h"
 #include "thrusters.h"
 #include "physics.h"
 #include "../component/look_target.h"

@@ -6,7 +6,6 @@
 #include "game_input.h"
 #include "services/input_service.h"
 #include "hal/input_hal.h"
-#include "input_compat.h"
 #include "scene_state.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,18 +27,8 @@ static struct {
 
 // Check if new input system should be enabled
 static bool check_new_input_enabled(void) {
-    // Check environment variable
-    const char* env_val = getenv(USE_NEW_INPUT_SYSTEM_ENV);
-    if (env_val) {
-        if (strcmp(env_val, "1") == 0 || strcasecmp(env_val, "true") == 0) {
-            return true;
-        } else if (strcmp(env_val, "0") == 0 || strcasecmp(env_val, "false") == 0) {
-            return false;
-        }
-    }
-    
-    // Default to disabled for safer rollout - set CGAME_USE_NEW_INPUT=1 to enable
-    return false;
+    // Always use new input system - legacy system deprecated
+    return true;
 }
 
 bool game_input_init(void) {
@@ -51,12 +40,7 @@ bool game_input_init(void) {
     // Check if new system should be enabled
     g_game_input.new_system_enabled = check_new_input_enabled();
     
-    if (!g_game_input.new_system_enabled) {
-        printf("ℹ️  Using legacy input system (set %s=1 to enable new system)\n", USE_NEW_INPUT_SYSTEM_ENV);
-        return true;  // Legacy system doesn't need explicit init
-    }
-    
-    printf("🎮 Initializing new input system...\n");
+    printf("🎮 Initializing input system...\n");
     
     // Create HAL (Sokol implementation)
     g_game_input.hal = input_hal_create_sokol();
@@ -90,11 +74,8 @@ bool game_input_init(void) {
         return false;
     }
     
-    // Initialize compatibility layer
-    input_compat_init(g_game_input.service);
-    
     g_game_input.initialized = true;
-    printf("✅ New input system initialized successfully\n");
+    printf("✅ Input system initialized successfully\n");
     
     return true;
 }
@@ -106,8 +87,6 @@ void game_input_shutdown(void) {
     
     printf("🎮 Shutting down input system...\n");
     
-    // Shutdown compatibility layer
-    input_compat_shutdown();
     
     // Shutdown service
     if (g_game_input.service) {
@@ -127,14 +106,12 @@ void game_input_shutdown(void) {
 }
 
 void game_input_process_frame(float delta_time) {
-    if (!g_game_input.initialized || !g_game_input.new_system_enabled) {
-        // Legacy system processes input differently
+    if (!g_game_input.initialized || !g_game_input.service) {
         return;
     }
     
-    // Process input through compatibility layer
-    // This will update the service and make events available
-    input_compat_process_frame(delta_time);
+    // Process input through the service
+    g_game_input.service->process_frame(g_game_input.service, delta_time);
     
     // Process global input actions (Tab for navigation menu)
     game_input_process_global_actions();

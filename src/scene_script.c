@@ -12,11 +12,9 @@
 
 // Forward declarations for scene scripts
 extern const SceneScript logo_script;
-extern const SceneScript scene_selector_script;
 extern const SceneScript navigation_menu_script;
-extern const SceneScript derelict_navigation_script;
 extern const SceneScript flight_test_script;
-extern const SceneScript ship_launch_test_script;
+extern const SceneScript template_script;
 
 // ============================================================================
 // SCENE SCRIPT REGISTRY
@@ -24,11 +22,9 @@ extern const SceneScript ship_launch_test_script;
 
 static const SceneScript* scene_scripts[] = {
     &logo_script,
-    &scene_selector_script,
     &navigation_menu_script,
-    &derelict_navigation_script,
     &flight_test_script,
-    &ship_launch_test_script,
+    &template_script,
     // Add more scene scripts here as they are created
 };
 
@@ -95,7 +91,7 @@ bool scene_script_execute_input(const char* scene_name, struct World* world, Sce
     if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_ESCAPE)
     {
         // Don't handle ESC if we're already in the navigation menu
-        if (strcmp(scene_name, "navigation_menu") != 0 && strcmp(scene_name, "scene_selector") != 0)
+        if (strcmp(scene_name, "navigation_menu") != 0)
         {
             printf("🎬 Default handler: ESC pressed in %s, returning to navigation menu\n", scene_name);
             scene_state_request_transition(state, "navigation_menu");

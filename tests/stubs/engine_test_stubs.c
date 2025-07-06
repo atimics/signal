@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "../../src/system/gamepad.h"
+// Legacy gamepad.h removed - no longer needed
 #include "../../src/assets.h"
 
 // ============================================================================
@@ -115,52 +115,7 @@ void ui_set_visible(bool visible) {
     // Test stub - no-op
 }
 
-// Gamepad stubs for testing
-static GamepadState test_gamepad_state = {0};
-
-bool gamepad_init(void) { return true; }
-void gamepad_shutdown(void) {}
-void gamepad_enable_hotplug(bool enable) { (void)enable; }
-void gamepad_set_hotplug_interval(float seconds) { (void)seconds; }
-void gamepad_update_hotplug(void) {}
-void gamepad_set_connected_callback(void (*callback)(int)) { (void)callback; }
-void gamepad_set_disconnected_callback(void (*callback)(int)) { (void)callback; }
-void gamepad_poll(void) {}
-GamepadState* gamepad_get_state(int gamepad_index) { 
-    (void)gamepad_index; 
-    return &test_gamepad_state; 
-}
-bool gamepad_is_connected(int gamepad_index) { 
-    (void)gamepad_index; 
-    return false; 
-}
-bool gamepad_button_pressed(int gamepad_index, GamepadButton button) { 
-    (void)gamepad_index; 
-    (void)button; 
-    return false; 
-}
-bool gamepad_button_just_pressed(int gamepad_index, GamepadButton button) { 
-    (void)gamepad_index; 
-    (void)button; 
-    return false; 
-}
-bool gamepad_button_just_released(int gamepad_index, GamepadButton button) { 
-    (void)gamepad_index; 
-    (void)button; 
-    return false; 
-}
-float gamepad_get_axis(int gamepad_index, const char* axis_name) { 
-    (void)gamepad_index; 
-    (void)axis_name; 
-    return 0.0f; 
-}
-const char* gamepad_get_button_name(GamepadButton button) { 
-    (void)button; 
-    return "test_button"; 
-}
-void gamepad_set_deadzone(float deadzone) { 
-    (void)deadzone; 
-}
+// Gamepad stubs removed - legacy system deprecated
 
 // System scheduler stub (minimal)
 typedef struct {

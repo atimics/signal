@@ -6,7 +6,7 @@
 #include "../core.h"
 #include "../render.h"
 #include "../system/material.h"
-#include "../system/input.h"
+#include "../input_state.h"
 #include "../system/control.h"
 #include "../system/thrusters.h"
 #include "../system/scripted_flight.h"
@@ -150,12 +150,8 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         setup_visual_thrusters(world, player_ship_id);
     }
     
-    // Initialize input system
-    if (!input_init()) {
-        printf("⚠️  Input initialization failed\n");
-    } else {
-        diagnose_gamepad_issues();
-    }
+    // Input system initialization removed - handled by game_input service
+    // diagnose_gamepad_issues(); // TODO: Update this function to use new input system
     
     // Generate obstacles around the plain
     printf("🗿 Generating %d obstacles across %.0fx%.0f plain...\n", OBSTACLE_COUNT, PLAIN_SIZE, PLAIN_SIZE);
@@ -354,8 +350,7 @@ void flight_test_update(struct World* world, SceneStateManager* state, float del
     
     flight_time += delta_time;
     
-    // Update input system (the Control and Thruster systems handle the rest automatically)
-    input_update();
+    // Input updates handled automatically by game_input service
     
     // Update scripted flight system
     scripted_flight_update(world, NULL, delta_time);
@@ -513,16 +508,11 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
             return true;
         }
         
-        // Handle other input
-        if (input_handle_keyboard(ev->key_code, true)) {
-            return true;
-        }
+        // Legacy input handling removed - events processed through game_input service
     }
     
     if (ev->type == SAPP_EVENTTYPE_KEY_UP) {
-        if (input_handle_keyboard(ev->key_code, false)) {
-            return true;
-        }
+        // Legacy input handling removed - events processed through game_input service
     }
     
     return false;
@@ -535,7 +525,7 @@ void flight_test_cleanup(struct World* world, SceneStateManager* state) {
     if (!flight_test_initialized) return;
     
     flight_test_initialized = false;
-    input_shutdown();
+    // Input shutdown removed - handled by game_input service
     
     printf("🚀 Flight test cleanup complete\n");
 }

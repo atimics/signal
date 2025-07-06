@@ -156,9 +156,8 @@ void navigation_menu_on_select(int item_index, void* user_data) {
     printf("🎮 Menu item selected: %s (index %d)\n", data->destinations[item_index], item_index);
     
     const char* scene_names[] = {
-        "ship_launch_test",
         "flight_test", 
-        "thruster_test"
+        "template"
     };
     
     if (item_index < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {

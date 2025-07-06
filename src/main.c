@@ -13,7 +13,7 @@
 #include "systems.h"
 #include "system/camera.h"
 #include "system/performance.h"
-#include "system/input.h"  // For canyon racing input handling
+#include "input_state.h"  // Input state adapter for control systems
 #include "ui.h"
 #include "ui_api.h"
 #include "ui_microui.h"
@@ -667,12 +667,9 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
-    // Forward events to the new input HAL if enabled
-    if (game_input_is_new_system_enabled()) {
-        // The Sokol HAL needs this callback
-        extern void input_hal_sokol_event_handler(const sapp_event* e);
-        input_hal_sokol_event_handler(ev);
-    }
+    // Forward events to the input HAL
+    extern void input_hal_sokol_event_handler(const sapp_event* e);
+    input_hal_sokol_event_handler(ev);
     
     // Handle UI events first - if UI captures the event, don't process it further
     if (ui_handle_event(ev))
@@ -718,10 +715,10 @@ static void event(const sapp_event* ev)
             {
                 // Do nothing - let scene scripts handle number keys
             }
-            // Forward other keyboard events to canyon racing input system
+            // Legacy input handling removed - handled by game_input service
             else
             {
-                input_handle_keyboard(ev->key_code, true);
+                // Events are now processed through the new input system
             }
             break;
             
@@ -731,23 +728,18 @@ static void event(const sapp_event* ev)
             {
                 return;  // Scene script handled this event
             }
-            // Forward key up events to input system (but not number keys)
-            if (ev->key_code < SAPP_KEYCODE_1 || ev->key_code > SAPP_KEYCODE_9)
-            {
-                input_handle_keyboard(ev->key_code, false);
-            }
+            // Legacy input handling removed - handled by game_input service
             break;
             
         case SAPP_EVENTTYPE_MOUSE_MOVE:
-            // Forward mouse motion to canyon racing input
-            input_handle_mouse_motion(ev->mouse_dx, ev->mouse_dy);
+            // Mouse motion handled by game_input service
             break;
             
         case SAPP_EVENTTYPE_MOUSE_DOWN:
-            // Right mouse button (1) for camera control
+            // Right mouse button for camera control
             if (ev->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
             {
-                input_handle_mouse_button(1, true);
+                // Mouse button handled by game_input service
                 sapp_lock_mouse(true);  // Capture mouse for FPS-style control
             }
             break;
@@ -755,14 +747,13 @@ static void event(const sapp_event* ev)
         case SAPP_EVENTTYPE_MOUSE_UP:
             if (ev->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
             {
-                input_handle_mouse_button(1, false);
+                // Mouse button handled by game_input service
                 sapp_lock_mouse(false);  // Release mouse
             }
             break;
             
         case SAPP_EVENTTYPE_MOUSE_SCROLL:
-            // Forward scroll events for camera zoom
-            input_handle_mouse_wheel(ev->scroll_y);
+            // Scroll events handled by game_input service
             break;
             
         default:
