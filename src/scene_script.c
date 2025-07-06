@@ -87,17 +87,18 @@ bool scene_script_execute_input(const char* scene_name, struct World* world, Sce
     }
     
     // Default behavior for scenes without specific scripts: ESC returns to navigation menu
-    const sapp_event* ev = (const sapp_event*)event;
-    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_ESCAPE)
-    {
-        // Don't handle ESC if we're already in the navigation menu
-        if (strcmp(scene_name, "navigation_menu") != 0)
-        {
-            printf("🎬 Default handler: ESC pressed in %s, returning to navigation menu\n", scene_name);
-            scene_state_request_transition(state, "navigation_menu");
-            return true; // Event handled
-        }
-    }
+    // TODO: Implement when sokol_app.h is properly included
+    // const struct sapp_event* ev = (const struct sapp_event*)event;
+    // if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_ESCAPE)
+    // {
+    //     // Don't handle ESC if we're already in the navigation menu
+    //     if (strcmp(scene_name, "navigation_menu") != 0)
+    //     {
+    //         printf("🎬 Default handler: ESC pressed in %s, returning to navigation menu\n", scene_name);
+    //         scene_state_request_transition(state, "navigation_menu");
+    //         return true; // Event handled
+    //     }
+    // }
     
     return false; // Event not handled
 }
