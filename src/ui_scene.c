@@ -16,18 +16,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Navigation menu data structure (from ui_navigation_menu_impl.c)
-typedef struct {
-    int selected_index;
-    float animation_timer;
-    bool gamepad_was_connected;
-    
-    const char* destinations[9];
-    const char* descriptions[9];
-    int destination_count;
-    
-    ControlHint nav_hints[3];
-} NavigationMenuData;
+// Navigation menu now uses its own module with proper data management
+// The NavigationMenuData structure is defined in ui_navigation_menu_impl.c
 
 #ifdef TEST_MODE
 #include "../tests/stubs/ui_test_stubs.h"
@@ -151,83 +141,8 @@ void scene_ui_render_microui(mu_Context* ctx, const char* scene_name,
         return;
     }
     
-    // Navigation menu scene (legacy inline code - should be removed once module works)
-    if (strcmp(scene_name, "navigation_menu") == 0) {
-        // Fallback if module is not registered
-        SceneUIModule* nav_module = scene_ui_get_module(scene_name);
-        if (nav_module && nav_module->data) {
-            // Get the navigation menu data
-            NavigationMenuData* nav_data = (NavigationMenuData*)nav_module->data;
-            
-            // Render the navigation menu using MicroUI (within the current frame)
-            // Main window
-            if (mu_begin_window(ctx, "FTL Navigation Interface", mu_rect(50, 50, 700, 500))) {
-                
-                // Title
-                mu_layout_row(ctx, 1, (int[]){-1}, 40);
-                mu_label(ctx, "SELECT DESTINATION");
-                
-                // Show connection status
-                if (ui_adaptive_should_show_gamepad()) {
-                    mu_layout_row(ctx, 1, (int[]){-1}, 20);
-                    mu_label(ctx, "Gamepad Connected");
-                }
-                
-                // Spacer
-                mu_layout_row(ctx, 1, (int[]){-1}, 20);
-                mu_label(ctx, "");
-                
-                // Menu items
-                for (int i = 0; i < nav_data->destination_count; i++) {
-                    mu_layout_row(ctx, 1, (int[]){-1}, 50);
-                    
-                    // Highlight selected item
-                    if (i == nav_data->selected_index) {
-                        // Draw a colored background rect for selection
-                        mu_Rect item_rect = mu_layout_next(ctx);
-                        mu_draw_rect(ctx, item_rect, mu_color(100, 150, 255, 255));
-                    }
-                    
-                    if (mu_button(ctx, nav_data->destinations[i])) {
-                        // Handle selection
-                        const char* scene_names[] = {
-                            "ship_launch_test",
-                            "flight_test", 
-                            "thruster_test"
-                        };
-                        
-                        if (i < (int)(sizeof(scene_names) / sizeof(scene_names[0]))) {
-                            printf("🧭 Navigation: Selected %s\n", scene_names[i]);
-                            scene_state_request_transition(NULL, scene_names[i]);
-                        }
-                    }
-                    
-                    // Show description for selected item
-                    if (i == nav_data->selected_index && nav_data->descriptions[i]) {
-                        mu_layout_row(ctx, 1, (int[]){-1}, 20);
-                        mu_label(ctx, nav_data->descriptions[i]);
-                    }
-                }
-                
-                // Control hints at bottom
-                mu_layout_row(ctx, 1, (int[]){-1}, 40);
-                mu_label(ctx, "");  // Spacer
-                
-                // Render adaptive control hints
-                mu_layout_row(ctx, 1, (int[]){-1}, 20);
-                mu_label(ctx, "Controls:");
-                
-                for (int i = 0; i < 3; i++) {
-                    mu_layout_row(ctx, 2, (int[]){200, -1}, 20);
-                    mu_label(ctx, nav_data->nav_hints[i].action_name);
-                    mu_label(ctx, ui_adaptive_get_hint_text(&nav_data->nav_hints[i]));
-                }
-                
-                mu_end_window(ctx);
-            }
-            return;
-        }
-    }
+    // Navigation menu is now handled entirely by its module
+    // No fallback needed - the module is registered during scene entry
     
     // Fallback rendering for scenes without modules
     // Scene selector (fallback for compatibility)

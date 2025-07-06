@@ -139,7 +139,6 @@ static void ensure_menu_built(NavigationMenuData* data) {
     menu_set_style(&data->main_menu, true, true, true);  // descriptions, cursor, terminal style
     
     data->menu_initialized = true;
-    printf("🎮 Navigation menu initialized with %d items\n", data->destination_count);
 }
 
 // Menu selection callback
