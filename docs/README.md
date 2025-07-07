@@ -1,4 +1,9 @@
-# CGame Documentation
+# CGame Do**[📊 Sprint Status Dashboard](SPRINT_STATUS.md)** - Current sprint overview and tracking  
+**[🔧 Documentation Improvements](DOCUMENTATION_IMPROVEMENTS_SUMMARY.md)** - Recent improvements and standardsumentation
+
+**Document ID**: DOC_README_MAIN  
+**Date**: July 6, 2025  
+**Author**: Development Team
 
 Welcome to the CGame project documentation. This directory contains all project documentation organized for easy navigation and maintenance.
 
@@ -18,7 +23,8 @@ Welcome to the CGame project documentation. This directory contains all project 
 - **[`project/`](project/)** - Project-level documentation
   - [Research](project/research/FLIGHT_CONTROL_RESEARCH.md) - Consolidated research
   - [Game Vision](project/GAME_VISION.md) - Project vision and goals
-- **[`guides/`](guides/)** - Technical guides
+### 🔧 Development Guides
+- **[`guides/`](guides/)** - Technical implementation guides
   - [ECS Architecture](guides/ECS_ARCHITECTURE.md) - Entity Component System patterns
   - [Component Reference](guides/COMPONENT_REFERENCE.md) - All available components
   - [System Reference](guides/SYSTEM_REFERENCE.md) - All game systems
@@ -63,10 +69,10 @@ Welcome to the CGame project documentation. This directory contains all project 
 3. Check [Sprint Overview](sprints/README.md) for context
 
 ### For Development
-- **Current Work**: [Sprint 24 MicroUI](sprints/active/CURRENT_SPRINT_STATUS.md) 🚀
-- **Previous Sprint**: [Sprint 23 Complete](sprints/completed/sprint_23/CURRENT_SPRINT_STATUS.md) ✅
-- **Next Sprint**: [Sprint 25 Canyon Racing](sprints/backlog/SPRINT_25_CANYON_RACING.md) 🎮
-- **Development Guides**: [`development/`](development/)
+- **Current Work**: [Sprint 26 Semi-Autonomous Flight](sprints/active/SPRINT_26_SEMI_AUTONOMOUS_FLIGHT.md) 🚀
+- **Sprint Status**: [Dashboard](SPRINT_STATUS.md) ✅
+- **Previous Sprint**: [Sprint 25 Complete](sprints/completed/) 🎮
+- **Technical Docs**: [`technical/`](technical/)
 - **API Reference**: [`api/`](api/)
 
 ### For Planning
@@ -76,30 +82,27 @@ Welcome to the CGame project documentation. This directory contains all project 
 
 ## 📋 Documentation Standards
 
+All documentation follows the [Documentation Standards](DOCUMENTATION_STANDARDS.md) which include:
+
 ### Organization Principles
 1. **Single Source of Truth**: Each document type has one canonical location
 2. **Clear Hierarchy**: Easy to find current vs historical information
 3. **Consistent Structure**: Predictable organization patterns
 4. **Active vs Archive**: Clear separation of current and historical content
 
-### File Naming
-- Use descriptive, consistent names
-- Include dates for time-sensitive documents
-- Use UPPERCASE for major documents (README, CHANGELOG)
-- Use lowercase_with_underscores for most files
-
-### Cross-References
-- Use relative links when possible
-- Update links when moving files
-- Include navigation aids in major documents
+### File Naming and Structure
+- Use descriptive, consistent names per [standards](DOCUMENTATION_STANDARDS.md)
+- Include metadata headers for all documents
+- Use relative links and maintain cross-references
+- Follow validation requirements (use `docs/scripts/validate_docs.sh`)
 
 ## 🔄 Maintenance
 
 ### Regular Tasks
-- Update [Current Sprint Status](sprints/active/CURRENT_SPRINT_STATUS.md)
+- Update [Sprint Status Dashboard](SPRINT_STATUS.md)
 - Archive completed sprints
-- Clean up outdated proposals
-- Update cross-references
+- Run documentation validation: `docs/scripts/validate_docs.sh`
+- Update cross-references and maintain standards compliance
 
 ### Sprint Boundaries
 - Move completed sprints to [`completed/`](sprints/completed/)
@@ -108,31 +111,25 @@ Welcome to the CGame project documentation. This directory contains all project 
 
 ## 🚀 Recent Updates
 
-### July 4, 2025 - Sprint 24 Started
-- ✅ Sprint 23 archived (98% test coverage achieved!)
-- ✅ Sprint 24 MicroUI Improvements created
-- ✅ Critical UI rendering issue identified
-- ✅ Documentation fully updated
+### July 6, 2025 - Sprint 26 Started
+- ✅ Documentation standards implemented
+- ✅ Sprint 26 Semi-Autonomous Flight planning complete
+- ✅ Documentation structure improved and consolidated
+- ✅ Validation scripts and compliance tools added
 
-### July 3, 2025 - Sprint 23 Complete (Same Day!)
-- ✅ 98% test coverage achieved
-- ✅ Build system bulletproofed
-- ✅ Scripted flight system added
-- ✅ Documentation consolidated
-
-### New Features (Sprint 23)
-- **Scripted Flight System**: Autonomous waypoint-based flight paths
-- **YAML Scene Loading**: Human-readable scene definitions
-- **Enhanced Testing**: 56/57 tests passing (98% coverage)
-- **Documentation Overhaul**: New guides and consolidated structure
+### July 4, 2025 - Documentation Improvements
+- ✅ New technical documentation structure
+- ✅ Consolidated research documentation
+- ✅ Architecture overview and component catalog
+- ✅ Documentation standards and validation
 
 ## 📞 Support
 
 For questions about documentation:
-1. Check the relevant section above
-2. Review [Sprint Overview](sprints/README.md) for context
-3. Refer to [Contributing Guide](development/CONTRIBUTING.md) for development process
+1. Check the [Sprint Status Dashboard](SPRINT_STATUS.md)
+2. Review [Documentation Standards](DOCUMENTATION_STANDARDS.md)
+3. Use validation tools: `docs/scripts/validate_docs.sh`
 
 ---
 
-*Last Updated: July 4, 2025 - Sprint 24 MicroUI Improvements Active*
+*Last Updated: July 6, 2025 - Sprint 26 Semi-Autonomous Flight Active*

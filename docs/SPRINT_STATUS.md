@@ -1,5 +1,9 @@
 # Sprint Status Dashboard
 
+**Document ID**: SPRINT_STATUS_DASHBOARD  
+**Date**: July 6, 2025  
+**Author**: Development Team
+
 **Last Updated**: July 6, 2025  
 **Status**: Active Development
 

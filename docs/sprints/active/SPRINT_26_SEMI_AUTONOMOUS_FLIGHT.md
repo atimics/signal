@@ -1,5 +1,10 @@
 # Sprint 26: Semi-Autonomous Flight Computer System
 
+**Document ID**: SPRINT_26_FLIGHT_ASSIST  
+**Date**: July 6, 2025  
+**Author**: Development Team  
+**Status**: Active
+
 **Duration**: 2 weeks (14 days)  
 **Start Date**: July 7, 2025  
 **End Date**: July 20, 2025  
