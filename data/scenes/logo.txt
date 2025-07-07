@@ -1,7 +1,0 @@
-# Logo Scene - Gold Standard Reference Scene
-# This is the foundational scene that loads first for testing and validation
-# Contains only the logo cube and a single security camera
-
-scene: logo
-    spawn: logo_cube 0 0 0
-    spawn: security_camera 0 5 10

@@ -1,4 +1,6 @@
 #include "core.h"
+#include "gpu_resources.h"
+#include "component/unified_flight_control.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -18,9 +20,21 @@ bool world_init(struct World* world)
     if (!world) return false;
 
     memset(world, 0, sizeof(struct World));
+    
+    // Set default max entities
+    world->max_entities = MAX_ENTITIES;
+    
+    // Allocate entity array
+    world->entities = malloc(sizeof(struct Entity) * world->max_entities);
+    if (!world->entities) {
+        printf("❌ Failed to allocate entities array\n");
+        return false;
+    }
+    
+    memset(world->entities, 0, sizeof(struct Entity) * world->max_entities);
     world->next_entity_id = 1;  // Start at 1, 0 = INVALID_ENTITY
 
-    printf("🌍 World initialized - ready for %d entities\n", MAX_ENTITIES);
+    printf("🌍 World initialized - ready for %d entities\n", world->max_entities);
     return true;
 }
 
@@ -30,6 +44,15 @@ void world_destroy(struct World* world)
 
     printf("🌍 World destroyed - processed %d entities over %d frames\n", world->entity_count,
            world->frame_number);
+    
+    // Free entity array
+    if (world->entities) {
+        free(world->entities);
+        world->entities = NULL;
+    }
+    
+    world->entity_count = 0;
+    world->max_entities = 0;
 }
 
 void world_clear(struct World* world)
@@ -38,13 +61,22 @@ void world_clear(struct World* world)
     
     printf("🌍 Clearing world - removing %d entities\n", world->entity_count);
     
+    // Properly destroy all entities to free resources
+    while (world->entity_count > 0) {
+        // Get the first entity (they get compacted as we destroy)
+        EntityID entity_id = world->entities[0].id;
+        entity_destroy(world, entity_id);
+    }
+    
     // Clear all entities
     world->entity_count = 0;
     world->next_entity_id = 1; // Reset ID counter
     world->active_camera_entity = INVALID_ENTITY; // Reset active camera
     
     // Clear entity array
-    memset(world->entities, 0, sizeof(world->entities));
+    if (world->entities) {
+        memset(world->entities, 0, sizeof(struct Entity) * world->max_entities);
+    }
     
     printf("🌍 World cleared\n");
 }
@@ -67,7 +99,7 @@ void world_update(struct World* world, float delta_time)
 
 EntityID entity_create(struct World* world)
 {
-    if (!world || world->entity_count >= MAX_ENTITIES)
+    if (!world || !world->entities || world->entity_count >= world->max_entities)
     {
         return INVALID_ENTITY;
     }
@@ -89,9 +121,9 @@ EntityID entity_create(struct World* world)
     return id;
 }
 
-void entity_destroy(struct World* world, EntityID entity_id)
+bool entity_destroy(struct World* world, EntityID entity_id)
 {
-    if (!world || entity_id == INVALID_ENTITY) return;
+    if (!world || entity_id == INVALID_ENTITY) return false;
 
     // Find entity
     for (uint32_t i = 0; i < world->entity_count; i++)
@@ -136,9 +168,10 @@ void entity_destroy(struct World* world, EntityID entity_id)
                 world->entities[i] = world->entities[world->entity_count - 1];
             }
             world->entity_count--;
-            return;
+            return true;
         }
     }
+    return false;
 }
 
 struct Entity* entity_get(struct World* world, EntityID entity_id)
@@ -183,8 +216,16 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             if (world->components.physics_count >= MAX_ENTITIES) return false;
             entity->physics = &world->components.physics[world->components.physics_count++];
             memset(entity->physics, 0, sizeof(struct Physics));
+            
+            // Initialize linear dynamics
             entity->physics->mass = 1.0f;
-            entity->physics->drag = 0.99f;
+            entity->physics->drag_linear = 0.99f;
+            
+            // Initialize angular dynamics
+            entity->physics->drag_angular = 0.95f;
+            entity->physics->moment_of_inertia = (Vector3){ 1.0f, 1.0f, 1.0f };
+            entity->physics->has_6dof = false;  // Disabled by default
+            entity->physics->environment = PHYSICS_SPACE;
             break;
 
         case COMPONENT_COLLISION:
@@ -251,6 +292,51 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             mat4_identity(entity->scene_node->world_transform);
             break;
 
+        case COMPONENT_THRUSTER_SYSTEM:
+            if (world->components.thruster_system_count >= MAX_ENTITIES) return false;
+            entity->thruster_system = &world->components.thruster_systems[world->components.thruster_system_count++];
+            memset(entity->thruster_system, 0, sizeof(struct ThrusterSystem));
+            // Initialize thruster capabilities
+            entity->thruster_system->max_linear_force = (Vector3){ 100.0f, 100.0f, 100.0f };
+            entity->thruster_system->max_angular_torque = (Vector3){ 50.0f, 50.0f, 50.0f };
+            entity->thruster_system->thrust_response_time = 0.1f;
+            entity->thruster_system->atmosphere_efficiency = 0.8f;
+            entity->thruster_system->vacuum_efficiency = 1.0f;
+            entity->thruster_system->thrusters_enabled = true;
+            entity->thruster_system->auto_deceleration = false;  // Explicitly initialize to false
+            break;
+
+        case COMPONENT_CONTROL_AUTHORITY:
+            if (world->components.control_authority_count >= MAX_ENTITIES) return false;
+            entity->control_authority = &world->components.control_authorities[world->components.control_authority_count++];
+            memset(entity->control_authority, 0, sizeof(struct ControlAuthority));
+            // Initialize control settings
+            entity->control_authority->controlled_by = INVALID_ENTITY;
+            entity->control_authority->control_sensitivity = 1.0f;
+            entity->control_authority->stability_assist = 0.5f;
+            entity->control_authority->flight_assist_enabled = true;
+            entity->control_authority->control_mode = CONTROL_ASSISTED;
+            break;
+
+        case COMPONENT_CONTROLLABLE:
+            if (world->components.controllable_count >= MAX_ENTITIES) return false;
+            // Controllable uses dynamic allocation since it's an incomplete type
+            entity->controllable = NULL; // Will be allocated when needed
+            world->components.controllables[world->components.controllable_count++] = NULL;
+            break;
+
+        case COMPONENT_UNIFIED_FLIGHT_CONTROL:
+            if (world->components.unified_flight_control_count >= MAX_ENTITIES) return false;
+            // UnifiedFlightControl uses dynamic allocation since it's an incomplete type
+            entity->unified_flight_control = unified_flight_control_create();
+            if (entity->unified_flight_control) {
+                world->components.unified_flight_controls[world->components.unified_flight_control_count++] = entity->unified_flight_control;
+            } else {
+                entity->component_mask &= ~type;  // Remove flag on failure
+                return false;
+            }
+            break;
+
         default:
             entity->component_mask &= ~type;  // Remove flag
             return false;
@@ -259,12 +345,12 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
     return true;
 }
 
-void entity_remove_component(struct World* world, EntityID entity_id, ComponentType type)
+bool entity_remove_component(struct World* world, EntityID entity_id, ComponentType type)
 {
     struct Entity* entity = entity_get(world, entity_id);
     if (!entity || !(entity->component_mask & type))
     {
-        return;  // Entity not found or component doesn't exist
+        return false;  // Entity not found or component doesn't exist
     }
 
     entity->component_mask &= ~type;
@@ -286,6 +372,11 @@ void entity_remove_component(struct World* world, EntityID entity_id, ComponentT
             entity->ai = NULL;
             break;
         case COMPONENT_RENDERABLE:
+            // Free GPU resources if allocated
+            if (entity->renderable && entity->renderable->gpu_resources) {
+                gpu_resources_destroy(entity->renderable->gpu_resources);
+                entity->renderable->gpu_resources = NULL;
+            }
             entity->renderable = NULL;
             break;
         case COMPONENT_PLAYER:
@@ -301,7 +392,23 @@ void entity_remove_component(struct World* world, EntityID entity_id, ComponentT
             }
             entity->scene_node = NULL;
             break;
+        case COMPONENT_THRUSTER_SYSTEM:
+            entity->thruster_system = NULL;
+            break;
+        case COMPONENT_CONTROL_AUTHORITY:
+            entity->control_authority = NULL;
+            break;
+        case COMPONENT_CONTROLLABLE:
+            entity->controllable = NULL;
+            break;
+        case COMPONENT_UNIFIED_FLIGHT_CONTROL:
+            if (entity->unified_flight_control) {
+                unified_flight_control_destroy(entity->unified_flight_control);
+                entity->unified_flight_control = NULL;
+            }
+            break;
     }
+    return true;
 }
 
 bool entity_has_component(struct World* world, EntityID entity_id, ComponentType type)
@@ -360,6 +467,30 @@ struct SceneNode* entity_get_scene_node(struct World* world, EntityID entity_id)
 {
     struct Entity* entity = entity_get(world, entity_id);
     return entity ? entity->scene_node : NULL;
+}
+
+struct ThrusterSystem* entity_get_thruster_system(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->thruster_system : NULL;
+}
+
+struct ControlAuthority* entity_get_control_authority(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->control_authority : NULL;
+}
+
+struct Controllable* entity_get_controllable(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->controllable : NULL;
+}
+
+struct UnifiedFlightControl* entity_get_unified_flight_control(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->unified_flight_control : NULL;
 }
 
 // ============================================================================
@@ -544,6 +675,78 @@ float vector3_distance(Vector3 a, Vector3 b)
 {
     Vector3 diff = { a.x - b.x, a.y - b.y, a.z - b.z };
     return vector3_length(diff);
+}
+
+Vector3 vector3_multiply_scalar(Vector3 v, float scalar)
+{
+    return vector3_multiply(v, scalar);  // Alias for consistency
+}
+
+Vector3 vector3_lerp(Vector3 a, Vector3 b, float t)
+{
+    // Clamp t to [0, 1]
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    
+    return (Vector3){
+        a.x + (b.x - a.x) * t,
+        a.y + (b.y - a.y) * t,
+        a.z + (b.z - a.z) * t
+    };
+}
+
+float vector3_dot(Vector3 a, Vector3 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+Vector3 vector3_cross(Vector3 a, Vector3 b)
+{
+    return (Vector3){
+        a.y * b.z - a.z * b.y,
+        a.z * b.x - a.x * b.z,
+        a.x * b.y - a.y * b.x
+    };
+}
+
+// ============================================================================
+// QUATERNION UTILITY FUNCTIONS
+// ============================================================================
+
+Vector3 quaternion_rotate_vector(Quaternion q, Vector3 v)
+{
+    // Using the formula: v' = q * v * q^-1
+    // Optimized version: v' = v + 2 * q.xyz × (q.xyz × v + q.w * v)
+    
+    // First cross product: q.xyz × v
+    Vector3 qv_cross = {
+        q.y * v.z - q.z * v.y,
+        q.z * v.x - q.x * v.z,
+        q.x * v.y - q.y * v.x
+    };
+    
+    // Scale v by q.w and add to cross product
+    Vector3 temp = {
+        qv_cross.x + q.w * v.x,
+        qv_cross.y + q.w * v.y,
+        qv_cross.z + q.w * v.z
+    };
+    
+    // Second cross product: q.xyz × temp
+    Vector3 qtemp_cross = {
+        q.y * temp.z - q.z * temp.y,
+        q.z * temp.x - q.x * temp.z,
+        q.x * temp.y - q.y * temp.x
+    };
+    
+    // Final result: v + 2 * qtemp_cross
+    Vector3 result = {
+        v.x + 2.0f * qtemp_cross.x,
+        v.y + 2.0f * qtemp_cross.y,
+        v.z + 2.0f * qtemp_cross.z
+    };
+    
+    return result;
 }
 
 // ============================================================================
@@ -880,4 +1083,107 @@ void camera_extract_frustum_planes(const struct Camera* camera, float frustum_pl
             frustum_planes[i][3] /= mag;
         }
     }
+}
+
+// ============================================================================
+// TDD FUNCTIONS - Sprint 19 Test-Driven Development
+// ============================================================================
+
+bool entity_add_components(struct World* world, EntityID entity_id, ComponentType components)
+{
+    if (!world || entity_id == INVALID_ENTITY_ID) return false;
+    
+    struct Entity* entity = entity_get(world, entity_id);
+    if (!entity) return false;
+    
+    // Define mask of all valid components
+    const ComponentType VALID_COMPONENTS = 
+        COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_COLLISION | 
+        COMPONENT_AI | COMPONENT_RENDERABLE | COMPONENT_PLAYER | 
+        COMPONENT_CAMERA | COMPONENT_SCENENODE | COMPONENT_THRUSTER_SYSTEM |
+        COMPONENT_CONTROL_AUTHORITY | COMPONENT_UNIFIED_FLIGHT_CONTROL;
+    
+    // Check if components contains any invalid bits
+    if (components & ~VALID_COMPONENTS) {
+        return false; // Invalid component type detected
+    }
+    
+    // Add each component individually
+    bool all_success = true;
+    
+    if (components & COMPONENT_TRANSFORM && !(entity->component_mask & COMPONENT_TRANSFORM)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_TRANSFORM)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_PHYSICS && !(entity->component_mask & COMPONENT_PHYSICS)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_PHYSICS)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_COLLISION && !(entity->component_mask & COMPONENT_COLLISION)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_COLLISION)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_AI && !(entity->component_mask & COMPONENT_AI)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_AI)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_RENDERABLE && !(entity->component_mask & COMPONENT_RENDERABLE)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_RENDERABLE)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_PLAYER && !(entity->component_mask & COMPONENT_PLAYER)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_PLAYER)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_CAMERA && !(entity->component_mask & COMPONENT_CAMERA)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_CAMERA)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_THRUSTER_SYSTEM && !(entity->component_mask & COMPONENT_THRUSTER_SYSTEM)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_THRUSTER_SYSTEM)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_CONTROL_AUTHORITY && !(entity->component_mask & COMPONENT_CONTROL_AUTHORITY)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_CONTROL_AUTHORITY)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_UNIFIED_FLIGHT_CONTROL && !(entity->component_mask & COMPONENT_UNIFIED_FLIGHT_CONTROL)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_UNIFIED_FLIGHT_CONTROL)) {
+            all_success = false;
+        }
+    }
+    
+    return all_success;
+}
+
+bool entity_is_valid(struct World* world, EntityID entity_id)
+{
+    if (!world || entity_id == INVALID_ENTITY_ID) return false;
+    
+    // Check if entity exists in the world
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        if (world->entities[i].id == entity_id) {
+            return true;
+        }
+    }
+    
+    return false;
 }

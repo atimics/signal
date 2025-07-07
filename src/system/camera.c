@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "../graphics_api.h"
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -87,12 +88,10 @@ void camera_system_update(struct World* world, RenderConfig* render_config, floa
     // Update render config with camera data
     if (camera->matrices_dirty)
     {
-        printf("🎥 DEBUG: Updating camera matrices for Entity %d\n", active_camera_id);
         // Recalculate the camera matrices when dirty
         camera_update_matrices(camera);
         camera->matrices_dirty = false;
         update_legacy_render_config(render_config, camera);
-        printf("🎥 DEBUG: Camera matrices updated and render config synced\n");
     }
 }
 
@@ -156,9 +155,9 @@ static void camera_initialize_from_transform(struct World* world, EntityID camer
     if (!camera) return;
     
     // Set default camera properties if not already set
-    if (camera->fov == 0.0f) camera->fov = 90.0f;  // Wide FOV for good view
-    if (camera->near_plane == 0.0f) camera->near_plane = 0.1f;
-    if (camera->far_plane == 0.0f) camera->far_plane = 1000.0f;
+    if (camera->fov == 0.0f) camera->fov = 95.0f;  // Wider FOV to prevent clipping
+    if (camera->near_plane == 0.0f) camera->near_plane = 0.5f;  // Further near plane for stability
+    if (camera->far_plane == 0.0f) camera->far_plane = 20000.0f;  // Very far plane for infinite space
     if (camera->aspect_ratio == 0.0f) camera->aspect_ratio = 16.0f / 9.0f;
 
     // Initialize position from transform if available and camera pos is zero
@@ -227,27 +226,33 @@ static void camera_update_behavior(struct World* world, RenderConfig* render_con
                 if (target_transform)
                 {
                     Vector3 target_pos = target_transform->position;
+                    
+                    // Rotate the camera offset by the target's orientation
+                    // This makes the camera stay behind the ship as it rotates
+                    Vector3 rotated_offset = quaternion_rotate_vector(target_transform->rotation, camera->follow_offset);
+                    
                     Vector3 desired_pos = {
-                        target_pos.x + camera->follow_offset.x,
-                        target_pos.y + camera->follow_offset.y,
-                        target_pos.z + camera->follow_offset.z
+                        target_pos.x + rotated_offset.x,
+                        target_pos.y + rotated_offset.y,
+                        target_pos.z + rotated_offset.z
                     };
 
-                    // Smooth camera movement
-                    float lerp = camera->follow_smoothing * delta_time * 60.0f;
-                    if (lerp > 1.0f) lerp = 1.0f;
-
-                    // Make camera more responsive for better gameplay
-                    lerp *= 3.0f;
-                    if (lerp > 0.3f) lerp = 0.3f;
+                    // Smooth camera movement with better elasticity
+                    float lerp = camera->follow_smoothing * delta_time;
+                    if (lerp > 0.95f) lerp = 0.95f;  // Less aggressive capping for smoother movement
 
                     // Apply smooth interpolation
                     camera->position.x += (desired_pos.x - camera->position.x) * lerp;
                     camera->position.y += (desired_pos.y - camera->position.y) * lerp;
                     camera->position.z += (desired_pos.z - camera->position.z) * lerp;
 
-                    // Update target
-                    camera->target = target_pos;
+                    // Update target - look slightly ahead of the ship to reduce pivot effect
+                    // Get ship's forward direction
+                    Vector3 forward = quaternion_rotate_vector(target_transform->rotation, 
+                                                              (Vector3){0.0f, 0.0f, 5.0f});
+                    camera->target.x = target_pos.x + forward.x;
+                    camera->target.y = target_pos.y + forward.y;
+                    camera->target.z = target_pos.z + forward.z;
 
                     // Mark as dirty if position changed significantly
                     if (vector3_distance(old_pos, camera->position) > 0.001f)
@@ -291,4 +296,90 @@ static void update_legacy_render_config(RenderConfig* render_config, struct Came
     render_config->camera.near_plane = camera->near_plane;
     render_config->camera.far_plane = camera->far_plane;
     render_config->camera.aspect_ratio = camera->aspect_ratio;
+}
+
+#ifdef WASM_BUILD
+bool camera_system_handle_input(struct World* world, RenderConfig* render_config, const sapp_event* ev)
+#else
+bool camera_system_handle_input(struct World* world, RenderConfig* render_config, const struct sapp_event* ev)
+#endif
+{
+#ifdef TEST_MODE
+    // In test mode, we don't have access to Sokol app event types
+    (void)world;
+    (void)render_config;
+    (void)ev;
+    return false;
+#else
+    if (!world || !ev) return false;
+    
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN)
+    {
+        // Camera switching with number keys
+        if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
+        {
+            int camera_index = ev->key_code - SAPP_KEYCODE_1;  // 0-8
+            
+            if (switch_to_camera(world, camera_index))
+            {
+                printf("📹 Switched to camera %d\n", camera_index + 1);
+                
+                // Update aspect ratio for the new camera
+                if (render_config)
+                {
+                    float aspect_ratio = (float)render_config->screen_width / 
+                                       (float)render_config->screen_height;
+                    update_camera_aspect_ratio(world, aspect_ratio);
+                }
+                return true; // Handled
+            }
+            else
+            {
+                printf("📹 Camera %d not found\n", camera_index + 1);
+                return false; // Not handled - no such camera
+            }
+        }
+        // Camera cycling with C key
+        else if (ev->key_code == SAPP_KEYCODE_C)
+        {
+            if (cycle_to_next_camera(world))
+            {
+                // Get info about the new active camera
+                EntityID active_camera = world_get_active_camera(world);
+                struct Camera* camera = entity_get_camera(world, active_camera);
+                
+                const char* camera_type = "Unknown";
+                if (camera)
+                {
+                    switch (camera->behavior)
+                    {
+                        case CAMERA_BEHAVIOR_FIRST_PERSON: camera_type = "Cockpit"; break;
+                        case CAMERA_BEHAVIOR_THIRD_PERSON: camera_type = "Chase"; break;
+                        case CAMERA_BEHAVIOR_STATIC: camera_type = "Static/Overhead"; break;
+                        case CAMERA_BEHAVIOR_ORBITAL: camera_type = "Orbital"; break;
+                        default: camera_type = "Unknown"; break;
+                    }
+                }
+                
+                printf("📹 Cycled to %s camera (Entity %d)\n", camera_type, active_camera);
+                
+                // Update aspect ratio for the new camera
+                if (render_config)
+                {
+                    float aspect_ratio = (float)render_config->screen_width / 
+                                       (float)render_config->screen_height;
+                    update_camera_aspect_ratio(world, aspect_ratio);
+                }
+                return true; // Handled
+            }
+            else
+            {
+                printf("📹 No cameras available to cycle through\n");
+                return false;
+            }
+        }
+    }
+    
+    return false; // Not handled
+#endif
 }

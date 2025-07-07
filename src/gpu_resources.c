@@ -7,7 +7,6 @@
 
 #include "core.h"
 #include "graphics_api.h"
-#include "sokol_gfx.h"
 
 // Internal conversion functions
 static sg_buffer gpu_buffer_to_sg_buffer(gpu_buffer_t buf)

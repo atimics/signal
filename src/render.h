@@ -186,4 +186,8 @@ RenderConfig* get_render_config(void);
 #include "render_lighting.h"
 #include "render_mesh.h"
 
+// Offscreen rendering control
+void render_set_offscreen_mode(bool offscreen);
+bool render_is_offscreen_mode(void);
+
 #endif  // RENDER_H

@@ -1,0 +1,33 @@
+# RL10-style vacuum engine with gimbal capability
+part_id: engine_rl10
+display_name: "RL-10 Vacuum Engine"
+category: THRUSTER
+
+physical:
+  mass: 135.0  # kg
+  center_of_mass: [0, -0.5, 0]
+  drag_coefficient: 0.3
+  heat_capacity: 500.0
+
+visual:
+  mesh: "engine_bell"  # Need to create this mesh
+  material: "engine_nozzle"
+  offset: [0, 0, 0]
+
+attachment_nodes:
+  - name: "top"
+    position: [0, 0.3, 0]
+    direction: [0, 1, 0]
+    type: STACK
+    size: 1.25
+
+properties:
+  thruster:
+    max_thrust: 110000.0  # 110 kN
+    specific_impulse: 465.5  # seconds
+    gimbal_range: 4.0  # degrees
+    gimbal_speed: 5.0  # deg/s
+    throttle_range: [0.1, 1.0]  # 10-100% throttle
+    fuel_type: "LH2/LOX"
+    nozzle_length: 1.5
+    nozzle_exit_diameter: 1.0

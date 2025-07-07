@@ -1,0 +1,47 @@
+# CGame Engine - Modular Makefile System
+# ============================================================================
+# Component-Based Game Engine Build System
+# Supports: macOS, Linux, WebAssembly
+# Architecture: Entity-Component-System (ECS) with scheduled systems
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+# Build configuration (can be overridden)
+BUILD_TYPE ?= debug
+
+# ============================================================================
+# MODULAR INCLUDES
+# ============================================================================
+
+# Include modular makefiles in dependency order
+include makefiles/platform.mk
+include makefiles/compiler.mk
+include makefiles/sources.mk
+include makefiles/assets.mk
+include makefiles/tests.mk
+include makefiles/targets.mk
+
+# ============================================================================
+# DEFAULT BEHAVIOR
+# ============================================================================
+
+# Default target is defined in targets.mk
+# Make test the default behavior instead of build-only
+test: test-parallel
+
+# ============================================================================
+# BUILD INFORMATION
+# ============================================================================
+
+$(info )
+$(info CGame Engine - Modular Build System)
+$(info ===================================)
+$(info Platform: $(PLATFORM))
+$(info Build Type: $(BUILD_TYPE))
+$(info Compiler: $(CC))
+$(info Targets: $(words $(ALL_TEST_TARGETS)) tests, main executable)
+$(info )
+$(info Use 'make help' for available targets)
+$(info )

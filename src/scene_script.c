@@ -4,11 +4,17 @@
  */
 
 #include "scene_script.h"
+#include "graphics_api.h"
+#include "system/camera.h"
+#include "render.h"
 #include <stdio.h>
 #include <string.h>
 
 // Forward declarations for scene scripts
 extern const SceneScript logo_script;
+extern const SceneScript navigation_menu_script;
+extern const SceneScript flight_test_script;
+extern const SceneScript template_script;
 
 // ============================================================================
 // SCENE SCRIPT REGISTRY
@@ -16,6 +22,9 @@ extern const SceneScript logo_script;
 
 static const SceneScript* scene_scripts[] = {
     &logo_script,
+    &navigation_menu_script,
+    &flight_test_script,
+    &template_script,
     // Add more scene scripts here as they are created
 };
 
@@ -76,6 +85,21 @@ bool scene_script_execute_input(const char* scene_name, struct World* world, Sce
     {
         return script->on_input(world, state, event);
     }
+    
+    // Default behavior for scenes without specific scripts: ESC returns to navigation menu
+    // TODO: Implement when sokol_app.h is properly included
+    // const struct sapp_event* ev = (const struct sapp_event*)event;
+    // if (ev->type == SAPP_EVENTTYPE_KEY_DOWN && ev->key_code == SAPP_KEYCODE_ESCAPE)
+    // {
+    //     // Don't handle ESC if we're already in the navigation menu
+    //     if (strcmp(scene_name, "navigation_menu") != 0)
+    //     {
+    //         printf("🎬 Default handler: ESC pressed in %s, returning to navigation menu\n", scene_name);
+    //         scene_state_request_transition(state, "navigation_menu");
+    //         return true; // Event handled
+    //     }
+    // }
+    
     return false; // Event not handled
 }
 
@@ -119,13 +143,20 @@ void scene_transition_to(const char* scene_name, struct World* world, SceneState
     scene_state_request_transition(state, scene_name);
     
     // Update scene state based on target scene
-    if (strcmp(scene_name, "spaceport_alpha") == 0 || strcmp(scene_name, "mesh_test") == 0)
+    if (strcmp(scene_name, "system_overview") == 0 || 
+        strcmp(scene_name, "slipstream_nav") == 0 ||
+        strcmp(scene_name, "derelict_alpha") == 0 ||
+        strcmp(scene_name, "derelict_beta") == 0)
     {
         scene_state_set(state, SCENE_STATE_GAME);
     }
     else if (strcmp(scene_name, "logo") == 0)
     {
         scene_state_set(state, SCENE_STATE_LOGO);
+    }
+    else if (strcmp(scene_name, "navigation_menu") == 0)
+    {
+        scene_state_set(state, SCENE_STATE_MENU);
     }
     else
     {

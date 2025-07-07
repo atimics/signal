@@ -1,0 +1,43 @@
+# Navigation Menu Scene
+# Simple scene for the main menu/navigation interface
+
+name: navigation_menu
+description: "Main navigation menu"
+
+entities:
+  # Camera for the menu
+  - type: camera
+    position: [0, 10, -30]
+    components:
+      camera:
+        fov: 45.0
+        behavior: static
+        target: [0, 0, 0]
+  
+  # Decorative ship in the background
+  - type: wedge_ship_mk2
+    position: [-15, 5, 10]
+    rotation: [0, 0.707, 0, 0.707]  # 45 degree Y rotation as quaternion
+    scale: [1.5, 1.5, 1.5]
+    material: racing_ship
+    mesh: wedge_ship_mk2
+    components:
+      physics:
+        mass: 100.0
+        drag_linear: 0.99
+        drag_angular: 0.99
+        has_6dof: true
+
+# Minimal lighting for menu
+lighting:
+  ambient:
+    color: [0.2, 0.2, 0.3]
+    intensity: 0.5
+  
+  directional:
+    - direction: [0.3, -0.7, 0.2]
+      color: [0.8, 0.8, 0.9]
+      intensity: 0.6
+
+environment:
+  gravity: [0, 0, 0]

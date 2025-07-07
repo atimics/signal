@@ -16,6 +16,7 @@
 
 #define MAX_MEMORY_POOLS 16
 #define MAX_TRACKED_ASSETS 512
+#define MAX_ALLOCATION_TRACKING 4096   // Maximum number of tracked allocations
 #define MEMORY_UNLOAD_DISTANCE 100.0f  // Distance threshold for asset unloading
 #define MEMORY_LOAD_DISTANCE 50.0f     // Distance threshold for asset loading
 #define MEMORY_CHECK_INTERVAL 2.0f     // Check memory usage every 2 seconds
@@ -23,6 +24,13 @@
 // ============================================================================
 // MEMORY TRACKING STRUCTURES
 // ============================================================================
+
+/** @brief Allocation metadata for tracking allocation sizes */
+typedef struct {
+    void* ptr;                  /**< Pointer to the allocated memory */
+    size_t size;               /**< Size of the allocation */
+    uint32_t pool_id;          /**< Pool that owns this allocation */
+} AllocationMetadata;
 
 /** @brief Memory pool for different asset types */
 typedef struct {
@@ -50,9 +58,11 @@ typedef struct {
 typedef struct {
     MemoryPool pools[MAX_MEMORY_POOLS];
     TrackedAsset tracked_assets[MAX_TRACKED_ASSETS];
+    AllocationMetadata allocations[MAX_ALLOCATION_TRACKING];
     
     uint32_t pool_count;
     uint32_t tracked_asset_count;
+    uint32_t allocation_count;
     
     size_t total_allocated_bytes;
     size_t memory_limit_bytes;
@@ -173,6 +183,39 @@ void memory_set_unloading_enabled(bool enabled);
  * @brief Print detailed memory usage report
  */
 void memory_print_report(void);
+
+// ============================================================================
+// MEMORY POOL API (for testing and advanced allocation)
+// ============================================================================
+
+/**
+ * @brief Allocate memory from a specific pool
+ * @param pool_id Pool ID returned from memory_create_pool
+ * @param size Number of bytes to allocate
+ * @return Pointer to allocated memory, or NULL on failure
+ */
+void* memory_pool_alloc(uint32_t pool_id, size_t size);
+
+/**
+ * @brief Free memory back to a specific pool
+ * @param pool_id Pool ID where memory was allocated
+ * @param ptr Pointer to memory to free
+ */
+void memory_pool_free(uint32_t pool_id, void* ptr);
+
+/**
+ * @brief Destroy a memory pool and free all its memory
+ * @param pool_id Pool ID to destroy
+ */
+void memory_destroy_pool(uint32_t pool_id);
+
+/**
+ * @brief Track asset allocation for testing
+ * @param ptr Pointer to allocated memory
+ * @param size Size of allocation
+ * @param asset_name Name of the asset
+ */
+void memory_track_asset_allocation(void* ptr, size_t size, const char* asset_name);
 
 // ============================================================================
 // ASSET UNLOADING API

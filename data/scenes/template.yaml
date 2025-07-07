@@ -1,0 +1,33 @@
+name: template
+description: Template scene for testing and development
+
+entities:
+  # Simple test entity
+  - type: logo_cube
+    position: [0, 0, 0]
+    scale: [1, 1, 1]
+    components:
+      physics:
+        mass: 0
+        kinematic: true
+
+  # Basic camera setup
+  - type: camera
+    position: [0, 5, -10]
+    components:
+      camera:
+        fov: 60.0
+        behavior: fixed
+        target: [0, 0, 0]
+
+lighting:
+  ambient:
+    color: [0.2, 0.2, 0.2]
+    intensity: 0.3
+  directional:
+    direction: [0.3, -0.7, 0.2]
+    color: [0.8, 0.8, 0.9]
+    intensity: 0.7
+
+environment:
+  gravity: [0, -9.81, 0]

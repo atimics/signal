@@ -1,410 +1,179 @@
-#include "graphics_api.h"
+/**
+ * @file ui.c
+ * @brief Core UI system using Microui
+ */
 
-// Include standard headers before Nuklear
-#include <math.h>
-#include <stdarg.h>
+#include "ui.h"
+#include "ui_api.h"
+#include "ui_microui.h"
+#include "ui_microui_adapter.h"
+#include "graphics_api.h"
+#include "ui_scene.h"
+#include "sokol_app.h"
+#include "sokol_gfx.h"
+#include "sokol_glue.h"
 #include <stdio.h>
 #include <string.h>
 
-// Nuklear configuration - declarations only (no implementation)
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#include "core.h"
-#include "nuklear.h"
-#include "sokol_nuklear.h"
-#include "ui.h"
+// ============================================================================
+// GLOBAL UI STATE
+// ============================================================================
 
-static UIState ui_state = { 0 };
-static bool ui_visible = true;
-static bool debug_ui_visible = false;  // Start hidden
+static bool g_ui_visible = true;
+static bool g_debug_ui_visible = false;
+static char g_current_scene[64] = {0};
+
+// ============================================================================
+// CORE UI SYSTEM
+// ============================================================================
 
 void ui_init(void)
 {
-    snk_setup(&(snk_desc_t){ 0 });
-
-    // Initialize UI state
-    ui_state.show_debug_panel = false;  // Start hidden
-    ui_state.show_hud = false;          // Start hidden
-    ui_state.show_wireframe = false;
-    ui_state.camera_speed = 10.0f;
-    ui_state.time_scale = 1.0f;
-    ui_state.fps = 0.0f;
-    ui_state.frame_count = 0;
-    ui_state.fps_timer = 0.0f;
-
-    printf("✅ Nuklear UI initialized\n");
+    // Initialize Microui
+    ui_microui_init();
+    
+    // Initialize scene UI system
+    scene_ui_init();
+    
+    printf("✅ Core UI system initialized with Microui\n");
 }
 
 void ui_shutdown(void)
 {
-    snk_shutdown();
-    printf("✅ Nuklear UI shutdown\n");
+    // Shutdown scene UI system
+    scene_ui_shutdown();
+    
+    // Shutdown Microui
+    ui_microui_shutdown();
+    
+    printf("✅ Core UI system shut down\n");
 }
 
-static void draw_hud(struct nk_context* ctx, struct World* world)
+void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene, int screen_width, int screen_height)
 {
-    if (!ui_state.show_hud) return;
-
-    // Create a HUD window in the top-left corner
-    if (nk_begin(ctx, "HUD", nk_rect(10, 10, 300, 200),
-                 NK_WINDOW_NO_INPUT | NK_WINDOW_BACKGROUND | NK_WINDOW_TITLE))
-    {
-        nk_layout_row_dynamic(ctx, 20, 1);
-
-        // Display FPS
-        nk_labelf(ctx, NK_TEXT_LEFT, "FPS: %.1f", ui_state.fps);
-
-        // Display entity count
-        nk_labelf(ctx, NK_TEXT_LEFT, "Entities: %d", world->entity_count);
-
-        // Find and display camera information
-        EntityID camera_id = INVALID_ENTITY;
-        for (uint32_t i = 0; i < world->entity_count; i++)
-        {
-            struct Entity* entity = &world->entities[i];
-            if (entity->component_mask & COMPONENT_CAMERA)
-            {
-                camera_id = entity->id;
-                break;
-            }
-        }
-
-        if (camera_id != INVALID_ENTITY)
-        {
-            struct Transform* cam_transform = entity_get_transform(world, camera_id);
-            struct Camera* camera = entity_get_camera(world, camera_id);
-
-            if (cam_transform)
-            {
-                nk_labelf(ctx, NK_TEXT_LEFT, "Camera Pos: (%.1f, %.1f, %.1f)",
-                          cam_transform->position.x, cam_transform->position.y,
-                          cam_transform->position.z);
-            }
-
-            if (camera)
-            {
-                nk_labelf(ctx, NK_TEXT_LEFT, "FOV: %.1f°", camera->fov);
-                nk_labelf(ctx, NK_TEXT_LEFT, "Type: Camera");
-            }
-        }
-
-        // Find and display player information
-        for (uint32_t i = 0; i < world->entity_count; i++)
-        {
-            struct Entity* entity = &world->entities[i];
-            if (entity->component_mask & COMPONENT_PLAYER)
-            {
-                struct Transform* transform = entity_get_transform(world, entity->id);
-                struct Physics* physics = entity_get_physics(world, entity->id);
-
-                if (transform)
-                {
-                    nk_labelf(ctx, NK_TEXT_LEFT, "Player: (%.1f, %.1f, %.1f)",
-                              transform->position.x, transform->position.y, transform->position.z);
-                }
-
-                if (physics)
-                {
-                    float velocity = sqrtf(physics->velocity.x * physics->velocity.x +
-                                           physics->velocity.y * physics->velocity.y +
-                                           physics->velocity.z * physics->velocity.z);
-                    nk_labelf(ctx, NK_TEXT_LEFT, "Velocity: %.1f", velocity);
-                }
-                break;
-            }
-        }
-    }
-    nk_end(ctx);
-}
-
-static void draw_debug_panel(struct nk_context* ctx, struct World* world,
-                             SystemScheduler* scheduler)
-{
-    if (!ui_state.show_debug_panel) return;
-
-    if (nk_begin(ctx, "Debug Panel", nk_rect(50, 250, 400, 500),
-                 NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE | NK_WINDOW_MINIMIZABLE |
-                     NK_WINDOW_TITLE))
-    {
-        // System Performance Section
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Performance", NK_MAXIMIZED))
-        {
-            nk_layout_row_dynamic(ctx, 20, 2);
-            nk_label(ctx, "FPS:", NK_TEXT_LEFT);
-            nk_labelf(ctx, NK_TEXT_LEFT, "%.1f", ui_state.fps);
-
-            nk_label(ctx, "Frame Count:", NK_TEXT_LEFT);
-            nk_labelf(ctx, NK_TEXT_LEFT, "%d", scheduler->frame_count);
-
-            nk_label(ctx, "Total Time:", NK_TEXT_LEFT);
-            nk_labelf(ctx, NK_TEXT_LEFT, "%.1fs", scheduler->total_time);
-
-            nk_layout_row_dynamic(ctx, 20, 1);
-            nk_label(ctx, "System Times:", NK_TEXT_LEFT);
-
-            for (int i = 0; i < SYSTEM_COUNT; i++)
-            {
-                if (scheduler->system_calls[i] > 0)
-                {
-                    float avg_time = scheduler->system_times[i] / scheduler->system_calls[i];
-                    nk_layout_row_dynamic(ctx, 15, 1);
-                    nk_labelf(ctx, NK_TEXT_LEFT, "  %s: %.3fms", scheduler->systems[i].name,
-                              avg_time * 1000);
-                }
-            }
-
-            nk_tree_pop(ctx);
-        }
-
-        // Render Settings Section
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Render Settings", NK_MAXIMIZED))
-        {
-            nk_layout_row_dynamic(ctx, 30, 1);
-
-            // Wireframe toggle - using int for nuklear compatibility
-            int wireframe_int = ui_state.show_wireframe ? 1 : 0;
-            if (nk_checkbox_label(ctx, "Wireframe Mode", &wireframe_int))
-            {
-                ui_state.show_wireframe = wireframe_int ? true : false;
-                RenderConfig* render_config = get_render_config();
-                if (render_config)
-                {
-                    render_config->mode =
-                        ui_state.show_wireframe ? RENDER_MODE_WIREFRAME : RENDER_MODE_SOLID;
-                }
-            }
-
-            // Debug visualization toggles
-            RenderConfig* render_config = get_render_config();
-            if (render_config)
-            {
-                int debug_info = render_config->show_debug_info ? 1 : 0;
-                int show_velocities = render_config->show_velocities ? 1 : 0;
-                int show_collision = render_config->show_collision_bounds ? 1 : 0;
-                int show_orbits = render_config->show_orbits ? 1 : 0;
-
-                if (nk_checkbox_label(ctx, "Show Debug Info", &debug_info))
-                {
-                    render_config->show_debug_info = debug_info ? true : false;
-                }
-                if (nk_checkbox_label(ctx, "Show Velocities", &show_velocities))
-                {
-                    render_config->show_velocities = show_velocities ? true : false;
-                }
-                if (nk_checkbox_label(ctx, "Show Collision Bounds", &show_collision))
-                {
-                    render_config->show_collision_bounds = show_collision ? true : false;
-                }
-                if (nk_checkbox_label(ctx, "Show Orbits", &show_orbits))
-                {
-                    render_config->show_orbits = show_orbits ? true : false;
-                }
-            }
-
-            nk_tree_pop(ctx);
-        }
-
-        // Camera Controls Section
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Camera Controls", NK_MAXIMIZED))
-        {
-            nk_layout_row_dynamic(ctx, 30, 1);
-
-            nk_property_float(ctx, "Camera Speed", 0.1f, &ui_state.camera_speed, 50.0f, 0.1f, 0.1f);
-            nk_property_float(ctx, "Time Scale", 0.0f, &ui_state.time_scale, 5.0f, 0.1f, 0.1f);
-
-            nk_tree_pop(ctx);
-        }
-
-        // Entity Browser Section
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED))
-        {
-            nk_layout_row_dynamic(ctx, 20, 1);
-            nk_labelf(ctx, NK_TEXT_LEFT, "Total Entities: %d", world->entity_count);
-
-            for (uint32_t i = 0; i < world->entity_count; i++)
-            {
-                struct Entity* entity = &world->entities[i];
-
-                // Create a collapsible tree for each entity
-                char entity_name[64];
-                snprintf(entity_name, sizeof(entity_name), "Entity %d", entity->id);
-
-                if (nk_tree_push_id(ctx, NK_TREE_NODE, entity_name, NK_MINIMIZED, entity->id))
-                {
-                    nk_layout_row_dynamic(ctx, 15, 1);
-
-                    // Show component mask
-                    nk_labelf(ctx, NK_TEXT_LEFT, "  Mask: 0x%08X", entity->component_mask);
-
-                    // Show individual components
-                    if (entity->component_mask & COMPONENT_TRANSFORM)
-                    {
-                        struct Transform* t = entity_get_transform(world, entity->id);
-                        if (t)
-                        {
-                            nk_labelf(ctx, NK_TEXT_LEFT, "  Pos: (%.1f, %.1f, %.1f)", t->position.x,
-                                      t->position.y, t->position.z);
-                        }
-                    }
-
-                    if (entity->component_mask & COMPONENT_PHYSICS)
-                    {
-                        struct Physics* p = entity_get_physics(world, entity->id);
-                        if (p)
-                        {
-                            nk_labelf(ctx, NK_TEXT_LEFT, "  Mass: %.1f", p->mass);
-                        }
-                    }
-
-                    if (entity->component_mask & COMPONENT_CAMERA)
-                    {
-                        nk_labelf(ctx, NK_TEXT_LEFT, "  Type: Camera");
-                    }
-
-                    if (entity->component_mask & COMPONENT_PLAYER)
-                    {
-                        nk_labelf(ctx, NK_TEXT_LEFT, "  Type: Player");
-                    }
-
-                    nk_tree_pop(ctx);
-                }
-            }
-            nk_tree_pop(ctx);
-        }
-
-        // System Controls Section
-        if (nk_tree_push(ctx, NK_TREE_TAB, "System Controls", NK_MINIMIZED))
-        {
-            nk_layout_row_dynamic(ctx, 30, 1);
-
-            for (int i = 0; i < SYSTEM_COUNT; i++)
-            {
-                SystemInfo* system = &scheduler->systems[i];
-
-                nk_layout_row_dynamic(ctx, 25, 2);
-                int enabled = system->enabled ? 1 : 0;
-                if (nk_checkbox_label(ctx, system->name, &enabled))
-                {
-                    system->enabled = enabled ? true : false;
-                }
-                nk_labelf(ctx, NK_TEXT_LEFT, "%.1f Hz", system->frequency);
-            }
-
-            nk_tree_pop(ctx);
-        }
-    }
-    nk_end(ctx);
-}
-
-static void draw_logo_overlay(struct nk_context* ctx)
-{
-    // Create a centered overlay window for the "[Press ENTER to begin]" text
-    int screen_width = sapp_width();
-    int screen_height = sapp_height();
-    
-    int overlay_width = 300;
-    int overlay_height = 80;
-    int x = (screen_width - overlay_width) / 2;
-    int y = screen_height - overlay_height - 50; // Near bottom of screen
-    
-    if (nk_begin(ctx, "[Press ENTER to begin]", nk_rect(x, y, overlay_width, overlay_height),
-                 NK_WINDOW_NO_INPUT | NK_WINDOW_BACKGROUND | NK_WINDOW_BORDER))
-    {
-        nk_layout_row_dynamic(ctx, 30, 1);
-        nk_label(ctx, "[Press ENTER to begin]", NK_TEXT_CENTERED);
-    }
-    nk_end(ctx);
-}
-
-void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene)
-{
-    // Early exit if UI is not visible
-    if (!ui_visible) return;
-    
-    // Get new frame context from sokol_nuklear
-    struct nk_context* ctx = snk_new_frame();
-
-    // Update FPS calculation
-    ui_state.frame_count++;
-    ui_state.fps_timer += delta_time;
-
-    if (ui_state.fps_timer >= 1.0f)
-    {
-        ui_state.fps = ui_state.frame_count / ui_state.fps_timer;
-        ui_state.frame_count = 0;
-        ui_state.fps_timer = 0.0f;
-    }
-
-    // Draw UI components
-    draw_hud(ctx, world);
-    
-    // Draw logo overlay if in logo scene
-    if (current_scene && strcmp(current_scene, "logo") == 0)
-    {
-        draw_logo_overlay(ctx);
+    // DEBUG: Always log ui_render calls to track the navigation menu issue
+    static int ui_render_call_count = 0;
+    ui_render_call_count++;
+    // Only log occasionally
+    if (ui_render_call_count % 300 == 1) {
+        printf("🎨 UI Render #%d: scene='%s', visible=%s, debug_visible=%s, screen=%dx%d\n", 
+               ui_render_call_count, current_scene ? current_scene : "null", 
+               g_ui_visible ? "yes" : "no", g_debug_ui_visible ? "yes" : "no", 
+               screen_width, screen_height);
     }
     
-    // Only draw debug panel if debug UI is visible
-    if (debug_ui_visible)
-    {
-        draw_debug_panel(ctx, world, scheduler);
+    // Store current scene for event handling
+    if (current_scene) {
+        strncpy(g_current_scene, current_scene, sizeof(g_current_scene) - 1);
+        g_current_scene[sizeof(g_current_scene) - 1] = '\0';
+    }
+    
+    // Early exit if UI is not visible - absolutely no UI calls should happen
+    if (!g_ui_visible) {
+        // printf("🎨 UI: Skipping render - UI not visible\n");
+        return;
+    }
+    
+    // Guard against multiple UI processing per frame
+    static int last_frame_processed = -1;
+    if (ui_render_call_count == last_frame_processed) {
+        printf("⚠️ UI: Duplicate ui_render call in same frame %d - skipping\n", ui_render_call_count);
+        return;
+    }
+    last_frame_processed = ui_render_call_count;
+    
+    // Navigation menu module is now registered during scene entry
+    // No fallback creation needed here
+    
+    // Get Microui context
+    UIContext* ui_ctx = ui_microui_get_context();
+    if (!ui_ctx) {
+        printf("⚠️ Warning: Cannot render UI - context not initialized\n");
+        return;
     }
 
-    // Render the UI
-    snk_render(sapp_width(), sapp_height());
+    mu_Context* ctx = ui_microui_get_mu_context();
+    if (!ctx) {
+        printf("⚠️ Warning: Cannot render UI - MicroUI context not initialized\n");
+        return;
+    }
+    
+    // Begin Microui frame (this sets up the clip stack)
+    // printf("🎨 UI: Calling ui_microui_begin_frame()...\n");
+    ui_microui_begin_frame();
+    
+    // Additional safety check: ensure clip stack is properly set up
+    if (ctx->clip_stack.idx <= 0) {
+        printf("❌ Error: MicroUI clip stack not properly initialized! Skipping UI render.\n");
+        ui_microui_end_frame();  // Clean up
+        return;
+    }
+    
+    // printf("🎨 UI: MicroUI frame begun successfully, clip_stack.idx=%d\n", ctx->clip_stack.idx);
+    
+    // Render scene-specific UI using Microui adapter
+    // printf("🎨 UI: Rendering scene-specific UI for '%s'...\n", current_scene ? current_scene : "null");
+    scene_ui_render_microui(ctx, current_scene, world, scheduler, delta_time, screen_width, screen_height);
+    
+    // Render debug overlay if enabled
+    if (g_debug_ui_visible) {
+        printf("🎨 UI: Rendering debug overlay...\n");
+        // Debug UI with Microui
+        if (mu_begin_window(ctx, "Debug", mu_rect(10, 10, 200, 100))) {
+            mu_layout_row(ctx, 1, (int[]){-1}, 0);
+            mu_label(ctx, "Debug Mode Active");
+            mu_end_window(ctx);
+        }
+    }
+    
+    // End frame and process commands
+    // printf("🎨 UI: Calling ui_microui_end_frame()...\n");
+    ui_microui_end_frame();
+    // printf("🎨 UI: MicroUI frame ended successfully\n");
+    
+    // UI rendering is now handled within the main render pass in main.c
+    // This function only manages MicroUI context and prepares vertices
+    // No separate render pass needed - UI will be drawn in the same pass as 3D
 }
 
 bool ui_handle_event(const void* ev)
 {
     const sapp_event* event = (const sapp_event*)ev;
-
-    // Handle UI-specific hotkeys before passing to Nuklear
-    if (event->type == SAPP_EVENTTYPE_KEY_DOWN)
-    {
-        switch (event->key_code)
-        {
+    
+    // Handle global UI hotkeys before passing to scene modules
+    if (event->type == SAPP_EVENTTYPE_KEY_DOWN) {
+        switch (event->key_code) {
             case SAPP_KEYCODE_F1:
                 ui_toggle_debug_panel();
                 return true;  // UI captured this event
-
-            case SAPP_KEYCODE_F2:
-                ui_toggle_hud();
-                return true;  // UI captured this event
-
+                
             case SAPP_KEYCODE_F3:
-                ui_state.show_wireframe = !ui_state.show_wireframe;
-                RenderConfig* render_config = get_render_config();
-                if (render_config)
-                {
-                    render_config->mode =
-                        ui_state.show_wireframe ? RENDER_MODE_WIREFRAME : RENDER_MODE_SOLID;
-                }
+                ui_toggle_wireframe();
                 return true;  // UI captured this event
-
+                
+            case SAPP_KEYCODE_ESCAPE:
+            case SAPP_KEYCODE_TAB:
+                // Let scene handle these
+                return false;
+                
             default:
                 break;
         }
     }
-
-    // Pass event to Nuklear and return whether it was captured
-    return snk_handle_event(event);
-}
-
-void ui_toggle_debug_panel(void)
-{
-    ui_state.show_debug_panel = !ui_state.show_debug_panel;
-    printf("🔧 Debug panel %s\n", ui_state.show_debug_panel ? "enabled" : "disabled");
-}
-
-void ui_toggle_hud(void)
-{
-    ui_state.show_hud = !ui_state.show_hud;
-    printf("📊 HUD %s\n", ui_state.show_hud ? "enabled" : "disabled");
+    
+    // First, check if current scene's UI module wants to handle this event
+    if (strlen(g_current_scene) > 0) {
+        SceneUIModule* module = scene_ui_get_module(g_current_scene);
+        if (module && module->handle_event) {
+            // Pass NULL for world since we don't have it here
+            if (module->handle_event(ev, NULL)) {
+                return true;  // Scene UI module handled this event
+            }
+        }
+    }
+    
+    // If scene UI didn't handle it, pass to Microui for general UI handling
+    return ui_microui_handle_event(event);
 }
 
 // ============================================================================
@@ -413,20 +182,27 @@ void ui_toggle_hud(void)
 
 void ui_set_visible(bool visible)
 {
-    ui_visible = visible;
+    g_ui_visible = visible;
 }
 
 void ui_set_debug_visible(bool visible)
 {
-    debug_ui_visible = visible;
+    g_debug_ui_visible = visible;
 }
 
 bool ui_is_visible(void)
 {
-    return ui_visible;
+    return g_ui_visible;
 }
 
 bool ui_is_debug_visible(void)
 {
-    return debug_ui_visible;
+    return g_debug_ui_visible;
 }
+
+// ============================================================================
+// LEGACY COMPATIBILITY (forwarded to ui_api.h)
+// ============================================================================
+
+// Note: These functions are now implemented in ui_api.c
+// The main application should use ui_api.h directly for new code

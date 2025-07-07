@@ -1,70 +1,135 @@
-# CGame Engine Documentation
+# CGame Do**[📊 Sprint Status Dashboard](SPRINT_STATUS.md)** - Current sprint overview and tracking  
+**[🔧 Documentation Improvements](DOCUMENTATION_IMPROVEMENTS_SUMMARY.md)** - Recent improvements and standardsumentation
 
-**Last Updated**: June 30, 2025
+**Document ID**: DOC_README_MAIN  
+**Date**: July 6, 2025  
+**Author**: Development Team
 
-Welcome to the CGame engine documentation. This directory contains comprehensive documentation for the engine's architecture, development process, and current status.
-
-## 📋 Current Status
-
-- **Current Sprint**: [Sprint 19: Performance Optimization & Polish](./sprints/active/sprint_19_performance_optimization.md)
-- **Project Status**: [CURRENT_STATUS.md](./CURRENT_STATUS.md)
-- **Asset Pipeline**: [ASSET_PIPELINE_VALIDATION.md](../ASSET_PIPELINE_VALIDATION.md) ✅ COMPLETE
-
-## 🚀 Quick Start
-
-1. **For Developers**: See [CURRENT_STATUS.md](./CURRENT_STATUS.md) for the latest engine status
-2. **For Artists**: See [Asset Pipeline Guide](./guides/) for content creation workflow
-3. **For Contributors**: Check [active sprints](./sprints/active/) for current development focus
+Welcome to the CGame project documentation. This directory contains all project documentation organized for easy navigation and maintenance.
 
 ## 📚 Documentation Structure
 
-### Core Documentation
-- **[CURRENT_STATUS.md](./CURRENT_STATUS.md)** - Real-time project status and current focus
-- **[STRATEGIC_PLAN.md](./STRATEGIC_PLAN.md)** - Long-term project roadmap and vision
-- **[ASSET_PIPELINE.md](./ASSET_PIPELINE.md)** - Complete asset pipeline documentation
+**[� Sprint Status Dashboard](SPRINT_STATUS.md)** - Current sprint overview and tracking
 
-### Development
-- **[sprints/](./sprints/)** - Sprint planning and execution tracking
-  - [active/](./sprints/active/) - Currently running sprints
-  - [completed/](./sprints/completed/) - Completed sprint documentation
-  - [backlog/](./sprints/backlog/) - Planned future sprints
-- **[guides/](./guides/)** - Technical guides and tutorials
-- **[research/](./research/)** - Technical research and analysis
+### 🎯 Active Development
+- **[`sprints/active/`](sprints/active/)** - Current sprint work
+  - [Sprint Status Dashboard](SPRINT_STATUS.md) - Sprint 26 Semi-Autonomous Flight
+  - [Sprint 26 Plan](sprints/active/SPRINT_26_SEMI_AUTONOMOUS_FLIGHT.md) - Flight assist system
 
-### Archive
-- **[archive/](./archive/)** - Historical documentation and deprecated guides
+### 🔧 Technical Documentation
+- **[`technical/`](technical/)** - Architecture and system documentation
+  - [Architecture Overview](technical/ARCHITECTURE_OVERVIEW.md) - System architecture guide
+  - [Component Catalog](technical/COMPONENT_CATALOG.md) - All available components
+- **[`project/`](project/)** - Project-level documentation
+  - [Research](project/research/FLIGHT_CONTROL_RESEARCH.md) - Consolidated research
+  - [Game Vision](project/GAME_VISION.md) - Project vision and goals
+### 🔧 Development Guides
+- **[`guides/`](guides/)** - Technical implementation guides
+  - [ECS Architecture](guides/ECS_ARCHITECTURE.md) - Entity Component System patterns
+  - [Component Reference](guides/COMPONENT_REFERENCE.md) - All available components
+  - [System Reference](guides/SYSTEM_REFERENCE.md) - All game systems
+  - [YAML Scene Format](guides/YAML_SCENE_FORMAT.md) - Scene definition guide
+  - [Scripted Flight System](guides/SCRIPTED_FLIGHT_GUIDE.md) - Autonomous flight paths
 
-## 🎯 Current Capabilities
+### 📖 User Documentation
+- **[`manual/`](manual/)** - User-facing documentation
+  - [Player Manual](manual/PLAYER_MANUAL.md) - Complete game guide
+  - Controls reference and troubleshooting
 
-### ✅ Complete Systems
-- **Asset Pipeline**: UV-mapped mesh generation with SVG texture editing
-- **Engine Core**: ECS architecture with scene management
-- **Rendering**: 7 working meshes with proper UV textures
-- **Development Tools**: Web-based mesh viewer and asset validation
+### 🏃 Sprint Management
+- **[`sprints/`](sprints/)** - Sprint planning and tracking
+  - [Sprint Overview](sprints/README.md) - Sprint history and management
+  - [`completed/`](sprints/completed/) - Historical sprint documentation
+  - [`backlog/`](sprints/backlog/) - Future work organization
+    - [`immediate/`](sprints/backlog/immediate/) - Next 2-3 sprints
+    - [`features/`](sprints/backlog/features/) - Feature proposals
+    - [`technical_debt/`](sprints/backlog/technical_debt/) - Technical debt tracking
 
-### 🔄 Active Development
-- **Performance Optimization**: LOD systems and memory optimization
-- **Developer Experience**: Hot-reload and profiling tools
-- **Production Polish**: Release configuration and documentation
+### 🎨 Design Documents
+- **[`design/`](design/)** - Design and vision documents
+  - Game vision, technical architecture, and active proposals
 
-### 📋 Planned Features
-- **Gameplay Systems**: Physics, AI, player controls
-- **Audio System**: 3D spatial audio and music
-- **Advanced Rendering**: Shadows, lighting, post-processing
+### 🔧 API Documentation
+- **[`api/`](api/)** - Code documentation
+  - [`html_generated/`](api/html_generated/) - Auto-generated HTML documentation
+  - Component and system documentation
 
-## 📊 Key Metrics
+### 📦 Archive
+- **[`archive/`](archive/)** - Historical documents
+  - [`research/`](archive/research/) - Old research papers
+  - [`proposals/`](archive/proposals/) - Superseded proposals
+  - [`migrations/`](archive/migrations/) - Completed migrations
+  - [`SIGNAL/`](archive/SIGNAL/) - Alternative game concept (historical)
 
-- **Assets**: 7 meshes, all rendering with textures ✅
-- **Performance**: 60+ FPS stable in all test scenes ✅
-- **Memory**: Under 256MB usage target ✅
-- **Loading**: ~10x faster than OBJ parsing ✅
-- **File Size**: 40-50% reduction with binary format ✅
+## 🔍 Quick Navigation
 
-## 🔗 Quick Links
+### For New Developers
+1. Start with [Current Sprint Status](sprints/active/CURRENT_SPRINT_STATUS.md)
+2. Read [Contributing Guide](development/CONTRIBUTING.md)
+3. Check [Sprint Overview](sprints/README.md) for context
 
-- **Build & Run**: See [README.md](../README.md) in project root
-- **Asset Creation**: [Asset Pipeline Validation](../ASSET_PIPELINE_VALIDATION.md)
-- **Mesh Viewer**: `make view-meshes` for web-based 3D preview
-- **Performance Testing**: `make test-performance`
+### For Development
+- **Current Work**: [Sprint 26 Semi-Autonomous Flight](sprints/active/SPRINT_26_SEMI_AUTONOMOUS_FLIGHT.md) 🚀
+- **Sprint Status**: [Dashboard](SPRINT_STATUS.md) ✅
+- **Previous Sprint**: [Sprint 25 Complete](sprints/completed/) 🎮
+- **Technical Docs**: [`technical/`](technical/)
+- **API Reference**: [`api/`](api/)
 
-For detailed technical information, see the [guides/](./guides/) directory.
+### For Planning
+- **Sprint Backlog**: [`sprints/backlog/`](sprints/backlog/)
+- **Design Documents**: [`design/`](design/)
+- **Feature Proposals**: [`sprints/backlog/features/`](sprints/backlog/features/)
+
+## 📋 Documentation Standards
+
+All documentation follows the [Documentation Standards](DOCUMENTATION_STANDARDS.md) which include:
+
+### Organization Principles
+1. **Single Source of Truth**: Each document type has one canonical location
+2. **Clear Hierarchy**: Easy to find current vs historical information
+3. **Consistent Structure**: Predictable organization patterns
+4. **Active vs Archive**: Clear separation of current and historical content
+
+### File Naming and Structure
+- Use descriptive, consistent names per [standards](DOCUMENTATION_STANDARDS.md)
+- Include metadata headers for all documents
+- Use relative links and maintain cross-references
+- Follow validation requirements (use `docs/scripts/validate_docs.sh`)
+
+## 🔄 Maintenance
+
+### Regular Tasks
+- Update [Sprint Status Dashboard](SPRINT_STATUS.md)
+- Archive completed sprints
+- Run documentation validation: `docs/scripts/validate_docs.sh`
+- Update cross-references and maintain standards compliance
+
+### Sprint Boundaries
+- Move completed sprints to [`completed/`](sprints/completed/)
+- Update active sprint documentation
+- Review and organize backlog items
+
+## 🚀 Recent Updates
+
+### July 6, 2025 - Sprint 26 Started
+- ✅ Documentation standards implemented
+- ✅ Sprint 26 Semi-Autonomous Flight planning complete
+- ✅ Documentation structure improved and consolidated
+- ✅ Validation scripts and compliance tools added
+
+### July 4, 2025 - Documentation Improvements
+- ✅ New technical documentation structure
+- ✅ Consolidated research documentation
+- ✅ Architecture overview and component catalog
+- ✅ Documentation standards and validation
+
+## 📞 Support
+
+For questions about documentation:
+1. Check the [Sprint Status Dashboard](SPRINT_STATUS.md)
+2. Review [Documentation Standards](DOCUMENTATION_STANDARDS.md)
+3. Use validation tools: `docs/scripts/validate_docs.sh`
+
+---
+
+*Last Updated: July 6, 2025 - Sprint 26 Semi-Autonomous Flight Active*

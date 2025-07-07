@@ -1,0 +1,270 @@
+# CGame Engine - Unified CMake Build System
+# ============================================================================
+# This is a proposed CMakeLists.txt to replace the multiple Makefile system
+# Created: July 6, 2025
+# ============================================================================
+
+cmake_minimum_required(VERSION 3.20)
+project(CGame 
+    VERSION 1.0.0
+    DESCRIPTION "Component-based Game Engine with ECS Architecture"
+    LANGUAGES C
+)
+
+# ============================================================================
+# OPTIONS
+# ============================================================================
+option(CGAME_BUILD_TESTS "Build test suite" ON)
+option(CGAME_BUILD_DOCS "Build documentation" OFF)
+option(CGAME_BUILD_ASSETS "Build game assets" ON)
+option(CGAME_ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(CGAME_ENABLE_TSAN "Enable Thread Sanitizer" OFF)
+option(CGAME_ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
+option(CGAME_PARALLEL_TESTS "Run tests in parallel" ON)
+
+# ============================================================================
+# CMAKE CONFIGURATION
+# ============================================================================
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Default to Debug build
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+# Module path for custom Find modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# ============================================================================
+# PLATFORM DETECTION
+# ============================================================================
+include(cmake/Platform.cmake)
+
+# ============================================================================
+# COMPILER CONFIGURATION
+# ============================================================================
+include(cmake/CompilerFlags.cmake)
+
+# ============================================================================
+# DEPENDENCIES
+# ============================================================================
+include(cmake/Dependencies.cmake)
+
+# Find required packages
+find_package(Threads REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+# Platform-specific dependencies
+if(APPLE)
+    find_library(METAL_FRAMEWORK Metal REQUIRED)
+    find_library(METALKIT_FRAMEWORK MetalKit REQUIRED)
+    find_library(APPKIT_FRAMEWORK AppKit REQUIRED)
+    find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
+    find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
+    find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
+    
+    # Homebrew paths for macOS
+    list(APPEND CMAKE_PREFIX_PATH /opt/homebrew)
+    list(APPEND CMAKE_PREFIX_PATH /usr/local)
+endif()
+
+# External dependencies
+find_package(ODE REQUIRED)
+find_package(YAML REQUIRED)
+
+# ============================================================================
+# SOURCE CONFIGURATION
+# ============================================================================
+
+# Collect source files
+file(GLOB_RECURSE CGAME_SOURCES 
+    src/*.c
+    src/component/*.c
+    src/system/*.c
+    src/render/*.c
+    src/scripts/*.c
+    src/hal/*.c
+    src/services/*.c
+    src/microui/*.c
+)
+
+# Exclude platform-specific files
+if(NOT APPLE)
+    list(FILTER CGAME_SOURCES EXCLUDE REGEX ".*_mac\\.c$")
+endif()
+if(NOT UNIX OR APPLE)
+    list(FILTER CGAME_SOURCES EXCLUDE REGEX ".*_linux\\.c$")
+endif()
+if(NOT WIN32)
+    list(FILTER CGAME_SOURCES EXCLUDE REGEX ".*_win\\.c$")
+endif()
+
+# Create engine library
+add_library(cgame_engine STATIC ${CGAME_SOURCES})
+
+target_include_directories(cgame_engine PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party
+    ${ODE_INCLUDE_DIRS}
+    ${YAML_INCLUDE_DIRS}
+)
+
+target_link_libraries(cgame_engine PUBLIC
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${ODE_LIBRARIES}
+    ${YAML_LIBRARIES}
+    m  # Math library
+)
+
+# Platform-specific linking
+if(APPLE)
+    target_link_libraries(cgame_engine PUBLIC
+        ${METAL_FRAMEWORK}
+        ${METALKIT_FRAMEWORK}
+        ${APPKIT_FRAMEWORK}
+        ${QUARTZCORE_FRAMEWORK}
+        ${IOKIT_FRAMEWORK}
+        ${COREFOUNDATION_FRAMEWORK}
+    )
+    target_compile_definitions(cgame_engine PUBLIC SOKOL_METAL)
+elseif(UNIX)
+    find_package(OpenGL REQUIRED)
+    find_package(X11 REQUIRED)
+    target_link_libraries(cgame_engine PUBLIC
+        OpenGL::GL
+        ${X11_LIBRARIES}
+    )
+    target_compile_definitions(cgame_engine PUBLIC SOKOL_GLCORE33)
+endif()
+
+# ============================================================================
+# HIDAPI INTEGRATION
+# ============================================================================
+add_subdirectory(third_party/hidapi EXCLUDE_FROM_ALL)
+target_link_libraries(cgame_engine PUBLIC hidapi)
+
+# ============================================================================
+# EXECUTABLE
+# ============================================================================
+add_executable(cgame src/main.c)
+target_link_libraries(cgame PRIVATE cgame_engine)
+
+# Copy executable to build root for compatibility
+add_custom_command(TARGET cgame POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:cgame> ${CMAKE_BINARY_DIR}/
+)
+
+# ============================================================================
+# ASSET PIPELINE
+# ============================================================================
+if(CGAME_BUILD_ASSETS)
+    include(cmake/Assets.cmake)
+endif()
+
+# ============================================================================
+# TESTING
+# ============================================================================
+if(CGAME_BUILD_TESTS)
+    enable_testing()
+    include(CTest)
+    add_subdirectory(tests)
+    
+    # Custom test targets for compatibility
+    add_custom_target(test
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        DEPENDS cgame_engine
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    
+    if(CGAME_PARALLEL_TESTS)
+        add_custom_target(test-parallel
+            COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --parallel
+            DEPENDS cgame_engine
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
+    endif()
+endif()
+
+# ============================================================================
+# DOCUMENTATION
+# ============================================================================
+if(CGAME_BUILD_DOCS)
+    find_package(Doxygen)
+    if(DOXYGEN_FOUND)
+        set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
+        set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+        
+        configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+        
+        add_custom_target(docs
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Generating API documentation with Doxygen"
+            VERBATIM
+        )
+    endif()
+endif()
+
+# ============================================================================
+# INSTALLATION
+# ============================================================================
+install(TARGETS cgame
+    RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY ${CMAKE_BINARY_DIR}/assets
+    DESTINATION share/cgame
+)
+
+# ============================================================================
+# CONVENIENCE TARGETS
+# ============================================================================
+
+# Run target
+add_custom_target(run
+    COMMAND ${CMAKE_BINARY_DIR}/cgame
+    DEPENDS cgame
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
+
+# Clean all
+add_custom_target(clean-all
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target clean
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/assets
+)
+
+# Memory check targets
+if(UNIX)
+    find_program(VALGRIND valgrind)
+    if(VALGRIND)
+        add_custom_target(memcheck
+            COMMAND ${VALGRIND} --leak-check=full --show-leak-kinds=all 
+                    --track-origins=yes ${CMAKE_BINARY_DIR}/cgame
+            DEPENDS cgame
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
+    endif()
+endif()
+
+# ============================================================================
+# STATUS MESSAGES
+# ============================================================================
+message(STATUS "CGame Engine Configuration:")
+message(STATUS "  Version: ${PROJECT_VERSION}")
+message(STATUS "  Build Type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "  Graphics Backend: ${GRAPHICS_BACKEND}")
+message(STATUS "  Build Tests: ${CGAME_BUILD_TESTS}")
+message(STATUS "  Build Docs: ${CGAME_BUILD_DOCS}")
+message(STATUS "  Build Assets: ${CGAME_BUILD_ASSETS}")
+
+# ============================================================================
+# CMAKE PRESETS SUPPORT
+# ============================================================================
+# Users can use CMake presets for common configurations:
+# cmake --preset=debug
+# cmake --preset=release
+# cmake --preset=test-coverage
+# See CMakePresets.json for available presets

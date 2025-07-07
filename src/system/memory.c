@@ -48,6 +48,41 @@ static TrackedAsset* find_tracked_asset(const char* asset_name) {
     return NULL;
 }
 
+static bool track_allocation(void* ptr, size_t size, uint32_t pool_id) {
+    if (memory_state.allocation_count >= MAX_ALLOCATION_TRACKING) {
+        return false; // No space to track more allocations
+    }
+    
+    AllocationMetadata* metadata = &memory_state.allocations[memory_state.allocation_count];
+    metadata->ptr = ptr;
+    metadata->size = size;
+    metadata->pool_id = pool_id;
+    memory_state.allocation_count++;
+    return true;
+}
+
+static AllocationMetadata* find_allocation(void* ptr) {
+    for (uint32_t i = 0; i < memory_state.allocation_count; i++) {
+        if (memory_state.allocations[i].ptr == ptr) {
+            return &memory_state.allocations[i];
+        }
+    }
+    return NULL;
+}
+
+static void remove_allocation_tracking(void* ptr) {
+    for (uint32_t i = 0; i < memory_state.allocation_count; i++) {
+        if (memory_state.allocations[i].ptr == ptr) {
+            // Move the last allocation to this slot to maintain compact array
+            if (i < memory_state.allocation_count - 1) {
+                memory_state.allocations[i] = memory_state.allocations[memory_state.allocation_count - 1];
+            }
+            memory_state.allocation_count--;
+            return;
+        }
+    }
+}
+
 static size_t calculate_mesh_memory(const Mesh* mesh) {
     if (!mesh || !mesh->loaded) return 0;
     
@@ -551,4 +586,125 @@ void memory_system_update_wrapper(struct World* world, RenderConfig* render_conf
         extern AssetRegistry g_asset_registry;
         memory_system_update(world, &g_asset_registry, delta_time);
     #endif
+}
+
+// ============================================================================
+// MEMORY POOL API (for testing and advanced allocation)
+// ============================================================================
+
+void* memory_pool_alloc(uint32_t pool_id, size_t size) {
+    if (!memory_state.initialized) {
+        return NULL;
+    }
+    
+    MemoryPool* pool = get_pool(pool_id);
+    if (!pool) {
+        return NULL;
+    }
+    
+    // Check if pool has space for this allocation
+    if (pool->allocated_bytes + size > pool->max_bytes && pool->max_bytes > 0) {
+        return NULL;
+    }
+    
+    // Allocate memory
+    void* ptr = malloc(size);
+    if (ptr) {
+        // Track the allocation metadata
+        if (track_allocation(ptr, size, pool_id)) {
+            pool->allocated_bytes += size;
+            pool->allocation_count++;
+            memory_state.total_allocated_bytes += size;
+            
+            // Update peak usage
+            if (pool->allocated_bytes > pool->peak_bytes) {
+                pool->peak_bytes = pool->allocated_bytes;
+            }
+        } else {
+            // Failed to track allocation - free the memory and return NULL
+            free(ptr);
+            return NULL;
+        }
+    }
+    
+    return ptr;
+}
+
+void memory_pool_free(uint32_t pool_id, void* ptr) {
+    if (!memory_state.initialized || !ptr) {
+        return;
+    }
+    
+    MemoryPool* pool = get_pool(pool_id);
+    if (!pool) {
+        return;
+    }
+    
+    // Find the allocation metadata to get the size
+    AllocationMetadata* metadata = find_allocation(ptr);
+    if (metadata && metadata->pool_id == pool_id) {
+        // Update pool statistics
+        pool->allocated_bytes -= metadata->size;
+        pool->allocation_count--;
+        memory_state.total_allocated_bytes -= metadata->size;
+        memory_state.bytes_freed_total += metadata->size;
+        
+        // Remove from tracking
+        remove_allocation_tracking(ptr);
+    } else {
+        // Fallback: just decrement count if we can't find the metadata
+        // This should not happen in normal operation
+        if (pool->allocation_count > 0) {
+            pool->allocation_count--;
+        }
+    }
+    
+    free(ptr);
+}
+
+void memory_destroy_pool(uint32_t pool_id) {
+    if (!memory_state.initialized) {
+        return;
+    }
+    
+    MemoryPool* pool = get_pool(pool_id);
+    if (!pool) {
+        return;
+    }
+    
+    // Reset pool state
+    pool->allocated_bytes = 0;
+    pool->peak_bytes = 0;
+    pool->max_bytes = 0;
+    pool->allocation_count = 0;
+    pool->name[0] = '\0';
+    pool->enabled = false;
+}
+
+void memory_track_asset_allocation(void* ptr, size_t size, const char* asset_name) {
+    if (!memory_state.initialized || !ptr || !asset_name) {
+        return;
+    }
+    
+    // Find or create tracked asset entry
+    TrackedAsset* asset = find_tracked_asset(asset_name);
+    if (!asset && memory_state.tracked_asset_count < MAX_TRACKED_ASSETS) {
+        asset = &memory_state.tracked_assets[memory_state.tracked_asset_count++];
+        asset->asset_id = memory_state.tracked_asset_count;
+        strncpy(asset->asset_name, asset_name, sizeof(asset->asset_name) - 1);
+        asset->asset_name[sizeof(asset->asset_name) - 1] = '\0';
+        strncpy(asset->asset_type, "test", sizeof(asset->asset_type) - 1);
+        asset->asset_type[sizeof(asset->asset_type) - 1] = '\0';
+        asset->memory_bytes = 0;
+        asset->last_used_time = get_time();
+        asset->distance_from_camera = 0.0f;
+        asset->loaded = true;
+        asset->can_unload = true;
+    }
+    
+    if (asset) {
+        asset->memory_bytes += size;
+        asset->last_used_time = get_time();
+        asset->loaded = true;
+    }
 }

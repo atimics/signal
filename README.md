@@ -7,6 +7,29 @@
 
 **SIGNAL** is a high-performance, data-oriented 3D game engine and the foundation for a single-player space exploration game. It is written in C99, features a pure Entity-Component-System (ECS) architecture, and uses the modern, cross-platform **Sokol** graphics API for rendering.
 
+**[📊 Project Status](docs/PROJECT_STATUS.md)**: 98% test coverage | 60+ FPS | Sprint 24 (MicroUI System Improvements) Active
+
+**[📝 Engineering Report](docs/sprints/active/engineering_report.md)** | **[✅ Sprint 24 Plan](docs/sprints/active/SPRINT_24_PLAN.md)**
+
+### 🎮 Current Features
+
+- **6DOF Flight Mechanics**: Full six degrees of freedom spaceflight with realistic physics
+- **Entity Component System**: Pure ECS architecture supporting 10,000+ entities at 60 FPS
+- **Banking Flight Controls**: Intuitive control scheme with coordinated turns
+- **Multiple Ship Types**: Fighter, Interceptor, Cargo, and Explorer configurations
+- **Auto-Deceleration**: Optional flight assistance for arcade-style gameplay
+- **Performance Optimized**: Maintains 60+ FPS with complex physics simulations
+
+## 🕵️ SIGNAL CLI Minigame
+
+Explore the game's lore through an interactive classified document interface:
+
+```bash
+./signal
+```
+
+The SIGNAL CLI provides an immersive terminal experience for discovering and decrypting classified intelligence documents hidden in the repository. Use passwords discovered during gameplay to progressively unlock secret lore about the Black Armada and the Aethelian Network.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -25,55 +48,52 @@ The project uses a simple Makefile. The first build will automatically compile t
 # Clean, build, and run the engine
 make clean && make && make run
 
-# Run the automated test suite
+# Run the automated test suite (98% pass rate - near perfect!)
 make test
+
+# Run specific test suites
+make test-physics
+make test-thrusters
+
+# Run with flight test scene
+./build/cgame --test-flight
 ```
 
-## 📚 Documentation Hub
+### 🎮 Flight Controls
 
-For detailed information about the engine's architecture, development workflow, and creative vision, please see the main **[Documentation Hub](./docs/README.md)**. This is the primary entry point for all developers.
+**Keyboard:**
+- W/S - Pitch control (dive/climb)
+- A/D - Banking turns (coordinated yaw + roll)
+- Space/X - Forward/backward thrust
+- R/F - Vertical thrust (up/down)
+- Q/E - Pure roll (barrel roll)
+- Shift - Boost (50% extra thrust)
+- Alt - Brake + Auto-deceleration
+- Tab - Cycle camera modes
 
-### 🔄 Development Standards
+**Xbox Controller:**
+- Left Stick - Pitch/Yaw control
+- Right Stick X - Banking turns
+- Right Stick Y - Vertical thrust
+- Right Trigger - Forward thrust
+- Left Trigger - Reverse thrust
+- Bumpers - Roll control
 
-- **[Release & Branch Management](./docs/RELEASE_STANDARDS.md)** - Comprehensive standards for releases, branching, and quality gates
-- **[Contributing Guidelines](./CONTRIBUTING.md)** - How to contribute to the project
-- **[API Documentation](./docs/API_REFERENCE.md)** - Technical API reference (coming soon)
+## 🏗️ Codebase Structure
 
-## 🔧 Development Workflow
+The engine is organized into the following key directories:
 
-This project follows strict development standards with automated CI/CD pipelines:
+- **`src/`**: Core engine source code.
+  - **`core/`**: Entity-Component-System (ECS), math, and memory management.
+  - **`systems/`**: Gameplay logic (physics, AI, controls).
+  - **`render/`**: Rendering pipeline and graphics abstraction.
+  - **`asset/`**: Asset loading and management.
+  - **`ui/`**: User interface systems.
+- **`assets/`**: Game assets (meshes, textures, materials).
+- **`data/`**: Data-driven game content (scenes, entity templates).
+- **`docs/`**: All project documentation.
+- **`tests/`**: Unit and integration tests.
 
-### 🌳 Branch Strategy
-- `main` - Production-ready releases only
-- `develop` - Integration branch for features  
-- `feature/*` - Individual feature development
+## 📚 Documentation
 
-### 🚀 Continuous Integration
-- **Build Pipeline**: Automated builds for macOS, Linux, and WebAssembly
-- **Test Suite**: Comprehensive unit and integration testing
-- **Release Pipeline**: Semantic versioning with automated GitHub releases
-- **Quality Gates**: Mandatory code review and manual verification
-
-### 📋 Pull Request Requirements
-All changes must go through pull requests with:
-- Automated testing on all platforms
-- Code review from maintainers
-- Manual verification checklist (for main branch)
-- Conventional commit format
-
-See [Repository Setup Guide](./.github/REPOSITORY_SETUP.md) for complete GitHub configuration.
-
-## 📈 Project Status
-
-This project is under active development.
-
-**Recent Accomplishments**:
-*   **Asset Pipeline Overhaul**: Migrated from a slow, text-based asset system to a high-performance, pre-compiled binary format.
-*   **Rendering Stabilization**: Resolved all critical rendering bugs, enabling the stable loading and display of textured 3D models.
-*   **UV Layout Pipeline**: Implemented a robust, data-driven asset pipeline that generates UV layout SVGs from mesh UVs, enabling artist-friendly texture workflow.
-*   **Vision Solidified**: Established a clear and compelling creative vision, "The Ghost Signal," to guide all future development.
-
-**Current Focus**:
-*   **Data-Driven Architecture**: Fully data-driven scene/entity/mesh/material/texture management with version control and artist-friendly workflows.
-
-See the [Active Sprint Guide](./docs/sprints/active/sprint_18_systems_refactor.md) for more details.
+For all technical documentation, development guides, and project management resources, please see the main **[Documentation Hub](./docs/README.md)**.

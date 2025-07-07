@@ -1,9 +1,0 @@
-# Logo Texture Test Scene
-camera_test_logo:
-  spawn:
-    - entity: "player_ship"
-      position: [0, 0, 0]
-    - entity: "chase_camera"
-      position: [10, 25, 35]
-    - entity: "security_camera"
-      position: [-40, 35, -40]

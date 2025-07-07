@@ -1,0 +1,37 @@
+# RCS thruster block with 4-way thrust
+part_id: rcs_4way_block
+display_name: "4-Way RCS Block"
+category: THRUSTER
+
+physical:
+  mass: 10.0  # kg
+  center_of_mass: [0, 0, 0]
+  drag_coefficient: 0.1
+  heat_capacity: 800.0
+
+visual:
+  mesh: "rcs_block"
+  material: "metal_dark"
+  offset: [0, 0, 0]
+
+attachment_nodes:
+  - name: "mount"
+    position: [0, -0.1, 0]
+    direction: [0, -1, 0]
+    type: SURFACE
+    size: 0.2
+
+properties:
+  thruster:
+    max_thrust: 1000.0  # 1 kN per nozzle
+    specific_impulse: 240.0
+    fuel_type: "Monopropellant"
+    nozzles:
+      - direction: [1, 0, 0]
+        position: [0.15, 0, 0]
+      - direction: [-1, 0, 0]
+        position: [-0.15, 0, 0]
+      - direction: [0, 0, 1]
+        position: [0, 0, 0.15]
+      - direction: [0, 0, -1]
+        position: [0, 0, -0.15]

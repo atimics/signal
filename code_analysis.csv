@@ -1,0 +1,142 @@
+language,filename,blank,comment,code,"github.com/AlDanial/cloc v 2.06  T=0.19 s (740.1 files/s 590960.1 lines/s)"
+C/C++ Header,src/nuklear.h,1733,5286,20365
+C/C++ Header,src/sokol_gfx.h,1918,3231,17168
+C/C++ Header,src/sokol_app.h,1019,1851,9672
+C/C++ Header,src/stb_image.h,870,1266,6991
+C/C++ Header,src/sokol_nuklear.h,269,693,2391
+C,tests/vendor/unity.c,239,174,2173
+C/C++ Header,tests/vendor/unity_internals.h,142,133,1555
+C,src/hidapi_mac.c,275,206,1114
+C/C++ Header,tests/vendor/unity.h,57,120,1043
+C,src/core.c,163,95,785
+C,src/ui_legacy.c,169,80,712
+C,src/render_3d.c,121,102,571
+C,tests/systems/test_physics_6dof.c,217,173,568
+C,src/scripts/derelict_navigation_scene.c,127,100,537
+C,src/data.c,93,54,489
+C,src/system/memory.c,145,78,487
+C,src/scripts/flight_test_scene.c,118,78,476
+C,src/assets.c,86,60,465
+C,src/main.c,82,75,456
+C,src/asset_loader/asset_loader_mesh.c,88,71,436
+C,src/system/performance.c,98,35,353
+C,src/asset_loader/asset_loader_index.c,58,47,352
+C,tests/performance/test_performance_critical.c,118,68,322
+C,tests/systems/test_camera.c,117,93,319
+C,src/ui_scene.c,78,34,306
+C,tests/support/test_utilities.c,79,53,302
+C/C++ Header,src/core.h,66,81,301
+C,tests/systems/test_control.c,108,77,300
+C,tests/integration/test_flight_integration.c,121,100,299
+C,tests/performance/test_memory_perf.c,105,70,282
+C,src/ui_components.c,62,27,276
+C,tests/systems/test_input.c,110,100,273
+C,tests/unit/test_systems.c,113,95,266
+C,tests/systems/test_thrusters.c,111,76,262
+C,src/system/gamepad.c,66,32,248
+C,src/system/gamepad_real.c,66,32,247
+C/C++ Header,src/sokol_log.h,49,97,235
+Python,tests/support/test_automation.py,61,37,233
+C,src/system/physics.c,64,50,231
+C,tests/performance/test_memory_isolated.c,74,49,221
+C,src/system/camera.c,49,23,216
+C,src/system_camera.c,48,20,203
+C,tests/unit/test_ecs_core.c,95,97,202
+C,src/system/control.c,66,82,193
+C,src/systems.c,54,26,192
+C,src/system/thrusters.c,42,35,186
+C,tests/systems/test_performance_lod.c,65,65,184
+C,tests/scenes/test_scene_state.c,79,76,183
+C,tests/core/test_components.c,78,42,182
+C,src/system/lighting.c,58,23,177
+C,tests/ui/test_ui_system.c,71,72,173
+C,src/system/input.c,35,23,172
+C,tests/assets/test_assets.c,47,67,169
+C,src/system/lod.c,44,44,156
+C,src/system/material.c,30,5,150
+Markdown,tests/README.md,28,0,147
+C,src/config.c,30,14,141
+C,tests/core/test_world.c,59,37,139
+C,src/scripts/racing_scene.c,48,24,137
+C,tests/systems/test_physics_critical.c,47,58,134
+C,tests/systems/test_memory.c,62,51,126
+C/C++ Header,src/render.h,32,36,121
+C,src/render_lighting.c,32,16,116
+C,src/scene_script.c,23,24,115
+C,tests/regression/test_sprint_21_velocity_bug.c,51,52,115
+C,tests/backlog/test_task_4_isolated.c,27,13,114
+HTML,src/shell.html,2,0,106
+C,src/scripts/logo_scene.c,26,21,97
+C,src/render_gpu.c,14,13,96
+C/C++ Header,tests/support/test_utilities.h,57,183,96
+C,src/graphics_api.c,19,21,95
+C,src/scene_state.c,27,14,93
+C/C++ Header,src/assets.h,34,119,91
+C/C++ Header,tests/stubs/ui_test_stubs.h,28,14,91
+C,src/gpu_resources.c,19,12,90
+C,tests/performance/test_performance_simple.c,34,21,90
+C,src/system/collision.c,21,10,88
+C/C++ Header,src/hidapi.h,157,450,84
+C/C++ Header,src/data.h,24,17,83
+C,src/system/ai.c,17,9,82
+C/C++ Header,src/system/memory.h,41,137,78
+C/C++ Header,src/sokol_glue.h,33,57,74
+C,tests/systems/test_performance_lod_simple.c,29,32,71
+C/C++ Header,src/system/performance.h,30,92,70
+C,src/ui.c,27,28,67
+C,src/ui_api.c,23,20,67
+C,src/ui_new.c,29,33,67
+C,src/asset_loader/asset_loader_material.c,7,11,65
+C,src/scripts/scene_selector_scene.c,18,19,65
+C,src/render_mesh.c,19,11,64
+C,tests/rendering/test_rendering.c,17,26,64
+C/C++ Header,src/systems.h,13,11,58
+C,src/system/gamepad_stub.c,19,13,56
+C,tests/stubs/engine_test_stubs.c,8,8,56
+C,tests/mocks/mock_graphics.c,16,9,53
+C/C++ Header,src/system/gamepad.h,15,15,51
+C,tests/backlog/test_task_4_mock.c,13,5,50
+C,tests/backlog/test_task_4_simple.c,12,7,50
+C,tests/core/test_math.c,11,7,50
+C/C++ Header,src/system/lighting.h,15,14,49
+C/C++ Header,src/ui_components.h,16,23,47
+C/C++ Header,src/system/material.h,12,11,45
+Markdown,tests/backlog/README.md,14,0,40
+C/C++ Header,tests/mocks/mock_graphics.h,13,11,39
+C/C++ Header,src/system/input.h,13,14,36
+C,src/render_camera.c,15,9,35
+C/C++ Header,src/scene_state.h,10,13,34
+C/C++ Header,src/graphics_api.h,9,15,32
+C,tests/core_math.c,7,1,32
+C/C++ Header,src/system/lod.h,20,61,30
+C,tests/test_runner.c,10,7,29
+C/C++ Header,src/ui_scene.h,22,28,28
+C/C++ Header,src/gpu_resources.h,9,8,24
+C/C++ Header,src/config.h,6,7,21
+C,tests/stubs/graphics_api_test_stub.c,9,10,20
+C/C++ Header,src/scene_script.h,8,12,19
+C/C++ Header,src/render_gpu.h,8,7,17
+C/C++ Header,tests/core_math.h,4,4,17
+C/C++ Header,src/ui_api.h,18,25,16
+C/C++ Header,src/hidapi_darwin.h,30,53,15
+C,tests/test_main_simple.c,6,4,15
+C/C++ Header,src/render_mesh.h,5,4,14
+C/C++ Header,src/system/physics.h,6,4,14
+C,tests/stubs/performance_test_stubs.c,3,6,14
+C/C++ Header,src/render_lighting.h,5,5,13
+C/C++ Header,src/ui.h,5,4,13
+C/C++ Header,src/system/control.h,5,3,12
+C/C++ Header,src/system/thrusters.h,6,4,12
+C/C++ Header,src/system/camera.h,4,2,11
+C/C++ Header,src/system_camera.h,4,2,11
+C,tests/stubs/memory_test_stubs.c,4,6,11
+C,tests/test_main.c,5,7,11
+C/C++ Header,src/render_camera.h,4,4,9
+C/C++ Header,src/asset_loader/asset_loader_index.h,5,31,8
+C/C++ Header,src/sokol_wrapper.h,4,3,8
+C/C++ Header,src/asset_loader/asset_loader_mesh.h,4,25,7
+C/C++ Header,src/system/ai.h,3,0,6
+C/C++ Header,src/system/collision.h,3,0,6
+C/C++ Header,src/asset_loader/asset_loader_material.h,3,11,5
+C/C++ Header,src/graphics.h,3,4,4
+SUM,,12169,18111,81512

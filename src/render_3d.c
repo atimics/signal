@@ -11,8 +11,10 @@
 #include "render_camera.h"
 #include "render_lighting.h"
 #include "render_mesh.h"
-#include "sokol_gfx.h"  // Direct inclusion for rendering implementation
+#include "scene_script.h"  // For find_entity_by_name function
+#include "system/material.h"  // For material properties
 #include "ui.h"
+#include "graphics_health.h"  // For health monitoring
 
 // Internal conversion functions for PIMPL pattern
 // These are only used within the rendering implementation
@@ -67,19 +69,23 @@ typedef struct
 
 typedef struct
 {
-    float light_dir[3];  // Light direction
-    float _pad;          // Padding for alignment
+    float light_dir[3];     // Light direction
+    float glow_intensity;   // Glow effect intensity (0.0 = no glow, 1.0 = full glow)
+    float time;             // Current time for animation
+    float _pad[3];          // Padding for 16-byte alignment
 } fs_uniforms_t;
 
 // Global rendering state
 static struct
 {
     sg_pipeline pipeline;
+    sg_pipeline offscreen_pipeline;  // Pipeline for offscreen rendering
     sg_shader shader;
     sg_sampler sampler;
     sg_buffer uniform_buffer;  // Uniform buffer for dynamic updates
     sg_image default_texture;
     bool initialized;
+    bool rendering_offscreen;  // Track if we're rendering to offscreen target
     char* vertex_shader_source;
     char* fragment_shader_source;
 } render_state = { 0 };
@@ -200,7 +206,7 @@ static bool render_sokol_init(void)
         .colors[0] = {
             // Don't specify pixel_format - let it default to match swapchain
         },
-        // Don't specify sample_count - let it default to match swapchain
+        .sample_count = 1,  // CRITICAL: Must match swapchain sample count
         .cull_mode = SG_CULLMODE_NONE,  // Disable culling for debugging
         .face_winding = SG_FACEWINDING_CCW,  // Try counter-clockwise (standard)
         .label = "basic_3d_pipeline"
@@ -212,7 +218,56 @@ static bool render_sokol_init(void)
         return false;
     }
 
+    // Validate pipeline state
+    sg_resource_state pip_state = sg_query_pipeline_state(render_state.pipeline);
+    if (pip_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ ERROR: 3D pipeline invalid after creation! State: %d\n", pip_state);
+        return false;
+    }
+    
     printf("🔍 Pipeline created with default formats\n");
+    
+    // Create offscreen pipeline with explicit RGBA8 format
+    render_state.offscreen_pipeline = sg_make_pipeline(&(sg_pipeline_desc){
+        .shader = render_state.shader,
+        .layout = {
+            // Vertex layout matching our vertex structure
+            .attrs = {
+                [0] = { .format = SG_VERTEXFORMAT_FLOAT3 },  // position
+                [1] = { .format = SG_VERTEXFORMAT_FLOAT3 },  // normal
+                [2] = { .format = SG_VERTEXFORMAT_FLOAT2 },  // texcoord
+            }
+        },
+        .index_type = SG_INDEXTYPE_UINT32,
+        .primitive_type = SG_PRIMITIVETYPE_TRIANGLES,
+        .depth = {
+            .compare = SG_COMPAREFUNC_LESS_EQUAL,
+            .write_enabled = true,
+            .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL
+        },
+        .colors[0] = {
+            .pixel_format = SG_PIXELFORMAT_RGBA8  // Explicit format for offscreen
+        },
+        .sample_count = 1,  // CRITICAL: Must match layer render targets
+        .cull_mode = SG_CULLMODE_NONE,
+        .face_winding = SG_FACEWINDING_CCW,
+        .label = "basic_3d_offscreen_pipeline"
+    });
+    
+    if (render_state.offscreen_pipeline.id == SG_INVALID_ID)
+    {
+        printf("❌ Failed to create offscreen pipeline\n");
+        return false;
+    }
+    
+    // Validate offscreen pipeline state
+    pip_state = sg_query_pipeline_state(render_state.offscreen_pipeline);
+    if (pip_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ ERROR: 3D offscreen pipeline invalid after creation! State: %d\n", pip_state);
+        return false;
+    }
+    
+    printf("🔍 Offscreen pipeline created with RGBA8 format\n");
 
     // Create uniform buffer (dynamic to allow updates)
     render_state.uniform_buffer = sg_make_buffer(
@@ -334,7 +389,10 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
 {
     (void)config;      // Unused for now
     (void)player_id;   // Unused for now
-    (void)delta_time;  // Unused for now
+    
+    // Accumulate time for glow effects
+    static float accumulated_time = 0.0f;
+    accumulated_time += delta_time;
 
     // Performance monitoring (Sprint 08 Review Action Item)
     render_performance.frame_count++;
@@ -363,11 +421,63 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         return;
     }
 
-    // Pipeline is already set up in main.c render pass
-    // Just apply the rendering pipeline here
-
-    // Apply the rendering pipeline
-    sg_apply_pipeline(render_state.pipeline);
+    // CRITICAL: Apply the correct pipeline based on render target
+    sg_pipeline pipeline_to_use = render_state.rendering_offscreen ? 
+                                  render_state.offscreen_pipeline : 
+                                  render_state.pipeline;
+    
+    // Validate pipeline state before using
+    sg_resource_state pip_state = sg_query_pipeline_state(pipeline_to_use);
+    if (pip_state != SG_RESOURCESTATE_VALID) {
+        printf("❌ ERROR: 3D pipeline invalid! State: %d, offscreen: %s\n", 
+               pip_state, render_state.rendering_offscreen ? "yes" : "no");
+        
+        // Try to recreate the pipeline if it's invalid
+        if (render_state.rendering_offscreen) {
+            // Recreate offscreen pipeline
+            sg_destroy_pipeline(render_state.offscreen_pipeline);
+            render_state.offscreen_pipeline = sg_make_pipeline(&(sg_pipeline_desc){
+                .shader = render_state.shader,
+                .layout = {
+                    .attrs = {
+                        [0] = { .format = SG_VERTEXFORMAT_FLOAT3 },  // position
+                        [1] = { .format = SG_VERTEXFORMAT_FLOAT3 },  // normal
+                        [2] = { .format = SG_VERTEXFORMAT_FLOAT2 },  // texcoord
+                    }
+                },
+                .index_type = SG_INDEXTYPE_UINT32,
+                .depth = {
+                    .compare = SG_COMPAREFUNC_LESS_EQUAL,
+                    .write_enabled = true,
+                    .pixel_format = SG_PIXELFORMAT_DEPTH_STENCIL
+                },
+                .colors[0] = {
+                    .pixel_format = SG_PIXELFORMAT_RGBA8
+                },
+                .sample_count = 1,  // Must match render targets
+                .cull_mode = SG_CULLMODE_NONE,
+                .face_winding = SG_FACEWINDING_CCW,
+                .label = "basic_3d_offscreen_pipeline_recreated"
+            });
+            pipeline_to_use = render_state.offscreen_pipeline;
+        }
+        
+        // Check again
+        pip_state = sg_query_pipeline_state(pipeline_to_use);
+        if (pip_state != SG_RESOURCESTATE_VALID) {
+            printf("❌ CRITICAL: Failed to recreate 3D pipeline, aborting frame\n");
+            return;
+        }
+    }
+    
+    // Apply the validated pipeline
+    sg_apply_pipeline(pipeline_to_use);
+    
+    // Verify context is still valid after pipeline apply
+    if (!sg_isvalid()) {
+        printf("❌ Context invalid after applying 3D pipeline\n");
+        return;
+    }
 
     // Count entities to render
     int renderable_count = 0;
@@ -420,12 +530,34 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             continue;
         }
 
+        // CRITICAL: Additional mesh handle guards before binding
+        gpu_buffer_t vb = gpu_resources_get_vertex_buffer(renderable->gpu_resources);
+        gpu_buffer_t ib = gpu_resources_get_index_buffer(renderable->gpu_resources);
+        
+        // Double-check buffer validity
+        if (vb.id == 0 || ib.id == 0) {
+            if (frame_count < 10) {
+                printf("❌ Entity %d: Invalid buffer handles (vb:%d, ib:%d), skipping\n", 
+                       entity->id, vb.id, ib.id);
+            }
+            render_performance.entities_culled++;
+            continue;
+        }
+        
+        // Ensure index count is valid
+        if (renderable->index_count == 0 || renderable->index_count > 1000000) {
+            if (frame_count < 10) {
+                printf("❌ Entity %d: Invalid index count %d, skipping\n", 
+                       entity->id, renderable->index_count);
+            }
+            render_performance.entities_culled++;
+            continue;
+        }
+
         // Apply bindings (VBO, IBO, textures)
         sg_bindings binds = {
-            .vertex_buffers[0] =
-                gpu_buffer_to_sg(gpu_resources_get_vertex_buffer(renderable->gpu_resources)),
-            .index_buffer =
-                gpu_buffer_to_sg(gpu_resources_get_index_buffer(renderable->gpu_resources)),
+            .vertex_buffers[0] = gpu_buffer_to_sg(vb),
+            .index_buffer = gpu_buffer_to_sg(ib),
             .images[0] = gpu_resources_is_texture_valid(renderable->gpu_resources)
                              ? gpu_image_to_sg(gpu_resources_get_texture(renderable->gpu_resources))
                              : render_state.default_texture,
@@ -501,12 +633,28 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
         memcpy(vs_params.mvp, mvp, sizeof(mvp));
         sg_apply_uniforms(0, &SG_RANGE(vs_params));
 
-        // Apply fragment shader uniforms (lighting)
+        // Apply fragment shader uniforms (lighting and glow effect)
         fs_uniforms_t fs_params;
         fs_params.light_dir[0] = 0.3f;
         fs_params.light_dir[1] = -0.7f;
         fs_params.light_dir[2] = 0.2f;
-        fs_params._pad = 0.0f;
+        fs_params.time = accumulated_time;
+        
+        // Get material properties from the renderable component
+        float glow_intensity = 0.0f;
+        if (entity->renderable && entity->renderable->material_id < MAX_MATERIAL_REGISTRY) {
+            MaterialProperties* material = material_get_by_id(entity->renderable->material_id);
+            if (material) {
+                glow_intensity = material->glow_intensity;
+            }
+        }
+        
+        // Apply glow intensity from material properties
+        fs_params.glow_intensity = glow_intensity;
+        
+        // Clear padding
+        fs_params._pad[0] = fs_params._pad[1] = fs_params._pad[2] = 0.0f;
+        
         sg_apply_uniforms(1, &SG_RANGE(fs_params));
 
         // Debug first entity's matrix in first few frames
@@ -529,7 +677,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             printf("   [%.2f %.2f %.2f %.2f]\n", mvp[12], mvp[13], mvp[14], mvp[15]);
         }
 
-        // Draw
+        // Draw with health tracking
+        char draw_desc[128];
+        snprintf(draw_desc, sizeof(draw_desc), "Entity %d (%d indices)", 
+                 entity->id, renderable->index_count);
+        gfx_health_log_draw_call(draw_desc, renderable->index_count);
+        
         sg_draw(0, renderable->index_count, 1);
         render_performance.draw_calls++;
         render_performance.entities_rendered++;
@@ -552,6 +705,12 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
 
     // Performance reporting (Sprint 08 Review Action Item)
     report_render_performance();
+    
+    // Health check after rendering
+    if (!gfx_health_check("3D render_frame")) {
+        printf("⚠️ Graphics health check failed after 3D rendering\n");
+        gfx_health_dump_diagnostics();
+    }
 
     // Render pass is ended in main.c
 }
@@ -769,3 +928,16 @@ RenderConfig* get_render_config(void)
 {
     return g_render_config_ptr;
 }
+
+// Offscreen rendering control
+void render_set_offscreen_mode(bool offscreen)
+{
+    render_state.rendering_offscreen = offscreen;
+}
+
+#ifndef TEST_MODE
+bool render_is_offscreen_mode(void)
+{
+    return render_state.rendering_offscreen;
+}
+#endif

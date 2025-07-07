@@ -1,0 +1,337 @@
+🎬 CLI scene override: thruster_test
+🎮 CGGame - Sokol-based Component Engine
+==========================================
+
+⚙️  Initializing configuration...
+📝 Config: Loaded 6 configuration values from cgame_config.txt
+🎯 Startup scene: thruster_test (auto-start: enabled)
+⚙️  Config system initialized
+🔧 Initializing graphics...
+🌍 Setting up world...
+🌍 World initialized - ready for 4096 entities
+⚙️ Starting systems...
+📁 Asset root: /Users/ratimics/develop/cgame/build/assets
+📋 Data registry initialized
+   Data root: /Users/ratimics/develop/cgame/data
+📝 Loading entity templates from /Users/ratimics/develop/cgame/data/templates/entities.txt
+   ✅ Loaded 13 entity templates
+🏗️  Dynamically loading all scene templates from /Users/ratimics/develop/cgame/data/scenes
+🏗️  Loading scene templates from /Users/ratimics/develop/cgame/data/scenes/ode_simple.txt
+   ✅ Loaded 0 scene templates
+✅ Dynamically loaded 1 scene template files
+📦 Created memory pool 'Meshes' (ID: 0, limit: 128.00 MB)
+📦 Created memory pool 'Textures' (ID: 1, limit: 64.00 MB)
+📦 Created memory pool 'Materials' (ID: 2, limit: 1.00 MB)
+✅ Memory system initialized:
+   Memory limit: 256 MB
+   Streaming: enabled
+   Unloading: enabled
+✅ Material system initialized with 4 default materials
+🚀 Initializing Sokol-based renderer (1200x800)
+📂 Loading vertex shader: assets/shaders/basic_3d.vert.metal
+📂 Loading fragment shader: assets/shaders/basic_3d.frag.metal
+🔧 Creating shader with entry points: vs=vs_main, fs=fs_main
+🔍 Shader state: 2 (VALID=2, FAILED=3, INVALID=4)
+🔧 Creating pipeline with default swapchain-compatible formats
+🔧 Creating pipeline with default swapchain-compatible formats
+🔍 Pipeline created with default formats
+🔍 Pipeline state: 2 (VALID=2, FAILED=3, INVALID=4)
+✅ Sokol rendering pipeline initialized with external shaders
+✅ Render system initialized successfully
+🔍 Loading assets...
+📋 Loading asset index: /Users/ratimics/develop/cgame/build/assets/meshes/index.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/metadata.json
+🔍 DEBUG: Parsed metadata - name='wedge_ship_mk2', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1011ac890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', name='wedge_ship_mk2'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', mesh_name='wedge_ship_mk2'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj
+🔍 Loading binary mesh: 9 vertices, 30 indices
+🔍 DEBUG: Creating GPU buffers for wedge_ship_mk2 - VB=288 bytes, IB=120 bytes
+✅ GPU resources created successfully for mesh wedge_ship_mk2
+✅ Loaded binary mesh: wedge_ship_mk2 (9 vertices, 30 indices) with AABB
+🔍 DEBUG: Set material 'wedge_ship_mk2' for mesh 'wedge_ship_mk2'
+🔍 DEBUG: Updated material 'wedge_ship_mk2' texture reference from 'texture.png' to 'wedge_ship_mk2_texture'
+✅ Loaded texture: wedge_ship_mk2_texture (1024x1024)
+✅ wedge_ship_mk2
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/metadata.json
+🔍 DEBUG: Parsed metadata - name='sun', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1011ac890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', name='sun'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', mesh_name='sun'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj
+🔍 Loading binary mesh: 56 vertices, 288 indices
+🔍 DEBUG: Creating GPU buffers for sun - VB=1792 bytes, IB=1152 bytes
+✅ GPU resources created successfully for mesh sun
+✅ Loaded binary mesh: sun (56 vertices, 288 indices) with AABB
+🔍 DEBUG: Set material 'sun' for mesh 'sun'
+🔍 DEBUG: Updated material 'sun' texture reference from 'texture.png' to 'sun_texture'
+✅ Loaded texture: sun_texture (1024x1024)
+✅ sun
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/metadata.json
+🔍 DEBUG: Parsed metadata - name='wedge_ship', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1011ac890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', name='wedge_ship'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', mesh_name='wedge_ship'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj
+🔍 Loading binary mesh: 7 vertices, 24 indices
+🔍 DEBUG: Creating GPU buffers for wedge_ship - VB=224 bytes, IB=96 bytes
+✅ GPU resources created successfully for mesh wedge_ship
+✅ Loaded binary mesh: wedge_ship (7 vertices, 24 indices) with AABB
+🔍 DEBUG: Set material 'wedge_ship' for mesh 'wedge_ship'
+🔍 DEBUG: Updated material 'wedge_ship' texture reference from 'texture.png' to 'wedge_ship_texture'
+✅ Loaded texture: wedge_ship_texture (1024x1024)
+✅ wedge_ship
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/metadata.json
+🔍 DEBUG: Parsed metadata - name='control_tower', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1011ac890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', name='control_tower'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', mesh_name='control_tower'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj
+🔍 Loading binary mesh: 39 vertices, 204 indices
+🔍 DEBUG: Creating GPU buffers for control_tower - VB=1248 bytes, IB=816 bytes
+✅ GPU resources created successfully for mesh control_tower
+✅ Loaded binary mesh: control_tower (39 vertices, 204 indices) with AABB
+🔍 DEBUG: Set material 'control_tower' for mesh 'control_tower'
+🔍 DEBUG: Updated material 'control_tower' texture reference from 'texture.png' to 'control_tower_texture'
+✅ Loaded texture: control_tower_texture (1024x1024)
+✅ control_tower
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/metadata.json
+🔍 DEBUG: Parsed metadata - name='logo_cube', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1011ac890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj', name='logo_cube'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj', mesh_name='logo_cube'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj
+🔍 Loading binary mesh: 24 vertices, 36 indices
+🔍 DEBUG: Creating GPU buffers for logo_cube - VB=768 bytes, IB=144 bytes
+✅ GPU resources created successfully for mesh logo_cube
+✅ Loaded binary mesh: logo_cube (24 vertices, 36 indices) with AABB
+🔍 DEBUG: Set material 'logo_cube' for mesh 'logo_cube'
+🔍 DEBUG: Updated material 'logo_cube' texture reference from 'logo.png' to 'logo_cube_texture'
+✅ Loaded texture: logo_cube_texture (1024x1024)
+✅ logo_cube
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/metadata.json
+🔍 DEBUG: Parsed metadata - name='landing_pad', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1011ac890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj', name='landing_pad'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj', mesh_name='landing_pad'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj
+🔍 Loading binary mesh: 14 vertices, 72 indices
+🔍 DEBUG: Creating GPU buffers for landing_pad - VB=448 bytes, IB=288 bytes
+✅ GPU resources created successfully for mesh landing_pad
+✅ Loaded binary mesh: landing_pad (14 vertices, 72 indices) with AABB
+🔍 DEBUG: Set material 'landing_pad' for mesh 'landing_pad'
+🔍 DEBUG: Updated material 'landing_pad' texture reference from 'texture.png' to 'landing_pad_texture'
+✅ Loaded texture: landing_pad_texture (1024x1024)
+✅ landing_pad
+📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/metadata.json
+🔍 DEBUG: Parsed metadata - name='planet_surface', geometry='geometry.cobj'
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1011ac890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj', name='planet_surface'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj', mesh_name='planet_surface'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj
+🔍 Loading binary mesh: 4 vertices, 6 indices
+🔍 DEBUG: Creating GPU buffers for planet_surface - VB=128 bytes, IB=24 bytes
+✅ GPU resources created successfully for mesh planet_surface
+✅ Loaded binary mesh: planet_surface (4 vertices, 6 indices) with AABB
+🔍 DEBUG: Set material 'planet_surface' for mesh 'planet_surface'
+🔍 DEBUG: Updated material 'planet_surface' texture reference from 'texture.png' to 'planet_surface_texture'
+✅ Loaded texture: planet_surface_texture (1024x1024)
+✅ planet_surface
+📋 Loaded 7 meshes from asset index
+📋 Loaded Assets:
+   Meshes (7):
+     wedge_ship_mk2: 9 vertices, 30 indices ✅
+     sun: 56 vertices, 288 indices ✅
+     wedge_ship: 7 vertices, 24 indices ✅
+     control_tower: 39 vertices, 204 indices ✅
+     logo_cube: 24 vertices, 36 indices ✅
+     landing_pad: 14 vertices, 72 indices ✅
+     planet_surface: 4 vertices, 6 indices ✅
+   Textures (7):
+     wedge_ship_mk2_texture: 1024x1024 ✅
+     sun_texture: 1024x1024 ✅
+     wedge_ship_texture: 1024x1024 ✅
+     control_tower_texture: 1024x1024 ✅
+     logo_cube_texture: 1024x1024 ✅
+     landing_pad_texture: 1024x1024 ✅
+     planet_surface_texture: 1024x1024 ✅
+   Materials (7):
+     wedge_ship_mk2 ✅
+     sun ✅
+     wedge_ship ✅
+     control_tower ✅
+     logo_cube ✅
+     landing_pad ✅
+     planet_surface ✅
+📋 Entity Templates (13):
+   - control_tower: Spaceport control structure
+   - sun: Central star
+   - wedge_ship: Standard wedge-shaped spacecraft
+   - wedge_ship_mk2: Advanced wedge-shaped spacecraft  
+   - player_ship: Basic player-controlled spacecraft
+   - chase_camera: Third-person chase camera
+   - cockpit_camera: First-person cockpit camera
+   - security_camera: Fixed security camera
+   - ai_ship: AI-controlled spacecraft
+   - landing_pad: Spaceport landing platform
+   - planet_surface: Large planetary surface
+   - logo_cube: Gold standard reference cube for testing and validation
+   - scene_node: Minimal scene entity for utility purposes
+🏗️  Scene Templates (0):
+⚡ Performance monitoring initialized
+   Frame time warning: 20.0 ms
+   Memory warning: 512 MB
+🎯 System scheduler initialized
+   Physics: 60.0 Hz
+   Collision: 20.0 Hz
+   AI: 5.0 Hz (base)
+   Camera: 60.0 Hz
+   LOD: 30.0 Hz
+   Performance: 5.0 Hz
+   Memory: 2.0 Hz
+   Thrusters: 60.0 Hz
+   Control: 60.0 Hz
+🎨 Configuring renderer...
+🚀 Initializing Sokol-based renderer (1280x720)
+✅ Render system initialized successfully
+🏗️ Loading scene...
+🎯 Using CLI-specified scene: thruster_test
+ℹ️ Loading scene: thruster_test
+🏗️  Loading scene 'thruster_test' from data...
+Loading scene: thruster_test
+📋 Loading entities...
+📦 Created entity 1 of type: player_ship
+   Added PLAYER component
+⚠️ Ship 1 missing required components for configuration
+   Configured ship with FIGHTER preset
+✅ Loaded YAML scene from thruster_test.yaml
+✅ Loaded scene from YAML: thruster_test.yaml
+🎯 Player found: Entity ID 1
+💡 Set ambient light: color(0.10,0.15,0.20) intensity=0.30
+💡 Added directional light: dir(0.30,-0.70,0.20) color(0.40,0.50,0.60) intensity=0.40
+💡 Scene lighting configured
+🌍 Scene loaded with 1 entities
+🎬 Scene state manager initialized - starting in LOGO state
+🎨 Registered scene UI module: navigation_menu
+🎨 Registered scene UI module: debug
+🎨 Registered scene UI module: logo
+🎨 Scene UI system initialized with 3 modules
+🎮 UI: Adaptive controls initialized (mode: Keyboard)
+✅ HUD system initialized with 11 components
+🎯 Default camera mode: CHASE_NEAR
+✅ Core UI system initialized
+🎥 Initializing camera system...
+🎥 Camera system initialized
+
+📹 Available cameras:
+   ⚠️  No active camera set
+
+🎬 Executing scene script enter: thruster_test
+🚀 Initializing Thruster Test Scene - Gyroscopic Control Prototype
+🎯 Test ship found: Entity ID 1
+⚠️ Ship 1 missing required components for configuration
+🎮 Initializing gamepad system with hidapi...
+🎮 No supported gamepads detected
+🎮 Supported: Xbox (VID:0x045E), PlayStation (VID:0x054C), 8BitDo (VID:0x2DC8)
+✅ Gamepad system initialized successfully
+🎮 Canyon Racing Input: Gamepad system ready
+✅ Canyon Racing Input system initialized
+🎮 Canyon Racing Control: Player entity set to 1
+
+📋 THRUSTER TEST CONTROLS:
+   F1 - Toggle thrust vector display
+   F2 - Toggle physics debug info
+   F3 - Toggle thruster group display
+   F5 - Reset ship position
+
+🎮 GYROSCOPIC STABILIZATION:
+   - Ship automatically counters rotation when stick released
+   - RCS thrusters fire to stop spin
+   - Realistic momentum and inertia
+✅ Engine initialized successfully!
+
+🎮 Starting simulation...
+Press ESC to exit, C to cycle cameras, W for wireframe
+🎮 gamepad_poll() called #1
+🔍 Total entities in world: 1
+🔍 Entity 1: components=0x31 (R:1 T:1)
+🔍 Processing Entity 1: components=0x31 (R:1 T:1)
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+🎨 Sokol ECS rendering active: pipeline_state=2, renderable_entities=1
+🎮 gamepad_poll() called #2
+✅ LOD system initialized - distances: H:20.0 M:50.0 L:100.0 C:200.0
+🔍 Processing Entity 1: components=0x31 (R:1 T:1)
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+🎮 gamepad_poll() called #3
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+🎮 gamepad_poll() called #4
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+🎮 gamepad_poll() called #5
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+❌ Entity 1: Invalid vertex buffer (ID: 0)
+❌ Entity 1: Invalid index buffer (ID: 0)
+❌ Entity 1: Zero index count
+🧭 TAB pressed - opening navigation menu
+🎬 Scene transition requested: thruster_test -> navigation_menu
+🎬 Executing scene transition: thruster_test -> navigation_menu
+🎥 Camera system reset for scene transition
+🌍 Clearing world - removing 1 entities
+🌍 World cleared
+🏗️  Loading scene 'navigation_menu' from data...
+❌ Failed to open YAML scene file: data/scenes/navigation_menu.yaml
+❌ Scene not found in YAML or templates: navigation_menu
+❌ Failed to load scene: navigation_menu
+🎥 Initializing camera system...
+🎥 Camera system initialized
+🎬 Executing scene script enter: navigation_menu
+🧭 Navigation Menu: Entered FTL navigation interface
+🎬 Scene state changing: LOGO -> MENU
+🎨 Scene UI module will handle navigation interface
+🎬 Scene transition completed: now in navigation_menu
+⎋ Escape key pressed in navigation menu - exiting
+
+🏁 Simulation complete!
+✅ HUD system shut down
+🎨 Scene UI system shut down
+✅ Core UI system shut down
+🧹 Render system cleaned up
+🔧 Material system shutdown
+🎨 Asset system cleaned up
+📋 Data registry cleaned up
+🎯 System scheduler destroyed after 112 frames
+
+📊 SYSTEM PERFORMANCE STATS
+Total frames: 112, Total time: 2.12s
+  Physics: 112 calls, 0.00ms avg, 52.8 Hz actual
+  AI: 10 calls, 0.00ms avg, 4.7 Hz actual
+  Camera: 112 calls, 0.00ms avg, 52.8 Hz actual
+  LOD: 56 calls, 0.00ms avg, 26.4 Hz actual
+  Memory: 4 calls, 0.00ms avg, 1.9 Hz actual
+  Thrusters: 112 calls, 0.00ms avg, 52.8 Hz actual
+  Control: 112 calls, 0.00ms avg, 52.8 Hz actual
+═══════════════════════════════════
+
+🌍 World destroyed - processed 0 entities over 112 frames
+💾 Config: Saved configuration to cgame_config.txt
+⚙️  Config system shut down
+✅ Cleanup complete

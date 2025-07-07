@@ -12,21 +12,14 @@
 #include "sokol_gfx.h"
 
 // Only include app layer if not running dummy backend for tests
-#ifndef SOKOL_DUMMY_BACKEND
+#if !defined(SOKOL_DUMMY_BACKEND)
 #include "sokol_app.h"
 #include "sokol_glue.h"
+#endif
 
-// Nuklear UI library requires specific definitions before include
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#include <stdarg.h>
-#define NK_INCLUDE_STANDARD_VARARGS
-#include "nuklear.h"
-#include "sokol_nuklear.h"
+// Test mode: include minimal UI definitions
+#ifdef TEST_MODE
+#include "../tests/stubs/ui_test_stubs.h"
 #endif
 
 #include "sokol_log.h"
@@ -38,5 +31,14 @@
  * @return true on success, false on failure
  */
 bool graphics_capture_screenshot(const char* filename);
+
+// Test mode function declarations
+#ifdef TEST_MODE
+// Legacy Nuklear context removed - using MicroUI now
+void graphics_begin_frame(void);
+void graphics_end_frame(void);
+bool graphics_init(int width, int height);
+void graphics_cleanup(void);
+#endif
 
 #endif  // GRAPHICS_API_H

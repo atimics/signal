@@ -1,14 +1,3 @@
-#include "graphics_api.h"
-
-// Nuklear implementation
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#define NK_IMPLEMENTATION
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,17 +5,33 @@
 #include <time.h>
 
 #include "assets.h"
+#include "config.h"
 #include "core.h"
 #include "data.h"
 #include "gpu_resources.h"
-#include "nuklear.h"
 #include "render.h"
 #include "systems.h"
 #include "system/camera.h"
 #include "system/performance.h"
+#include "input_state.h"  // Input state adapter for control systems
 #include "ui.h"
+#include "ui_api.h"
+#include "ui_microui.h"
 #include "scene_state.h"
 #include "scene_script.h"
+#include "render_layers.h"  // Offscreen rendering system
+#include "graphics_health.h"  // Graphics health monitoring
+#include "render_pass_guard.h"  // Encoder state management
+#include "game_input.h"  // New input system management
+#include "event_router.h"  // Centralized event routing
+#include "event_handlers.h"  // Standard event handlers
+
+// UI system includes
+
+// Sokol includes
+#include "graphics_api.h"  // This includes sokol headers safely
+#include "sokol_glue.h"
+#include "sokol_log.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -51,10 +56,12 @@ static struct
     // Render state
     RenderConfig render_config;
     sg_pass_action pass_action;
+    LayerManager* layer_manager;  // Offscreen rendering layers
 
     // Scene management
     char current_scene[64];
     SceneStateManager scene_state;
+    char requested_scene[64];  // CLI-requested scene override
     
     // Test modes
     bool capture_golden_reference;
@@ -104,6 +111,18 @@ static void load_scene_by_name(struct World* world, const char* scene_name, Enti
     printf("💡 Scene lighting configured\n");
 
     printf("🌍 Scene loaded with %d entities\n", world->entity_count);
+    
+    // DEBUG: Log all entities and their components for debugging
+    printf("🔍 Entity debug after scene load:\n");
+    for (uint32_t i = 0; i < world->entity_count; i++) {
+        struct Entity* entity = &world->entities[i];
+        printf("  Entity %d: mask=0x%X (T:%d R:%d C:%d P:%d)\n", 
+               entity->id, entity->component_mask,
+               !!(entity->component_mask & COMPONENT_TRANSFORM),
+               !!(entity->component_mask & COMPONENT_RENDERABLE),
+               !!(entity->component_mask & COMPONENT_CAMERA),
+               !!(entity->component_mask & COMPONENT_PHYSICS));
+    }
 }
 
 static void list_available_cameras(struct World* world)
@@ -165,8 +184,29 @@ static void init(void)
     printf("🎮 CGGame - Sokol-based Component Engine\n");
     printf("==========================================\n\n");
 
+    // Initialize configuration system
+    printf("⚙️  Initializing configuration...\n");
+    if (!config_init()) {
+        printf("❌ Failed to initialize configuration system\n");
+        sapp_quit();
+        return;
+    }
+
     // Initialize random seed
     srand((unsigned int)time(NULL));
+    
+    // Initialize input system (new architecture)
+    printf("🎮 Initializing input system...\n");
+    if (!game_input_init()) {
+        printf("❌ Failed to initialize input system\n");
+        sapp_quit();
+        return;
+    }
+    
+    // Initialize centralized event router
+    printf("📡 Initializing event router...\n");
+    EventRouter* router = event_router_get_instance();
+    event_router_init(router);
 
     printf("🔧 Initializing graphics...\n");
 
@@ -182,6 +222,12 @@ static void init(void)
         sapp_quit();
         return;
     }
+    
+    // Initialize graphics health monitoring
+    gfx_health_init();
+    
+    // Initialize UI renderer early (before any scenes load)
+    ui_microui_init_renderer();
 
     printf("🌍 Setting up world...\n");
 
@@ -237,8 +283,22 @@ static void init(void)
 
     printf("🏗️ Loading scene...\n");
 
-    // Load logo scene directly - no loading screen needed
-    const char* scene_to_load = "logo";
+    // Determine initial scene: CLI override > config startup scene > default to logo
+    const char* scene_to_load;
+    if (strlen(app_state.requested_scene) > 0) {
+        // CLI override takes precedence
+        scene_to_load = app_state.requested_scene;
+        printf("🎯 Using CLI-specified scene: %s\n", scene_to_load);
+    } else if (config_get_auto_start()) {
+        // Use configured startup scene if auto-start is enabled
+        scene_to_load = config_get_startup_scene();
+        printf("⚙️  Using configured startup scene: %s (auto-start enabled)\n", scene_to_load);
+    } else {
+        // Default to logo scene
+        scene_to_load = "logo";
+        printf("🎮 Using default scene: %s\n", scene_to_load);
+    }
+    
     strcpy(app_state.current_scene, scene_to_load);
     printf("ℹ️ Loading scene: %s\n", scene_to_load);
 
@@ -248,11 +308,64 @@ static void init(void)
     scene_state_init(&app_state.scene_state);
     strcpy(app_state.scene_state.current_scene_name, scene_to_load);
     
-    // Start with debug UI and HUD hidden (~ to toggle)
-    scene_state_set_debug_ui_visible(&app_state.scene_state, false);
-    ui_set_debug_visible(false);  // Synchronize with UI system
+    // Register standard event handlers now that scene state is ready
+    register_standard_event_handlers(router, &app_state.scene_state, &app_state.world);
     
+    // Initialize offscreen rendering layers
+    app_state.layer_manager = layer_manager_create(
+        app_state.render_config.screen_width, 
+        app_state.render_config.screen_height
+    );
+    
+    // Create render layers
+    RenderLayerConfig scene_layer_config = {
+        .name = "3d_scene",
+        .width = app_state.render_config.screen_width,
+        .height = app_state.render_config.screen_height,
+        .needs_depth = true,
+        .color_format = SG_PIXELFORMAT_RGBA8,
+        .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL,
+        .sample_count = 1,
+        .update_frequency = UPDATE_DYNAMIC
+    };
+    RenderLayer* scene_layer = layer_manager_add_layer(app_state.layer_manager, &scene_layer_config);
+    layer_set_order(scene_layer, 0);  // Render first
+    
+    // CRITICAL FIX: Set opaque clear color for 3D scene layer
+    // Transparent clear color (0,0,0,0) makes rendered content invisible in compositor
+    scene_layer->clear_color = (sg_color){ 0.0f, 0.05f, 0.1f, 1.0f }; // Match main clear color
+    
+    RenderLayerConfig ui_layer_config = {
+        .name = "ui",
+        .width = app_state.render_config.screen_width,
+        .height = app_state.render_config.screen_height,
+        .needs_depth = true,
+        .color_format = SG_PIXELFORMAT_RGBA8,
+        .depth_format = SG_PIXELFORMAT_DEPTH_STENCIL,
+        .sample_count = 1,
+        .update_frequency = UPDATE_DYNAMIC
+    };
+    RenderLayer* ui_layer = layer_manager_add_layer(app_state.layer_manager, &ui_layer_config);
+    layer_set_order(ui_layer, 1);  // Render on top
+    layer_set_blend_mode(ui_layer, BLEND_MODE_NORMAL);
+    
+    // Initialize UI system first before any UI calls
     ui_init();
+    
+    // Set UI visibility based on initial scene
+    if (strcmp(scene_to_load, "logo") == 0) {
+        // Logo scene should start with UI hidden
+        scene_state_set_ui_visible(&app_state.scene_state, false);
+        scene_state_set_debug_ui_visible(&app_state.scene_state, false);
+        ui_set_visible(false);  // Synchronize with UI system
+        ui_set_debug_visible(false);  // Synchronize with UI system
+    } else {
+        // Other scenes start with UI visible but debug hidden
+        scene_state_set_ui_visible(&app_state.scene_state, true);
+        scene_state_set_debug_ui_visible(&app_state.scene_state, false);
+        ui_set_visible(true);  // Synchronize with UI system
+        ui_set_debug_visible(false);  // Synchronize with UI system
+    }
     
     // Initialize camera system after scene is loaded
     camera_system_init(&app_state.world, &app_state.render_config);
@@ -272,6 +385,14 @@ static void init(void)
     printf("Press ESC to exit, C to cycle cameras, W for wireframe\n");
 }
 
+static bool app_shutting_down = false;
+static bool frame_rendering_active = false;
+
+// Function to check if frame rendering is active (for UI safety)
+bool is_frame_rendering_active(void) {
+    return frame_rendering_active;
+}
+
 static void frame(void)
 {
     // Begin performance frame timing
@@ -281,8 +402,13 @@ static void frame(void)
     app_state.simulation_time += dt;
     app_state.frame_count++;
 
-    // Skip rendering if not initialized
-    if (!app_state.initialized) {
+    // Check if app is shutting down or invalid
+    if (!sapp_isvalid()) {
+        app_shutting_down = true;
+    }
+
+    // Skip rendering if not initialized or app is shutting down
+    if (!app_state.initialized || app_shutting_down) {
         performance_frame_end();
         return;
     }
@@ -291,8 +417,17 @@ static void frame(void)
     scene_state_update(&app_state.scene_state, dt);
     scene_script_execute_update(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, dt);
     
-    // Handle scene transitions
-    if (scene_state_has_pending_transition(&app_state.scene_state))
+    // Handle UI scene change requests (only when not actively rendering)
+    if (ui_has_scene_change_request() && !frame_rendering_active)
+    {
+        const char* requested_scene = ui_get_requested_scene();
+        printf("🎬 UI scene change request: %s -> %s\n", app_state.scene_state.current_scene_name, requested_scene);
+        scene_state_request_transition(&app_state.scene_state, requested_scene);
+        ui_clear_scene_change_request();
+    }
+
+    // Handle scene transitions (only when not actively rendering)
+    if (scene_state_has_pending_transition(&app_state.scene_state) && !frame_rendering_active)
     {
         const char* next_scene = scene_state_get_next_scene(&app_state.scene_state);
         printf("🎬 Executing scene transition: %s -> %s\n", app_state.scene_state.current_scene_name, next_scene);
@@ -314,26 +449,190 @@ static void frame(void)
         strcpy(app_state.current_scene, next_scene);
         app_state.scene_state.transition_pending = false;
         
-        // Execute enter script for new scene
+        // Execute enter script for new scene (this will set appropriate UI visibility)
         scene_script_execute_enter(next_scene, &app_state.world, &app_state.scene_state);
         
         printf("🎬 Scene transition completed: now in %s\n", next_scene);
     }
 
+    // Process input first (new system)
+    game_input_process_frame(dt);
+    
     // Update world and systems
     world_update(&app_state.world, dt);
     scheduler_update(&app_state.scheduler, &app_state.world, &app_state.render_config, dt);
+    
 
-    // Render frame
-    sg_begin_pass(&(sg_pass){ .swapchain = sglue_swapchain(), .action = app_state.pass_action });
-
-    // Render entities
-    render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
-
-    ui_render(&app_state.world, &app_state.scheduler, dt, app_state.scene_state.current_scene_name);
-
-    sg_end_pass();
+    // === OFFSCREEN RENDERING SOLUTION ===
+    // Render to separate offscreen targets to avoid pipeline conflicts
+    
+    if (!sg_isvalid()) {
+        printf("⚠️ Skipping rendering - Graphics context invalid\n");
+        performance_frame_end();
+        return;
+    }
+    
+    // Get screen dimensions
+    const int screen_width = sapp_width();
+    const int screen_height = sapp_height();
+    
+    // Update layer manager resolution if needed
+    if (screen_width != app_state.layer_manager->screen_width || 
+        screen_height != app_state.layer_manager->screen_height) {
+        layer_manager_resize(app_state.layer_manager, screen_width, screen_height);
+    }
+    
+    // === START ACTIVE RENDERING PHASE ===
+    // Set flag to prevent scene transitions during rendering
+    frame_rendering_active = true;
+    
+    // === RENDER TO 3D SCENE LAYER ===
+    RenderLayer* scene_layer = layer_manager_get_layer(app_state.layer_manager, "3d_scene");
+    bool should_update = layer_should_update(app_state.layer_manager, scene_layer);
+    
+    // DEBUG: Log 3D scene layer state periodically
+    static int scene_debug_counter = 0;
+    if (scene_debug_counter++ % 180 == 0) { // Log every 3 seconds at 60fps
+        printf("🎨 3D SCENE LAYER DEBUG: exists=%d, should_update=%d, enabled=%d, entities=%d\n", 
+               scene_layer ? 1 : 0, should_update, 
+               scene_layer ? scene_layer->enabled : -1, app_state.world.entity_count);
+    }
+    
+    if (scene_layer && should_update) {
+        // Ensure context is valid before rendering
+        if (sg_isvalid()) {
+            render_set_offscreen_mode(true);  // Switch to offscreen pipeline
+            layer_begin_render(scene_layer);
+            
+            // Render 3D entities to offscreen target
+            render_frame(&app_state.world, &app_state.render_config, app_state.player_id, dt);
+            
+            layer_end_render();  // CRITICAL: Always end the render pass
+            render_set_offscreen_mode(false);  // Switch back to default pipeline
+            
+            // CRITICAL: Verify encoder is actually closed after 3D render
+            if (layer_is_encoder_active()) {
+                printf("❌ CRITICAL: Encoder still active after 3D scene render!\n");
+                // Force end any lingering encoder
+                PASS_END();
+            }
+        } else {
+            printf("⚠️ Skipping 3D scene render - context already invalid\n");
+        }
+    }
+    
+    // === RENDER TO UI LAYER ===
+    RenderLayer* ui_layer = layer_manager_get_layer(app_state.layer_manager, "ui");
+    bool ui_visible = ui_is_visible();
+    
+    // Update UI layer enabled state BEFORE render attempt
+    if (ui_layer) {
+        layer_set_enabled(ui_layer, ui_visible);
+    }
+    
+    // DEBUG: Log UI visibility state periodically
+    static int ui_debug_counter = 0;
+    if (ui_debug_counter++ % 180 == 0) { // Log every 3 seconds at 60fps
+        printf("🎨 UI LAYER DEBUG: ui_visible=%d, scene='%s', layer_enabled=%d\n", 
+               ui_visible, app_state.scene_state.current_scene_name, 
+               ui_layer ? ui_layer->enabled : -1);
+    }
+    
+    // CRITICAL FIX: Only render UI layer if UI is actually visible
+    // This prevents empty UI context from being composited and causing magenta artifacts
+    if (ui_layer && ui_visible && layer_should_update(app_state.layer_manager, ui_layer)) {
+        // Track if we actually rendered UI
+        bool ui_rendered = false;
+        
+        // 1. Build MicroUI command list (generates vertices)
+        ui_render(&app_state.world, &app_state.scheduler, dt, 
+                  app_state.scene_state.current_scene_name, screen_width, screen_height);
+        
+        // 2. Upload vertices while NO encoder is open
+        if (ui_microui_ready()) {
+            // CRITICAL: Double-check no encoder is active before vertex upload
+            if (layer_is_encoder_active()) {
+                printf("❌ CRITICAL: Encoder still active before UI vertex upload!\n");
+                printf("   This usually means the 3D scene render pass wasn't properly closed.\n");
+                printf("   Force-ending encoder to prevent crash...\n");
+                // Force-end any active encoder to prevent crash
+                PASS_END();
+            }
+            
+            // Now safe to upload vertices
+            // printf("🎨 PRE-UPLOAD: encoder_active=%d, context_valid=%d\n", 
+            //        layer_is_encoder_active(), sg_isvalid());
+            ui_microui_upload_vertices();
+            // printf("🎨 POST-UPLOAD: encoder_active=%d, context_valid=%d\n", 
+            //        layer_is_encoder_active(), sg_isvalid());
+            ui_rendered = true;
+        } else {
+            printf("⚠️ Skipping UI upload - renderer not ready\n");
+        }
+        
+        // 3. Only render if we successfully uploaded vertices
+        if (ui_rendered) {
+            render_set_offscreen_mode(true);          // Set mode
+            layer_begin_render(ui_layer);             // Begin encoder
+            ui_microui_render(screen_width, screen_height);
+            layer_end_render();                       // ALWAYS end encoder
+            render_set_offscreen_mode(false);         // Reset mode
+        }
+    }
+    
+    // UI layer enable/disable is now handled before render attempt
+    
+    // === COMPOSITE LAYERS TO SWAPCHAIN ===
+    // Validate context before final composite pass
+    if (!sg_isvalid()) {
+        printf("⚠️ Graphics context invalid before composite pass - skipping frame\n");
+        frame_rendering_active = false;  // Clear flag before early return
+        performance_frame_end();
+        return;
+    }
+    
+    // Ensure app is still valid
+    if (!sapp_isvalid()) {
+        printf("⚠️ Sokol app context invalid - skipping frame\n");
+        frame_rendering_active = false;  // Clear flag before early return
+        performance_frame_end();
+        return;
+    }
+    
+    // DEBUG: Log composite pass periodically
+    static int composite_debug_counter = 0;
+    if (composite_debug_counter++ % 180 == 0) { // Log every 3 seconds
+        printf("🎨 COMPOSITE DEBUG: Beginning swapchain pass...\n");
+    }
+    
+    // Create pass descriptor first to avoid macro issues
+    sg_pass swapchain_pass = { 
+        .swapchain = sglue_swapchain(), 
+        .action = app_state.pass_action 
+    };
+    
+    // Use PASS_BEGIN macro for safe pass management
+    PASS_BEGIN("swapchain_composite", &swapchain_pass);
+    
+    // Composite all layers
+    layer_manager_composite(app_state.layer_manager);
+    
+    if ((composite_debug_counter-1) % 180 == 0) { // Log every 3 seconds
+        printf("🎨 COMPOSITE DEBUG: Ending swapchain pass...\n");
+    }
+    
+    // Use PASS_END macro to ensure proper cleanup
+    PASS_END();
+    
+    // Commit frame
     sg_commit();
+    
+    // === END ACTIVE RENDERING PHASE ===
+    // Clear flag to allow scene transitions for next frame
+    frame_rendering_active = false;
+    
+    // Process deferred UI operations (safe to create/destroy resources now)
+    ui_microui_end_of_frame();
 
     // End performance frame timing
     performance_frame_end();
@@ -354,10 +653,28 @@ static void cleanup(void)
     printf("\n🏁 Simulation complete!\n");
 
     ui_shutdown();
+    
+    // Destroy layer manager and all offscreen targets
+    if (app_state.layer_manager) {
+        layer_manager_destroy(app_state.layer_manager);
+        app_state.layer_manager = NULL;
+    }
+    
     render_cleanup(&app_state.render_config);
     // Assets are cleaned up by the scheduler
     scheduler_destroy(&app_state.scheduler, &app_state.render_config);
     world_destroy(&app_state.world);
+    
+    // Shutdown input system
+    game_input_shutdown();
+    
+    // Shutdown event router
+    EventRouter* router = event_router_get_instance();
+    unregister_standard_event_handlers(router);
+    event_router_shutdown(router);
+    
+    // Shutdown configuration system
+    config_shutdown();
 
     sg_shutdown();
     printf("✅ Cleanup complete\n");
@@ -365,115 +682,9 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
-    // Handle UI events first - if UI captures the event, don't process it further
-    if (ui_handle_event(ev))
-    {
-        return;  // UI captured this event
-    }
-
-    // Handle scene-specific input events
-    if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
-    {
-        return;  // Scene script handled this event
-    }
-
-    // Process global game events only if UI and scene scripts didn't capture them
-    switch (ev->type)
-    {
-        case SAPP_EVENTTYPE_KEY_DOWN:
-            if (ev->key_code == SAPP_KEYCODE_ESCAPE)
-            {
-                printf("⎋ Escape key pressed - exiting\n");
-                sapp_request_quit();
-            }
-            // Toggle debug UI with tilde (~) key
-            else if (ev->key_code == SAPP_KEYCODE_GRAVE_ACCENT)
-            {
-                bool current_visible = scene_state_is_debug_ui_visible(&app_state.scene_state);
-                scene_state_set_debug_ui_visible(&app_state.scene_state, !current_visible);
-                ui_set_debug_visible(!current_visible);  // Synchronize with UI system
-                ui_toggle_hud();  // Also toggle the HUD
-                printf("🔧 Debug UI & HUD: %s\n", !current_visible ? "ON" : "OFF");
-            }
-            // Camera switching with number keys (legacy support)
-            else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
-            {
-                int camera_index = ev->key_code - SAPP_KEYCODE_1;  // 0-8
-
-                // Use the new switch_to_camera function
-                if (switch_to_camera(&app_state.world, camera_index))
-                {
-                    printf("📹 Switched to camera %d\n", camera_index + 1);
-
-                    // Update aspect ratio for the new camera
-                    float aspect_ratio = (float)app_state.render_config.screen_width /
-                                         (float)app_state.render_config.screen_height;
-                    update_camera_aspect_ratio(&app_state.world, aspect_ratio);
-                }
-                else
-                {
-                    printf("📹 Camera %d not found\n", camera_index + 1);
-                }
-            }
-            // Camera cycling with C key
-            else if (ev->key_code == SAPP_KEYCODE_C)
-            {
-                if (cycle_to_next_camera(&app_state.world))
-                {
-                    // Get info about the new active camera
-                    EntityID active_camera = world_get_active_camera(&app_state.world);
-                    struct Camera* camera = entity_get_camera(&app_state.world, active_camera);
-                    
-                    const char* camera_type = "Unknown";
-                    if (camera)
-                    {
-                        switch (camera->behavior)
-                        {
-                            case CAMERA_BEHAVIOR_FIRST_PERSON: camera_type = "Cockpit"; break;
-                            case CAMERA_BEHAVIOR_THIRD_PERSON: camera_type = "Chase"; break;
-                            case CAMERA_BEHAVIOR_STATIC: camera_type = "Static/Overhead"; break;
-                            case CAMERA_BEHAVIOR_ORBITAL: camera_type = "Orbital"; break;
-                            default: camera_type = "Unknown"; break;
-                        }
-                    }
-                    
-                    printf("📹 Cycled to %s camera (Entity %d)\n", camera_type, active_camera);
-
-                    // Update aspect ratio for the new camera
-                    float aspect_ratio = (float)app_state.render_config.screen_width /
-                                         (float)app_state.render_config.screen_height;
-                    update_camera_aspect_ratio(&app_state.world, aspect_ratio);
-                }
-                else
-                {
-                    printf("📹 No cameras available to cycle through\n");
-                }
-            }
-            // Toggle wireframe mode with W key
-            else if (ev->key_code == SAPP_KEYCODE_W)
-            {
-                app_state.render_config.wireframe_mode = !app_state.render_config.wireframe_mode;
-                printf("🔧 Wireframe mode: %s\n",
-                       app_state.render_config.wireframe_mode ? "ON" : "OFF");
-            }
-            // Take screenshot with S key
-            else if (ev->key_code == SAPP_KEYCODE_S)
-            {
-                char filename[64];
-                snprintf(filename, sizeof(filename), "screenshots/cube_test_%ld.bmp", time(NULL));
-                if (render_take_screenshot(&app_state.render_config, filename))
-                {
-                    printf("📸 Screenshot saved: %s\n", filename);
-                }
-                else
-                {
-                    printf("📸 Screenshot attempted: %s (function not implemented)\n", filename);
-                }
-            }
-            break;
-        default:
-            break;
-    }
+    // Use centralized event router for all event handling
+    EventRouter* router = event_router_get_instance();
+    event_router_process_event(router, ev);
 }
 
 // ============================================================================
@@ -482,6 +693,9 @@ static void event(const sapp_event* ev)
 
 sapp_desc sokol_main(int argc, char* argv[])
 {
+    // Initialize CLI scene override
+    app_state.requested_scene[0] = '\0';
+    
     // Parse command line arguments
     for (int i = 1; i < argc; i++)
     {
@@ -490,19 +704,53 @@ sapp_desc sokol_main(int argc, char* argv[])
             app_state.capture_golden_reference = true;
             printf("🏆 Golden reference capture mode enabled\n");
         }
+        else if (strcmp(argv[i], "--scene") == 0 || strcmp(argv[i], "-s") == 0)
+        {
+            if (i + 1 < argc)
+            {
+                strncpy(app_state.requested_scene, argv[i + 1], sizeof(app_state.requested_scene) - 1);
+                app_state.requested_scene[sizeof(app_state.requested_scene) - 1] = '\0';
+                printf("🎬 CLI scene override: %s\n", app_state.requested_scene);
+                i++; // Skip the scene name argument
+            }
+            else
+            {
+                printf("❌ Error: --scene requires a scene name\n");
+            }
+        }
+        else if (strcmp(argv[i], "--list-scenes") == 0 || strcmp(argv[i], "-l") == 0)
+        {
+            printf("🎬 Available scenes:\n");
+            printf("  logo              - Engine logo and system test\n");
+            printf("  navigation_menu   - FTL navigation interface\n");
+            printf("  system_overview   - System map for FTL navigation\n");
+            printf("  derelict_alpha    - Magnetic navigation through Aethelian Command Ship\n");
+            printf("  derelict_beta     - Smaller derelict exploration\n");
+            printf("  slipstream_nav    - FTL slipstream navigation test\n");
+            exit(0);
+        }
         else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
         {
             printf("CGame Engine Usage:\n");
+            printf("  --scene NAME, -s NAME     Launch directly into specified scene\n");
+            printf("  --list-scenes, -l         List all available scenes\n");
             printf("  --golden-reference, -g    Capture golden reference screenshot of loading cube\n");
             printf("  --help, -h                Show this help message\n");
+            printf("\nExamples:\n");
+            printf("  ./cgame --scene derelict_alpha    # Launch into magnetic navigation scene\n");
+            printf("  ./cgame -s navigation_menu        # Launch into FTL navigation\n");
+            printf("  ./cgame --list-scenes             # Show all available scenes\n");
             printf("\nGame Controls:\n");
-            printf("  ESC        Exit game\n");
+            printf("  ESC        Exit game / Return to navigation menu\n");
+            printf("  TAB        Switch between related scenes\n");
+            printf("  SPACE      Toggle magnetic navigation (in derelict scenes)\n");
             printf("  ENTER      Skip logo screen (on logo scene)\n");
             printf("  ~          Toggle debug UI & HUD\n");
             printf("  1-9        Switch cameras\n");
             printf("  C          Cycle cameras\n");
             printf("  W          Toggle wireframe mode\n");
             printf("  S          Take screenshot\n");
+            exit(0);
         }
     }
 
@@ -513,7 +761,7 @@ sapp_desc sokol_main(int argc, char* argv[])
         .event_cb = event,
         .width = 1280,
         .height = 720,
-        .sample_count = 4,
+        .sample_count = 1,  // Must match render layer sample counts
         .window_title = "CGame - Entity-Component-System Engine (Sokol)",
         .icon.sokol_default = true,
         .logger.func = slog_func,

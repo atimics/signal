@@ -1,278 +1,164 @@
-# Component-Based Game Engine Makefile
-CC = clang
-CFLAGS = -Wall -Wextra -Werror -std=c99 -O2 -g -Isrc
-LIBS = -lm
-OS := $(shell uname)
+# CGame Engine - CMake Wrapper Makefile
+# ============================================================================
+# This Makefile provides familiar make commands that delegate to CMake
+# All existing `make` commands work seamlessly with the new CMake backend
 
-# Platform-specific flags
-ifeq ($(OS),Darwin)
-    # macOS
-    CFLAGS += -DSOKOL_METAL
-    LIBS += -framework Metal -framework MetalKit -framework AppKit -framework QuartzCore
+# ============================================================================
+# CMAKE CONFIGURATION
+# ============================================================================
+
+CMAKE_BUILD_DIR = build
+CMAKE_BUILD_TYPE ?= Debug
+
+# Platform detection
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    CMAKE_PLATFORM = macOS
+else ifeq ($(UNAME_S),Linux)
+    CMAKE_PLATFORM = Linux
 else
-    # Linux - define POSIX for clock_gettime and suppress problematic warnings
-    CFLAGS += -DSOKOL_GLCORE -D_POSIX_C_SOURCE=199309L
-    CFLAGS += -Wno-error=implicit-function-declaration
-    CFLAGS += -Wno-error=missing-field-initializers
-    CFLAGS += -Wno-error=unused-but-set-variable
-    CFLAGS += -Wno-error=null-pointer-subtraction
-    CFLAGS += -Wno-error=implicit-int
-    LIBS += -lGL -lX11 -lXi -lXcursor -lXrandr -lm
+    CMAKE_PLATFORM = Unknown
 endif
 
-# Directories
-SRC_DIR = src
-BUILD_DIR = build
-DATA_DIR = data
-ASSETS_DIR = assets
-TOOLS_DIR = tools
+# ============================================================================
+# PRIMARY TARGETS
+# ============================================================================
 
-# Asset compilation
-PYTHON = ./.venv/bin/python3
-ASSET_COMPILER = $(TOOLS_DIR)/asset_compiler.py
-BUILD_ASSETS_DIR = $(BUILD_DIR)/assets
+.PHONY: all build clean test assets run help
 
-# Source files
-SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c system/camera.c system/lod.c system/performance.c system/memory.c assets.c asset_loader/asset_loader_index.c asset_loader/asset_loader_mesh.c asset_loader/asset_loader_material.c render_3d.c render_camera.c render_lighting.c render_mesh.c ui.c data.c graphics_api.c gpu_resources.c scene_state.c scene_script.c scripts/logo_scene.c main.c
-OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
+# Default target - build the game
+all: configure
+	@echo "🔨 Building CGame Engine..."
+	@cmake --build $(CMAKE_BUILD_DIR) --target cgame --parallel
+	@echo "✅ Build complete! Executable: $(CMAKE_BUILD_DIR)/cgame"
 
-# Target executable
-TARGET = $(BUILD_DIR)/cgame
+# Explicit build target (same as all)
+build: all
 
-# Default target - try to build assets, then executable
-all: assets $(TARGET)
+# Run the game
+run: all
+	@echo "🚀 Starting CGame..."
+	@$(CMAKE_BUILD_DIR)/cgame
 
-# Build with assets (may fail if asset compiler has issues)
-with-assets: assets $(TARGET)
+# Test target - build and run all tests
+test: configure
+	@echo "🧪 Running CGame test suite..."
+	@cmake --build $(CMAKE_BUILD_DIR) --target build_all_tests --parallel
+	@cd $(CMAKE_BUILD_DIR) && ctest --output-on-failure --progress
 
-# Create build directory
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+# Asset compilation (if enabled)
+assets: configure
+	@echo "🎨 Compiling assets..."
+	@if cmake --build $(CMAKE_BUILD_DIR) --target assets 2>/dev/null; then \
+		echo "✅ Assets compiled successfully"; \
+	else \
+		echo "ℹ️  Assets disabled (requires numpy), skipping..."; \
+	fi
 
-# Compile assets using the new binary pipeline
-assets: $(BUILD_ASSETS_DIR)
-
-$(BUILD_ASSETS_DIR): | $(BUILD_DIR)
-	@echo "🔨 Compiling assets to binary format..."
-	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py
-	@echo "✅ Asset compilation complete."
-
-# Force asset recompilation
-assets-force:
-	@echo "🔨 Force recompiling assets..."
-	$(PYTHON) $(TOOLS_DIR)/build_pipeline.py --force
-	@echo "✅ Asset compilation complete."
-
-# Generate all procedural source assets using clean pipeline
-generate-assets:
-	@echo "🌱 Generating all mesh assets with UV layouts..."
-	$(PYTHON) $(TOOLS_DIR)/clean_asset_pipeline.py --all
-	@echo "✅ Source asset generation complete."
-
-# Generate specific asset using clean pipeline  
-generate-asset:
-	@echo "🌱 Generating mesh asset: $(MESH)..."
-	$(PYTHON) $(TOOLS_DIR)/clean_asset_pipeline.py --mesh $(MESH)
-	@echo "✅ Asset $(MESH) generated."
-
-# Full asset regeneration and compilation
-regenerate-assets: clean-source-assets generate-assets assets
-
-# Clean source assets (SVGs, PNGs, OBJs)
-clean-source-assets:
-	@echo "🧹 Cleaning source assets..."
-	find $(ASSETS_DIR)/meshes/props -name "*.obj" -delete
-	find $(ASSETS_DIR)/meshes/props -name "*.svg" -delete
-	find $(ASSETS_DIR)/meshes/props -name "*.png" -delete
-	find $(ASSETS_DIR)/meshes/props -name "*.mtl" -delete
-	find $(ASSETS_DIR)/meshes/props -name "metadata.json" -delete
-	@echo "✅ Source assets cleaned."
-
-# Launch mesh viewer
-view-meshes:
-	@echo "🎨 Launching mesh viewer..."
-	$(PYTHON) $(TOOLS_DIR)/launch_mesh_viewer.py
-
-# Run performance test
-test-performance:
-	@echo "⚡ Running asset performance test..."
-	$(PYTHON) $(TOOLS_DIR)/test_asset_performance.py
-
-# Link executable
-$(TARGET): $(OBJECTS) | $(BUILD_DIR)
-	$(CC) $(OBJECTS) -o $@ $(LIBS)
-
-# Compile source files
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Special compilation rules for main.c (platform-specific)
-ifeq ($(OS),Darwin)
-$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -Wno-error=unused-but-set-variable -Wno-error=null-pointer-subtraction -x objective-c -c $< -o $@
-$(BUILD_DIR)/render_3d.o: $(SRC_DIR)/render_3d.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
-$(BUILD_DIR)/graphics_api.o: $(SRC_DIR)/graphics_api.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -x objective-c -c $< -o $@
-else
-# Linux - additional warning suppressions for third-party headers
-$(BUILD_DIR)/main.o: $(SRC_DIR)/main.c | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -Wno-error=implicit-function-declaration -Wno-error=implicit-int -c $< -o $@
-endif
-
-
-# Clean build files and compiled assets
+# Clean build artifacts
 clean:
-	rm -rf $(BUILD_DIR)
-
-# Clean only compiled assets
-clean-assets:
-	rm -rf $(BUILD_ASSETS_DIR)
-
-# Run the test, allow passing a scene name, e.g., make run SCENE=spaceport_alpha
-run: $(TARGET)
-	./$(TARGET) $(SCENE)
-
-# Run with performance analysis
-profile: $(TARGET)
-	time ./$(TARGET)
-
-# Debug build
-debug: CFLAGS += -DDEBUG -O0
-debug: $(TARGET)
-
-# Release build
-release: CFLAGS += -DNDEBUG -O3
-release: clean $(TARGET)
-
-# WebAssembly build (requires Emscripten)
-wasm: assets-wasm | $(BUILD_DIR)
-	@echo "🌐 Building for WebAssembly..."
-	@echo "📋 Note: This requires Emscripten SDK to be installed and activated"
-	@echo "📋 Install with: https://emscripten.org/docs/getting_started/downloads.html"
-	@mkdir -p $(BUILD_DIR)
-	emcc -std=c99 -O2 -Isrc \
-		-DSOKOL_GLES3 \
-		-DSOKOL_IMPL \
-		-DNUKLEAR_IMPLEMENTATION \
-		-DEMSCRIPTEN \
-		-Wno-unused-function \
-		-Wno-unused-variable \
-		-Wno-unused-parameter \
-		-s USE_WEBGL2=1 -s FULL_ES3=1 \
-		-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
-		-s EXPORTED_FUNCTIONS='["_main"]' \
-		-s FORCE_FILESYSTEM=1 \
-		-s INITIAL_MEMORY=67108864 \
-		--preload-file $(BUILD_ASSETS_DIR)@/assets \
-		--shell-file src/shell.html \
-		$(addprefix src/,$(SOURCES)) \
-		-o $(BUILD_DIR)/cgame.html
-	@echo "✅ WebAssembly build complete: $(BUILD_DIR)/cgame.html"
-	@echo "📋 Serve with: python3 -m http.server 8000 (from build/ directory)"
-
-# Compile assets for WASM (simplified)
-assets-wasm: $(BUILD_ASSETS_DIR)
-	@echo "🔨 Preparing assets for WASM build..."
-	@echo "📋 Using existing compiled assets from build/assets/"
+	@echo "🧹 Cleaning build directory..."
+	@rm -rf $(CMAKE_BUILD_DIR)
 
 # ============================================================================
-# TEST TARGETS - Sprint 15: Unity Testing Framework Integration
+# CMAKE CONFIGURATION
 # ============================================================================
 
-# Phase 1: Core Math Tests (No dependencies)
-TEST_MATH_SRC = tests/test_main_simple.c tests/test_core_math.c tests/core_math.c tests/vendor/unity.c
-TEST_MATH_TARGET = $(BUILD_DIR)/cgame_tests_math
+.PHONY: configure
 
-# Phase 2 & 3: Full Integration Tests (With Sokol and engine dependencies)
-TEST_FULL_SRC = tests/test_runner.c tests/test_core_math.c tests/test_assets.c tests/test_rendering.c tests/vendor/unity.c
-ENGINE_SRC_FOR_TEST = src/assets.c src/asset_loader/asset_loader_index.c src/asset_loader/asset_loader_mesh.c src/asset_loader/asset_loader_material.c src/gpu_resources.c src/core.c
-TEST_FULL_TARGET = $(BUILD_DIR)/cgame_tests_full
+# Configure CMake build (runs automatically when needed)
+configure:
+	@if [ ! -d $(CMAKE_BUILD_DIR) ] || [ ! -f $(CMAKE_BUILD_DIR)/CMakeCache.txt ]; then \
+		echo "🔧 Configuring CMake build for $(CMAKE_PLATFORM)..."; \
+		cmake -B $(CMAKE_BUILD_DIR) -S . -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE); \
+	fi
 
-# Default test target - run Phase 1 (stable math tests)
-test: test-math
+# Force reconfigure CMake
+reconfigure:
+	@echo "🔧 Reconfiguring CMake build..."
+	@rm -rf $(CMAKE_BUILD_DIR)
+	@cmake -B $(CMAKE_BUILD_DIR) -S . -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE)
 
-# Phase 1: Math tests only (stable and fast)
-test-math: $(TEST_MATH_TARGET)
-	@echo "🧪 Running Phase 1: Core Math Tests..."
-	./$(TEST_MATH_TARGET)
-	@echo "✅ Phase 1 tests completed"
+# ============================================================================
+# ADVANCED TARGETS
+# ============================================================================
 
-# Phase 2 & 3: Full integration tests (experimental)
-test-full: $(TEST_FULL_TARGET)
-	@echo "🧪 Running Full Test Suite (Phases 1-3)..."
-	./$(TEST_FULL_TARGET)
-	@echo "✅ All tests completed"
+.PHONY: test-core test-rendering test-ui debug release status
 
-# Build Phase 1 test executable (math only)
-$(TEST_MATH_TARGET): $(TEST_MATH_SRC) | $(BUILD_DIR)
-	@echo "🔨 Building Phase 1 test suite (math only)..."
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Itests -Itests/vendor -DUNITY_TESTING -o $@ $(TEST_MATH_SRC) -lm
+# Test categories
+test-core: configure
+	@echo "📐 Running Core tests..."
+	@cmake --build $(CMAKE_BUILD_DIR) --target build_all_tests
+	@cd $(CMAKE_BUILD_DIR) && ctest --output-on-failure -R "test_core"
 
-# Build full test executable (all phases)
-$(TEST_FULL_TARGET): $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) | $(BUILD_DIR)
-	@echo "🔨 Building full test suite (experimental)..."
-ifeq ($(OS),Darwin)
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm
-else
-	$(CC) -Wall -Wextra -std=c99 -O2 -g -Isrc -Itests -Itests/vendor -DUNITY_TESTING -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -Wno-error=macro-redefined -Wno-error=implicit-function-declaration -D_POSIX_C_SOURCE=199309L -o $@ $(TEST_FULL_SRC) $(ENGINE_SRC_FOR_TEST) -lm -lGL -lX11 -lXi -lXcursor -lXrandr
-endif
+test-rendering: configure
+	@echo "🎨 Running Rendering tests..."
+	@cmake --build $(CMAKE_BUILD_DIR) --target build_all_tests
+	@cd $(CMAKE_BUILD_DIR) && ctest --output-on-failure -R "test_render"
 
-# Sprint 10.5 Task 1: Test index.json path resolution
-test_sprint_10_5_task_1: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 1 test (standalone)..."
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_1_standalone tests/sprint_10_5/test_task_1_standalone.c
-	./$(BUILD_DIR)/test_task_1_standalone
-	@echo "✅ Sprint 10.5 Task 1 test complete"
+test-ui: configure
+	@echo "🖥️  Running UI tests..."
+	@cmake --build $(CMAKE_BUILD_DIR) --target build_all_tests  
+	@cd $(CMAKE_BUILD_DIR) && ctest --output-on-failure -R "test_ui"
 
-# Sprint 10.5 Task 1: Integration test with actual assets.c (requires Objective-C)
-test_sprint_10_5_task_1_integration: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 1 integration test..."
-	$(CC) $(CFLAGS) -x objective-c -o $(BUILD_DIR)/test_task_1_integration tests/sprint_10_5/test_task_1.c src/assets.c src/render_gpu.c src/graphics_api.c $(LIBS)
-	./$(BUILD_DIR)/test_task_1_integration
-	@echo "✅ Sprint 10.5 Task 1 integration test complete"
+# Build configurations
+debug: CMAKE_BUILD_TYPE=Debug
+debug: reconfigure all
+	@echo "🐛 Debug build complete"
 
-.PHONY: all with-assets clean clean-assets assets assets-force assets-wasm run profile debug release wasm test test-math test-full test_sprint_10_5_task_1 test_sprint_10_5_task_1_integration
+release: CMAKE_BUILD_TYPE=Release  
+release: reconfigure all
+	@echo "🚀 Release build complete"
 
-# Sprint 10.5 Task 2: Test dynamic memory allocation in mesh parser
-test_sprint_10_5_task_2: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 2 test (standalone)..."
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_2_standalone tests/sprint_10_5/test_task_2_standalone.c
-	./$(BUILD_DIR)/test_task_2_standalone
-	@echo "✅ Sprint 10.5 Task 2 test complete"
+# Show build status
+status:
+	@echo "📊 CGame Build Status:"
+	@echo "====================="
+	@echo "Platform: $(CMAKE_PLATFORM)"
+	@echo "Build Type: $(CMAKE_BUILD_TYPE)"
+	@echo "Build Directory: $(CMAKE_BUILD_DIR)"
+	@if [ -d $(CMAKE_BUILD_DIR) ]; then \
+		echo "Build Configured: ✅"; \
+		if [ -f $(CMAKE_BUILD_DIR)/cgame ]; then \
+			echo "Executable Built: ✅"; \
+		else \
+			echo "Executable Built: ❌"; \
+		fi; \
+	else \
+		echo "Build Configured: ❌"; \
+	fi
 
-.PHONY: test_sprint_10_5_task_2
+# ============================================================================
+# HELP
+# ============================================================================
 
-# Sprint 10.5 Task 3: Test GPU resource validation
-test_sprint_10_5_task_3: | $(BUILD_DIR)
-	@echo "🧪 Building and running Sprint 10.5 Task 3 test (standalone)..."
-	$(CC) $(CFLAGS) -o $(BUILD_DIR)/test_task_3_standalone tests/sprint_10_5/test_task_3_standalone.c
-	./$(BUILD_DIR)/test_task_3_standalone
-	@echo "✅ Sprint 10.5 Task 3 test complete"
+help:
+	@echo "🎮 CGame Engine - Make Commands"
+	@echo "==============================="
+	@echo ""
+	@echo "🔨 BUILD COMMANDS:"
+	@echo "  make             - Build the game (default)"
+	@echo "  make all         - Build the game"
+	@echo "  make clean       - Clean build artifacts"
+	@echo "  make run         - Build and run the game"
+	@echo "  make assets      - Compile game assets"
+	@echo ""
+	@echo "🧪 TEST COMMANDS:"
+	@echo "  make test        - Run all tests"
+	@echo "  make test-core   - Run core component tests"
+	@echo "  make test-rendering - Run rendering tests"
+	@echo "  make test-ui     - Run UI tests"
+	@echo ""
+	@echo "⚙️  BUILD TYPES:"
+	@echo "  make debug       - Debug build"
+	@echo "  make release     - Release build"
+	@echo ""
+	@echo "🔧 UTILITIES:"
+	@echo "  make status      - Show build status"
+	@echo "  make reconfigure - Force CMake reconfiguration"
+	@echo "  make help        - Show this help"
+	@echo ""
+	@echo "✨ All commands use CMake backend for modern, reliable builds"
 
-.PHONY: test_sprint_10_5_task_3
-
-# Sprint 19 Task 1: Test LOD system
-test_lod: | $(BUILD_DIR)
-	@echo "🧪 Building and running LOD system tests..."
-	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_lod \
-		tests/test_performance_lod_simple.c tests/vendor/unity.c \
-		src/system/lod.c src/core.c \
-		-lm
-	./$(BUILD_DIR)/test_lod
-	@echo "✅ LOD system tests complete"
-
-.PHONY: test_lod
-
-# Sprint 19 Task 2.2: Test Memory Management system
-test_memory: | $(BUILD_DIR)
-	@echo "🧪 Building and running Memory Management system tests..."
-	$(CC) $(CFLAGS) -DSOKOL_DUMMY_BACKEND -DCGAME_TESTING -o $(BUILD_DIR)/test_memory \
-		tests/test_memory_management.c tests/vendor/unity.c \
-		src/system/memory.c src/system/performance.c src/core.c \
-		-lm
-	./$(BUILD_DIR)/test_memory
-	@echo "✅ Memory Management system tests complete"
-
-.PHONY: test_memory
+# Set default goal
+.DEFAULT_GOAL := all

@@ -1,8 +1,26 @@
 # Build artifacts
 build/
+html/
 *.o
+*.d
 *.exe
 cgame
+Makefile.original
+
+# CMake related files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+compile_commands.json
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake
+Testing/
+
+# Build artifacts
+*.a
+*.so
+*.dylib
 
 # Object files from C compilation (but not mesh .obj files)
 src/**/*.obj
@@ -99,3 +117,43 @@ assets/**/*.temp
 
 # Keep mesh source files (.obj) - these are assets, not compiled objects
 !assets/**/*.obj
+
+# Encryption tools and sensitive data
+tools/signal_wordlist.txt
+tools/*wordlist*
+*.wordlist
+
+# Test binaries and build artifacts - these should never be committed
+tests/test_cmake-*
+tests/**/test_cmake-*
+tests/CMakeFiles/
+tests/cmake_install.cmake
+tests/Makefile
+tests/CTestTestfile.cmake
+
+# Build directory - ignore everything in it
+build/**
+
+# Explicitly ignore test executables
+test_*
+!test_*.c
+!test_*.h
+
+# Claude-specific files
+.claude/
+
+# Test artifacts and binary outputs
+tests/artifacts/*.bmp
+tests/artifacts/*.png
+tests/artifacts/*.jpg
+tests/artifacts/*.jpeg
+tests/artifacts/*.tga
+tests/artifacts/*.dds
+tests/artifacts/*.exe
+tests/artifacts/*.bin
+
+# Test temporary files
+tests/**/*.tmp
+tests/**/*.temp
+tests/**/*.cache
+docs/api/html_generated/

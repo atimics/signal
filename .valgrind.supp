@@ -1,0 +1,51 @@
+# Valgrind suppressions for CGame/SIGNAL engine
+# These suppress known false positives from system libraries
+
+{
+   macOS_CoreFoundation_false_positive
+   Memcheck:Leak
+   ...
+   obj:*/CoreFoundation
+}
+
+{
+   macOS_IOKit_false_positive
+   Memcheck:Leak
+   ...
+   obj:*/IOKit
+}
+
+{
+   macOS_Metal_false_positive
+   Memcheck:Leak
+   ...
+   obj:*/Metal
+}
+
+{
+   hidapi_initialization
+   Memcheck:Leak
+   ...
+   fun:hid_*
+}
+
+{
+   sokol_graphics_init
+   Memcheck:Leak
+   ...
+   fun:sg_*
+}
+
+{
+   OpenGL_driver_leaks
+   Memcheck:Leak
+   ...
+   obj:*/libGL*
+}
+
+{
+   X11_leaks
+   Memcheck:Leak
+   ...
+   obj:*/libX11*
+}

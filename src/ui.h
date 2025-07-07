@@ -4,32 +4,24 @@
 #include "core.h"
 #include "systems.h"
 
-// UI State management
-typedef struct
-{
-    bool show_debug_panel;
-    bool show_hud;
-    bool show_wireframe;
-    float camera_speed;
-    float time_scale;
+// Forward declarations
+struct nk_context;
 
-    // FPS tracking
-    float fps;
-    int frame_count;
-    float fps_timer;
-} UIState;
+// ============================================================================
+// CORE UI SYSTEM
+// ============================================================================
 
 void ui_init(void);
 void ui_shutdown(void);
-void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene);
+void ui_render(struct World* world, SystemScheduler* scheduler, float delta_time, const char* current_scene, int screen_width, int screen_height);
 bool ui_handle_event(const void* ev);  // Returns true if UI captured the event
-void ui_toggle_debug_panel(void);
-void ui_toggle_hud(void);
 
 // UI visibility control
 void ui_set_visible(bool visible);
 void ui_set_debug_visible(bool visible);
 bool ui_is_visible(void);
 bool ui_is_debug_visible(void);
+
+// NOTE: Flight HUD system moved to hud_system.h for modular camera mode support
 
 #endif  // UI_H

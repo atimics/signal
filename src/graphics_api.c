@@ -4,9 +4,9 @@
 // By defining SOKOL_IMPL here, we ensure that the implementation is
 // compiled only once, preventing linker errors.
 
+// Backend is now defined via compiler flags
+
 #define SOKOL_IMPL
-#define SOKOL_NUKLEAR_IMPL
-typedef int nk_bool;  // Define nk_bool for sokol_nuklear.h implementation
 #include "graphics_api.h"
 
 #include <stdio.h>
@@ -78,8 +78,14 @@ static bool write_bmp_file(const char* filename, uint8_t* pixels, int width, int
 
 bool graphics_capture_screenshot(const char* filename) {
     // Get current framebuffer dimensions
+#ifdef TEST_MODE
+    // In test mode, use fixed dimensions
+    int width = 1920;
+    int height = 1080;
+#else
     int width = sapp_width();
     int height = sapp_height();
+#endif
     
     printf("📸 Capturing screenshot: %dx%d -> %s\n", width, height, filename);
     

@@ -17,6 +17,11 @@
 #include "system/lod.h"
 #include "system/performance.h"
 #include "system/memory.h"
+#include "system/material.h"
+#include "system/thrusters.h"
+#include "system/unified_control_system.h"
+#include "entity_yaml_loader.h"
+#include "scene_yaml_loader.h"
 
 // Global asset and data registries
 AssetRegistry g_asset_registry;
@@ -46,18 +51,20 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
         return false;
     }
 
-    // Load entity and scene templates
-    load_entity_templates(&g_data_registry, "templates/entities.txt");
-    load_scene_templates(&g_data_registry, "scenes/logo.txt");         // Gold standard baseline scene
-    load_scene_templates(&g_data_registry, "scenes/mesh_test.txt");
-    load_scene_templates(&g_data_registry, "scenes/spaceport.txt");
-    load_scene_templates(&g_data_registry, "scenes/camera_test.txt");
+    // Load entity and scene templates (YAML-first with text fallback)
+    load_entity_templates_with_fallback(&g_data_registry, "entities");
+    
+    // Dynamically load all scene templates from scenes directory
+    load_all_scene_templates(&g_data_registry, "scenes");
 
     // Initialize memory management BEFORE loading assets
     if (!memory_system_init(256)) {
         printf("❌ Failed to initialize memory system\n");
         return false;
     }
+
+    // Initialize material and lighting systems
+    material_system_init();
 
     // Initialize render system with asset registry FIRST
     if (!render_init(render_config, &g_asset_registry, 1200.0f, 800.0f))
@@ -91,7 +98,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     scheduler->systems[SYSTEM_COLLISION] =
         (SystemInfo){ .name = "Collision",
                       .frequency = 20.0f,  // Every 3 frames at 60 FPS
-                      .enabled = true,
+                      .enabled = false,  // Temporarily disabled - causing runaway loop
                       .update_func = collision_system_update };
 
     scheduler->systems[SYSTEM_AI] =
@@ -112,7 +119,7 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
 
     scheduler->systems[SYSTEM_PERFORMANCE] = (SystemInfo){ .name = "Performance",
                                                           .frequency = 5.0f,   // 5 times per second
-                                                          .enabled = true,
+                                                          .enabled = false,  // Temporarily disabled - causing runaway loop
                                                           .update_func = performance_system_update };
 
     scheduler->systems[SYSTEM_MEMORY] = (SystemInfo){ .name = "Memory",
@@ -120,8 +127,21 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                      .enabled = true,
                                                      .update_func = memory_system_update_wrapper };
 
+    scheduler->systems[SYSTEM_THRUSTERS] = (SystemInfo){ .name = "Thrusters",
+                                                         .frequency = 60.0f,  // Every frame
+                                                         .enabled = true,
+                                                         .update_func = thruster_system_update };
+
+    scheduler->systems[SYSTEM_CONTROL] = (SystemInfo){ .name = "Unified Control",
+                                                       .frequency = 60.0f,  // Match physics frequency for responsive controls
+                                                       .enabled = true,
+                                                       .update_func = unified_control_system_update };
+
     // Initialize performance monitoring
     performance_init();
+    
+    // Initialize unified control system
+    unified_control_system_init();
     
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
@@ -131,6 +151,8 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     printf("   LOD: %.1f Hz\n", scheduler->systems[SYSTEM_LOD].frequency);
     printf("   Performance: %.1f Hz\n", scheduler->systems[SYSTEM_PERFORMANCE].frequency);
     printf("   Memory: %.1f Hz\n", scheduler->systems[SYSTEM_MEMORY].frequency);
+    printf("   Thrusters: %.1f Hz\n", scheduler->systems[SYSTEM_THRUSTERS].frequency);
+    printf("   Control: %.1f Hz\n", scheduler->systems[SYSTEM_CONTROL].frequency);
 
     return true;
 }
@@ -139,12 +161,21 @@ void scheduler_destroy(struct SystemScheduler* scheduler, RenderConfig* config)
 {
     if (!scheduler) return;
 
+    // Shutdown our new systems
+    material_system_shutdown();
+    unified_control_system_shutdown();
+
     if (config)
     {
         render_cleanup(config);
     }
     assets_cleanup(&g_asset_registry);
     data_registry_cleanup(&g_data_registry);
+    
+    // Shutdown YAML loaders
+    entity_yaml_loader_shutdown();
+    scene_yaml_loader_shutdown();
+    
     printf("🎯 System scheduler destroyed after %d frames\n", scheduler->frame_count);
     scheduler_print_stats(scheduler);
 }

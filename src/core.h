@@ -17,6 +17,12 @@
 // R06 Solution: PIMPL Idiom - Forward declaration for opaque graphics resources
 struct GpuResources;
 
+// Forward declaration for controllable component
+struct Controllable;
+
+// Forward declaration for unified flight control component
+struct UnifiedFlightControl;
+
 // ============================================================================
 // CORE TYPES
 // ============================================================================
@@ -42,6 +48,7 @@ typedef struct
 /** @brief A unique identifier for an entity in the world. */
 typedef uint32_t EntityID;
 #define INVALID_ENTITY 0 /**< A reserved ID for an invalid or null entity. */
+#define INVALID_ENTITY_ID 0 /**< Alternative name for consistency with tests. */
 
 /** @brief A bitmask representing the components attached to an entity. */
 typedef enum
@@ -54,6 +61,10 @@ typedef enum
     COMPONENT_PLAYER = 1 << 5,
     COMPONENT_CAMERA = 1 << 6,
     COMPONENT_SCENENODE = 1 << 7,
+    COMPONENT_THRUSTER_SYSTEM = 1 << 8,
+    COMPONENT_CONTROL_AUTHORITY = 1 << 9,
+    COMPONENT_CONTROLLABLE = 1 << 10,
+    COMPONENT_UNIFIED_FLIGHT_CONTROL = 1 << 11,
 } ComponentType;
 
 /** @brief Level of Detail enumeration for performance optimization. */
@@ -81,11 +92,38 @@ struct Transform
 /** @brief Defines an entity's physical properties for simulation. */
 struct Physics
 {
+    // Linear dynamics
     Vector3 velocity;
     Vector3 acceleration;
+    Vector3 force_accumulator;    // Sum forces per frame
     float mass;
-    float drag;
-    bool kinematic;  // Not affected by forces
+    
+    // Angular dynamics (6DOF)
+    Vector3 angular_velocity;     // Rotation rates (rad/s)
+    Vector3 angular_acceleration; // Angular acceleration (rad/s²)
+    Vector3 torque_accumulator;   // Sum torques per frame
+    Vector3 moment_of_inertia;    // Per-axis resistance to rotation
+    
+    // Configuration
+    float drag_linear;            // Linear drag coefficient
+    float drag_angular;           // Angular drag coefficient
+    bool kinematic;               // Not affected by forces
+    bool has_6dof;               // Enable angular dynamics
+    
+    // Environment
+    enum {
+        PHYSICS_SPACE,
+        PHYSICS_ATMOSPHERE
+    } environment;
+    
+    // ODE Integration
+    bool use_ode;                // Use ODE physics instead of custom
+    void* ode_body;              // ODE rigid body handle (dBodyID)
+    void* ode_geom;              // ODE collision geometry (dGeomID)
+    
+    // Gravitational Alignment (for spatial orientation)
+    bool enable_gravity_alignment;   // Enable "up/down" orientation relative to gravity
+    float gravity_alignment_strength; // Strength of gravitational alignment torque
 };
 
 /** @brief Defines an entity's collision shape and properties. */
@@ -141,6 +179,7 @@ struct Renderable
 {
     struct GpuResources* gpu_resources; /**< Opaque pointer to GPU-specific resources. */
     uint32_t index_count;               /**< Number of indices to draw. */
+    uint32_t material_id;               /**< Material ID for shading properties. */
     bool visible;                       /**< Whether the entity should be rendered. */
     float lod_distance;                 /**< Distance at which to switch LOD levels. */
     uint8_t lod_level;                  /**< The current level of detail. */
@@ -212,6 +251,65 @@ struct SceneNode
     uint32_t depth;                          /**< Depth in the scene graph (0 = root). */
 };
 
+/** @brief Defines a universal propulsion system for any entity. */
+/** @brief Ship type enumeration for different handling characteristics. */
+typedef enum {
+    SHIP_TYPE_FIGHTER,      /**< Fast, agile, light */
+    SHIP_TYPE_INTERCEPTOR,  /**< Very fast, minimal cargo */
+    SHIP_TYPE_CARGO,        /**< Slow, heavy, lots of thrust */
+    SHIP_TYPE_EXPLORER,     /**< Balanced, efficient */
+    SHIP_TYPE_CUSTOM        /**< Custom configuration */
+} ShipType;
+
+struct ThrusterSystem
+{
+    // Thruster capabilities
+    Vector3 max_linear_force;     /**< Maximum thrust per axis (N) */
+    Vector3 max_angular_torque;   /**< Maximum torque per axis (N⋅m) */
+    
+    // Current state
+    Vector3 current_linear_thrust;  /**< Current thrust command (-1 to 1 per axis) */
+    Vector3 current_angular_thrust; /**< Current angular thrust command (-1 to 1 per axis) */
+    
+    // Characteristics
+    float thrust_response_time;     /**< Time to reach full thrust (seconds) */
+    float atmosphere_efficiency;    /**< Efficiency in atmosphere (0-1) */
+    float vacuum_efficiency;        /**< Efficiency in vacuum (0-1) */
+    bool thrusters_enabled;         /**< Master thruster enable/disable */
+    
+    // Ship type and characteristics (Sprint 21 enhancement)
+    ShipType ship_type;            /**< Ship type for handling characteristics */
+    float power_efficiency;        /**< Overall power efficiency (0-1) */
+    float heat_generation;         /**< Heat generated per thrust unit */
+    
+    // Auto-deceleration
+    bool auto_deceleration;        /**< Enable automatic deceleration when no input */
+};
+
+/** @brief Defines input processing and control authority for an entity. */
+struct ControlAuthority
+{
+    EntityID controlled_by;         /**< Entity ID that controls this entity */
+    
+    // Control settings
+    float control_sensitivity;      /**< Input sensitivity multiplier */
+    float stability_assist;         /**< Stability assist strength (0-1) */
+    bool flight_assist_enabled;     /**< Enable flight assistance systems */
+    
+    // Input state (processed from raw input)
+    Vector3 input_linear;           /**< Linear input commands (-1 to 1 per axis) */
+    Vector3 input_angular;          /**< Angular input commands (-1 to 1 per axis) */
+    float input_boost;              /**< Boost intensity (0-1) */
+    bool input_brake;               /**< Brake engaged */
+    
+    // Control mode
+    enum {
+        CONTROL_MANUAL,             /**< Pure manual control */
+        CONTROL_ASSISTED,           /**< Flight assistance enabled */
+        CONTROL_AUTOPILOT           /**< AI-controlled */
+    } control_mode;
+};
+
 // ============================================================================
 // ENTITY DEFINITION
 // ============================================================================
@@ -233,6 +331,10 @@ struct Entity
     struct Player* player;
     struct Camera* camera;
     struct SceneNode* scene_node;
+    struct ThrusterSystem* thruster_system;
+    struct ControlAuthority* control_authority;
+    struct Controllable* controllable;
+    struct UnifiedFlightControl* unified_flight_control;
 };
 
 // ============================================================================
@@ -250,6 +352,10 @@ struct ComponentPools
     struct Player players[MAX_ENTITIES];
     struct Camera cameras[MAX_ENTITIES];
     struct SceneNode scene_nodes[MAX_ENTITIES];
+    struct ThrusterSystem thruster_systems[MAX_ENTITIES];
+    struct ControlAuthority control_authorities[MAX_ENTITIES];
+    struct Controllable* controllables[MAX_ENTITIES];  // Use pointers for incomplete type
+    struct UnifiedFlightControl* unified_flight_controls[MAX_ENTITIES];  // Use pointers for incomplete type
 
     uint32_t transform_count;
     uint32_t physics_count;
@@ -259,6 +365,10 @@ struct ComponentPools
     uint32_t player_count;
     uint32_t camera_count;
     uint32_t scene_node_count;
+    uint32_t thruster_system_count;
+    uint32_t control_authority_count;
+    uint32_t controllable_count;
+    uint32_t unified_flight_control_count;
 };
 
 // ============================================================================
@@ -268,8 +378,9 @@ struct ComponentPools
 /** @brief Represents the entire state of the game world. */
 struct World
 {
-    struct Entity entities[MAX_ENTITIES];
+    struct Entity* entities;        // Dynamic allocation for TDD flexibility
     uint32_t entity_count;
+    uint32_t max_entities;          // Maximum number of entities (for TDD)
     uint32_t next_entity_id;
 
     struct ComponentPools components;
@@ -293,12 +404,12 @@ void world_update(struct World* world, float delta_time);
 
 // Entity management
 EntityID entity_create(struct World* world);
-void entity_destroy(struct World* world, EntityID entity_id);
+bool entity_destroy(struct World* world, EntityID entity_id);
 struct Entity* entity_get(struct World* world, EntityID entity_id);
 
 // Component management
 bool entity_add_component(struct World* world, EntityID entity_id, ComponentType type);
-void entity_remove_component(struct World* world, EntityID entity_id, ComponentType type);
+bool entity_remove_component(struct World* world, EntityID entity_id, ComponentType type);
 bool entity_has_component(struct World* world, EntityID entity_id, ComponentType type);
 
 // Component accessors
@@ -310,6 +421,10 @@ struct Renderable* entity_get_renderable(struct World* world, EntityID entity_id
 struct Player* entity_get_player(struct World* world, EntityID entity_id);
 struct Camera* entity_get_camera(struct World* world, EntityID entity_id);
 struct SceneNode* entity_get_scene_node(struct World* world, EntityID entity_id);
+struct ThrusterSystem* entity_get_thruster_system(struct World* world, EntityID entity_id);
+struct ControlAuthority* entity_get_control_authority(struct World* world, EntityID entity_id);
+struct Controllable* entity_get_controllable(struct World* world, EntityID entity_id);
+struct UnifiedFlightControl* entity_get_unified_flight_control(struct World* world, EntityID entity_id);
 
 // Camera management
 void world_set_active_camera(struct World* world, EntityID camera_entity);
@@ -337,9 +452,16 @@ EntityID scene_node_find_by_name(struct World* world, const char* name);
 Vector3 vector3_add(Vector3 a, Vector3 b);
 Vector3 vector3_subtract(Vector3 a, Vector3 b);
 Vector3 vector3_multiply(Vector3 v, float scalar);
+Vector3 vector3_multiply_scalar(Vector3 v, float scalar);  // Alias for vector3_multiply
 Vector3 vector3_normalize(Vector3 v);
 float vector3_length(Vector3 v);
 float vector3_distance(Vector3 a, Vector3 b);
+Vector3 vector3_lerp(Vector3 a, Vector3 b, float t);
+float vector3_dot(Vector3 a, Vector3 b);
+Vector3 vector3_cross(Vector3 a, Vector3 b);
+
+// Quaternion utility functions
+Vector3 quaternion_rotate_vector(Quaternion q, Vector3 v);
 
 // Matrix utility functions
 void mat4_identity(float* m);
@@ -353,5 +475,9 @@ void mat4_rotation_z(float* m, float angle_radians);
 void mat4_scale(float* m, Vector3 scale);
 void mat4_from_quaternion(float* m, Quaternion q);
 void mat4_compose_transform(float* result, Vector3 position, Quaternion rotation, Vector3 scale);
+
+// TDD-required functions for Sprint 19
+bool entity_add_components(struct World* world, EntityID entity_id, ComponentType components);
+bool entity_is_valid(struct World* world, EntityID entity_id);
 
 #endif  // CORE_H

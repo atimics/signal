@@ -5,10 +5,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
 
 #include "assets.h"
+#include "system/thrusters.h"
+#include "system/control.h"
 #include "gpu_resources.h"
+#include "system/material.h"
 #include "graphics_api.h"
+#include "scene_yaml_loader.h"
+#include "entity_yaml_loader.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -64,6 +70,28 @@ void data_registry_cleanup(DataRegistry* registry)
 {
     if (!registry) return;
     printf("📋 Data registry cleaned up\n");
+}
+
+// ============================================================================
+// TEMPLATE LOADING (YAML WITH TEXT FALLBACK)
+// ============================================================================
+
+// Load entity templates with YAML priority only
+bool load_entity_templates_with_fallback(DataRegistry* registry, const char* base_name)
+{
+    if (!registry || !base_name) return false;
+    
+    // Load from YAML file only - text format deprecated
+    char yaml_filename[256];
+    snprintf(yaml_filename, sizeof(yaml_filename), "templates/%s.yaml", base_name);
+    
+    if (load_entity_templates_yaml(registry, yaml_filename)) {
+        printf("✅ Loaded entity templates from YAML: %s\n", yaml_filename);
+        return true;
+    }
+    
+    printf("❌ Entity templates not found: %s (text format deprecated)\n", base_name);
+    return false;
 }
 
 // ============================================================================
@@ -177,6 +205,14 @@ bool load_entity_templates(DataRegistry* registry, const char* templates_path)
         else if (strcmp(key, "has_player") == 0)
         {
             current_template->has_player = (strcmp(value, "true") == 0);
+        }
+        else if (strcmp(key, "has_thrusters") == 0)
+        {
+            current_template->has_thrusters = (strcmp(value, "true") == 0);
+        }
+        else if (strcmp(key, "has_control_authority") == 0)
+        {
+            current_template->has_control_authority = (strcmp(value, "true") == 0);
         }
         else if (strcmp(key, "has_camera") == 0)
         {
@@ -391,7 +427,8 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
         entity_add_component(world, id, COMPONENT_PHYSICS);
         struct Physics* physics = entity_get_physics(world, id);
         physics->mass = template->mass;
-        physics->drag = template->drag;
+        physics->drag_linear = template->drag;
+        physics->drag_angular = template->drag;
         physics->velocity = template->velocity;
         physics->acceleration = template->acceleration;
         physics->kinematic = template->kinematic;
@@ -412,6 +449,21 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
         entity_add_component(world, id, COMPONENT_RENDERABLE);
         struct Renderable* renderable = entity_get_renderable(world, id);
         renderable->visible = template->visible;
+        
+        // Assign material based on material name
+        if (strlen(template->material_name) > 0) {
+            MaterialProperties* material = material_get_by_name(template->material_name);
+            if (material) {
+                // Calculate material ID from pointer offset
+                renderable->material_id = (uint32_t)(material - material_get_by_id(0));
+                printf("✅ Entity %d assigned material: %s (ID: %d)\n", id, template->material_name, renderable->material_id);
+            } else {
+                printf("⚠️  Entity %d failed to find material: %s - using default\n", id, template->material_name);
+                renderable->material_id = 0; // Default material
+            }
+        } else {
+            renderable->material_id = 0; // Default material
+        }
 
         // Try to create renderable from mesh name
         if (strlen(template->mesh_name) > 0)
@@ -454,6 +506,30 @@ EntityID create_entity_from_template(struct World* world, DataRegistry* registry
     {
         entity_add_component(world, id, COMPONENT_PLAYER);
     }
+    
+    if (template->has_thrusters)
+    {
+        entity_add_component(world, id, COMPONENT_THRUSTER_SYSTEM);
+        struct ThrusterSystem* thrusters = entity_get_thruster_system(world, id);
+        if (thrusters)
+        {
+            // Initialize with default values
+            thrusters->thrusters_enabled = true;
+            thrusters->ship_type = SHIP_TYPE_FIGHTER;
+        }
+    }
+    
+    if (template->has_control_authority)
+    {
+        entity_add_component(world, id, COMPONENT_CONTROL_AUTHORITY);
+        struct ControlAuthority* control = entity_get_control_authority(world, id);
+        if (control)
+        {
+            // Initialize with default values
+            control->control_mode = CONTROL_MANUAL;
+            control->control_sensitivity = 1.0f;
+        }
+    }
 
     if (template->has_camera)
     {
@@ -489,14 +565,24 @@ bool load_scene(struct World* world, DataRegistry* registry, AssetRegistry* asse
 {
     if (!world || !registry || !scene_name) return false;
 
+    // First, try to load from YAML file
+    char yaml_filename[256];
+    snprintf(yaml_filename, sizeof(yaml_filename), "%s.yaml", scene_name);
+    
+    if (scene_load_from_yaml(world, assets, yaml_filename)) {
+        printf("✅ Loaded scene from YAML: %s\n", yaml_filename);
+        return true;
+    }
+    
+    // Fall back to old template system
     SceneTemplate* scene = find_scene_template(registry, scene_name);
     if (!scene)
     {
-        printf("❌ Scene template not found: %s\n", scene_name);
+        printf("❌ Scene not found in YAML or templates: %s\n", scene_name);
         return false;
     }
 
-    printf("🏗️  Loading scene: %s\n", scene->name);
+    printf("🏗️  Loading scene from template: %s\n", scene->name);
 
     for (uint32_t i = 0; i < scene->spawn_count; i++)
     {
@@ -574,4 +660,45 @@ void list_scene_templates(DataRegistry* registry)
         SceneTemplate* s = &registry->scene_templates[i];
         printf("   - %s: %d spawns\n", s->name, s->spawn_count);
     }
+}
+
+bool load_all_scene_templates(DataRegistry* registry, const char* scenes_dir)
+{
+    if (!registry || !scenes_dir) return false;
+
+    char full_dir_path[1024];
+    snprintf(full_dir_path, sizeof(full_dir_path), "%s/%s", registry->data_root, scenes_dir);
+
+    DIR* dir = opendir(full_dir_path);
+    if (!dir) {
+        printf("⚠️  Could not open scenes directory: %s\n", full_dir_path);
+        return false;
+    }
+
+    printf("🏗️  Dynamically loading all scene templates from %s\n", full_dir_path);
+
+    struct dirent* entry;
+    int loaded_count = 0;
+    
+    while ((entry = readdir(dir)) != NULL) {
+        // Skip hidden files, current/parent directories
+        if (entry->d_name[0] == '.') continue;
+        
+        // Only process .yaml files
+        if (!strstr(entry->d_name, ".yaml")) continue;
+        
+        // Build relative path for load_scene_templates
+        char relative_path[512];
+        snprintf(relative_path, sizeof(relative_path), "%s/%s", scenes_dir, entry->d_name);
+        
+        // Load this scene template file
+        if (load_scene_templates(registry, relative_path)) {
+            loaded_count++;
+        }
+    }
+    
+    closedir(dir);
+    
+    printf("✅ Dynamically loaded %d scene template files\n", loaded_count);
+    return loaded_count > 0;
 }

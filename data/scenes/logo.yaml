@@ -1,0 +1,39 @@
+# Logo Scene
+# Engine logo display
+
+name: logo
+description: "Engine logo and initialization screen"
+
+entities:
+  # Central logo cube
+  - type: logo_cube
+    position: [0, 0, 0]
+    scale: [3, 3, 3]
+    material: gold
+    mesh: logo_cube
+    components:
+      physics:
+        mass: 0  # Static logo
+        kinematic: true
+
+  # Camera - fixed view
+  - type: camera
+    position: [0, 5, -10]
+    components:
+      camera:
+        fov: 45.0
+        behavior: fixed
+        target: [0, 0, 0]
+
+lighting:
+  ambient:
+    color: [0.20, 0.20, 0.25]
+    intensity: 0.50
+  
+  directional:
+    - direction: [0.30, -0.70, 0.20]
+      color: [0.80, 0.85, 0.90]
+      intensity: 0.70
+
+environment:
+  gravity: [0, 0, 0]

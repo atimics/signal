@@ -1,0 +1,59 @@
+# Basic command pod - minimal single-person spacecraft hull
+part_id: hull_basic_pod
+display_name: "Basic Command Pod"
+category: HULL
+
+physical:
+  mass: 800.0  # kg
+  center_of_mass: [0, 0.2, 0]
+  drag_coefficient: 0.25
+  heat_capacity: 900.0  # J/kg·K
+
+visual:
+  mesh: "pod_hull"  # Need to create this mesh
+  material: "metal_painted"
+  offset: [0, 0, 0]
+
+attachment_nodes:
+  - name: "bottom"
+    position: [0, -1.2, 0]
+    direction: [0, -1, 0]
+    type: STACK
+    size: 1.25  # 1.25m diameter
+    
+  - name: "top"
+    position: [0, 1.0, 0]
+    direction: [0, 1, 0]
+    type: STACK
+    size: 0.625  # 0.625m diameter for docking port
+    
+  # Radial attachment points
+  - name: "radial_1"
+    position: [0.8, 0, 0]
+    direction: [1, 0, 0]
+    type: RADIAL
+    size: 0.5
+    
+  - name: "radial_2"
+    position: [-0.8, 0, 0]
+    direction: [-1, 0, 0]
+    type: RADIAL
+    size: 0.5
+    
+  - name: "radial_3"
+    position: [0, 0, 0.8]
+    direction: [0, 0, 1]
+    type: RADIAL
+    size: 0.5
+    
+  - name: "radial_4"
+    position: [0, 0, -0.8]
+    direction: [0, 0, -1]
+    type: RADIAL
+    size: 0.5
+
+properties:
+  crew_capacity: 1
+  reaction_wheels: true  # Built-in attitude control
+  battery_capacity: 50.0  # kWh
+  life_support_duration: 6.0  # hours
