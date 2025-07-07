@@ -1218,31 +1218,33 @@ bool ui_microui_handle_event(const void* event) {
         g_ui_context.event_queue.count -= events_to_drop;
     }
     
-    // Only consume keyboard events if UI has active text input
-    // Otherwise let game handle them
-    bool should_consume = true;
-    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN || ev->type == SAPP_EVENTTYPE_KEY_UP) {
-        // Check if MicroUI has any active text input
-        mu_Context* ctx = &g_ui_context.mu_ctx;
-        if (ctx->focus < 0) {
-            // No focused element - don't consume keyboard events
-            should_consume = false;
-        }
-    }
-    
     // Queue the event for processing during frame
     if (g_ui_context.event_queue.count < UI_EVENT_QUEUE_SIZE) {
         g_ui_context.event_queue.events[g_ui_context.event_queue.count++] = *ev;
-        // Log only important events (not mouse moves which are very frequent)
-        if (ev->type != SAPP_EVENTTYPE_MOUSE_MOVE) {
-            static int event_log_counter = 0;
-            if (event_log_counter++ % 10 == 0) {  // Reduce spam
-                // Reduce event queue logging
-                // printf("🎨 MicroUI: Queue size: %d/%d (%.0f%%)\n", 
-                //        g_ui_context.event_queue.count, UI_EVENT_QUEUE_SIZE, queue_usage * 100);
-            }
+        
+        // Only consume events that MicroUI actually uses
+        mu_Context* ctx = &g_ui_context.mu_ctx;
+        
+        // Consume keyboard events only if UI has text input focus
+        if (ev->type == SAPP_EVENTTYPE_KEY_DOWN || ev->type == SAPP_EVENTTYPE_KEY_UP) {
+            return ctx->focus >= 0;  // Only consume if a text field is focused
         }
-        return should_consume;  // Only consume if UI needs the event
+        
+        // Consume character events only if UI has focus
+        if (ev->type == SAPP_EVENTTYPE_CHAR) {
+            return ctx->focus >= 0;
+        }
+        
+        // For mouse events, only consume if mouse is over a UI element
+        // For now, don't consume any mouse events to allow camera control
+        if (ev->type == SAPP_EVENTTYPE_MOUSE_DOWN || 
+            ev->type == SAPP_EVENTTYPE_MOUSE_UP ||
+            ev->type == SAPP_EVENTTYPE_MOUSE_MOVE ||
+            ev->type == SAPP_EVENTTYPE_MOUSE_SCROLL) {
+            return false;  // Let game handle mouse for camera etc
+        }
+        
+        return false;  // Don't consume other events
     }
     
     // Queue is full, track overflow

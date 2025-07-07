@@ -4,6 +4,7 @@
  */
 
 #include "input_service.h"
+#include "input_action_maps.h"
 #include "input_constants.h"
 #include <stdlib.h>
 #include <string.h>
@@ -251,10 +252,19 @@ static bool input_service_init(InputService* self, const InputServiceConfig* con
     
     // Load bindings if path provided
     if (config->bindings_path) {
-        input_service_load_bindings(self, config->bindings_path);
+        printf("🎮 Input Service: Loading action maps from '%s'\n", config->bindings_path);
+        if (!action_maps_load_and_apply(self, config->bindings_path)) {
+            printf("⚠️  Input Service: Failed to load action maps, using defaults\n");
+            input_service_setup_default_bindings(self);
+        }
     } else {
-        // Set up default bindings
-        input_service_setup_default_bindings(self);
+        // Try to load default action maps
+        const char* default_path = "assets/config/action_maps.json";
+        printf("🎮 Input Service: Attempting to load default action maps from '%s'\n", default_path);
+        if (!action_maps_load_and_apply(self, default_path)) {
+            printf("🎮 Input Service: No action maps found, using hardcoded defaults\n");
+            input_service_setup_default_bindings(self);
+        }
     }
     
     printf("✅ Input Service initialized\n");

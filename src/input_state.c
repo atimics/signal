@@ -19,113 +19,46 @@ static uint32_t debug_frame_counter = 0;
 
 // Update the input state from the new input service
 static void update_input_state(void) {
-    // Clear previous state - just_pressed flags are one-frame only
-    memset(&g_input_state, 0, sizeof(InputState));
-    
-    // Get input service
     InputService* service = game_input_get_service();
-    if (!service || !service->get_next_event) {
+    if (!service) {
+        memset(&g_input_state, 0, sizeof(InputState));
         return;
     }
-    
-    // Process all events for this frame
+
+    // Query continuous-state actions every frame
+    g_input_state.thrust = service->get_action_value(service, INPUT_ACTION_THRUST_FORWARD) - 
+                           service->get_action_value(service, INPUT_ACTION_THRUST_BACK);
+    g_input_state.pitch = service->get_action_value(service, INPUT_ACTION_PITCH_UP) - 
+                          service->get_action_value(service, INPUT_ACTION_PITCH_DOWN);
+    g_input_state.yaw = service->get_action_value(service, INPUT_ACTION_YAW_RIGHT) - 
+                        service->get_action_value(service, INPUT_ACTION_YAW_LEFT);
+    g_input_state.roll = service->get_action_value(service, INPUT_ACTION_ROLL_RIGHT) - 
+                         service->get_action_value(service, INPUT_ACTION_ROLL_LEFT);
+    g_input_state.vertical = service->get_action_value(service, INPUT_ACTION_MOVE_UP) - 
+                             service->get_action_value(service, INPUT_ACTION_MOVE_DOWN);
+    g_input_state.boost = service->get_action_value(service, INPUT_ACTION_BOOST);
+    g_input_state.brake_intensity = service->get_action_value(service, INPUT_ACTION_BRAKE);
+
+    // Handle one-shot (just pressed) events from the queue
+    g_input_state.menu = false;
+    g_input_state.confirm = false;
+    g_input_state.cancel = false;
+    g_input_state.camera_next = false;
+    g_input_state.camera_prev = false;
+    g_input_state.brake = (g_input_state.brake_intensity > 0.1f);
+
     InputEvent event;
     while (service->get_next_event(service, &event)) {
-        switch (event.action) {
-            // Movement controls
-            case INPUT_ACTION_MOVE_FORWARD:
-                g_input_state.thrust = event.value;
-                break;
-            case INPUT_ACTION_MOVE_UP:
-                g_input_state.vertical = event.value;
-                break;
-            case INPUT_ACTION_CAMERA_PITCH:
-                g_input_state.pitch = event.value;
-                break;
-            case INPUT_ACTION_CAMERA_YAW:
-                g_input_state.yaw = event.value;
-                break;
-            case INPUT_ACTION_MOVE_LEFT:
-                g_input_state.strafe_left = event.value;
-                g_input_state.roll = -event.value; // Banking turns
-                break;
-            case INPUT_ACTION_MOVE_RIGHT:
-                g_input_state.strafe_right = event.value;
-                g_input_state.roll = event.value; // Banking turns
-                break;
-                
-            // Flight controls (Sprint 25) - additive for multi-device support
-            case INPUT_ACTION_THRUST_FORWARD:
-                g_input_state.thrust += event.value;
-                break;
-            case INPUT_ACTION_THRUST_BACK:
-                g_input_state.thrust -= event.value;
-                break;
-            case INPUT_ACTION_PITCH_UP:
-                g_input_state.pitch += event.value;
-                break;
-            case INPUT_ACTION_PITCH_DOWN:
-                g_input_state.pitch -= event.value;
-                break;
-            case INPUT_ACTION_YAW_LEFT:
-                g_input_state.yaw -= event.value;
-                break;
-            case INPUT_ACTION_YAW_RIGHT:
-                g_input_state.yaw += event.value;
-                break;
-            case INPUT_ACTION_ROLL_LEFT:
-                g_input_state.roll -= event.value;
-                break;
-            case INPUT_ACTION_ROLL_RIGHT:
-                g_input_state.roll += event.value;
-                break;
-                
-            // Action controls - boost/brake with just_pressed detection
-            case INPUT_ACTION_BOOST:
-                g_input_state.boost = event.value;
-                if (event.just_pressed) {
-                    g_input_state.boost_pressed = true;
-                }
-                break;
-            case INPUT_ACTION_BRAKE:
-                g_input_state.brake = event.just_pressed || (event.value > 0.1f);
-                g_input_state.brake_intensity = event.value;
-                if (event.just_pressed) {
-                    g_input_state.brake_pressed = true;
-                }
-                break;
-                
-            // UI controls
-            case INPUT_ACTION_UI_MENU:
-                if (event.just_pressed) {
-                    g_input_state.menu = true;
-                }
-                break;
-            case INPUT_ACTION_UI_CONFIRM:
-                if (event.just_pressed) {
-                    g_input_state.confirm = true;
-                }
-                break;
-            case INPUT_ACTION_UI_CANCEL:
-                if (event.just_pressed) {
-                    g_input_state.cancel = true;
-                }
-                break;
-                
-            // Camera controls - using primary/secondary for now
-            case INPUT_ACTION_PRIMARY:
-                if (event.just_pressed) {
-                    g_input_state.camera_next = true;
-                }
-                break;
-            case INPUT_ACTION_SECONDARY:
-                if (event.just_pressed) {
-                    g_input_state.camera_prev = true;
-                }
-                break;
-                
-            default:
-                break;
+        if (event.just_pressed) {
+            switch (event.action) {
+                case INPUT_ACTION_UI_MENU: g_input_state.menu = true; break;
+                case INPUT_ACTION_UI_CONFIRM: g_input_state.confirm = true; break;
+                case INPUT_ACTION_UI_CANCEL: g_input_state.cancel = true; break;
+                case INPUT_ACTION_PRIMARY: g_input_state.camera_next = true; break;
+                case INPUT_ACTION_SECONDARY: g_input_state.camera_prev = true; break;
+                case INPUT_ACTION_BRAKE: g_input_state.brake = true; break;
+                default: break;
+            }
         }
     }
     

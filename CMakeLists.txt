@@ -110,6 +110,7 @@ set(CGAME_SOURCES
     src/hal/input_hal_sokol.c
     src/hal/input_hal_mock.c
     src/services/input_service.c
+    src/services/input_action_maps.c
     src/input_state.c
     src/config.c
 )

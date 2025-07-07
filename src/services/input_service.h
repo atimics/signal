@@ -10,54 +10,7 @@
 #include <stdbool.h>
 
 // Input actions (game-specific)
-typedef enum {
-    INPUT_ACTION_NONE = 0,
-    
-    // UI actions
-    INPUT_ACTION_UI_UP,
-    INPUT_ACTION_UI_DOWN,
-    INPUT_ACTION_UI_LEFT,
-    INPUT_ACTION_UI_RIGHT,
-    INPUT_ACTION_UI_CONFIRM,
-    INPUT_ACTION_UI_CANCEL,
-    INPUT_ACTION_UI_MENU,
-    
-    // Movement actions
-    INPUT_ACTION_MOVE_FORWARD,
-    INPUT_ACTION_MOVE_BACKWARD,
-    INPUT_ACTION_MOVE_LEFT,
-    INPUT_ACTION_MOVE_RIGHT,
-    INPUT_ACTION_MOVE_UP,
-    INPUT_ACTION_MOVE_DOWN,
-    
-    // Control actions
-    INPUT_ACTION_BOOST,
-    INPUT_ACTION_BRAKE,
-    INPUT_ACTION_PRIMARY,
-    INPUT_ACTION_SECONDARY,
-    
-    // Flight control actions (Sprint 25)
-    INPUT_ACTION_PITCH_UP,
-    INPUT_ACTION_PITCH_DOWN,
-    INPUT_ACTION_YAW_LEFT,
-    INPUT_ACTION_YAW_RIGHT,
-    INPUT_ACTION_ROLL_LEFT,
-    INPUT_ACTION_ROLL_RIGHT,
-    INPUT_ACTION_THRUST_FORWARD,
-    INPUT_ACTION_THRUST_BACK,
-    
-    // Camera actions
-    INPUT_ACTION_CAMERA_PITCH,
-    INPUT_ACTION_CAMERA_YAW,
-    INPUT_ACTION_CAMERA_ZOOM,
-    
-    // System actions
-    INPUT_ACTION_DEBUG_TOGGLE,
-    INPUT_ACTION_SCREENSHOT,
-    INPUT_ACTION_QUIT,
-    
-    INPUT_ACTION_COUNT
-} InputActionID;
+#include "input_action_maps.h"
 
 // Input contexts
 typedef enum {

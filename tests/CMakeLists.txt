@@ -107,6 +107,19 @@ target_compile_options(test_ui_rendering_pipeline PRIVATE ${TEST_COMPILE_FLAGS})
 target_link_libraries(test_ui_rendering_pipeline PRIVATE unity test_support m)
 add_test(NAME test_ui_rendering_pipeline COMMAND test_ui_rendering_pipeline)
 
+# Input service tests
+add_executable(test_input_action_maps 
+    services/test_input_action_maps.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/services/input_action_maps.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/services/input_service.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/hal/input_hal_mock.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+)
+target_include_directories(test_input_action_maps PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_input_action_maps PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_input_action_maps PRIVATE unity test_support m)
+add_test(NAME test_input_action_maps COMMAND test_input_action_maps)
+
 # All tests target
 add_custom_target(build_all_tests
     DEPENDS
@@ -116,4 +129,5 @@ add_custom_target(build_all_tests
         test_rendering
         test_render_layers
         test_ui_rendering_pipeline
+        test_input_action_maps
 )
