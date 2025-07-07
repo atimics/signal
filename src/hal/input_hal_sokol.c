@@ -140,78 +140,153 @@ static float normalize_axis_with_deadzone(int16_t raw_value, float deadzone) {
 
 // Helper: Parse Xbox controller input report
 static void parse_xbox_report(GamepadState* gamepad, const uint8_t* data, size_t len) {
-    if (len < 17) return;
+    if (len < 8) return;  // Minimum viable report size
     
-    // Xbox controller report format varies by controller type:
-    // All Xbox controllers use 17-byte HID reports
-    // Byte 0: Report ID (0x01)
-    // Bytes 1-2: Buttons (little endian)
-    // Bytes 3-4: Left stick X (little endian, signed)
-    // Bytes 5-6: Left stick Y (little endian, signed)
-    // Bytes 7-8: Right stick X (little endian, signed) 
-    // Bytes 9-10: Right stick Y (little endian, signed)
-    // Bytes 11-12: Triggers (format varies by controller)
+    // **CRITICAL FIX**: Xbox controllers DO NOT use standardized HID reports!
+    // They use vendor-specific protocols that vary by connection type and controller model.
+    // The previous assumptions about byte layouts were completely wrong.
     
-    // Parse buttons (same format for all Xbox controllers)
-    gamepad->buttons = data[1] | (data[2] << 8);
+    // Detect report type by first checking known patterns
+    bool is_xinput_format = false;
+    bool is_hid_mode = false;
     
-    // Parse analog sticks (same format for all Xbox controllers)
-    int16_t left_x = (int16_t)(data[3] | (data[4] << 8));
-    int16_t left_y = (int16_t)(data[5] | (data[6] << 8));
-    int16_t right_x = (int16_t)(data[7] | (data[8] << 8));
-    int16_t right_y = (int16_t)(data[9] | (data[10] << 8));
-    
-    // Parse triggers - format depends on controller type
-    uint16_t lt_raw, rt_raw;
-    
-    switch (gamepad->type) {
-        case XBOX_CONTROLLER_360:
-            // Xbox 360: Triggers are separate bytes
-            lt_raw = data[11];
-            rt_raw = data[12];
-            // Scale 8-bit to 16-bit range
-            lt_raw *= 257;  // 257 = 65535/255 (more accurate than *255)
-            rt_raw *= 257;
-            break;
-            
-        case XBOX_CONTROLLER_ONE:
-        case XBOX_CONTROLLER_SERIES:
-            // Xbox One/Series: Triggers can be 16-bit values
-            // Based on user feedback, try individual bytes first
-            lt_raw = data[11];
-            rt_raw = data[12];
-            // Scale 8-bit to 16-bit range  
-            lt_raw *= 257;
-            rt_raw *= 257;
-            break;
-            
-        default:
-            // Fallback: treat as separate bytes
-            lt_raw = data[11] * 257;
-            rt_raw = data[12] * 257;
-            break;
+    // Xbox controllers in XInput mode (most common via USB)
+    // Report structure varies significantly between 360, One, and Series controllers
+    if (len >= 14) {
+        // Try to detect XInput vs HID mode by looking at data patterns
+        // XInput typically has a specific header structure
+        if (data[0] == 0x00 && len == 20) {
+            // Likely Xbox 360 XInput format
+            is_xinput_format = true;
+        } else if (data[0] == 0x20 && len >= 18) {
+            // Xbox One GIP (Gaming Input Protocol) format
+            is_xinput_format = true;
+        } else {
+            // Fallback to HID mode parsing
+            is_hid_mode = true;
+        }
     }
     
-    // Convert to normalized floats with dead zones
-    gamepad->axes[0] = normalize_axis_with_deadzone(right_x, gamepad->stick_deadzone);   // Right X
-    gamepad->axes[1] = -normalize_axis_with_deadzone(right_y, gamepad->stick_deadzone);  // Right Y (inverted)
-    gamepad->axes[2] = normalize_axis_with_deadzone(left_x, gamepad->stick_deadzone);    // Left X
-    gamepad->axes[3] = -normalize_axis_with_deadzone(left_y, gamepad->stick_deadzone);   // Left Y (inverted)
-    gamepad->axes[4] = apply_deadzone((float)lt_raw / 65535.0f, gamepad->trigger_deadzone);  // LT
-    gamepad->axes[5] = apply_deadzone((float)rt_raw / 65535.0f, gamepad->trigger_deadzone);  // RT
+    if (is_xinput_format && data[0] == 0x20 && len >= 18) {
+        // Xbox One/Series GIP format (the CORRECT format from Linux kernel)
+        // This is the authoritative reference from Linux drivers
+        
+        // Buttons are in bytes 4-5 with specific bit layouts
+        uint16_t button_state = 0;
+        
+        // Byte 4 bit mapping: sync(0), dummy(1), start(2), back(3), A(4), B(5), X(6), Y(7)
+        if (data[4] & 0x04) button_state |= (1 << 7);  // Start/Menu
+        if (data[4] & 0x08) button_state |= (1 << 6);  // Back/View  
+        if (data[4] & 0x10) button_state |= (1 << 0);  // A
+        if (data[4] & 0x20) button_state |= (1 << 1);  // B
+        if (data[4] & 0x40) button_state |= (1 << 2);  // X
+        if (data[4] & 0x80) button_state |= (1 << 3);  // Y
+        
+        // Byte 5 bit mapping: dpad_up(0), dpad_down(1), dpad_left(2), dpad_right(3), LB(4), RB(5), LS(6), RS(7)
+        if (data[5] & 0x10) button_state |= (1 << 4);   // LB (left bumper)
+        if (data[5] & 0x20) button_state |= (1 << 5);   // RB (right bumper)
+        if (data[5] & 0x40) button_state |= (1 << 8);   // Left stick click
+        if (data[5] & 0x80) button_state |= (1 << 9);   // Right stick click
+        
+        gamepad->buttons = button_state;
+        
+        // Triggers: Xbox One uses 16-bit values (0-1023 range) at bytes 6-9
+        uint16_t left_trigger = data[6] | (data[7] << 8);
+        uint16_t right_trigger = data[8] | (data[9] << 8);
+        
+        // Analog sticks: 16-bit signed values at bytes 10-17
+        int16_t left_x = (int16_t)(data[10] | (data[11] << 8));
+        int16_t left_y = (int16_t)(data[12] | (data[13] << 8));
+        int16_t right_x = (int16_t)(data[14] | (data[15] << 8));
+        int16_t right_y = (int16_t)(data[16] | (data[17] << 8));
+        
+        // Normalize all values
+        gamepad->axes[0] = normalize_axis_with_deadzone(right_x, gamepad->stick_deadzone);    
+        gamepad->axes[1] = -normalize_axis_with_deadzone(right_y, gamepad->stick_deadzone);   
+        gamepad->axes[2] = normalize_axis_with_deadzone(left_x, gamepad->stick_deadzone);     
+        gamepad->axes[3] = -normalize_axis_with_deadzone(left_y, gamepad->stick_deadzone);    
+        gamepad->axes[4] = apply_deadzone(left_trigger / 1023.0f, gamepad->trigger_deadzone);   // LT
+        gamepad->axes[5] = apply_deadzone(right_trigger / 1023.0f, gamepad->trigger_deadzone);  // RT
+        
+    } else if (is_xinput_format && data[0] == 0x00 && len == 20) {
+        // Xbox 360 XInput format (from Linux kernel driver)
+        
+        // Skip validation byte at data[1], buttons at data[2-3]
+        gamepad->buttons = data[2] | (data[3] << 8);
+        
+        // Triggers are single bytes at data[4] and data[5]
+        uint8_t left_trigger = data[4];
+        uint8_t right_trigger = data[5];
+        
+        // Analog sticks are at data[6-13] 
+        int16_t left_x = (int16_t)(data[6] | (data[7] << 8));
+        int16_t left_y = (int16_t)(data[8] | (data[9] << 8));
+        int16_t right_x = (int16_t)(data[10] | (data[11] << 8));
+        int16_t right_y = (int16_t)(data[12] | (data[13] << 8));
+        
+        // Normalize values
+        gamepad->axes[0] = normalize_axis_with_deadzone(right_x, gamepad->stick_deadzone);   
+        gamepad->axes[1] = -normalize_axis_with_deadzone(right_y, gamepad->stick_deadzone);  
+        gamepad->axes[2] = normalize_axis_with_deadzone(left_x, gamepad->stick_deadzone);    
+        gamepad->axes[3] = -normalize_axis_with_deadzone(left_y, gamepad->stick_deadzone);   
+        gamepad->axes[4] = apply_deadzone(left_trigger / 255.0f, gamepad->trigger_deadzone);   // LT
+        gamepad->axes[5] = apply_deadzone(right_trigger / 255.0f, gamepad->trigger_deadzone);  // RT
+        
+    } else {
+        // Fallback: try to parse as generic HID gamepad
+        // This handles controllers that might be in HID mode
+        printf("⚠️  Unknown Xbox controller report format (len=%zu, data[0]=0x%02X)\n", len, data[0]);
+        
+        // Attempt basic parsing for debugging
+        if (len >= 14) {
+            // Assume basic layout
+            gamepad->buttons = data[1] | (data[2] << 8);
+            
+            int16_t left_x = (int16_t)(data[3] | (data[4] << 8));
+            int16_t left_y = (int16_t)(data[5] | (data[6] << 8));
+            int16_t right_x = (int16_t)(data[7] | (data[8] << 8));
+            int16_t right_y = (int16_t)(data[9] | (data[10] << 8));
+            
+            gamepad->axes[0] = normalize_axis_with_deadzone(right_x, gamepad->stick_deadzone);
+            gamepad->axes[1] = -normalize_axis_with_deadzone(right_y, gamepad->stick_deadzone);
+            gamepad->axes[2] = normalize_axis_with_deadzone(left_x, gamepad->stick_deadzone);
+            gamepad->axes[3] = -normalize_axis_with_deadzone(left_y, gamepad->stick_deadzone);
+            gamepad->axes[4] = 0.0f;  // Unable to parse triggers reliably
+            gamepad->axes[5] = 0.0f;
+        }
+    }
     
-    // Debug output - only log when values change significantly
-    static float last_rt = -1.0f;
-    static int debug_count = 0;
+    // Enhanced debug output showing actual data
+    static uint32_t debug_counter = 0;
+    static float last_axes[6] = {0};
+    static uint16_t last_buttons = 0;
+    bool significant_change = false;
     
-    if (fabsf(gamepad->axes[5] - last_rt) > 0.05f || debug_count < 3) {
-        printf("🎮 Controller %s: LT=%.2f RT=%.2f (raw: LT=%d RT=%d, bytes: [11]=%02X [12]=%02X)\n",
-               gamepad->type == XBOX_CONTROLLER_360 ? "360" :
-               gamepad->type == XBOX_CONTROLLER_ONE ? "One" :
-               gamepad->type == XBOX_CONTROLLER_SERIES ? "Series" : "Unknown",
-               gamepad->axes[4], gamepad->axes[5], lt_raw, rt_raw, data[11], data[12]);
-        last_rt = gamepad->axes[5];
-        debug_count++;
+    for (int i = 0; i < 6; i++) {
+        if (fabsf(gamepad->axes[i] - last_axes[i]) > 0.05f) {
+            significant_change = true;
+            break;
+        }
+    }
+    
+    if (significant_change || gamepad->buttons != last_buttons || (++debug_counter % 300 == 0)) {
+        printf("🎮 Xbox Controller: LS[%.2f,%.2f] RS[%.2f,%.2f] LT:%.2f RT:%.2f Btn:%04X\n",
+               gamepad->axes[2], gamepad->axes[3],  // Left stick
+               gamepad->axes[0], gamepad->axes[1],  // Right stick
+               gamepad->axes[4], gamepad->axes[5],  // Triggers
+               gamepad->buttons);
+        
+        // Also show raw bytes for first few packets
+        if (debug_counter < 5) {
+            printf("    Raw data (%zu bytes): ", len);
+            for (size_t i = 0; i < len && i < 20; i++) {
+                printf("%02X ", data[i]);
+            }
+            printf("\n");
+        }
+        
+        memcpy(last_axes, gamepad->axes, sizeof(last_axes));
+        last_buttons = gamepad->buttons;
     }
 }
 
@@ -236,32 +311,49 @@ static void init_gamepads(SokolInputHAL* hal) {
         printf("🔍 HID Device: VID=0x%04X PID=0x%04X Path=%s\n", 
                cur->vendor_id, cur->product_id, cur->path ? cur->path : "NULL");
         
-        // Check for various gamepad vendor IDs
-        bool is_gamepad = false;
-        const char* controller_type = "Unknown";
+        // Check for Xbox controllers specifically
+        bool is_xbox_controller = false;
+        XboxControllerType xbox_type = XBOX_CONTROLLER_UNKNOWN;
+        const char* controller_name = "Unknown";
         
-        if (cur->vendor_id == 0x045E) {  // Microsoft
-            is_gamepad = true;
-            controller_type = "Xbox";
-        } else if (cur->vendor_id == 0x054C) {  // Sony
-            is_gamepad = true;
-            controller_type = "PlayStation";
-        } else if (cur->vendor_id == 0x057E) {  // Nintendo
-            is_gamepad = true;
-            controller_type = "Nintendo";
+        if (cur->vendor_id == XBOX_VENDOR_ID) {
+            xbox_type = identify_xbox_controller(cur->product_id);
+            if (xbox_type != XBOX_CONTROLLER_UNKNOWN) {
+                is_xbox_controller = true;
+                switch (xbox_type) {
+                    case XBOX_CONTROLLER_360:
+                        controller_name = "Xbox 360";
+                        break;
+                    case XBOX_CONTROLLER_ONE:
+                        controller_name = "Xbox One";
+                        break;
+                    case XBOX_CONTROLLER_SERIES:
+                        controller_name = "Xbox Series X|S";
+                        break;
+                    default:
+                        controller_name = "Xbox (Unknown)";
+                        break;
+                }
+            }
         }
         
-        if (is_gamepad && gamepad_count < MAX_GAMEPADS) {
-            printf("🎮 Attempting to open %s controller...\n", controller_type);
+        if (is_xbox_controller && gamepad_count < MAX_GAMEPADS) {
+            printf("🎮 Attempting to open %s controller (PID: 0x%04X)...\n", controller_name, cur->product_id);
             hid_device* dev = hid_open_path(cur->path);
             if (dev) {
                 hid_set_nonblocking(dev, 1);  // Non-blocking reads
                 hal->gamepads[gamepad_count].device = dev;
                 hal->gamepads[gamepad_count].connected = true;
-                printf("✅ %s controller connected as gamepad %d\n", controller_type, gamepad_count);
+                hal->gamepads[gamepad_count].type = xbox_type;
+                hal->gamepads[gamepad_count].stick_deadzone = DEFAULT_STICK_DEADZONE;
+                hal->gamepads[gamepad_count].trigger_deadzone = DEFAULT_TRIGGER_DEADZONE;
+                printf("✅ %s controller connected as gamepad %d (deadzone: stick=%.2f, trigger=%.2f)\n", 
+                       controller_name, gamepad_count, 
+                       hal->gamepads[gamepad_count].stick_deadzone,
+                       hal->gamepads[gamepad_count].trigger_deadzone);
                 gamepad_count++;
             } else {
-                printf("❌ Failed to open %s controller\n", controller_type);
+                printf("❌ Failed to open %s controller\n", controller_name);
             }
         }
         
@@ -277,9 +369,6 @@ static void init_gamepads(SokolInputHAL* hal) {
 static void update_gamepads(SokolInputHAL* hal) {
     if (!hal->hidapi_initialized) return;
     
-    static int poll_count = 0;
-    poll_count++;
-    
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         GamepadState* gamepad = &hal->gamepads[i];
         if (!gamepad->connected || !gamepad->device) continue;
@@ -287,53 +376,7 @@ static void update_gamepads(SokolInputHAL* hal) {
         uint8_t report[64];
         int bytes_read = hid_read(gamepad->device, report, sizeof(report));
         
-        // Debug: Show read attempts and results more frequently when debugging RT
-        if (poll_count % 60 == 0) {  // Every 1 second at 60fps
-            printf("🎮 Gamepad %d poll: bytes_read=%d\n", i, bytes_read);
-        }
-        
         if (bytes_read > 0) {
-            // Always show raw report data to debug RT trigger
-            static uint8_t last_report[64] = {0};
-            static bool first_report = true;
-            
-            // Compare with last report to see what changed
-            bool changed = first_report || memcmp(report, last_report, bytes_read) != 0;
-            
-            if (changed) {
-                printf("🎮 Raw report (%d bytes): ", bytes_read);
-                for (int j = 0; j < bytes_read && j < 17; j++) {
-                    printf("%02X ", report[j]);
-                }
-                printf("\n");
-                
-                if (!first_report) {
-                    printf("🎮 Changed bytes: ");
-                    bool any_changed = false;
-                    for (int j = 0; j < bytes_read && j < 17; j++) {
-                        if (report[j] != last_report[j]) {
-                            printf("[%d]:%02X→%02X ", j, last_report[j], report[j]);
-                            any_changed = true;
-                        }
-                    }
-                    if (!any_changed) {
-                        printf("NO CHANGES DETECTED!");
-                    }
-                    printf("\n");
-                }
-                
-                memcpy(last_report, report, bytes_read);
-                first_report = false;
-            } else if (bytes_read > 0) {
-                // Even if no changes, check if RT might be in button data
-                static int no_change_debug = 0;
-                if (no_change_debug < 2) {
-                    printf("🎮 No changes detected, but got %d bytes. Button data: [1]=%02X [2]=%02X\n", 
-                           bytes_read, report[1], report[2]);
-                    no_change_debug++;
-                }
-            }
-            
             // Parse the report
             float prev_axes[6];
             memcpy(prev_axes, gamepad->axes, sizeof(prev_axes));
@@ -350,20 +393,13 @@ static void update_gamepads(SokolInputHAL* hal) {
                     memcpy(event.data.gamepad.axes, gamepad->axes, sizeof(gamepad->axes));
                     event.data.gamepad.buttons = gamepad->buttons;
                     
-                    // Debug: Show first few gamepad events
-                    static int debug_count = 0;
-                    if (debug_count < 10) {
-                        printf("🎮 Gamepad %d Axis %d: %.2f → %.2f\n", 
-                               i, axis, prev_axes[axis], gamepad->axes[axis]);
-                        debug_count++;
-                    }
-                    
                     queue_event(hal, &event);
                 }
             }
         } else if (bytes_read < 0) {
-            // Error reading
-            if (poll_count % 300 == 0) {
+            // Error reading - only log occasionally to avoid spam
+            static int error_count = 0;
+            if (++error_count % 300 == 1) {  // Log every 5 seconds at 60fps
                 printf("⚠️  Error reading from gamepad %d: %d\n", i, bytes_read);
             }
         }

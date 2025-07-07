@@ -120,10 +120,9 @@ static float get_binding_value(const HardwareInputEvent* hw_event, const InputBi
             if (binding->binding.gamepad.is_axis) {
                 // Handle analog axis
                 int axis_index = binding->binding.gamepad.axis;
-                if (axis_index >= 0 && axis_index < 4) {  // Xbox controller has 4 axes
+                if (axis_index >= 0 && axis_index < 6) {  // Xbox controller has 6 axes (including triggers)
                     value = hw_event->data.gamepad.axes[axis_index];
-                    // Apply dead zone
-                    if (fabsf(value) < 0.1f) value = 0.0f;
+                    // Dead zones are now handled in the HAL layer
                 }
             } else {
                 // Handle digital button
@@ -585,32 +584,99 @@ void input_service_setup_default_bindings(InputService* service) {
     binding.binding.mouse.button = 0;  // Left click for confirm
     service->bind_action(service, INPUT_ACTION_UI_CONFIRM, INPUT_CONTEXT_MENU, &binding);
     
-    // Flight control bindings for gameplay context (Sprint 25)
-    // Declarative bindings table for easier maintenance
+    // Modern Flight Control Bindings - Intuitive WASD Layout
+    // Follows standard FPS/flight sim conventions for maximum intuitiveness
     static const struct {
         InputActionID action;
         uint32_t keycode;
         const char* description;
-    } flight_bindings[] = {
-        { INPUT_ACTION_THRUST_FORWARD, KEY_W,    "W - Forward Thrust" },
-        { INPUT_ACTION_THRUST_BACK,    KEY_S,    "S - Backward Thrust" },
-        { INPUT_ACTION_YAW_RIGHT,      KEY_A,    "A - Banking Turn Left" },   // A/D now do banking turns
-        { INPUT_ACTION_YAW_LEFT,       KEY_D,    "D - Banking Turn Right" },
-        { INPUT_ACTION_VERTICAL_DOWN,  KEY_Q,    "Q - Descend" },             // Q/E now control vertical
-        { INPUT_ACTION_VERTICAL_UP,    KEY_E,    "E - Ascend" },
-        { INPUT_ACTION_PITCH_UP,       KEY_SPACE,"Space - Pitch Up" },        // Space for pitch up
-        { INPUT_ACTION_PITCH_DOWN,     KEY_LEFT_CONTROL, "LCtrl - Pitch Down" },
-        { INPUT_ACTION_ROLL_LEFT,      KEY_LEFT, "← - Roll Left" },           // Arrow keys for pure roll
-        { INPUT_ACTION_ROLL_RIGHT,     KEY_RIGHT,"→ - Roll Right" },
+    } modern_flight_bindings[] = {
+        // === PRIMARY MOVEMENT - WASD PATTERN ===
+        { INPUT_ACTION_THRUST_FORWARD,  KEY_W,              "W - Thrust Forward" },
+        { INPUT_ACTION_THRUST_BACK,     KEY_S,              "S - Thrust Backward" },
+        { INPUT_ACTION_MOVE_LEFT,       KEY_A,              "A - Strafe Left" },
+        { INPUT_ACTION_MOVE_RIGHT,      KEY_D,              "D - Strafe Right" },
+        
+        // === PITCH CONTROLS - HANDLED SEPARATELY WITH 2x SPEED ===
+        // (Pitch controls are configured below with enhanced responsiveness)
+        
+        // === BOOST AND BRAKE - EASY TO REACH ===
+        { INPUT_ACTION_BOOST,           KEY_LEFT_SHIFT,     "Left Shift - Boost" },
+        { INPUT_ACTION_BRAKE,           KEY_TAB,            "Tab - Brake/Dampeners" },
+        
+        // === VERTICAL THRUST - Q/E (UP/DOWN MOVEMENT) ===
+        { INPUT_ACTION_VERTICAL_UP,     KEY_E,              "E - Thrust Up (ascend)" },
+        { INPUT_ACTION_VERTICAL_DOWN,   KEY_Q,              "Q - Thrust Down (descend)" },
+        
+        // === ROLL CONTROLS - R/F (ACCESSIBLE KEYS) ===
+        { INPUT_ACTION_ROLL_LEFT,       SAPP_KEYCODE_R,     "R - Roll Left" },
+        { INPUT_ACTION_ROLL_RIGHT,      SAPP_KEYCODE_F,     "F - Roll Right" },
+        
+        // === ARROW KEYS - ALTERNATIVE ROTATION (NON-MOUSE USERS) ===
+        { INPUT_ACTION_PITCH_DOWN,      KEY_UP,             "↑ - Pitch Down (nose down)" },
+        { INPUT_ACTION_PITCH_UP,        KEY_DOWN,           "↓ - Pitch Up (nose up)" },
+        { INPUT_ACTION_YAW_LEFT,        KEY_LEFT,           "← - Yaw Left" },
+        { INPUT_ACTION_YAW_RIGHT,       KEY_RIGHT,          "→ - Yaw Right" },
     };
     
-    // Apply all flight control bindings
-    printf("🎮 Setting up flight control bindings for GAMEPLAY context:\n");
-    for (size_t i = 0; i < ARRAY_SIZE(flight_bindings); ++i) {
-        KEY_BIND(service, flight_bindings[i].action, INPUT_CONTEXT_GAMEPLAY, flight_bindings[i].keycode);
-        printf("   Bound action %d to key %d: %s\n", 
-               flight_bindings[i].action, flight_bindings[i].keycode, flight_bindings[i].description);
+    // === SYSTEM KEYS ===
+    static const struct {
+        InputActionID action;
+        uint32_t keycode;
+        const char* description;
+    } system_bindings[] = {
+        { INPUT_ACTION_UI_MENU,         KEY_ESCAPE,         "Escape - Open Menu" },
+        { INPUT_ACTION_DEBUG_TOGGLE,    SAPP_KEYCODE_F1,    "F1 - Toggle Debug Info" },
+        { INPUT_ACTION_SCREENSHOT,      SAPP_KEYCODE_F12,   "F12 - Screenshot" },
+    };
+    
+    // Apply all modern flight control bindings
+    printf("🎮 Setting up MODERN flight control bindings for GAMEPLAY context:\n");
+    printf("   === WASD Movement Layout (FPS-style) ===\n");
+    for (size_t i = 0; i < ARRAY_SIZE(modern_flight_bindings); ++i) {
+        KEY_BIND(service, modern_flight_bindings[i].action, INPUT_CONTEXT_GAMEPLAY, modern_flight_bindings[i].keycode);
+        printf("   %s\n", modern_flight_bindings[i].description);
     }
+    
+    printf("   === System Controls ===\n");
+    for (size_t i = 0; i < ARRAY_SIZE(system_bindings); ++i) {
+        KEY_BIND(service, system_bindings[i].action, INPUT_CONTEXT_GAMEPLAY, system_bindings[i].keycode);
+        printf("   %s\n", system_bindings[i].description);
+    }
+    
+    // === ENHANCED PITCH CONTROLS (2x speed for responsiveness) ===
+    printf("   === Enhanced Pitch Controls (2x speed) ===\n");
+    
+    InputBinding pitch_binding = {0};
+    pitch_binding.device = INPUT_DEVICE_KEYBOARD;
+    pitch_binding.scale = 2.0f;  // 2x faster for more responsive pitch control
+    
+    // Space - Pitch Down (nose down) - 2x speed
+    pitch_binding.binding.keyboard.key = KEY_SPACE;
+    service->bind_action(service, INPUT_ACTION_PITCH_DOWN, INPUT_CONTEXT_GAMEPLAY, &pitch_binding);
+    printf("   Space - Pitch Down (nose down) - 2x speed\n");
+    
+    // Left Ctrl - Pitch Up (nose up) - 2x speed  
+    pitch_binding.binding.keyboard.key = KEY_LEFT_CONTROL;
+    service->bind_action(service, INPUT_ACTION_PITCH_UP, INPUT_CONTEXT_GAMEPLAY, &pitch_binding);
+    printf("   Left Ctrl - Pitch Up (nose up) - 2x speed\n");
+    
+    // === MOUSE BINDINGS ===
+    printf("   === Mouse Controls ===\n");
+    
+    InputBinding mouse_binding = {0};
+    mouse_binding.device = INPUT_DEVICE_MOUSE;
+    mouse_binding.scale = 1.0f;
+    
+    // Left click - Primary action
+    mouse_binding.binding.mouse.button = 0;
+    service->bind_action(service, INPUT_ACTION_PRIMARY, INPUT_CONTEXT_GAMEPLAY, &mouse_binding);
+    printf("   Left Mouse Button - Primary Action\n");
+    
+    // Right click - Secondary action  
+    mouse_binding.binding.mouse.button = 1;
+    service->bind_action(service, INPUT_ACTION_SECONDARY, INPUT_CONTEXT_GAMEPLAY, &mouse_binding);
+    printf("   Right Mouse Button - Secondary Action\n");
     
     // Gamepad bindings are set up manually below with proper axis support
     
