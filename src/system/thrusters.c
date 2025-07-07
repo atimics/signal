@@ -193,7 +193,7 @@ void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType shi
                 base_thrust * 1.5f,  // Y = Up/down: excellent maneuverability
                 base_thrust * 1.2f   // Z = Forward/back: slightly above average
             };
-            thrusters->max_angular_torque = (Vector3){ 20.0f, 25.0f, 15.0f };  // Much higher for responsiveness
+            thrusters->max_angular_torque = (Vector3){ 8.0f, 10.0f, 6.0f };  // Reduced for smoother control
             thrusters->thrust_response_time = 0.05f;  // Very responsive
             thrusters->power_efficiency = 0.9f;       // Good efficiency
             thrusters->heat_generation = 0.7f;        // Moderate heat
@@ -261,7 +261,7 @@ void thruster_apply_ship_characteristics(struct ThrusterSystem* thrusters, struc
         case SHIP_TYPE_FIGHTER:
             // Fighters have lower drag for agility
             physics->drag_linear = fmaxf(physics->drag_linear * 0.98f, 0.95f);
-            physics->drag_angular = fmaxf(physics->drag_angular * 0.95f, 0.85f);
+            physics->drag_angular = fmaxf(physics->drag_angular * 0.98f, 0.95f);  // Increased damping for stability
             break;
             
         case SHIP_TYPE_INTERCEPTOR:

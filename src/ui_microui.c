@@ -923,13 +923,15 @@ static void push_vertex(float x, float y, float u, float v, mu_Color color) {
         if (new_capacity > render_state.requested_capacity) {
             render_state.requested_capacity = new_capacity;
             render_state.need_resize = true;
-            printf("⚠️ UI RESIZE REQUEST: vertex_count=%d >= capacity=%d, requesting new_capacity=%d\n",
-                   render_state.vertex_count, render_state.vertex_capacity, new_capacity);
+            // Silently request resize
+            // printf("⚠️ UI RESIZE REQUEST: vertex_count=%d >= capacity=%d, requesting new_capacity=%d\n",
+            //        render_state.vertex_count, render_state.vertex_capacity, new_capacity);
         }
         // CRITICAL: Abort current frame to avoid overflow
         static int abort_logged = 0;
         if (abort_logged++ < 5) {
-            printf("❌ UI UPLOAD ABORTED: Stopping vertex upload to prevent buffer overflow\n");
+            // Silently abort to prevent spam
+            // printf("❌ UI UPLOAD ABORTED: Stopping vertex upload to prevent buffer overflow\n");
         }
         return;
     }
@@ -1223,8 +1225,9 @@ bool ui_microui_handle_event(const void* event) {
         if (ev->type != SAPP_EVENTTYPE_MOUSE_MOVE) {
             static int event_log_counter = 0;
             if (event_log_counter++ % 10 == 0) {  // Reduce spam
-                printf("🎨 MicroUI: Queue size: %d/%d (%.0f%%)\n", 
-                       g_ui_context.event_queue.count, UI_EVENT_QUEUE_SIZE, queue_usage * 100);
+                // Reduce event queue logging
+                // printf("🎨 MicroUI: Queue size: %d/%d (%.0f%%)\n", 
+                //        g_ui_context.event_queue.count, UI_EVENT_QUEUE_SIZE, queue_usage * 100);
             }
         }
         return true;  // Event queued successfully
@@ -1259,8 +1262,9 @@ static void ui_microui_process_event(const sapp_event* ev) {
             // NOTE: Pointer capture disabled - causes Metal context invalidation
             // sapp_lock_mouse(true);
             
-            printf("🎨 MicroUI: Mouse down at (%.0f,%.0f) button=%d mu_button=%d\n", 
-                   ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
+            // Mouse event logging disabled
+            // printf("🎨 MicroUI: Mouse down at (%.0f,%.0f) button=%d mu_button=%d\n", 
+            //        ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
             break;
             
         case SAPP_EVENTTYPE_MOUSE_UP:
@@ -1272,8 +1276,9 @@ static void ui_microui_process_event(const sapp_event* ev) {
             //     sapp_lock_mouse(false);
             // }
             
-            printf("🎨 MicroUI: Mouse up at (%.0f,%.0f) button=%d mu_button=%d\n", 
-                   ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
+            // Mouse event logging disabled
+            // printf("🎨 MicroUI: Mouse up at (%.0f,%.0f) button=%d mu_button=%d\n", 
+            //        ev->mouse_x, ev->mouse_y, ev->mouse_button, 1 << ev->mouse_button);
             break;
             
         case SAPP_EVENTTYPE_MOUSE_SCROLL:
