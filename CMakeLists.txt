@@ -14,14 +14,14 @@ project(SIGNAL
 # ============================================================================
 # OPTIONS
 # ============================================================================
-option(CGAME_BUILD_TESTS "Build test suite" ON)
-option(CGAME_BUILD_DOCS "Build documentation" OFF)
-option(CGAME_BUILD_ASSETS "Build game assets" ON)
-option(CGAME_ENABLE_ASAN "Enable Address Sanitizer" OFF)
-option(CGAME_ENABLE_TSAN "Enable Thread Sanitizer" OFF)
-option(CGAME_ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
-option(CGAME_PARALLEL_TESTS "Run tests in parallel" ON)
-option(CGAME_BUILD_WASM "Build WebAssembly version" OFF)
+option(SIGNAL_BUILD_TESTS "Build test suite" ON)
+option(SIGNAL_BUILD_DOCS "Build documentation" OFF)
+option(SIGNAL_BUILD_ASSETS "Build game assets" ON)
+option(SIGNAL_ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(SIGNAL_ENABLE_TSAN "Enable Thread Sanitizer" OFF)
+option(SIGNAL_ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
+option(SIGNAL_PARALLEL_TESTS "Run tests in parallel" ON)
+option(SIGNAL_BUILD_WASM "Build WebAssembly version" OFF)
 
 # ============================================================================
 # CMAKE CONFIGURATION
@@ -49,7 +49,7 @@ include(cmake/Dependencies.cmake)
 # ============================================================================
 
 # Main source files (from sources.mk)
-set(CGAME_SOURCES
+set(SIGNAL_SOURCES
     src/core.c
     src/systems.c
     src/system/physics.c
@@ -119,7 +119,7 @@ set(CGAME_SOURCES
 
 # Platform-specific sources
 if(APPLE)
-    list(APPEND CGAME_SOURCES src/hidapi_mac.c)
+    list(APPEND SIGNAL_SOURCES src/hidapi_mac.c)
     
     # Sokol requires Objective-C on macOS
     set_source_files_properties(
@@ -133,12 +133,12 @@ if(APPLE)
 endif()
 
 # Main executable source
-set(CGAME_MAIN_SOURCE src/main.c)
+set(SIGNAL_MAIN_SOURCE src/main.c)
 
 # ============================================================================
 # ENGINE LIBRARY
 # ============================================================================
-add_library(signal_engine STATIC ${CGAME_SOURCES})
+add_library(signal_engine STATIC ${SIGNAL_SOURCES})
 
 # Include compiler flags after target is created
 include(cmake/CompilerFlags.cmake)
@@ -209,7 +209,7 @@ endif()
 # ============================================================================
 # EXECUTABLE
 # ============================================================================
-add_executable(signal ${CGAME_MAIN_SOURCE})
+add_executable(signal ${SIGNAL_MAIN_SOURCE})
 target_link_libraries(signal PRIVATE signal_engine)
 
 # Set output directory
@@ -220,19 +220,19 @@ set_target_properties(signal PROPERTIES
 # ============================================================================
 # ASSET PIPELINE
 # ============================================================================
-if(CGAME_BUILD_ASSETS)
+if(SIGNAL_BUILD_ASSETS)
     include(cmake/Assets.cmake)
 endif()
 
 # ============================================================================
 # TESTING
 # ============================================================================
-if(CGAME_BUILD_TESTS)
+if(SIGNAL_BUILD_TESTS)
     enable_testing()
     include(CTest)
     
     # Pass source list to tests
-    set(CGAME_SOURCES_FOR_TESTS ${CGAME_SOURCES} PARENT_SCOPE)
+    set(SIGNAL_SOURCES_FOR_TESTS ${SIGNAL_SOURCES} PARENT_SCOPE)
     
     # Include test configuration
     add_subdirectory(tests)
@@ -245,7 +245,7 @@ if(CGAME_BUILD_TESTS)
         COMMENT "Running all tests..."
     )
     
-    if(CGAME_PARALLEL_TESTS)
+    if(SIGNAL_PARALLEL_TESTS)
         add_custom_target(test-parallel
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --parallel
             DEPENDS signal_engine
@@ -274,7 +274,7 @@ endif()
 # ============================================================================
 # DOCUMENTATION
 # ============================================================================
-if(CGAME_BUILD_DOCS)
+if(SIGNAL_BUILD_DOCS)
     find_package(Doxygen)
     if(DOXYGEN_FOUND)
         set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/docs)
@@ -350,7 +350,7 @@ message(STATUS "  Version: ${PROJECT_VERSION}")
 message(STATUS "  Build Type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "  Graphics Backend: ${GRAPHICS_BACKEND}")
-message(STATUS "  Build Tests: ${CGAME_BUILD_TESTS}")
-message(STATUS "  Build Docs: ${CGAME_BUILD_DOCS}")
-message(STATUS "  Build Assets: ${CGAME_BUILD_ASSETS}")
+message(STATUS "  Build Tests: ${SIGNAL_BUILD_TESTS}")
+message(STATUS "  Build Docs: ${SIGNAL_BUILD_DOCS}")
+message(STATUS "  Build Assets: ${SIGNAL_BUILD_ASSETS}")
 message(STATUS "")

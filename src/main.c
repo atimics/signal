@@ -181,7 +181,7 @@ static void list_available_cameras(struct World* world)
 
 static void init(void)
 {
-    printf("🎮 CGGame - Sokol-based Component Engine\n");
+    printf("🎮 SIGNAL Engine - Component-Based Game Engine\n");
     printf("==========================================\n\n");
 
     // Initialize configuration system
