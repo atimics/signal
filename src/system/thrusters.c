@@ -193,7 +193,7 @@ void thruster_configure_ship_type(struct ThrusterSystem* thrusters, ShipType shi
                 base_thrust * 1.5f,  // Y = Up/down: excellent maneuverability
                 base_thrust * 1.2f   // Z = Forward/back: slightly above average
             };
-            thrusters->max_angular_torque = (Vector3){ 8.0f, 10.0f, 6.0f };  // Reduced for smoother control
+            thrusters->max_angular_torque = (Vector3){ 5.0f, 6.0f, 3.0f };  // Further reduced for gentler banking
             thrusters->thrust_response_time = 0.05f;  // Very responsive
             thrusters->power_efficiency = 0.9f;       // Good efficiency
             thrusters->heat_generation = 0.7f;        // Moderate heat

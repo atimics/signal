@@ -276,6 +276,37 @@ static void apply_control_to_thrusters(struct Entity* entity, const UnifiedFligh
     Vector3 linear_command = unified_flight_control_get_linear_command(control);
     Vector3 angular_command = unified_flight_control_get_angular_command(control);
     
+    // Apply stability assist for angular control
+    if (control->flight_assist_enabled && control->stability_assist > 0.0f && entity->physics) {
+        struct Physics* physics = entity->physics;
+        
+        // Apply per-axis stabilization only when there's no input on that axis
+        Vector3 damping_torque = {0, 0, 0};
+        
+        // X-axis (pitch)
+        if (fabsf(angular_command.x) < 0.01f && fabsf(physics->angular_velocity.x) > 0.01f) {
+            damping_torque.x = -physics->angular_velocity.x * control->stability_assist * 0.3f;
+        }
+        
+        // Y-axis (yaw)
+        if (fabsf(angular_command.y) < 0.01f && fabsf(physics->angular_velocity.y) > 0.01f) {
+            damping_torque.y = -physics->angular_velocity.y * control->stability_assist * 0.3f;
+        }
+        
+        // Z-axis (roll) - less aggressive damping for smoother banking
+        if (fabsf(angular_command.z) < 0.01f && fabsf(physics->angular_velocity.z) > 0.01f) {
+            damping_torque.z = -physics->angular_velocity.z * control->stability_assist * 0.2f;
+        }
+        
+        // Clamp damping to prevent overcorrection
+        float max_damping = 0.2f;
+        damping_torque.x = fmaxf(-max_damping, fminf(max_damping, damping_torque.x));
+        damping_torque.y = fmaxf(-max_damping, fminf(max_damping, damping_torque.y));
+        damping_torque.z = fmaxf(-max_damping, fminf(max_damping, damping_torque.z));
+        
+        angular_command = vector3_add(angular_command, damping_torque);
+    }
+    
     // Apply commands to thruster system
     thruster_set_linear_command(thrusters, linear_command);
     thruster_set_angular_command(thrusters, angular_command);

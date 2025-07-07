@@ -889,9 +889,9 @@ void ui_microui_end_frame(void) {
     
     // Log command breakdown - ALWAYS for debugging
     if (render_state.command_count > 0) {
-        // printf("📊 UI COMMANDS: %d commands (%d rect, %d text, %d clip, %d icon) → %d vertices (capacity=%d)\n", 
-               render_state.command_count, rect_count, text_count, clip_count, icon_count, 
-               render_state.vertex_count, render_state.vertex_capacity);
+        // Debug logging disabled to reduce spam
+        // Command counts: rect_count, text_count, clip_count, icon_count available
+        (void)rect_count; (void)text_count; (void)clip_count; (void)icon_count;
         
         // Warn if we're getting close to capacity
         float usage = (float)render_state.vertex_count / render_state.vertex_capacity;
@@ -1035,8 +1035,9 @@ void ui_microui_upload_vertices(void) {
     
     // Log upload attempt
     static int upload_id = 0;
-    // printf("📤 UI UPLOAD #%d: Uploading %d vertices (%zu bytes) to GPU buffer (size=%zu)\n",
-           ++upload_id, render_state.vertex_count, upload_size, render_state.vbuf_size);
+    // Upload logging disabled
+    ++upload_id;
+    (void)upload_size; // Mark as used
     
     // CRITICAL: Ensure buffer is large enough BEFORE any validation
     // This way if we need to recreate, we do it before checking validity
@@ -1081,9 +1082,8 @@ void ui_microui_upload_vertices(void) {
     }
     
     // ALWAYS log upload attempts for debugging
-    // printf("📤 UI UPLOAD: Uploading %d vertices (%zu bytes to %zu byte buffer, id=%u)\n", 
-           render_state.vertex_count, final_upload_size, render_state.vbuf_size,
-           render_state.bind.vertex_buffers[0].id);
+    // Upload logging disabled
+    (void)final_upload_size; // Mark as used
     
     // CRITICAL: Assert no encoder is active before buffer update
     ASSERT_NO_PASS_ACTIVE();
@@ -1218,6 +1218,18 @@ bool ui_microui_handle_event(const void* event) {
         g_ui_context.event_queue.count -= events_to_drop;
     }
     
+    // Only consume keyboard events if UI has active text input
+    // Otherwise let game handle them
+    bool should_consume = true;
+    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN || ev->type == SAPP_EVENTTYPE_KEY_UP) {
+        // Check if MicroUI has any active text input
+        mu_Context* ctx = &g_ui_context.mu_ctx;
+        if (ctx->focus < 0) {
+            // No focused element - don't consume keyboard events
+            should_consume = false;
+        }
+    }
+    
     // Queue the event for processing during frame
     if (g_ui_context.event_queue.count < UI_EVENT_QUEUE_SIZE) {
         g_ui_context.event_queue.events[g_ui_context.event_queue.count++] = *ev;
@@ -1230,7 +1242,7 @@ bool ui_microui_handle_event(const void* event) {
                 //        g_ui_context.event_queue.count, UI_EVENT_QUEUE_SIZE, queue_usage * 100);
             }
         }
-        return true;  // Event queued successfully
+        return should_consume;  // Only consume if UI needs the event
     }
     
     // Queue is full, track overflow
