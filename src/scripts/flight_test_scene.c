@@ -6,7 +6,7 @@
 #include "../core.h"
 #include "../render.h"
 #include "../system/material.h"
-#include "../input_state.h"
+// Note: Now using InputService directly instead of legacy InputState
 #include "../system/control.h"
 #include "../system/thrusters.h"
 #include "../system/scripted_flight.h"
@@ -712,15 +712,7 @@ void update_visual_thrusters(struct World* world, float delta_time) {
         return;
     }
     
-    // Get input state to determine thruster intensities
-    const InputState* input = input_get_state();
-    if (!input) {
-        static uint32_t input_debug_counter = 0;
-        if (++input_debug_counter % 120 == 0) {
-            printf("🔥 No input state available for thrusters\n");
-        }
-        return;
-    }
+    // Visual thrusters use processed input from control authority
     
     // Get control authority to access processed input
     struct ControlAuthority* control = entity_get_control_authority(world, player_ship_id);

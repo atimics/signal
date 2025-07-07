@@ -1,5 +1,6 @@
 #include "control.h"
-#include "../input_state.h"
+#include "../services/input_service.h"
+#include "../game_input.h"
 #include "thrusters.h"
 #include "physics.h"
 #include "../component/look_target.h"
@@ -16,6 +17,57 @@
 // Global player entity for input processing
 static EntityID g_player_entity = INVALID_ENTITY;
 
+// Current input state gathered from InputService
+typedef struct {
+    float thrust;
+    float vertical;
+    float pitch;
+    float yaw;
+    float roll;
+    float strafe_left;
+    float strafe_right;
+    float boost;
+    bool boost_pressed;
+    bool brake;
+    bool brake_pressed;
+    float brake_intensity;
+} DirectInputState;
+
+// Get input state directly from InputService (replacing legacy adapter)
+static DirectInputState get_direct_input_state(void) {
+    DirectInputState input = {0};
+    
+    InputService* service = game_input_get_service();
+    if (!service) return input;
+    
+    // Get flight control values
+    input.thrust = service->get_action_value(service, INPUT_ACTION_THRUST_FORWARD) - 
+                   service->get_action_value(service, INPUT_ACTION_THRUST_BACK);
+    input.pitch = service->get_action_value(service, INPUT_ACTION_PITCH_UP) - 
+                  service->get_action_value(service, INPUT_ACTION_PITCH_DOWN);
+    input.yaw = service->get_action_value(service, INPUT_ACTION_YAW_RIGHT) - 
+                service->get_action_value(service, INPUT_ACTION_YAW_LEFT);
+    input.roll = service->get_action_value(service, INPUT_ACTION_ROLL_RIGHT) - 
+                 service->get_action_value(service, INPUT_ACTION_ROLL_LEFT);
+    
+    // Get boost/brake
+    input.boost = service->get_action_value(service, INPUT_ACTION_BOOST);
+    input.boost_pressed = service->is_action_just_pressed(service, INPUT_ACTION_BOOST);
+    input.brake = service->is_action_pressed(service, INPUT_ACTION_BRAKE);
+    input.brake_pressed = service->is_action_just_pressed(service, INPUT_ACTION_BRAKE);
+    input.brake_intensity = service->get_action_value(service, INPUT_ACTION_BRAKE);
+    
+    // Clamp values
+    input.thrust = fmaxf(-1.0f, fminf(1.0f, input.thrust));
+    input.pitch = fmaxf(-1.0f, fminf(1.0f, input.pitch));
+    input.yaw = fmaxf(-1.0f, fminf(1.0f, input.yaw));
+    input.roll = fmaxf(-1.0f, fminf(1.0f, input.roll));
+    input.boost = fmaxf(0.0f, fminf(1.0f, input.boost));
+    input.brake_intensity = fmaxf(0.0f, fminf(1.0f, input.brake_intensity));
+    
+    return input;
+}
+
 // ============================================================================
 // CANYON RACING CONTROL FUNCTIONS
 // ============================================================================
@@ -27,7 +79,7 @@ static EntityID g_player_entity = INVALID_ENTITY;
 // All disabled for direct manual control only
 
 // Process linear input for canyon racing with auto-stop
-static Vector3 process_canyon_racing_linear(const InputState* input, 
+static Vector3 process_canyon_racing_linear(const DirectInputState* input, 
                                           struct ControlAuthority* control,
                                           const Vector3* ship_position,
                                           const Quaternion* ship_orientation,
@@ -126,7 +178,7 @@ static Vector3 process_canyon_racing_linear(const InputState* input,
 }
 
 // Process angular input for canyon racing with enhanced stabilization
-static Vector3 process_canyon_racing_angular(const InputState* input,
+static Vector3 process_canyon_racing_angular(const DirectInputState* input,
                                            struct ControlAuthority* control,
                                            const Vector3* ship_position,
                                            const Quaternion* ship_orientation,
@@ -185,9 +237,8 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
     (void)delta_time;
     if (!world) return;
 
-    // Get current input state
-    const InputState* input = input_get_state();
-    if (!input) return;
+    // Get current input state directly from InputService
+    DirectInputState input = get_direct_input_state();
 
     uint32_t control_updates = 0;
     (void)control_updates; // Suppress unused warning
@@ -219,14 +270,14 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
             
             // Check if we have any actual input to process (including zero-g controls)
             // Use deadzone threshold to prevent gamepad drift from being detected as input
-            bool has_input = (fabsf(input->thrust) > INPUT_DEADZONE || 
-                            fabsf(input->pitch) > INPUT_DEADZONE || 
-                            fabsf(input->yaw) > INPUT_DEADZONE || 
-                            fabsf(input->roll) > INPUT_DEADZONE ||
-                            input->brake ||
-                            input->boost > INPUT_DEADZONE ||
-                            input->strafe_left > INPUT_DEADZONE ||
-                            input->strafe_right > INPUT_DEADZONE);
+            bool has_input = (fabsf(input.thrust) > INPUT_DEADZONE || 
+                            fabsf(input.pitch) > INPUT_DEADZONE || 
+                            fabsf(input.yaw) > INPUT_DEADZONE || 
+                            fabsf(input.roll) > INPUT_DEADZONE ||
+                            input.brake ||
+                            input.boost > INPUT_DEADZONE ||
+                            input.strafe_left > INPUT_DEADZONE ||
+                            input.strafe_right > INPUT_DEADZONE);
             
             // Only override thrust commands if there's actual player input
             // This allows scripted flight to work when player isn't providing input
@@ -245,14 +296,14 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                 }
                 
                 // Process linear input (thrust) with auto-stop functionality
-                Vector3 linear_commands = process_canyon_racing_linear(input, control, 
+                Vector3 linear_commands = process_canyon_racing_linear(&input, control, 
                                                                      &ship_position, &ship_orientation,
                                                                      linear_velocity_ptr, &ship_orientation);
                 control->input_linear = linear_commands;
                 thruster_set_linear_command(thrusters, linear_commands);
                 
                 // Process angular input (rotation) with enhanced stabilization
-                Vector3 angular_commands = process_canyon_racing_angular(input, control, 
+                Vector3 angular_commands = process_canyon_racing_angular(&input, control, 
                                                                        &ship_position, 
                                                                        &ship_orientation,
                                                                        angular_velocity_ptr);
@@ -260,8 +311,8 @@ void control_system_update(struct World* world, RenderConfig* render_config, flo
                 thruster_set_angular_command(thrusters, angular_commands);
                 
                 // Store boost and brake state
-                control->input_boost = input->boost;
-                control->input_brake = input->brake;
+                control->input_boost = input.boost;
+                control->input_brake = input.brake;
                 
             } else {
                 // No player input - scripted flight can control

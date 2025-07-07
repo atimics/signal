@@ -23,6 +23,8 @@
 #include "graphics_health.h"  // Graphics health monitoring
 #include "render_pass_guard.h"  // Encoder state management
 #include "game_input.h"  // New input system management
+#include "event_router.h"  // Centralized event routing
+#include "event_handlers.h"  // Standard event handlers
 
 // UI system includes
 
@@ -200,6 +202,11 @@ static void init(void)
         sapp_quit();
         return;
     }
+    
+    // Initialize centralized event router
+    printf("📡 Initializing event router...\n");
+    EventRouter* router = event_router_get_instance();
+    event_router_init(router);
 
     printf("🔧 Initializing graphics...\n");
 
@@ -300,6 +307,10 @@ static void init(void)
     // Initialize scene state management
     scene_state_init(&app_state.scene_state);
     strcpy(app_state.scene_state.current_scene_name, scene_to_load);
+    
+    // Register standard event handlers now that scene state is ready
+    EventRouter* router = event_router_get_instance();
+    register_standard_event_handlers(router, &app_state.scene_state, &app_state.world);
     
     // Initialize offscreen rendering layers
     app_state.layer_manager = layer_manager_create(
@@ -658,6 +669,11 @@ static void cleanup(void)
     // Shutdown input system
     game_input_shutdown();
     
+    // Shutdown event router
+    EventRouter* router = event_router_get_instance();
+    unregister_standard_event_handlers(router);
+    event_router_shutdown(router);
+    
     // Shutdown configuration system
     config_shutdown();
 
@@ -667,98 +683,9 @@ static void cleanup(void)
 
 static void event(const sapp_event* ev)
 {
-    // Forward events to the input HAL
-    extern void input_hal_sokol_event_handler(const sapp_event* e);
-    input_hal_sokol_event_handler(ev);
-    
-    // Handle UI events first - if UI captures the event, don't process it further
-    if (ui_handle_event(ev))
-    {
-        return;  // UI captured this event
-    }
-
-    // Handle scene-specific input events first
-    if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
-    {
-        return;  // Scene script handled this event
-    }
-
-    // Process global game events only if UI and scene scripts didn't capture them
-    switch (ev->type)
-    {
-        case SAPP_EVENTTYPE_KEY_DOWN:
-            
-            // Handle other keys
-            if (ev->key_code == SAPP_KEYCODE_ESCAPE)
-            {
-                // Only exit the application if we're in the navigation menu and ESC wasn't handled
-                if (strcmp(app_state.scene_state.current_scene_name, "navigation_menu") == 0)
-                {
-                    printf("⎋ Escape key pressed in navigation menu - exiting\n");
-                    sapp_request_quit();
-                }
-                // For other scenes, ESC is handled by scene scripts (return to navigation menu)
-            }
-            // TAB key handling moved to new input system
-            // Toggle debug UI with tilde (~) key
-            else if (ev->key_code == SAPP_KEYCODE_GRAVE_ACCENT)
-            {
-                bool current_visible = scene_state_is_debug_ui_visible(&app_state.scene_state);
-                scene_state_set_debug_ui_visible(&app_state.scene_state, !current_visible);
-                ui_set_debug_visible(!current_visible);  // Synchronize with UI system
-                ui_toggle_hud();  // Also toggle the HUD
-                printf("🔧 Debug UI & HUD: %s\n", !current_visible ? "ON" : "OFF");
-            }
-            // For number keys 1-9, let's not forward to input system
-            // since these might be used for camera switching or other scene-specific functions
-            else if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9)
-            {
-                // Do nothing - let scene scripts handle number keys
-            }
-            // Legacy input handling removed - handled by game_input service
-            else
-            {
-                // Events are now processed through the new input system
-            }
-            break;
-            
-        case SAPP_EVENTTYPE_KEY_UP:
-            // Try scene script first for key up events
-            if (scene_script_execute_input(app_state.scene_state.current_scene_name, &app_state.world, &app_state.scene_state, ev))
-            {
-                return;  // Scene script handled this event
-            }
-            // Legacy input handling removed - handled by game_input service
-            break;
-            
-        case SAPP_EVENTTYPE_MOUSE_MOVE:
-            // Mouse motion handled by game_input service
-            break;
-            
-        case SAPP_EVENTTYPE_MOUSE_DOWN:
-            // Right mouse button for camera control
-            if (ev->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
-            {
-                // Mouse button handled by game_input service
-                sapp_lock_mouse(true);  // Capture mouse for FPS-style control
-            }
-            break;
-            
-        case SAPP_EVENTTYPE_MOUSE_UP:
-            if (ev->mouse_button == SAPP_MOUSEBUTTON_RIGHT)
-            {
-                // Mouse button handled by game_input service
-                sapp_lock_mouse(false);  // Release mouse
-            }
-            break;
-            
-        case SAPP_EVENTTYPE_MOUSE_SCROLL:
-            // Scroll events handled by game_input service
-            break;
-            
-        default:
-            break;
-    }
+    // Use centralized event router for all event handling
+    EventRouter* router = event_router_get_instance();
+    event_router_process_event(router, ev);
 }
 
 // ============================================================================

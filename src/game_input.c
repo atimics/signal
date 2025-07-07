@@ -14,8 +14,6 @@
 // Feature flag - can be set via environment variable or config
 #define USE_NEW_INPUT_SYSTEM_ENV "CGAME_USE_NEW_INPUT"
 
-// Forward declaration
-static void game_input_process_global_actions(void);
 
 // Global state
 static struct {
@@ -112,9 +110,6 @@ void game_input_process_frame(float delta_time) {
     
     // Process input through the service
     g_game_input.service->process_frame(g_game_input.service, delta_time);
-    
-    // Process global input actions (Tab for navigation menu)
-    game_input_process_global_actions();
 }
 
 bool game_input_is_new_system_enabled(void) {
@@ -125,19 +120,3 @@ InputService* game_input_get_service(void) {
     return g_game_input.service;
 }
 
-// Process global input actions that affect the entire game
-static void game_input_process_global_actions(void) {
-    if (!g_game_input.service) return;
-    
-    // Check for Tab key press to open navigation menu
-    if (g_game_input.service->is_action_just_pressed(g_game_input.service, INPUT_ACTION_UI_MENU)) {
-        printf("🧭 TAB pressed - requesting navigation menu transition\n");
-        
-        // This is a temporary solution - we need better access to scene state
-        // For now, just print that Tab was pressed
-        // TODO: Implement proper scene transition from input system
-        #ifdef DEBUG
-        printf("[INPUT] Tab pressed - navigation menu request pending\n");
-        #endif
-    }
-}
