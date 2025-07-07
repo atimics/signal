@@ -51,10 +51,13 @@ static void navigation_menu_init(struct World* world)
     nav_data.destinations[0] = "Flight Test";
     nav_data.descriptions[0] = "Free flight testing mode";
     
-    nav_data.destinations[1] = "Template Scene";
-    nav_data.descriptions[1] = "Development and testing template";
+    nav_data.destinations[1] = "Controller Calibration";
+    nav_data.descriptions[1] = "Calibrate and configure controllers";
     
-    nav_data.destination_count = 2;
+    nav_data.destinations[2] = "Template Scene";
+    nav_data.descriptions[2] = "Development and testing template";
+    
+    nav_data.destination_count = 3;
     
     printf("🧭 Navigation Menu UI: Initialized with %d destinations\n", nav_data.destination_count);
     for (int i = 0; i < nav_data.destination_count; i++) {

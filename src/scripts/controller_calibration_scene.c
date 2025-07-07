@@ -6,7 +6,7 @@
 #include "controller_calibration_scene.h"
 #include "../ui.h"
 #include "../game_input.h"
-#include "../hal/input_hal_sokol.h"
+#include "../hal/input_hal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

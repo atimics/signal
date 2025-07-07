@@ -26,4 +26,14 @@ bool game_input_is_new_system_enabled(void);
 // Get the global input service (for direct access if needed)
 struct InputService* game_input_get_service(void);
 
+// Get the controller configuration service
+struct ControllerConfigService* game_input_get_controller_config_service(void);
+
+// Controller detection and calibration functions
+void game_input_check_new_controllers(void);
+bool game_input_has_pending_calibration(void);
+const char* game_input_get_pending_calibration_id(void);
+void game_input_clear_pending_calibration(void);
+void game_input_request_controller_calibration(const char* controller_id);
+
 #endif // GAME_INPUT_H

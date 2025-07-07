@@ -58,21 +58,16 @@ bool game_input_init(void) {
     // Create Controller Config Service
     g_game_input.controller_config = controller_config_service_create();
     if (!g_game_input.controller_config) {
-        printf("❌ Failed to create controller config service\n");
-        free(g_game_input.hal);
-        g_game_input.hal = NULL;
-        return false;
+        printf("⚠️  Warning: Failed to create controller config service\\n");
     }
     
     // Create Input Service
     g_game_input.service = input_service_create();
     if (!g_game_input.service) {
         printf("❌ Failed to create input service\n");
-        controller_config_service_destroy(g_game_input.controller_config);
         free(g_game_input.hal);
         g_game_input.service = NULL;
         g_game_input.hal = NULL;
-        g_game_input.controller_config = NULL;
         return false;
     }
     
@@ -105,6 +100,11 @@ void game_input_shutdown(void) {
     
     printf("🎮 Shutting down input system...\n");
     
+    // Shutdown controller config service
+    if (g_game_input.controller_config) {
+        controller_config_service_destroy(g_game_input.controller_config);
+        g_game_input.controller_config = NULL;
+    }
     
     // Shutdown service
     if (g_game_input.service) {
@@ -148,23 +148,25 @@ ControllerConfigService* game_input_get_controller_config_service(void) {
 }
 
 void game_input_check_new_controllers(void) {
-    if (!g_game_input.hal || !g_game_input.controller_config) return;
+    if (!g_game_input.controller_config || !g_game_input.hal) {
+        return;
+    }
     
-    // Get current controller info from HAL
-    // For now, this is a simplified implementation
-    // In a full version, this would query the HAL for connected controllers
+    // Check controller count from HAL
+    int current_count = 0;
+    // TODO: Add HAL method to get controller count
+    // For now, we'll implement a basic check
     
-    static int check_counter = 0;
-    if (++check_counter % 60 != 0) return;  // Check once per second
-    
-    // TODO: Implement actual controller detection via HAL
-    // This would check for new controller connections and generate IDs
-    
-    // Example of how it would work:
-    // 1. Query HAL for connected controllers
-    // 2. Compare with last known state
-    // 3. For new controllers, check if they have configurations
-    // 4. If not, request calibration scene
+    // If controller count changed, scan for new controllers
+    if (current_count != g_game_input.last_controller_count) {
+        printf("🎮 Controller count changed: %d -> %d\n", 
+               g_game_input.last_controller_count, current_count);
+        
+        // TODO: Scan for new controller IDs and check if they need calibration
+        // For now, we'll skip the detailed implementation
+        
+        g_game_input.last_controller_count = current_count;
+    }
 }
 
 bool game_input_has_pending_calibration(void) {
