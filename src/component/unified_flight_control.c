@@ -211,8 +211,8 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     
     // Add banking (coordinated turn) - automatically roll when yawing
     if (control->flight_assist_enabled && fabsf(yaw) > 0.01f) {
-        // Banking ratio: how much to roll for each unit of yaw
-        float banking_ratio = 1.2f;  // 120% roll for each unit of yaw (very strong banking)
+        // Banking ratio: how much to roll for each unit of yaw  
+        float banking_ratio = 1.8f;  // Increased from 1.2f for stronger banking turns
         roll -= yaw * banking_ratio;  // Negative because we want to roll into the turn
         
         // Debug banking
@@ -343,7 +343,7 @@ void unified_flight_control_setup_manual_flight(UnifiedFlightControl* control) {
     if (!control) return;
     
     unified_flight_control_set_mode(control, FLIGHT_CONTROL_MANUAL);
-    control->stability_assist = 0.1f;
+    control->stability_assist = 0.02f;  // Much reduced from 0.1f for true manual feel
     control->inertia_dampening = 0.0f;
     control->flight_assist_enabled = false;
     control->state.assistance_level = 0.0f;
@@ -353,10 +353,10 @@ void unified_flight_control_setup_assisted_flight(UnifiedFlightControl* control)
     if (!control) return;
     
     unified_flight_control_set_mode(control, FLIGHT_CONTROL_ASSISTED);
-    control->stability_assist = 0.5f;
-    control->inertia_dampening = 0.3f;
+    control->stability_assist = 0.15f;  // Much reduced from 0.5f for manual feel 
+    control->inertia_dampening = 0.1f;  // Reduced from 0.3f
     control->flight_assist_enabled = true;
-    control->state.assistance_level = 0.8f;
+    control->state.assistance_level = 0.3f;  // Reduced from 0.8f
 }
 
 void unified_flight_control_setup_autonomous_flight(UnifiedFlightControl* control) {

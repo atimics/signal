@@ -26,9 +26,11 @@
 #define XBOX_ONE_WIRELESS_PID   0x02E0
 #define XBOX_ONE_S_PID          0x02EA
 #define XBOX_ONE_ELITE_PID      0x02E3
+#define XBOX_ONE_S_BT_PID       0x02FD  // Xbox One S Bluetooth
 
 // Xbox Series X|S controller PIDs
 #define XBOX_SERIES_PID         0x0B12
+#define XBOX_SERIES_S_PID       0x0B13
 
 // Dead zone configuration
 #define DEFAULT_STICK_DEADZONE  0.15f
@@ -103,9 +105,11 @@ static XboxControllerType identify_xbox_controller(uint16_t product_id) {
         case XBOX_ONE_WIRELESS_PID:
         case XBOX_ONE_S_PID:
         case XBOX_ONE_ELITE_PID:
+        case XBOX_ONE_S_BT_PID:
             return XBOX_CONTROLLER_ONE;
             
         case XBOX_SERIES_PID:
+        case XBOX_SERIES_S_PID:
             return XBOX_CONTROLLER_SERIES;
             
         default:
@@ -231,6 +235,49 @@ static void parse_xbox_report(GamepadState* gamepad, const uint8_t* data, size_t
         gamepad->axes[3] = -normalize_axis_with_deadzone(left_y, gamepad->stick_deadzone);   
         gamepad->axes[4] = apply_deadzone(left_trigger / 255.0f, gamepad->trigger_deadzone);   // LT
         gamepad->axes[5] = apply_deadzone(right_trigger / 255.0f, gamepad->trigger_deadzone);  // RT
+        
+    } else if (data[0] == 0x01 && len == 17) {
+        // Xbox Series X|S controller Bluetooth HID format (17 bytes, header 0x01)
+        // This is a common format for Xbox Series controllers over Bluetooth
+        
+        // Button mapping for Series controllers in BT mode:
+        // Byte 1: A(0), B(1), X(2), Y(3), LB(4), RB(5), Back(6), Start(7)
+        // Byte 2: LS(0), RS(1), Xbox(2), Share(3), D-pad nibble in upper 4 bits
+        uint16_t button_state = 0;
+        
+        // Map buttons from byte 1
+        if (data[1] & 0x01) button_state |= (1 << 0);  // A
+        if (data[1] & 0x02) button_state |= (1 << 1);  // B  
+        if (data[1] & 0x04) button_state |= (1 << 2);  // X
+        if (data[1] & 0x08) button_state |= (1 << 3);  // Y
+        if (data[1] & 0x10) button_state |= (1 << 4);  // LB
+        if (data[1] & 0x20) button_state |= (1 << 5);  // RB
+        if (data[1] & 0x40) button_state |= (1 << 6);  // Back/View
+        if (data[1] & 0x80) button_state |= (1 << 7);  // Start/Menu
+        
+        // Map stick clicks from byte 2
+        if (data[2] & 0x01) button_state |= (1 << 8);  // Left stick click
+        if (data[2] & 0x02) button_state |= (1 << 9);  // Right stick click
+        
+        gamepad->buttons = button_state;
+        
+        // Triggers: bytes 3-4 (8-bit values, 0-255 range)
+        uint8_t left_trigger = data[3];
+        uint8_t right_trigger = data[4];
+        
+        // Analog sticks: bytes 5-12 (16-bit signed values)
+        int16_t left_x = (int16_t)(data[5] | (data[6] << 8));
+        int16_t left_y = (int16_t)(data[7] | (data[8] << 8));
+        int16_t right_x = (int16_t)(data[9] | (data[10] << 8));
+        int16_t right_y = (int16_t)(data[11] | (data[12] << 8));
+        
+        // Normalize all values to [-1.0, 1.0] range
+        gamepad->axes[0] = normalize_axis_with_deadzone(right_x, gamepad->stick_deadzone);    // Right stick X
+        gamepad->axes[1] = -normalize_axis_with_deadzone(right_y, gamepad->stick_deadzone);   // Right stick Y (inverted)
+        gamepad->axes[2] = normalize_axis_with_deadzone(left_x, gamepad->stick_deadzone);     // Left stick X  
+        gamepad->axes[3] = -normalize_axis_with_deadzone(left_y, gamepad->stick_deadzone);    // Left stick Y (inverted)
+        gamepad->axes[4] = apply_deadzone(left_trigger / 255.0f, gamepad->trigger_deadzone);  // Left trigger
+        gamepad->axes[5] = apply_deadzone(right_trigger / 255.0f, gamepad->trigger_deadzone); // Right trigger
         
     } else {
         // Fallback: try to parse as generic HID gamepad
