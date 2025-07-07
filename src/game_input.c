@@ -136,6 +136,8 @@ static void game_input_process_global_actions(void) {
         // This is a temporary solution - we need better access to scene state
         // For now, just print that Tab was pressed
         // TODO: Implement proper scene transition from input system
-        printf("TODO: Implement scene transition to navigation menu from new input system\n");
+        #ifdef DEBUG
+        printf("[INPUT] Tab pressed - navigation menu request pending\n");
+        #endif
     }
 }

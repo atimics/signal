@@ -4,6 +4,7 @@
  */
 
 #include "input_service.h"
+#include "input_constants.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -519,33 +520,33 @@ void input_service_setup_default_bindings(InputService* service) {
     
     // UI Up: Arrow Up, W, Gamepad D-Pad Up
     binding.device = INPUT_DEVICE_KEYBOARD;
-    binding.binding.keyboard.key = 265;  // Up arrow (SAPP_KEYCODE_UP)
+    binding.binding.keyboard.key = KEY_UP;
     service->bind_action(service, INPUT_ACTION_UI_UP, INPUT_CONTEXT_MENU, &binding);
     
-    binding.binding.keyboard.key = 87;  // W
+    binding.binding.keyboard.key = KEY_W;
     service->bind_action(service, INPUT_ACTION_UI_UP, INPUT_CONTEXT_MENU, &binding);
     
     // UI Down: Arrow Down, S, Gamepad D-Pad Down
-    binding.binding.keyboard.key = 264;  // Down arrow (SAPP_KEYCODE_DOWN)
+    binding.binding.keyboard.key = KEY_DOWN;
     service->bind_action(service, INPUT_ACTION_UI_DOWN, INPUT_CONTEXT_MENU, &binding);
     
-    binding.binding.keyboard.key = 83;  // S
+    binding.binding.keyboard.key = KEY_S;
     service->bind_action(service, INPUT_ACTION_UI_DOWN, INPUT_CONTEXT_MENU, &binding);
     
     // UI Confirm: Enter, Space, Gamepad A
-    binding.binding.keyboard.key = 36;  // Enter (SAPP_KEYCODE_ENTER)
+    binding.binding.keyboard.key = KEY_ENTER;
     service->bind_action(service, INPUT_ACTION_UI_CONFIRM, INPUT_CONTEXT_MENU, &binding);
     
-    binding.binding.keyboard.key = 32;  // Space
+    binding.binding.keyboard.key = KEY_SPACE;
     service->bind_action(service, INPUT_ACTION_UI_CONFIRM, INPUT_CONTEXT_MENU, &binding);
     
     // UI Cancel: Escape, Gamepad B
-    binding.binding.keyboard.key = 27;  // Escape (SAPP_KEYCODE_ESCAPE)
+    binding.binding.keyboard.key = KEY_ESCAPE;
     service->bind_action(service, INPUT_ACTION_UI_CANCEL, INPUT_CONTEXT_MENU, &binding);
     
     // UI Menu: Tab key (for navigation menu)
     binding.device = INPUT_DEVICE_KEYBOARD;
-    binding.binding.keyboard.key = 258;  // Tab (SAPP_KEYCODE_TAB)
+    binding.binding.keyboard.key = KEY_TAB;
     service->bind_action(service, INPUT_ACTION_UI_MENU, INPUT_CONTEXT_MENU, &binding);
     
     // Mouse bindings for UI
@@ -560,14 +561,14 @@ void input_service_setup_default_bindings(InputService* service) {
         uint32_t keycode;
         const char* description;
     } flight_bindings[] = {
-        { INPUT_ACTION_THRUST_FORWARD, 87,  "W - Forward Thrust" },
-        { INPUT_ACTION_THRUST_BACK,    83,  "S - Backward Thrust" },
-        { INPUT_ACTION_YAW_LEFT,       65,  "A - Yaw Left" },
-        { INPUT_ACTION_YAW_RIGHT,      68,  "D - Yaw Right" },
-        { INPUT_ACTION_ROLL_LEFT,      81,  "Q - Roll Left" },
-        { INPUT_ACTION_ROLL_RIGHT,     69,  "E - Roll Right" },
-        { INPUT_ACTION_PITCH_UP,       265, "↑ - Pitch Up" },
-        { INPUT_ACTION_PITCH_DOWN,     264, "↓ - Pitch Down" },
+        { INPUT_ACTION_THRUST_FORWARD, KEY_W,    "W - Forward Thrust" },
+        { INPUT_ACTION_THRUST_BACK,    KEY_S,    "S - Backward Thrust" },
+        { INPUT_ACTION_YAW_LEFT,       KEY_A,    "A - Yaw Left" },
+        { INPUT_ACTION_YAW_RIGHT,      KEY_D,    "D - Yaw Right" },
+        { INPUT_ACTION_ROLL_LEFT,      KEY_Q,    "Q - Roll Left" },
+        { INPUT_ACTION_ROLL_RIGHT,     KEY_E,    "E - Roll Right" },
+        { INPUT_ACTION_PITCH_UP,       KEY_UP,   "↑ - Pitch Up" },
+        { INPUT_ACTION_PITCH_DOWN,     KEY_DOWN, "↓ - Pitch Down" },
     };
     
     // Apply all flight control bindings
