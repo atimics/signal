@@ -12,7 +12,7 @@
 
 ## 🎯 Vision & Core Objectives
 
-Build an intelligent flight assist system that extends CGame's existing flight controls with semi-autonomous capabilities. Transform "direct thruster control" into "intent-based flight" where players specify where to go and the ship calculates the optimal path.
+Build an intelligent flight assist system that extends SIGNAL's existing flight controls with semi-autonomous capabilities. Transform "direct thruster control" into "intent-based flight" where players specify where to go and the ship calculates the optimal path.
 
 **Key Success Metrics:**
 - ✅ Extend existing `unified_flight_control` system

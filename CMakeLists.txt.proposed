@@ -1,11 +1,11 @@
-# CGame Engine - Unified CMake Build System
+# SIGNAL Engine - Unified CMake Build System
 # ============================================================================
 # This is a proposed CMakeLists.txt to replace the multiple Makefile system
 # Created: July 6, 2025
 # ============================================================================
 
 cmake_minimum_required(VERSION 3.20)
-project(CGame 
+project(SIGNAL 
     VERSION 1.0.0
     DESCRIPTION "Component-based Game Engine with ECS Architecture"
     LANGUAGES C
@@ -102,16 +102,16 @@ if(NOT WIN32)
 endif()
 
 # Create engine library
-add_library(cgame_engine STATIC ${CGAME_SOURCES})
+add_library(signal_engine STATIC ${CGAME_SOURCES})
 
-target_include_directories(cgame_engine PUBLIC
+target_include_directories(signal_engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party
     ${ODE_INCLUDE_DIRS}
     ${YAML_INCLUDE_DIRS}
 )
 
-target_link_libraries(cgame_engine PUBLIC
+target_link_libraries(signal_engine PUBLIC
     ${CMAKE_THREAD_LIBS_INIT}
     ${ODE_LIBRARIES}
     ${YAML_LIBRARIES}
@@ -120,7 +120,7 @@ target_link_libraries(cgame_engine PUBLIC
 
 # Platform-specific linking
 if(APPLE)
-    target_link_libraries(cgame_engine PUBLIC
+    target_link_libraries(signal_engine PUBLIC
         ${METAL_FRAMEWORK}
         ${METALKIT_FRAMEWORK}
         ${APPKIT_FRAMEWORK}
@@ -128,32 +128,32 @@ if(APPLE)
         ${IOKIT_FRAMEWORK}
         ${COREFOUNDATION_FRAMEWORK}
     )
-    target_compile_definitions(cgame_engine PUBLIC SOKOL_METAL)
+    target_compile_definitions(signal_engine PUBLIC SOKOL_METAL)
 elseif(UNIX)
     find_package(OpenGL REQUIRED)
     find_package(X11 REQUIRED)
-    target_link_libraries(cgame_engine PUBLIC
+    target_link_libraries(signal_engine PUBLIC
         OpenGL::GL
         ${X11_LIBRARIES}
     )
-    target_compile_definitions(cgame_engine PUBLIC SOKOL_GLCORE33)
+    target_compile_definitions(signal_engine PUBLIC SOKOL_GLCORE33)
 endif()
 
 # ============================================================================
 # HIDAPI INTEGRATION
 # ============================================================================
 add_subdirectory(third_party/hidapi EXCLUDE_FROM_ALL)
-target_link_libraries(cgame_engine PUBLIC hidapi)
+target_link_libraries(signal_engine PUBLIC hidapi)
 
 # ============================================================================
 # EXECUTABLE
 # ============================================================================
-add_executable(cgame src/main.c)
-target_link_libraries(cgame PRIVATE cgame_engine)
+add_executable(signal src/main.c)
+target_link_libraries(signal PRIVATE signal_engine)
 
 # Copy executable to build root for compatibility
-add_custom_command(TARGET cgame POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:cgame> ${CMAKE_BINARY_DIR}/
+add_custom_command(TARGET signal POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:signal> ${CMAKE_BINARY_DIR}/
 )
 
 # ============================================================================
@@ -174,14 +174,14 @@ if(CGAME_BUILD_TESTS)
     # Custom test targets for compatibility
     add_custom_target(test
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-        DEPENDS cgame_engine
+        DEPENDS signal_engine
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
     
     if(CGAME_PARALLEL_TESTS)
         add_custom_target(test-parallel
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --parallel
-            DEPENDS cgame_engine
+            DEPENDS signal_engine
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
     endif()
@@ -210,12 +210,12 @@ endif()
 # ============================================================================
 # INSTALLATION
 # ============================================================================
-install(TARGETS cgame
+install(TARGETS signal
     RUNTIME DESTINATION bin
 )
 
 install(DIRECTORY ${CMAKE_BINARY_DIR}/assets
-    DESTINATION share/cgame
+    DESTINATION share/signal
 )
 
 # ============================================================================
@@ -224,8 +224,8 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/assets
 
 # Run target
 add_custom_target(run
-    COMMAND ${CMAKE_BINARY_DIR}/cgame
-    DEPENDS cgame
+    COMMAND ${CMAKE_BINARY_DIR}/signal
+    DEPENDS signal
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
@@ -241,8 +241,8 @@ if(UNIX)
     if(VALGRIND)
         add_custom_target(memcheck
             COMMAND ${VALGRIND} --leak-check=full --show-leak-kinds=all 
-                    --track-origins=yes ${CMAKE_BINARY_DIR}/cgame
-            DEPENDS cgame
+                    --track-origins=yes ${CMAKE_BINARY_DIR}/signal
+            DEPENDS signal
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
     endif()
@@ -251,7 +251,7 @@ endif()
 # ============================================================================
 # STATUS MESSAGES
 # ============================================================================
-message(STATUS "CGame Engine Configuration:")
+message(STATUS "SIGNAL Engine Configuration:")
 message(STATUS "  Version: ${PROJECT_VERSION}")
 message(STATUS "  Build Type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME}")

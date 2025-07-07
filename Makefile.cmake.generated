@@ -57,10 +57,10 @@ RM = /opt/homebrew/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/ratimics/develop/cgame
+CMAKE_SOURCE_DIR = /Users/ratimics/develop/signal
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/ratimics/develop/cgame
+CMAKE_BINARY_DIR = /Users/ratimics/develop/signal
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -97,9 +97,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ratimics/develop/cgame/CMakeFiles /Users/ratimics/develop/cgame//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ratimics/develop/signal/CMakeFiles /Users/ratimics/develop/signal//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ratimics/develop/cgame/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ratimics/develop/signal/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -127,30 +127,30 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named cgame_engine
+# Target rules for targets named signal_engine
 
 # Build rule for target.
-cgame_engine: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cgame_engine
-.PHONY : cgame_engine
+signal_engine: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 signal_engine
+.PHONY : signal_engine
 
 # fast build rule for target.
-cgame_engine/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/build
-.PHONY : cgame_engine/fast
+signal_engine/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/build
+.PHONY : signal_engine/fast
 
 #=============================================================================
-# Target rules for targets named cgame
+# Target rules for targets named signal
 
 # Build rule for target.
-cgame: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 cgame
-.PHONY : cgame
+signal: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 signal
+.PHONY : signal
 
 # fast build rule for target.
-cgame/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/build
-.PHONY : cgame/fast
+signal/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal.dir/build.make CMakeFiles/signal.dir/build
+.PHONY : signal/fast
 
 #=============================================================================
 # Target rules for targets named Experimental
@@ -755,7 +755,7 @@ src/asset_loader/asset_loader_index.o: src/asset_loader/asset_loader_index.c.o
 
 # target to build an object file
 src/asset_loader/asset_loader_index.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_index.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_index.c.o
 .PHONY : src/asset_loader/asset_loader_index.c.o
 
 src/asset_loader/asset_loader_index.i: src/asset_loader/asset_loader_index.c.i
@@ -763,7 +763,7 @@ src/asset_loader/asset_loader_index.i: src/asset_loader/asset_loader_index.c.i
 
 # target to preprocess a source file
 src/asset_loader/asset_loader_index.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_index.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_index.c.i
 .PHONY : src/asset_loader/asset_loader_index.c.i
 
 src/asset_loader/asset_loader_index.s: src/asset_loader/asset_loader_index.c.s
@@ -771,7 +771,7 @@ src/asset_loader/asset_loader_index.s: src/asset_loader/asset_loader_index.c.s
 
 # target to generate assembly for a file
 src/asset_loader/asset_loader_index.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_index.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_index.c.s
 .PHONY : src/asset_loader/asset_loader_index.c.s
 
 src/asset_loader/asset_loader_material.o: src/asset_loader/asset_loader_material.c.o
@@ -779,7 +779,7 @@ src/asset_loader/asset_loader_material.o: src/asset_loader/asset_loader_material
 
 # target to build an object file
 src/asset_loader/asset_loader_material.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_material.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_material.c.o
 .PHONY : src/asset_loader/asset_loader_material.c.o
 
 src/asset_loader/asset_loader_material.i: src/asset_loader/asset_loader_material.c.i
@@ -787,7 +787,7 @@ src/asset_loader/asset_loader_material.i: src/asset_loader/asset_loader_material
 
 # target to preprocess a source file
 src/asset_loader/asset_loader_material.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_material.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_material.c.i
 .PHONY : src/asset_loader/asset_loader_material.c.i
 
 src/asset_loader/asset_loader_material.s: src/asset_loader/asset_loader_material.c.s
@@ -795,7 +795,7 @@ src/asset_loader/asset_loader_material.s: src/asset_loader/asset_loader_material
 
 # target to generate assembly for a file
 src/asset_loader/asset_loader_material.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_material.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_material.c.s
 .PHONY : src/asset_loader/asset_loader_material.c.s
 
 src/asset_loader/asset_loader_mesh.o: src/asset_loader/asset_loader_mesh.c.o
@@ -803,7 +803,7 @@ src/asset_loader/asset_loader_mesh.o: src/asset_loader/asset_loader_mesh.c.o
 
 # target to build an object file
 src/asset_loader/asset_loader_mesh.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_mesh.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_mesh.c.o
 .PHONY : src/asset_loader/asset_loader_mesh.c.o
 
 src/asset_loader/asset_loader_mesh.i: src/asset_loader/asset_loader_mesh.c.i
@@ -811,7 +811,7 @@ src/asset_loader/asset_loader_mesh.i: src/asset_loader/asset_loader_mesh.c.i
 
 # target to preprocess a source file
 src/asset_loader/asset_loader_mesh.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_mesh.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_mesh.c.i
 .PHONY : src/asset_loader/asset_loader_mesh.c.i
 
 src/asset_loader/asset_loader_mesh.s: src/asset_loader/asset_loader_mesh.c.s
@@ -819,7 +819,7 @@ src/asset_loader/asset_loader_mesh.s: src/asset_loader/asset_loader_mesh.c.s
 
 # target to generate assembly for a file
 src/asset_loader/asset_loader_mesh.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/asset_loader/asset_loader_mesh.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/asset_loader/asset_loader_mesh.c.s
 .PHONY : src/asset_loader/asset_loader_mesh.c.s
 
 src/assets.o: src/assets.c.o
@@ -827,7 +827,7 @@ src/assets.o: src/assets.c.o
 
 # target to build an object file
 src/assets.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/assets.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/assets.c.o
 .PHONY : src/assets.c.o
 
 src/assets.i: src/assets.c.i
@@ -835,7 +835,7 @@ src/assets.i: src/assets.c.i
 
 # target to preprocess a source file
 src/assets.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/assets.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/assets.c.i
 .PHONY : src/assets.c.i
 
 src/assets.s: src/assets.c.s
@@ -843,7 +843,7 @@ src/assets.s: src/assets.c.s
 
 # target to generate assembly for a file
 src/assets.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/assets.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/assets.c.s
 .PHONY : src/assets.c.s
 
 src/component/look_target.o: src/component/look_target.c.o
@@ -851,7 +851,7 @@ src/component/look_target.o: src/component/look_target.c.o
 
 # target to build an object file
 src/component/look_target.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/component/look_target.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/component/look_target.c.o
 .PHONY : src/component/look_target.c.o
 
 src/component/look_target.i: src/component/look_target.c.i
@@ -859,7 +859,7 @@ src/component/look_target.i: src/component/look_target.c.i
 
 # target to preprocess a source file
 src/component/look_target.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/component/look_target.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/component/look_target.c.i
 .PHONY : src/component/look_target.c.i
 
 src/component/look_target.s: src/component/look_target.c.s
@@ -867,7 +867,7 @@ src/component/look_target.s: src/component/look_target.c.s
 
 # target to generate assembly for a file
 src/component/look_target.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/component/look_target.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/component/look_target.c.s
 .PHONY : src/component/look_target.c.s
 
 src/component/thruster_points_component.o: src/component/thruster_points_component.c.o
@@ -875,7 +875,7 @@ src/component/thruster_points_component.o: src/component/thruster_points_compone
 
 # target to build an object file
 src/component/thruster_points_component.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/component/thruster_points_component.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/component/thruster_points_component.c.o
 .PHONY : src/component/thruster_points_component.c.o
 
 src/component/thruster_points_component.i: src/component/thruster_points_component.c.i
@@ -883,7 +883,7 @@ src/component/thruster_points_component.i: src/component/thruster_points_compone
 
 # target to preprocess a source file
 src/component/thruster_points_component.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/component/thruster_points_component.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/component/thruster_points_component.c.i
 .PHONY : src/component/thruster_points_component.c.i
 
 src/component/thruster_points_component.s: src/component/thruster_points_component.c.s
@@ -891,7 +891,7 @@ src/component/thruster_points_component.s: src/component/thruster_points_compone
 
 # target to generate assembly for a file
 src/component/thruster_points_component.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/component/thruster_points_component.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/component/thruster_points_component.c.s
 .PHONY : src/component/thruster_points_component.c.s
 
 src/config.o: src/config.c.o
@@ -899,7 +899,7 @@ src/config.o: src/config.c.o
 
 # target to build an object file
 src/config.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/config.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/config.c.o
 .PHONY : src/config.c.o
 
 src/config.i: src/config.c.i
@@ -907,7 +907,7 @@ src/config.i: src/config.c.i
 
 # target to preprocess a source file
 src/config.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/config.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/config.c.i
 .PHONY : src/config.c.i
 
 src/config.s: src/config.c.s
@@ -915,7 +915,7 @@ src/config.s: src/config.c.s
 
 # target to generate assembly for a file
 src/config.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/config.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/config.c.s
 .PHONY : src/config.c.s
 
 src/core.o: src/core.c.o
@@ -923,7 +923,7 @@ src/core.o: src/core.c.o
 
 # target to build an object file
 src/core.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/core.c.o
 .PHONY : src/core.c.o
 
 src/core.i: src/core.c.i
@@ -931,7 +931,7 @@ src/core.i: src/core.c.i
 
 # target to preprocess a source file
 src/core.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/core.c.i
 .PHONY : src/core.c.i
 
 src/core.s: src/core.c.s
@@ -939,7 +939,7 @@ src/core.s: src/core.c.s
 
 # target to generate assembly for a file
 src/core.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/core.c.s
 .PHONY : src/core.c.s
 
 src/data.o: src/data.c.o
@@ -947,7 +947,7 @@ src/data.o: src/data.c.o
 
 # target to build an object file
 src/data.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/data.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/data.c.o
 .PHONY : src/data.c.o
 
 src/data.i: src/data.c.i
@@ -955,7 +955,7 @@ src/data.i: src/data.c.i
 
 # target to preprocess a source file
 src/data.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/data.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/data.c.i
 .PHONY : src/data.c.i
 
 src/data.s: src/data.c.s
@@ -963,7 +963,7 @@ src/data.s: src/data.c.s
 
 # target to generate assembly for a file
 src/data.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/data.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/data.c.s
 .PHONY : src/data.c.s
 
 src/entity_yaml_loader.o: src/entity_yaml_loader.c.o
@@ -971,7 +971,7 @@ src/entity_yaml_loader.o: src/entity_yaml_loader.c.o
 
 # target to build an object file
 src/entity_yaml_loader.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/entity_yaml_loader.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/entity_yaml_loader.c.o
 .PHONY : src/entity_yaml_loader.c.o
 
 src/entity_yaml_loader.i: src/entity_yaml_loader.c.i
@@ -979,7 +979,7 @@ src/entity_yaml_loader.i: src/entity_yaml_loader.c.i
 
 # target to preprocess a source file
 src/entity_yaml_loader.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/entity_yaml_loader.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/entity_yaml_loader.c.i
 .PHONY : src/entity_yaml_loader.c.i
 
 src/entity_yaml_loader.s: src/entity_yaml_loader.c.s
@@ -987,7 +987,7 @@ src/entity_yaml_loader.s: src/entity_yaml_loader.c.s
 
 # target to generate assembly for a file
 src/entity_yaml_loader.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/entity_yaml_loader.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/entity_yaml_loader.c.s
 .PHONY : src/entity_yaml_loader.c.s
 
 src/game_input.o: src/game_input.c.o
@@ -995,7 +995,7 @@ src/game_input.o: src/game_input.c.o
 
 # target to build an object file
 src/game_input.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/game_input.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/game_input.c.o
 .PHONY : src/game_input.c.o
 
 src/game_input.i: src/game_input.c.i
@@ -1003,7 +1003,7 @@ src/game_input.i: src/game_input.c.i
 
 # target to preprocess a source file
 src/game_input.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/game_input.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/game_input.c.i
 .PHONY : src/game_input.c.i
 
 src/game_input.s: src/game_input.c.s
@@ -1011,7 +1011,7 @@ src/game_input.s: src/game_input.c.s
 
 # target to generate assembly for a file
 src/game_input.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/game_input.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/game_input.c.s
 .PHONY : src/game_input.c.s
 
 src/gpu_resources.o: src/gpu_resources.c.o
@@ -1019,7 +1019,7 @@ src/gpu_resources.o: src/gpu_resources.c.o
 
 # target to build an object file
 src/gpu_resources.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/gpu_resources.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/gpu_resources.c.o
 .PHONY : src/gpu_resources.c.o
 
 src/gpu_resources.i: src/gpu_resources.c.i
@@ -1027,7 +1027,7 @@ src/gpu_resources.i: src/gpu_resources.c.i
 
 # target to preprocess a source file
 src/gpu_resources.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/gpu_resources.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/gpu_resources.c.i
 .PHONY : src/gpu_resources.c.i
 
 src/gpu_resources.s: src/gpu_resources.c.s
@@ -1035,7 +1035,7 @@ src/gpu_resources.s: src/gpu_resources.c.s
 
 # target to generate assembly for a file
 src/gpu_resources.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/gpu_resources.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/gpu_resources.c.s
 .PHONY : src/gpu_resources.c.s
 
 src/graphics_api.o: src/graphics_api.c.o
@@ -1043,7 +1043,7 @@ src/graphics_api.o: src/graphics_api.c.o
 
 # target to build an object file
 src/graphics_api.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/graphics_api.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/graphics_api.c.o
 .PHONY : src/graphics_api.c.o
 
 src/graphics_api.i: src/graphics_api.c.i
@@ -1051,7 +1051,7 @@ src/graphics_api.i: src/graphics_api.c.i
 
 # target to preprocess a source file
 src/graphics_api.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/graphics_api.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/graphics_api.c.i
 .PHONY : src/graphics_api.c.i
 
 src/graphics_api.s: src/graphics_api.c.s
@@ -1059,7 +1059,7 @@ src/graphics_api.s: src/graphics_api.c.s
 
 # target to generate assembly for a file
 src/graphics_api.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/graphics_api.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/graphics_api.c.s
 .PHONY : src/graphics_api.c.s
 
 src/graphics_health.o: src/graphics_health.c.o
@@ -1067,7 +1067,7 @@ src/graphics_health.o: src/graphics_health.c.o
 
 # target to build an object file
 src/graphics_health.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/graphics_health.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/graphics_health.c.o
 .PHONY : src/graphics_health.c.o
 
 src/graphics_health.i: src/graphics_health.c.i
@@ -1075,7 +1075,7 @@ src/graphics_health.i: src/graphics_health.c.i
 
 # target to preprocess a source file
 src/graphics_health.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/graphics_health.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/graphics_health.c.i
 .PHONY : src/graphics_health.c.i
 
 src/graphics_health.s: src/graphics_health.c.s
@@ -1083,7 +1083,7 @@ src/graphics_health.s: src/graphics_health.c.s
 
 # target to generate assembly for a file
 src/graphics_health.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/graphics_health.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/graphics_health.c.s
 .PHONY : src/graphics_health.c.s
 
 src/hal/input_hal_mock.o: src/hal/input_hal_mock.c.o
@@ -1091,7 +1091,7 @@ src/hal/input_hal_mock.o: src/hal/input_hal_mock.c.o
 
 # target to build an object file
 src/hal/input_hal_mock.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hal/input_hal_mock.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hal/input_hal_mock.c.o
 .PHONY : src/hal/input_hal_mock.c.o
 
 src/hal/input_hal_mock.i: src/hal/input_hal_mock.c.i
@@ -1099,7 +1099,7 @@ src/hal/input_hal_mock.i: src/hal/input_hal_mock.c.i
 
 # target to preprocess a source file
 src/hal/input_hal_mock.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hal/input_hal_mock.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hal/input_hal_mock.c.i
 .PHONY : src/hal/input_hal_mock.c.i
 
 src/hal/input_hal_mock.s: src/hal/input_hal_mock.c.s
@@ -1107,7 +1107,7 @@ src/hal/input_hal_mock.s: src/hal/input_hal_mock.c.s
 
 # target to generate assembly for a file
 src/hal/input_hal_mock.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hal/input_hal_mock.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hal/input_hal_mock.c.s
 .PHONY : src/hal/input_hal_mock.c.s
 
 src/hal/input_hal_sokol.o: src/hal/input_hal_sokol.c.o
@@ -1115,7 +1115,7 @@ src/hal/input_hal_sokol.o: src/hal/input_hal_sokol.c.o
 
 # target to build an object file
 src/hal/input_hal_sokol.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hal/input_hal_sokol.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hal/input_hal_sokol.c.o
 .PHONY : src/hal/input_hal_sokol.c.o
 
 src/hal/input_hal_sokol.i: src/hal/input_hal_sokol.c.i
@@ -1123,7 +1123,7 @@ src/hal/input_hal_sokol.i: src/hal/input_hal_sokol.c.i
 
 # target to preprocess a source file
 src/hal/input_hal_sokol.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hal/input_hal_sokol.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hal/input_hal_sokol.c.i
 .PHONY : src/hal/input_hal_sokol.c.i
 
 src/hal/input_hal_sokol.s: src/hal/input_hal_sokol.c.s
@@ -1131,7 +1131,7 @@ src/hal/input_hal_sokol.s: src/hal/input_hal_sokol.c.s
 
 # target to generate assembly for a file
 src/hal/input_hal_sokol.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hal/input_hal_sokol.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hal/input_hal_sokol.c.s
 .PHONY : src/hal/input_hal_sokol.c.s
 
 src/hidapi_mac.o: src/hidapi_mac.c.o
@@ -1139,7 +1139,7 @@ src/hidapi_mac.o: src/hidapi_mac.c.o
 
 # target to build an object file
 src/hidapi_mac.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hidapi_mac.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hidapi_mac.c.o
 .PHONY : src/hidapi_mac.c.o
 
 src/hidapi_mac.i: src/hidapi_mac.c.i
@@ -1147,7 +1147,7 @@ src/hidapi_mac.i: src/hidapi_mac.c.i
 
 # target to preprocess a source file
 src/hidapi_mac.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hidapi_mac.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hidapi_mac.c.i
 .PHONY : src/hidapi_mac.c.i
 
 src/hidapi_mac.s: src/hidapi_mac.c.s
@@ -1155,7 +1155,7 @@ src/hidapi_mac.s: src/hidapi_mac.c.s
 
 # target to generate assembly for a file
 src/hidapi_mac.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/hidapi_mac.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/hidapi_mac.c.s
 .PHONY : src/hidapi_mac.c.s
 
 src/input_state.o: src/input_state.c.o
@@ -1163,7 +1163,7 @@ src/input_state.o: src/input_state.c.o
 
 # target to build an object file
 src/input_state.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/input_state.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/input_state.c.o
 .PHONY : src/input_state.c.o
 
 src/input_state.i: src/input_state.c.i
@@ -1171,7 +1171,7 @@ src/input_state.i: src/input_state.c.i
 
 # target to preprocess a source file
 src/input_state.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/input_state.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/input_state.c.i
 .PHONY : src/input_state.c.i
 
 src/input_state.s: src/input_state.c.s
@@ -1179,7 +1179,7 @@ src/input_state.s: src/input_state.c.s
 
 # target to generate assembly for a file
 src/input_state.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/input_state.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/input_state.c.s
 .PHONY : src/input_state.c.s
 
 src/main.o: src/main.c.o
@@ -1187,7 +1187,7 @@ src/main.o: src/main.c.o
 
 # target to build an object file
 src/main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/main.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal.dir/build.make CMakeFiles/signal.dir/src/main.c.o
 .PHONY : src/main.c.o
 
 src/main.i: src/main.c.i
@@ -1195,7 +1195,7 @@ src/main.i: src/main.c.i
 
 # target to preprocess a source file
 src/main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/main.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal.dir/build.make CMakeFiles/signal.dir/src/main.c.i
 .PHONY : src/main.c.i
 
 src/main.s: src/main.c.s
@@ -1203,7 +1203,7 @@ src/main.s: src/main.c.s
 
 # target to generate assembly for a file
 src/main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame.dir/build.make CMakeFiles/cgame.dir/src/main.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal.dir/build.make CMakeFiles/signal.dir/src/main.c.s
 .PHONY : src/main.c.s
 
 src/microui/microui.o: src/microui/microui.c.o
@@ -1211,7 +1211,7 @@ src/microui/microui.o: src/microui/microui.c.o
 
 # target to build an object file
 src/microui/microui.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/microui/microui.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/microui/microui.c.o
 .PHONY : src/microui/microui.c.o
 
 src/microui/microui.i: src/microui/microui.c.i
@@ -1219,7 +1219,7 @@ src/microui/microui.i: src/microui/microui.c.i
 
 # target to preprocess a source file
 src/microui/microui.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/microui/microui.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/microui/microui.c.i
 .PHONY : src/microui/microui.c.i
 
 src/microui/microui.s: src/microui/microui.c.s
@@ -1227,7 +1227,7 @@ src/microui/microui.s: src/microui/microui.c.s
 
 # target to generate assembly for a file
 src/microui/microui.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/microui/microui.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/microui/microui.c.s
 .PHONY : src/microui/microui.c.s
 
 src/pipeline_manager.o: src/pipeline_manager.c.o
@@ -1235,7 +1235,7 @@ src/pipeline_manager.o: src/pipeline_manager.c.o
 
 # target to build an object file
 src/pipeline_manager.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/pipeline_manager.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/pipeline_manager.c.o
 .PHONY : src/pipeline_manager.c.o
 
 src/pipeline_manager.i: src/pipeline_manager.c.i
@@ -1243,7 +1243,7 @@ src/pipeline_manager.i: src/pipeline_manager.c.i
 
 # target to preprocess a source file
 src/pipeline_manager.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/pipeline_manager.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/pipeline_manager.c.i
 .PHONY : src/pipeline_manager.c.i
 
 src/pipeline_manager.s: src/pipeline_manager.c.s
@@ -1251,7 +1251,7 @@ src/pipeline_manager.s: src/pipeline_manager.c.s
 
 # target to generate assembly for a file
 src/pipeline_manager.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/pipeline_manager.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/pipeline_manager.c.s
 .PHONY : src/pipeline_manager.c.s
 
 src/render_3d.o: src/render_3d.c.o
@@ -1259,7 +1259,7 @@ src/render_3d.o: src/render_3d.c.o
 
 # target to build an object file
 src/render_3d.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_3d.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_3d.c.o
 .PHONY : src/render_3d.c.o
 
 src/render_3d.i: src/render_3d.c.i
@@ -1267,7 +1267,7 @@ src/render_3d.i: src/render_3d.c.i
 
 # target to preprocess a source file
 src/render_3d.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_3d.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_3d.c.i
 .PHONY : src/render_3d.c.i
 
 src/render_3d.s: src/render_3d.c.s
@@ -1275,7 +1275,7 @@ src/render_3d.s: src/render_3d.c.s
 
 # target to generate assembly for a file
 src/render_3d.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_3d.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_3d.c.s
 .PHONY : src/render_3d.c.s
 
 src/render_camera.o: src/render_camera.c.o
@@ -1283,7 +1283,7 @@ src/render_camera.o: src/render_camera.c.o
 
 # target to build an object file
 src/render_camera.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_camera.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_camera.c.o
 .PHONY : src/render_camera.c.o
 
 src/render_camera.i: src/render_camera.c.i
@@ -1291,7 +1291,7 @@ src/render_camera.i: src/render_camera.c.i
 
 # target to preprocess a source file
 src/render_camera.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_camera.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_camera.c.i
 .PHONY : src/render_camera.c.i
 
 src/render_camera.s: src/render_camera.c.s
@@ -1299,7 +1299,7 @@ src/render_camera.s: src/render_camera.c.s
 
 # target to generate assembly for a file
 src/render_camera.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_camera.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_camera.c.s
 .PHONY : src/render_camera.c.s
 
 src/render_layers.o: src/render_layers.c.o
@@ -1307,7 +1307,7 @@ src/render_layers.o: src/render_layers.c.o
 
 # target to build an object file
 src/render_layers.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_layers.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_layers.c.o
 .PHONY : src/render_layers.c.o
 
 src/render_layers.i: src/render_layers.c.i
@@ -1315,7 +1315,7 @@ src/render_layers.i: src/render_layers.c.i
 
 # target to preprocess a source file
 src/render_layers.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_layers.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_layers.c.i
 .PHONY : src/render_layers.c.i
 
 src/render_layers.s: src/render_layers.c.s
@@ -1323,7 +1323,7 @@ src/render_layers.s: src/render_layers.c.s
 
 # target to generate assembly for a file
 src/render_layers.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_layers.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_layers.c.s
 .PHONY : src/render_layers.c.s
 
 src/render_lighting.o: src/render_lighting.c.o
@@ -1331,7 +1331,7 @@ src/render_lighting.o: src/render_lighting.c.o
 
 # target to build an object file
 src/render_lighting.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_lighting.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_lighting.c.o
 .PHONY : src/render_lighting.c.o
 
 src/render_lighting.i: src/render_lighting.c.i
@@ -1339,7 +1339,7 @@ src/render_lighting.i: src/render_lighting.c.i
 
 # target to preprocess a source file
 src/render_lighting.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_lighting.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_lighting.c.i
 .PHONY : src/render_lighting.c.i
 
 src/render_lighting.s: src/render_lighting.c.s
@@ -1347,7 +1347,7 @@ src/render_lighting.s: src/render_lighting.c.s
 
 # target to generate assembly for a file
 src/render_lighting.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_lighting.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_lighting.c.s
 .PHONY : src/render_lighting.c.s
 
 src/render_mesh.o: src/render_mesh.c.o
@@ -1355,7 +1355,7 @@ src/render_mesh.o: src/render_mesh.c.o
 
 # target to build an object file
 src/render_mesh.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_mesh.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_mesh.c.o
 .PHONY : src/render_mesh.c.o
 
 src/render_mesh.i: src/render_mesh.c.i
@@ -1363,7 +1363,7 @@ src/render_mesh.i: src/render_mesh.c.i
 
 # target to preprocess a source file
 src/render_mesh.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_mesh.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_mesh.c.i
 .PHONY : src/render_mesh.c.i
 
 src/render_mesh.s: src/render_mesh.c.s
@@ -1371,7 +1371,7 @@ src/render_mesh.s: src/render_mesh.c.s
 
 # target to generate assembly for a file
 src/render_mesh.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_mesh.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_mesh.c.s
 .PHONY : src/render_mesh.c.s
 
 src/render_pass_guard.o: src/render_pass_guard.c.o
@@ -1379,7 +1379,7 @@ src/render_pass_guard.o: src/render_pass_guard.c.o
 
 # target to build an object file
 src/render_pass_guard.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_pass_guard.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_pass_guard.c.o
 .PHONY : src/render_pass_guard.c.o
 
 src/render_pass_guard.i: src/render_pass_guard.c.i
@@ -1387,7 +1387,7 @@ src/render_pass_guard.i: src/render_pass_guard.c.i
 
 # target to preprocess a source file
 src/render_pass_guard.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_pass_guard.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_pass_guard.c.i
 .PHONY : src/render_pass_guard.c.i
 
 src/render_pass_guard.s: src/render_pass_guard.c.s
@@ -1395,7 +1395,7 @@ src/render_pass_guard.s: src/render_pass_guard.c.s
 
 # target to generate assembly for a file
 src/render_pass_guard.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_pass_guard.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_pass_guard.c.s
 .PHONY : src/render_pass_guard.c.s
 
 src/render_thrust_cones.o: src/render_thrust_cones.c.o
@@ -1403,7 +1403,7 @@ src/render_thrust_cones.o: src/render_thrust_cones.c.o
 
 # target to build an object file
 src/render_thrust_cones.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_thrust_cones.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_thrust_cones.c.o
 .PHONY : src/render_thrust_cones.c.o
 
 src/render_thrust_cones.i: src/render_thrust_cones.c.i
@@ -1411,7 +1411,7 @@ src/render_thrust_cones.i: src/render_thrust_cones.c.i
 
 # target to preprocess a source file
 src/render_thrust_cones.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_thrust_cones.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_thrust_cones.c.i
 .PHONY : src/render_thrust_cones.c.i
 
 src/render_thrust_cones.s: src/render_thrust_cones.c.s
@@ -1419,7 +1419,7 @@ src/render_thrust_cones.s: src/render_thrust_cones.c.s
 
 # target to generate assembly for a file
 src/render_thrust_cones.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/render_thrust_cones.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/render_thrust_cones.c.s
 .PHONY : src/render_thrust_cones.c.s
 
 src/scene_script.o: src/scene_script.c.o
@@ -1427,7 +1427,7 @@ src/scene_script.o: src/scene_script.c.o
 
 # target to build an object file
 src/scene_script.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_script.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_script.c.o
 .PHONY : src/scene_script.c.o
 
 src/scene_script.i: src/scene_script.c.i
@@ -1435,7 +1435,7 @@ src/scene_script.i: src/scene_script.c.i
 
 # target to preprocess a source file
 src/scene_script.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_script.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_script.c.i
 .PHONY : src/scene_script.c.i
 
 src/scene_script.s: src/scene_script.c.s
@@ -1443,7 +1443,7 @@ src/scene_script.s: src/scene_script.c.s
 
 # target to generate assembly for a file
 src/scene_script.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_script.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_script.c.s
 .PHONY : src/scene_script.c.s
 
 src/scene_state.o: src/scene_state.c.o
@@ -1451,7 +1451,7 @@ src/scene_state.o: src/scene_state.c.o
 
 # target to build an object file
 src/scene_state.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_state.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_state.c.o
 .PHONY : src/scene_state.c.o
 
 src/scene_state.i: src/scene_state.c.i
@@ -1459,7 +1459,7 @@ src/scene_state.i: src/scene_state.c.i
 
 # target to preprocess a source file
 src/scene_state.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_state.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_state.c.i
 .PHONY : src/scene_state.c.i
 
 src/scene_state.s: src/scene_state.c.s
@@ -1467,7 +1467,7 @@ src/scene_state.s: src/scene_state.c.s
 
 # target to generate assembly for a file
 src/scene_state.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_state.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_state.c.s
 .PHONY : src/scene_state.c.s
 
 src/scene_yaml_loader.o: src/scene_yaml_loader.c.o
@@ -1475,7 +1475,7 @@ src/scene_yaml_loader.o: src/scene_yaml_loader.c.o
 
 # target to build an object file
 src/scene_yaml_loader.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_yaml_loader.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_yaml_loader.c.o
 .PHONY : src/scene_yaml_loader.c.o
 
 src/scene_yaml_loader.i: src/scene_yaml_loader.c.i
@@ -1483,7 +1483,7 @@ src/scene_yaml_loader.i: src/scene_yaml_loader.c.i
 
 # target to preprocess a source file
 src/scene_yaml_loader.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_yaml_loader.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_yaml_loader.c.i
 .PHONY : src/scene_yaml_loader.c.i
 
 src/scene_yaml_loader.s: src/scene_yaml_loader.c.s
@@ -1491,7 +1491,7 @@ src/scene_yaml_loader.s: src/scene_yaml_loader.c.s
 
 # target to generate assembly for a file
 src/scene_yaml_loader.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scene_yaml_loader.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scene_yaml_loader.c.s
 .PHONY : src/scene_yaml_loader.c.s
 
 src/scripts/flight_test_scene.o: src/scripts/flight_test_scene.c.o
@@ -1499,7 +1499,7 @@ src/scripts/flight_test_scene.o: src/scripts/flight_test_scene.c.o
 
 # target to build an object file
 src/scripts/flight_test_scene.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/flight_test_scene.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/flight_test_scene.c.o
 .PHONY : src/scripts/flight_test_scene.c.o
 
 src/scripts/flight_test_scene.i: src/scripts/flight_test_scene.c.i
@@ -1507,7 +1507,7 @@ src/scripts/flight_test_scene.i: src/scripts/flight_test_scene.c.i
 
 # target to preprocess a source file
 src/scripts/flight_test_scene.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/flight_test_scene.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/flight_test_scene.c.i
 .PHONY : src/scripts/flight_test_scene.c.i
 
 src/scripts/flight_test_scene.s: src/scripts/flight_test_scene.c.s
@@ -1515,7 +1515,7 @@ src/scripts/flight_test_scene.s: src/scripts/flight_test_scene.c.s
 
 # target to generate assembly for a file
 src/scripts/flight_test_scene.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/flight_test_scene.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/flight_test_scene.c.s
 .PHONY : src/scripts/flight_test_scene.c.s
 
 src/scripts/logo_scene.o: src/scripts/logo_scene.c.o
@@ -1523,7 +1523,7 @@ src/scripts/logo_scene.o: src/scripts/logo_scene.c.o
 
 # target to build an object file
 src/scripts/logo_scene.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/logo_scene.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/logo_scene.c.o
 .PHONY : src/scripts/logo_scene.c.o
 
 src/scripts/logo_scene.i: src/scripts/logo_scene.c.i
@@ -1531,7 +1531,7 @@ src/scripts/logo_scene.i: src/scripts/logo_scene.c.i
 
 # target to preprocess a source file
 src/scripts/logo_scene.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/logo_scene.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/logo_scene.c.i
 .PHONY : src/scripts/logo_scene.c.i
 
 src/scripts/logo_scene.s: src/scripts/logo_scene.c.s
@@ -1539,7 +1539,7 @@ src/scripts/logo_scene.s: src/scripts/logo_scene.c.s
 
 # target to generate assembly for a file
 src/scripts/logo_scene.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/logo_scene.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/logo_scene.c.s
 .PHONY : src/scripts/logo_scene.c.s
 
 src/scripts/navigation_menu_scene.o: src/scripts/navigation_menu_scene.c.o
@@ -1547,7 +1547,7 @@ src/scripts/navigation_menu_scene.o: src/scripts/navigation_menu_scene.c.o
 
 # target to build an object file
 src/scripts/navigation_menu_scene.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/navigation_menu_scene.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/navigation_menu_scene.c.o
 .PHONY : src/scripts/navigation_menu_scene.c.o
 
 src/scripts/navigation_menu_scene.i: src/scripts/navigation_menu_scene.c.i
@@ -1555,7 +1555,7 @@ src/scripts/navigation_menu_scene.i: src/scripts/navigation_menu_scene.c.i
 
 # target to preprocess a source file
 src/scripts/navigation_menu_scene.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/navigation_menu_scene.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/navigation_menu_scene.c.i
 .PHONY : src/scripts/navigation_menu_scene.c.i
 
 src/scripts/navigation_menu_scene.s: src/scripts/navigation_menu_scene.c.s
@@ -1563,7 +1563,7 @@ src/scripts/navigation_menu_scene.s: src/scripts/navigation_menu_scene.c.s
 
 # target to generate assembly for a file
 src/scripts/navigation_menu_scene.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/navigation_menu_scene.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/navigation_menu_scene.c.s
 .PHONY : src/scripts/navigation_menu_scene.c.s
 
 src/scripts/template_scene.o: src/scripts/template_scene.c.o
@@ -1571,7 +1571,7 @@ src/scripts/template_scene.o: src/scripts/template_scene.c.o
 
 # target to build an object file
 src/scripts/template_scene.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/template_scene.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/template_scene.c.o
 .PHONY : src/scripts/template_scene.c.o
 
 src/scripts/template_scene.i: src/scripts/template_scene.c.i
@@ -1579,7 +1579,7 @@ src/scripts/template_scene.i: src/scripts/template_scene.c.i
 
 # target to preprocess a source file
 src/scripts/template_scene.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/template_scene.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/template_scene.c.i
 .PHONY : src/scripts/template_scene.c.i
 
 src/scripts/template_scene.s: src/scripts/template_scene.c.s
@@ -1587,7 +1587,7 @@ src/scripts/template_scene.s: src/scripts/template_scene.c.s
 
 # target to generate assembly for a file
 src/scripts/template_scene.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/scripts/template_scene.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/scripts/template_scene.c.s
 .PHONY : src/scripts/template_scene.c.s
 
 src/services/input_service.o: src/services/input_service.c.o
@@ -1595,7 +1595,7 @@ src/services/input_service.o: src/services/input_service.c.o
 
 # target to build an object file
 src/services/input_service.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/services/input_service.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/services/input_service.c.o
 .PHONY : src/services/input_service.c.o
 
 src/services/input_service.i: src/services/input_service.c.i
@@ -1603,7 +1603,7 @@ src/services/input_service.i: src/services/input_service.c.i
 
 # target to preprocess a source file
 src/services/input_service.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/services/input_service.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/services/input_service.c.i
 .PHONY : src/services/input_service.c.i
 
 src/services/input_service.s: src/services/input_service.c.s
@@ -1611,7 +1611,7 @@ src/services/input_service.s: src/services/input_service.c.s
 
 # target to generate assembly for a file
 src/services/input_service.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/services/input_service.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/services/input_service.c.s
 .PHONY : src/services/input_service.c.s
 
 src/system/ai.o: src/system/ai.c.o
@@ -1619,7 +1619,7 @@ src/system/ai.o: src/system/ai.c.o
 
 # target to build an object file
 src/system/ai.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/ai.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/ai.c.o
 .PHONY : src/system/ai.c.o
 
 src/system/ai.i: src/system/ai.c.i
@@ -1627,7 +1627,7 @@ src/system/ai.i: src/system/ai.c.i
 
 # target to preprocess a source file
 src/system/ai.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/ai.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/ai.c.i
 .PHONY : src/system/ai.c.i
 
 src/system/ai.s: src/system/ai.c.s
@@ -1635,7 +1635,7 @@ src/system/ai.s: src/system/ai.c.s
 
 # target to generate assembly for a file
 src/system/ai.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/ai.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/ai.c.s
 .PHONY : src/system/ai.c.s
 
 src/system/camera.o: src/system/camera.c.o
@@ -1643,7 +1643,7 @@ src/system/camera.o: src/system/camera.c.o
 
 # target to build an object file
 src/system/camera.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/camera.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/camera.c.o
 .PHONY : src/system/camera.c.o
 
 src/system/camera.i: src/system/camera.c.i
@@ -1651,7 +1651,7 @@ src/system/camera.i: src/system/camera.c.i
 
 # target to preprocess a source file
 src/system/camera.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/camera.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/camera.c.i
 .PHONY : src/system/camera.c.i
 
 src/system/camera.s: src/system/camera.c.s
@@ -1659,7 +1659,7 @@ src/system/camera.s: src/system/camera.c.s
 
 # target to generate assembly for a file
 src/system/camera.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/camera.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/camera.c.s
 .PHONY : src/system/camera.c.s
 
 src/system/collision.o: src/system/collision.c.o
@@ -1667,7 +1667,7 @@ src/system/collision.o: src/system/collision.c.o
 
 # target to build an object file
 src/system/collision.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/collision.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/collision.c.o
 .PHONY : src/system/collision.c.o
 
 src/system/collision.i: src/system/collision.c.i
@@ -1675,7 +1675,7 @@ src/system/collision.i: src/system/collision.c.i
 
 # target to preprocess a source file
 src/system/collision.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/collision.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/collision.c.i
 .PHONY : src/system/collision.c.i
 
 src/system/collision.s: src/system/collision.c.s
@@ -1683,7 +1683,7 @@ src/system/collision.s: src/system/collision.c.s
 
 # target to generate assembly for a file
 src/system/collision.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/collision.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/collision.c.s
 .PHONY : src/system/collision.c.s
 
 src/system/control.o: src/system/control.c.o
@@ -1691,7 +1691,7 @@ src/system/control.o: src/system/control.c.o
 
 # target to build an object file
 src/system/control.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/control.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/control.c.o
 .PHONY : src/system/control.c.o
 
 src/system/control.i: src/system/control.c.i
@@ -1699,7 +1699,7 @@ src/system/control.i: src/system/control.c.i
 
 # target to preprocess a source file
 src/system/control.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/control.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/control.c.i
 .PHONY : src/system/control.c.i
 
 src/system/control.s: src/system/control.c.s
@@ -1707,7 +1707,7 @@ src/system/control.s: src/system/control.c.s
 
 # target to generate assembly for a file
 src/system/control.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/control.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/control.c.s
 .PHONY : src/system/control.c.s
 
 src/system/lod.o: src/system/lod.c.o
@@ -1715,7 +1715,7 @@ src/system/lod.o: src/system/lod.c.o
 
 # target to build an object file
 src/system/lod.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/lod.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/lod.c.o
 .PHONY : src/system/lod.c.o
 
 src/system/lod.i: src/system/lod.c.i
@@ -1723,7 +1723,7 @@ src/system/lod.i: src/system/lod.c.i
 
 # target to preprocess a source file
 src/system/lod.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/lod.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/lod.c.i
 .PHONY : src/system/lod.c.i
 
 src/system/lod.s: src/system/lod.c.s
@@ -1731,7 +1731,7 @@ src/system/lod.s: src/system/lod.c.s
 
 # target to generate assembly for a file
 src/system/lod.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/lod.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/lod.c.s
 .PHONY : src/system/lod.c.s
 
 src/system/material.o: src/system/material.c.o
@@ -1739,7 +1739,7 @@ src/system/material.o: src/system/material.c.o
 
 # target to build an object file
 src/system/material.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/material.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/material.c.o
 .PHONY : src/system/material.c.o
 
 src/system/material.i: src/system/material.c.i
@@ -1747,7 +1747,7 @@ src/system/material.i: src/system/material.c.i
 
 # target to preprocess a source file
 src/system/material.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/material.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/material.c.i
 .PHONY : src/system/material.c.i
 
 src/system/material.s: src/system/material.c.s
@@ -1755,7 +1755,7 @@ src/system/material.s: src/system/material.c.s
 
 # target to generate assembly for a file
 src/system/material.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/material.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/material.c.s
 .PHONY : src/system/material.c.s
 
 src/system/memory.o: src/system/memory.c.o
@@ -1763,7 +1763,7 @@ src/system/memory.o: src/system/memory.c.o
 
 # target to build an object file
 src/system/memory.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/memory.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/memory.c.o
 .PHONY : src/system/memory.c.o
 
 src/system/memory.i: src/system/memory.c.i
@@ -1771,7 +1771,7 @@ src/system/memory.i: src/system/memory.c.i
 
 # target to preprocess a source file
 src/system/memory.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/memory.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/memory.c.i
 .PHONY : src/system/memory.c.i
 
 src/system/memory.s: src/system/memory.c.s
@@ -1779,7 +1779,7 @@ src/system/memory.s: src/system/memory.c.s
 
 # target to generate assembly for a file
 src/system/memory.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/memory.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/memory.c.s
 .PHONY : src/system/memory.c.s
 
 src/system/performance.o: src/system/performance.c.o
@@ -1787,7 +1787,7 @@ src/system/performance.o: src/system/performance.c.o
 
 # target to build an object file
 src/system/performance.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/performance.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/performance.c.o
 .PHONY : src/system/performance.c.o
 
 src/system/performance.i: src/system/performance.c.i
@@ -1795,7 +1795,7 @@ src/system/performance.i: src/system/performance.c.i
 
 # target to preprocess a source file
 src/system/performance.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/performance.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/performance.c.i
 .PHONY : src/system/performance.c.i
 
 src/system/performance.s: src/system/performance.c.s
@@ -1803,7 +1803,7 @@ src/system/performance.s: src/system/performance.c.s
 
 # target to generate assembly for a file
 src/system/performance.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/performance.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/performance.c.s
 .PHONY : src/system/performance.c.s
 
 src/system/physics.o: src/system/physics.c.o
@@ -1811,7 +1811,7 @@ src/system/physics.o: src/system/physics.c.o
 
 # target to build an object file
 src/system/physics.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/physics.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/physics.c.o
 .PHONY : src/system/physics.c.o
 
 src/system/physics.i: src/system/physics.c.i
@@ -1819,7 +1819,7 @@ src/system/physics.i: src/system/physics.c.i
 
 # target to preprocess a source file
 src/system/physics.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/physics.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/physics.c.i
 .PHONY : src/system/physics.c.i
 
 src/system/physics.s: src/system/physics.c.s
@@ -1827,7 +1827,7 @@ src/system/physics.s: src/system/physics.c.s
 
 # target to generate assembly for a file
 src/system/physics.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/physics.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/physics.c.s
 .PHONY : src/system/physics.c.s
 
 src/system/scripted_flight.o: src/system/scripted_flight.c.o
@@ -1835,7 +1835,7 @@ src/system/scripted_flight.o: src/system/scripted_flight.c.o
 
 # target to build an object file
 src/system/scripted_flight.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/scripted_flight.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/scripted_flight.c.o
 .PHONY : src/system/scripted_flight.c.o
 
 src/system/scripted_flight.i: src/system/scripted_flight.c.i
@@ -1843,7 +1843,7 @@ src/system/scripted_flight.i: src/system/scripted_flight.c.i
 
 # target to preprocess a source file
 src/system/scripted_flight.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/scripted_flight.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/scripted_flight.c.i
 .PHONY : src/system/scripted_flight.c.i
 
 src/system/scripted_flight.s: src/system/scripted_flight.c.s
@@ -1851,7 +1851,7 @@ src/system/scripted_flight.s: src/system/scripted_flight.c.s
 
 # target to generate assembly for a file
 src/system/scripted_flight.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/scripted_flight.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/scripted_flight.c.s
 .PHONY : src/system/scripted_flight.c.s
 
 src/system/thruster_points_system.o: src/system/thruster_points_system.c.o
@@ -1859,7 +1859,7 @@ src/system/thruster_points_system.o: src/system/thruster_points_system.c.o
 
 # target to build an object file
 src/system/thruster_points_system.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/thruster_points_system.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/thruster_points_system.c.o
 .PHONY : src/system/thruster_points_system.c.o
 
 src/system/thruster_points_system.i: src/system/thruster_points_system.c.i
@@ -1867,7 +1867,7 @@ src/system/thruster_points_system.i: src/system/thruster_points_system.c.i
 
 # target to preprocess a source file
 src/system/thruster_points_system.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/thruster_points_system.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/thruster_points_system.c.i
 .PHONY : src/system/thruster_points_system.c.i
 
 src/system/thruster_points_system.s: src/system/thruster_points_system.c.s
@@ -1875,7 +1875,7 @@ src/system/thruster_points_system.s: src/system/thruster_points_system.c.s
 
 # target to generate assembly for a file
 src/system/thruster_points_system.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/thruster_points_system.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/thruster_points_system.c.s
 .PHONY : src/system/thruster_points_system.c.s
 
 src/system/thrusters.o: src/system/thrusters.c.o
@@ -1883,7 +1883,7 @@ src/system/thrusters.o: src/system/thrusters.c.o
 
 # target to build an object file
 src/system/thrusters.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/thrusters.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/thrusters.c.o
 .PHONY : src/system/thrusters.c.o
 
 src/system/thrusters.i: src/system/thrusters.c.i
@@ -1891,7 +1891,7 @@ src/system/thrusters.i: src/system/thrusters.c.i
 
 # target to preprocess a source file
 src/system/thrusters.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/thrusters.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/thrusters.c.i
 .PHONY : src/system/thrusters.c.i
 
 src/system/thrusters.s: src/system/thrusters.c.s
@@ -1899,7 +1899,7 @@ src/system/thrusters.s: src/system/thrusters.c.s
 
 # target to generate assembly for a file
 src/system/thrusters.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/system/thrusters.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/system/thrusters.c.s
 .PHONY : src/system/thrusters.c.s
 
 src/systems.o: src/systems.c.o
@@ -1907,7 +1907,7 @@ src/systems.o: src/systems.c.o
 
 # target to build an object file
 src/systems.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/systems.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/systems.c.o
 .PHONY : src/systems.c.o
 
 src/systems.i: src/systems.c.i
@@ -1915,7 +1915,7 @@ src/systems.i: src/systems.c.i
 
 # target to preprocess a source file
 src/systems.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/systems.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/systems.c.i
 .PHONY : src/systems.c.i
 
 src/systems.s: src/systems.c.s
@@ -1923,7 +1923,7 @@ src/systems.s: src/systems.c.s
 
 # target to generate assembly for a file
 src/systems.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/systems.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/systems.c.s
 .PHONY : src/systems.c.s
 
 src/thruster_points.o: src/thruster_points.c.o
@@ -1931,7 +1931,7 @@ src/thruster_points.o: src/thruster_points.c.o
 
 # target to build an object file
 src/thruster_points.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/thruster_points.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/thruster_points.c.o
 .PHONY : src/thruster_points.c.o
 
 src/thruster_points.i: src/thruster_points.c.i
@@ -1939,7 +1939,7 @@ src/thruster_points.i: src/thruster_points.c.i
 
 # target to preprocess a source file
 src/thruster_points.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/thruster_points.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/thruster_points.c.i
 .PHONY : src/thruster_points.c.i
 
 src/thruster_points.s: src/thruster_points.c.s
@@ -1947,7 +1947,7 @@ src/thruster_points.s: src/thruster_points.c.s
 
 # target to generate assembly for a file
 src/thruster_points.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/thruster_points.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/thruster_points.c.s
 .PHONY : src/thruster_points.c.s
 
 src/ui.o: src/ui.c.o
@@ -1955,7 +1955,7 @@ src/ui.o: src/ui.c.o
 
 # target to build an object file
 src/ui.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui.c.o
 .PHONY : src/ui.c.o
 
 src/ui.i: src/ui.c.i
@@ -1963,7 +1963,7 @@ src/ui.i: src/ui.c.i
 
 # target to preprocess a source file
 src/ui.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui.c.i
 .PHONY : src/ui.c.i
 
 src/ui.s: src/ui.c.s
@@ -1971,7 +1971,7 @@ src/ui.s: src/ui.c.s
 
 # target to generate assembly for a file
 src/ui.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui.c.s
 .PHONY : src/ui.c.s
 
 src/ui_adaptive_controls.o: src/ui_adaptive_controls.c.o
@@ -1979,7 +1979,7 @@ src/ui_adaptive_controls.o: src/ui_adaptive_controls.c.o
 
 # target to build an object file
 src/ui_adaptive_controls.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_adaptive_controls.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_adaptive_controls.c.o
 .PHONY : src/ui_adaptive_controls.c.o
 
 src/ui_adaptive_controls.i: src/ui_adaptive_controls.c.i
@@ -1987,7 +1987,7 @@ src/ui_adaptive_controls.i: src/ui_adaptive_controls.c.i
 
 # target to preprocess a source file
 src/ui_adaptive_controls.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_adaptive_controls.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_adaptive_controls.c.i
 .PHONY : src/ui_adaptive_controls.c.i
 
 src/ui_adaptive_controls.s: src/ui_adaptive_controls.c.s
@@ -1995,7 +1995,7 @@ src/ui_adaptive_controls.s: src/ui_adaptive_controls.c.s
 
 # target to generate assembly for a file
 src/ui_adaptive_controls.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_adaptive_controls.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_adaptive_controls.c.s
 .PHONY : src/ui_adaptive_controls.c.s
 
 src/ui_api.o: src/ui_api.c.o
@@ -2003,7 +2003,7 @@ src/ui_api.o: src/ui_api.c.o
 
 # target to build an object file
 src/ui_api.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_api.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_api.c.o
 .PHONY : src/ui_api.c.o
 
 src/ui_api.i: src/ui_api.c.i
@@ -2011,7 +2011,7 @@ src/ui_api.i: src/ui_api.c.i
 
 # target to preprocess a source file
 src/ui_api.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_api.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_api.c.i
 .PHONY : src/ui_api.c.i
 
 src/ui_api.s: src/ui_api.c.s
@@ -2019,7 +2019,7 @@ src/ui_api.s: src/ui_api.c.s
 
 # target to generate assembly for a file
 src/ui_api.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_api.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_api.c.s
 .PHONY : src/ui_api.c.s
 
 src/ui_components.o: src/ui_components.c.o
@@ -2027,7 +2027,7 @@ src/ui_components.o: src/ui_components.c.o
 
 # target to build an object file
 src/ui_components.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_components.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_components.c.o
 .PHONY : src/ui_components.c.o
 
 src/ui_components.i: src/ui_components.c.i
@@ -2035,7 +2035,7 @@ src/ui_components.i: src/ui_components.c.i
 
 # target to preprocess a source file
 src/ui_components.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_components.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_components.c.i
 .PHONY : src/ui_components.c.i
 
 src/ui_components.s: src/ui_components.c.s
@@ -2043,7 +2043,7 @@ src/ui_components.s: src/ui_components.c.s
 
 # target to generate assembly for a file
 src/ui_components.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_components.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_components.c.s
 .PHONY : src/ui_components.c.s
 
 src/ui_menu_system.o: src/ui_menu_system.c.o
@@ -2051,7 +2051,7 @@ src/ui_menu_system.o: src/ui_menu_system.c.o
 
 # target to build an object file
 src/ui_menu_system.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_menu_system.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_menu_system.c.o
 .PHONY : src/ui_menu_system.c.o
 
 src/ui_menu_system.i: src/ui_menu_system.c.i
@@ -2059,7 +2059,7 @@ src/ui_menu_system.i: src/ui_menu_system.c.i
 
 # target to preprocess a source file
 src/ui_menu_system.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_menu_system.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_menu_system.c.i
 .PHONY : src/ui_menu_system.c.i
 
 src/ui_menu_system.s: src/ui_menu_system.c.s
@@ -2067,7 +2067,7 @@ src/ui_menu_system.s: src/ui_menu_system.c.s
 
 # target to generate assembly for a file
 src/ui_menu_system.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_menu_system.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_menu_system.c.s
 .PHONY : src/ui_menu_system.c.s
 
 src/ui_microui.o: src/ui_microui.c.o
@@ -2075,7 +2075,7 @@ src/ui_microui.o: src/ui_microui.c.o
 
 # target to build an object file
 src/ui_microui.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_microui.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_microui.c.o
 .PHONY : src/ui_microui.c.o
 
 src/ui_microui.i: src/ui_microui.c.i
@@ -2083,7 +2083,7 @@ src/ui_microui.i: src/ui_microui.c.i
 
 # target to preprocess a source file
 src/ui_microui.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_microui.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_microui.c.i
 .PHONY : src/ui_microui.c.i
 
 src/ui_microui.s: src/ui_microui.c.s
@@ -2091,7 +2091,7 @@ src/ui_microui.s: src/ui_microui.c.s
 
 # target to generate assembly for a file
 src/ui_microui.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_microui.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_microui.c.s
 .PHONY : src/ui_microui.c.s
 
 src/ui_microui_adapter.o: src/ui_microui_adapter.c.o
@@ -2099,7 +2099,7 @@ src/ui_microui_adapter.o: src/ui_microui_adapter.c.o
 
 # target to build an object file
 src/ui_microui_adapter.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_microui_adapter.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_microui_adapter.c.o
 .PHONY : src/ui_microui_adapter.c.o
 
 src/ui_microui_adapter.i: src/ui_microui_adapter.c.i
@@ -2107,7 +2107,7 @@ src/ui_microui_adapter.i: src/ui_microui_adapter.c.i
 
 # target to preprocess a source file
 src/ui_microui_adapter.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_microui_adapter.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_microui_adapter.c.i
 .PHONY : src/ui_microui_adapter.c.i
 
 src/ui_microui_adapter.s: src/ui_microui_adapter.c.s
@@ -2115,7 +2115,7 @@ src/ui_microui_adapter.s: src/ui_microui_adapter.c.s
 
 # target to generate assembly for a file
 src/ui_microui_adapter.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_microui_adapter.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_microui_adapter.c.s
 .PHONY : src/ui_microui_adapter.c.s
 
 src/ui_navigation_menu_impl.o: src/ui_navigation_menu_impl.c.o
@@ -2123,7 +2123,7 @@ src/ui_navigation_menu_impl.o: src/ui_navigation_menu_impl.c.o
 
 # target to build an object file
 src/ui_navigation_menu_impl.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_navigation_menu_impl.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_navigation_menu_impl.c.o
 .PHONY : src/ui_navigation_menu_impl.c.o
 
 src/ui_navigation_menu_impl.i: src/ui_navigation_menu_impl.c.i
@@ -2131,7 +2131,7 @@ src/ui_navigation_menu_impl.i: src/ui_navigation_menu_impl.c.i
 
 # target to preprocess a source file
 src/ui_navigation_menu_impl.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_navigation_menu_impl.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_navigation_menu_impl.c.i
 .PHONY : src/ui_navigation_menu_impl.c.i
 
 src/ui_navigation_menu_impl.s: src/ui_navigation_menu_impl.c.s
@@ -2139,7 +2139,7 @@ src/ui_navigation_menu_impl.s: src/ui_navigation_menu_impl.c.s
 
 # target to generate assembly for a file
 src/ui_navigation_menu_impl.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_navigation_menu_impl.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_navigation_menu_impl.c.s
 .PHONY : src/ui_navigation_menu_impl.c.s
 
 src/ui_navigation_menu_microui.o: src/ui_navigation_menu_microui.c.o
@@ -2147,7 +2147,7 @@ src/ui_navigation_menu_microui.o: src/ui_navigation_menu_microui.c.o
 
 # target to build an object file
 src/ui_navigation_menu_microui.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_navigation_menu_microui.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_navigation_menu_microui.c.o
 .PHONY : src/ui_navigation_menu_microui.c.o
 
 src/ui_navigation_menu_microui.i: src/ui_navigation_menu_microui.c.i
@@ -2155,7 +2155,7 @@ src/ui_navigation_menu_microui.i: src/ui_navigation_menu_microui.c.i
 
 # target to preprocess a source file
 src/ui_navigation_menu_microui.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_navigation_menu_microui.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_navigation_menu_microui.c.i
 .PHONY : src/ui_navigation_menu_microui.c.i
 
 src/ui_navigation_menu_microui.s: src/ui_navigation_menu_microui.c.s
@@ -2163,7 +2163,7 @@ src/ui_navigation_menu_microui.s: src/ui_navigation_menu_microui.c.s
 
 # target to generate assembly for a file
 src/ui_navigation_menu_microui.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_navigation_menu_microui.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_navigation_menu_microui.c.s
 .PHONY : src/ui_navigation_menu_microui.c.s
 
 src/ui_scene.o: src/ui_scene.c.o
@@ -2171,7 +2171,7 @@ src/ui_scene.o: src/ui_scene.c.o
 
 # target to build an object file
 src/ui_scene.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_scene.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_scene.c.o
 .PHONY : src/ui_scene.c.o
 
 src/ui_scene.i: src/ui_scene.c.i
@@ -2179,7 +2179,7 @@ src/ui_scene.i: src/ui_scene.c.i
 
 # target to preprocess a source file
 src/ui_scene.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_scene.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_scene.c.i
 .PHONY : src/ui_scene.c.i
 
 src/ui_scene.s: src/ui_scene.c.s
@@ -2187,7 +2187,7 @@ src/ui_scene.s: src/ui_scene.c.s
 
 # target to generate assembly for a file
 src/ui_scene.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/cgame_engine.dir/build.make CMakeFiles/cgame_engine.dir/src/ui_scene.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/signal_engine.dir/build.make CMakeFiles/signal_engine.dir/src/ui_scene.c.s
 .PHONY : src/ui_scene.c.s
 
 # Help Target
@@ -2237,8 +2237,8 @@ help:
 	@echo "... test-parallel"
 	@echo "... test-rendering"
 	@echo "... test-systems"
-	@echo "... cgame"
-	@echo "... cgame_engine"
+	@echo "... signal"
+	@echo "... signal_engine"
 	@echo "... test_core_components"
 	@echo "... test_core_math"
 	@echo "... test_core_world"

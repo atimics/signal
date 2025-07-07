@@ -591,8 +591,8 @@ void render_frame(struct World* world, RenderConfig* config, EntityID player_id,
             // Debug camera info occasionally
             static int debug_counter = 0;
             debug_counter++;
-            if (debug_counter % 180 == 0)
-            {  // Every 3 seconds
+            if (debug_counter % 1800 == 0)
+            {  // Every 30 seconds
                 printf("📷 Camera pos:(%.1f,%.1f,%.1f) target:(%.1f,%.1f,%.1f) fov:%.1f\n",
                        active_camera->position.x, active_camera->position.y,
                        active_camera->position.z, active_camera->target.x, active_camera->target.y,

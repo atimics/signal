@@ -1,5 +1,5 @@
 #!/bin/bash
-# CGame CMake Configuration Helper
+# SIGNAL CMake Configuration Helper
 # This script helps with the transition from Make to CMake
 
 set -e
@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help)
-            echo "CGame CMake Configuration Helper"
+            echo "SIGNAL CMake Configuration Helper"
             echo ""
             echo "Usage: $0 [options]"
             echo ""
@@ -77,7 +77,7 @@ if [[ $CMAKE_MAJOR -lt 3 ]] || [[ $CMAKE_MAJOR -eq 3 && $CMAKE_MINOR -lt 20 ]]; 
 fi
 
 # Configure with preset
-echo "Configuring CGame with preset: $PRESET"
+echo "Configuring SIGNAL with preset: $PRESET"
 echo "CMake version: $CMAKE_VERSION"
 echo ""
 

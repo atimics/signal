@@ -1,4 +1,4 @@
-# CGame Engine Architecture Overview
+# SIGNAL Engine Architecture Overview
 
 **Document ID**: ARCH_OVERVIEW_V1  
 **Date**: July 6, 2025  
@@ -6,7 +6,7 @@
 
 ## 🏗️ Core Architecture
 
-CGame is built on a pure Entity-Component-System (ECS) architecture designed for performance, modularity, and maintainability.
+SIGNAL is built on a pure Entity-Component-System (ECS) architecture designed for performance, modularity, and maintainability.
 
 ### ECS Foundation
 

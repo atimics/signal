@@ -6,7 +6,7 @@
 
 ## 1. Introduction
 
-This document outlines the research and design goals for the next-generation control system for the CGame engine. The recent implementation of a new event-driven input system (`src/services/input_service.h`) has laid the foundation for a more flexible, data-driven, and user-friendly control architecture. This document builds on that foundation to propose a clear path forward for Sprint 25 and beyond.
+This document outlines the research and design goals for the next-generation control system for the SIGNAL engine. The recent implementation of a new event-driven input system (`src/services/input_service.h`) has laid the foundation for a more flexible, data-driven, and user-friendly control architecture. This document builds on that foundation to propose a clear path forward for Sprint 25 and beyond.
 
 ## 2. Analysis of Recent Changes
 
@@ -107,4 +107,4 @@ The following is a detailed plan for the next sprint team to implement this visi
 
 ## 6. Conclusion
 
-By completing the steps outlined in this document, the CGame engine will have a best-in-class control system that is flexible, data-driven, and ready for future expansion. This will significantly improve the development workflow and the end-user experience.
+By completing the steps outlined in this document, the SIGNAL engine will have a best-in-class control system that is flexible, data-driven, and ready for future expansion. This will significantly improve the development workflow and the end-user experience.

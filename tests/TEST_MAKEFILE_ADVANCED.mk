@@ -1,4 +1,4 @@
-# CGame Test Suite Makefile
+# SIGNAL Test Suite Makefile
 # ============================================================================
 # Advanced test discovery, execution, and coverage analysis system
 # Supports our new folder-based test organization structure
@@ -274,7 +274,7 @@ coverage-cloc: | $(TEST_REPORTS_DIR)
 test-reports: test-all coverage-cloc
 	@echo "📋 Generating comprehensive test reports..."
 	@mkdir -p $(TEST_REPORTS_DIR)
-	@echo "# CGame Test Suite Report" > $(TEST_REPORTS_DIR)/test_summary.md
+	@echo "# SIGNAL Test Suite Report" > $(TEST_REPORTS_DIR)/test_summary.md
 	@echo "" >> $(TEST_REPORTS_DIR)/test_summary.md
 	@echo "Generated: $(shell date)" >> $(TEST_REPORTS_DIR)/test_summary.md
 	@echo "" >> $(TEST_REPORTS_DIR)/test_summary.md
@@ -290,8 +290,8 @@ test-reports: test-all coverage-cloc
 .PHONY: test-dashboard
 test-dashboard: test-reports
 	@echo "🖥️  Generating test dashboard..."
-	@echo "<!DOCTYPE html><html><head><title>CGame Test Dashboard</title></head><body>" > $(TEST_REPORTS_DIR)/dashboard.html
-	@echo "<h1>CGame Test Suite Dashboard</h1>" >> $(TEST_REPORTS_DIR)/dashboard.html
+	@echo "<!DOCTYPE html><html><head><title>SIGNAL Test Dashboard</title></head><body>" > $(TEST_REPORTS_DIR)/dashboard.html
+	@echo "<h1>SIGNAL Test Suite Dashboard</h1>" >> $(TEST_REPORTS_DIR)/dashboard.html
 	@echo "<p>Generated: $(shell date)</p>" >> $(TEST_REPORTS_DIR)/dashboard.html
 	@echo "<h2>Quick Links</h2><ul>" >> $(TEST_REPORTS_DIR)/dashboard.html
 	@echo "<li><a href='test_summary.md'>Test Summary</a></li>" >> $(TEST_REPORTS_DIR)/dashboard.html
@@ -329,7 +329,7 @@ $(TEST_ARTIFACTS_DIR):
 
 .PHONY: test-help
 test-help:
-	@echo "🧪 CGame Test Suite - Advanced Organization System"
+	@echo "🧪 SIGNAL Test Suite - Advanced Organization System"
 	@echo "=================================================="
 	@echo ""
 	@echo "📁 FOLDER-BASED TEST ORGANIZATION:"

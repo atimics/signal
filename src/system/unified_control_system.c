@@ -69,11 +69,11 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
             unified_flight_control_request_authority(control, AUTHORITY_PLAYER, g_player_entity);
         }
         
-        // Debug: Log player entity check
+        // Debug: Log player entity check (reduced frequency)
         static uint32_t player_debug_counter = 0;
-        if (++player_debug_counter % 300 == 0) { // Every 5 seconds
-            printf("🎮 DEBUG: Entity %d, g_player_entity=%d, is_player=%d, has_input=%d\n",
-                   entity->id, g_player_entity, is_player, (input_service != NULL));
+        if (++player_debug_counter % 1800 == 0) { // Every 30 seconds
+            printf("🎮 Control System: Entity %d, player=%d, input=%s\n",
+                   entity->id, is_player, (input_service != NULL) ? "YES" : "NO");
         }
         
         // Process input for player entity
@@ -112,10 +112,10 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
     g_stats.average_entity_time_ms = g_stats.entities_updated > 0 ? 
         g_stats.total_update_time_ms / g_stats.entities_updated : 0.0f;
     
-    // Debug logging
+    // Debug logging (reduced frequency)
     static uint32_t debug_counter = 0;
-    if (++debug_counter % 300 == 0) { // Every 5 seconds at 60 FPS
-        printf("🎮 Unified Control Stats: %d entities, %d manual, %d assisted, %d scripted, %d autonomous\n",
+    if (++debug_counter % 1800 == 0) { // Every 30 seconds at 60 FPS
+        printf("🎮 Control Stats: %d entities (%dm/%da/%ds/%da)\n",
                g_stats.entities_updated, g_stats.manual_controls, g_stats.assisted_controls,
                g_stats.scripted_controls, g_stats.autonomous_controls);
     }
@@ -283,35 +283,36 @@ static void apply_control_to_thrusters(struct Entity* entity, const UnifiedFligh
     Vector3 linear_command = unified_flight_control_get_linear_command(control);
     Vector3 angular_command = unified_flight_control_get_angular_command(control);
     
-    // Apply stability assist for angular control
+    // Simple flight assist - minimal interference for manual control
     if (control->flight_assist_enabled && control->stability_assist > 0.0f && entity->physics) {
         struct Physics* physics = entity->physics;
         
-        // Apply per-axis stabilization only when there's no input on that axis
-        Vector3 damping_torque = {0, 0, 0};
+        // Check if all inputs are near zero (ship is coasting)
+        bool no_input = (fabsf(linear_command.x) < 0.01f && 
+                       fabsf(linear_command.y) < 0.01f && 
+                       fabsf(linear_command.z) < 0.01f &&
+                       fabsf(angular_command.x) < 0.01f && 
+                       fabsf(angular_command.y) < 0.01f && 
+                       fabsf(angular_command.z) < 0.01f);
         
-        // X-axis (pitch)
-        if (fabsf(angular_command.x) < 0.01f && fabsf(physics->angular_velocity.x) > 0.01f) {
-            damping_torque.x = -physics->angular_velocity.x * control->stability_assist * 0.3f;
+        // Only apply minimal angular damping when no input
+        if (no_input) {
+            Vector3 damping_torque = {
+                -physics->angular_velocity.x * 0.05f,  // Minimal damping
+                -physics->angular_velocity.y * 0.05f,
+                -physics->angular_velocity.z * 0.05f
+            };
+            
+            angular_command = vector3_add(angular_command, damping_torque);
+            
+            // Auto-brake when coasting
+            if (thrusters->auto_deceleration) {
+                float brake_strength = 0.01f;  // 1% velocity reduction per frame
+                linear_command.x = -physics->velocity.x * brake_strength;
+                linear_command.y = -physics->velocity.y * brake_strength;
+                linear_command.z = -physics->velocity.z * brake_strength;
+            }
         }
-        
-        // Y-axis (yaw)
-        if (fabsf(angular_command.y) < 0.01f && fabsf(physics->angular_velocity.y) > 0.01f) {
-            damping_torque.y = -physics->angular_velocity.y * control->stability_assist * 0.3f;
-        }
-        
-        // Z-axis (roll) - less aggressive damping for smoother banking
-        if (fabsf(angular_command.z) < 0.01f && fabsf(physics->angular_velocity.z) > 0.01f) {
-            damping_torque.z = -physics->angular_velocity.z * control->stability_assist * 0.2f;
-        }
-        
-        // Clamp damping to prevent overcorrection
-        float max_damping = 0.2f;
-        damping_torque.x = fmaxf(-max_damping, fminf(max_damping, damping_torque.x));
-        damping_torque.y = fmaxf(-max_damping, fminf(max_damping, damping_torque.y));
-        damping_torque.z = fmaxf(-max_damping, fminf(max_damping, damping_torque.z));
-        
-        angular_command = vector3_add(angular_command, damping_torque);
     }
     
     // Apply commands to thruster system

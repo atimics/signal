@@ -41,7 +41,7 @@ OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 DEPS = $(OBJECTS:.o=.d)
 
 # Target executable
-TARGET = $(BUILD_DIR)/cgame
+TARGET = $(BUILD_DIR)/signal
 
 # WebAssembly source files (filtered for WASM compatibility)
 WASM_SOURCES = $(filter-out hidapi_mac.c system/ode_physics.c system/gamepad.c \

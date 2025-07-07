@@ -1,4 +1,4 @@
-# CGame Engine - WebAssembly Platform Configuration
+# SIGNAL Engine - WebAssembly Platform Configuration
 # ============================================================================
 # Platform-specific settings for WebAssembly/Emscripten builds
 
@@ -57,7 +57,7 @@ set(CGAME_WASM_EXPORT_FLAGS
     -s EXPORTED_FUNCTIONS=['_main','_malloc','_free']
     -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']
     -s MODULARIZE=1
-    -s EXPORT_NAME='CGame'
+    -s EXPORT_NAME='SIGNAL'
 )
 
 # Combine all WASM flags

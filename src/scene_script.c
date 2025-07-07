@@ -15,6 +15,7 @@ extern const SceneScript logo_script;
 extern const SceneScript navigation_menu_script;
 extern const SceneScript flight_test_script;
 extern const SceneScript template_script;
+extern const SceneScript controller_calibration_script;
 
 // ============================================================================
 // SCENE SCRIPT REGISTRY
@@ -24,6 +25,7 @@ static const SceneScript* scene_scripts[] = {
     &logo_script,
     &navigation_menu_script,
     &flight_test_script,
+    &controller_calibration_script,
     &template_script,
     // Add more scene scripts here as they are created
 };

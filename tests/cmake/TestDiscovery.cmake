@@ -1,4 +1,4 @@
-# CGame Engine - Test Discovery and Management
+# SIGNAL Engine - Test Discovery and Management
 # ============================================================================
 # Automated test discovery, organization, and execution system
 # Maintains compatibility with existing test structure and Makefile
@@ -64,7 +64,7 @@ set(CGAME_TEST_INCLUDES
 # ============================================================================
 
 # Function to discover and create test targets
-function(cgame_discover_tests category test_dir)
+function(signal_discover_tests category test_dir)
     message(STATUS "Discovering tests in ${test_dir} for category: ${category}")
     
     # Find all test files
@@ -132,7 +132,7 @@ function(cgame_discover_tests category test_dir)
 endfunction()
 
 # Function to create system test targets with dependencies
-function(cgame_discover_system_tests category test_dir system_sources)
+function(signal_discover_system_tests category test_dir system_sources)
     message(STATUS "Discovering system tests in ${test_dir} for category: ${category}")
     
     # Find all test files
@@ -205,7 +205,7 @@ endfunction()
 # ============================================================================
 
 # Function to create integration tests with full engine dependencies
-function(cgame_create_integration_tests)
+function(signal_create_integration_tests)
     set(INTEGRATION_DIR "${CMAKE_CURRENT_SOURCE_DIR}/integration")
     
     # Integration test dependencies (more comprehensive)
@@ -219,11 +219,11 @@ function(cgame_create_integration_tests)
         ${CMAKE_SOURCE_DIR}/src/system/camera.c
     )
     
-    cgame_discover_system_tests("integration" ${INTEGRATION_DIR} "${INTEGRATION_SOURCES}")
+    signal_discover_system_tests("integration" ${INTEGRATION_DIR} "${INTEGRATION_SOURCES}")
 endfunction()
 
 # Function to create performance tests with optimizations
-function(cgame_create_performance_tests)
+function(signal_create_performance_tests)
     set(PERFORMANCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/performance")
     
     # Find performance test files
@@ -275,7 +275,7 @@ endfunction()
 # TEST COVERAGE SUPPORT
 # ============================================================================
 
-function(cgame_setup_coverage)
+function(signal_setup_coverage)
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CMAKE_COMPILER_IS_GNUCC)
         # Add coverage flags
         set(COVERAGE_FLAGS --coverage -fprofile-arcs -ftest-coverage)
@@ -316,7 +316,7 @@ endfunction()
 # TEST REPORTING
 # ============================================================================
 
-function(cgame_setup_test_reporting)
+function(signal_setup_test_reporting)
     # Create test reports directory
     set(TEST_REPORTS_DIR "${CMAKE_BINARY_DIR}/test_reports")
     file(MAKE_DIRECTORY ${TEST_REPORTS_DIR})
@@ -340,9 +340,9 @@ endfunction()
 # ============================================================================
 
 # Function to print test configuration summary
-function(cgame_print_test_summary)
+function(signal_print_test_summary)
     message(STATUS "")
-    message(STATUS "CGame Test Configuration Summary:")
+    message(STATUS "SIGNAL Test Configuration Summary:")
     message(STATUS "================================")
     message(STATUS "Unity Framework: ${UNITY_SRC}")
     message(STATUS "Test Support: ${TEST_SUPPORT_DIR}")
@@ -353,7 +353,7 @@ function(cgame_print_test_summary)
     message(STATUS "")
 endfunction()
 
-# CGame Engine - Test Discovery CMake Module
+# SIGNAL Engine - Test Discovery CMake Module
 # ============================================================================
 # This module provides functions for discovering and configuring test suites
 # based on the project's directory structure.
@@ -366,7 +366,7 @@ endfunction()
 #   LIBS: A list of libraries to link against
 #   STUBS: (Optional) A list of stub files to include in the build
 #
-function(cgame_add_test_suite)
+function(signal_add_test_suite)
     set(options)
     set(oneValueArgs NAME)
     set(multiValueArgs SOURCES LIBS STUBS)

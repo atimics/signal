@@ -1,9 +1,9 @@
 /**
  * @file test_utilities.h
- * @brief Common test utilities and fixtures for the CGame test suite
+ * @brief Common test utilities and fixtures for the SIGNAL test suite
  * 
  * This header provides shared utilities, fixtures, and helper functions
- * used across multiple test files in the CGame engine test suite.
+ * used across multiple test files in the SIGNAL engine test suite.
  */
 
 #ifndef TEST_UTILITIES_H

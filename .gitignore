@@ -4,7 +4,7 @@ html/
 *.o
 *.d
 *.exe
-cgame
+signal
 Makefile.original
 
 # CMake related files
@@ -157,3 +157,4 @@ tests/**/*.tmp
 tests/**/*.temp
 tests/**/*.cache
 docs/api/html_generated/
+cgame

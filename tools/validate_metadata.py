@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Metadata Validator for CGame Engine
+Metadata Validator for SIGNAL Engine
 
 This script validates all `metadata.json` files within the `assets/meshes`
 directory against the master `schema.json`. It serves as a crucial tool for

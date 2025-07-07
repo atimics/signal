@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# CGame Build Status Checker
+# SIGNAL Build Status Checker
 # Quick utility to check current build status
 
 BUILD_STATUS_FILE=".build_status"
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🔍 CGame Build Status${NC}"
+echo -e "${BLUE}🔍 SIGNAL Build Status${NC}"
 echo "===================="
 
 # Check if build status file exists

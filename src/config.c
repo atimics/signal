@@ -13,7 +13,7 @@ static GameConfig g_config;
 static bool g_config_initialized = false;
 
 // Default configuration file path
-#define CONFIG_FILE_PATH "cgame_config.txt"
+#define CONFIG_FILE_PATH "signal_config.txt"
 
 // Default configuration values
 static const GameConfig DEFAULT_CONFIG = {

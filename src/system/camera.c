@@ -1,8 +1,15 @@
 #include "camera.h"
 #include "../graphics_api.h"
+#include "../game_input.h"
+#include "../services/input_service.h"
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // Forward declarations
 static void camera_initialize_from_transform(struct World* world, EntityID camera_entity);
@@ -227,9 +234,30 @@ static void camera_update_behavior(struct World* world, RenderConfig* render_con
                 {
                     Vector3 target_pos = target_transform->position;
                     
-                    // Rotate the camera offset by the target's orientation
-                    // This makes the camera stay behind the ship as it rotates
+                    // Get camera look input from the input service
+                    float camera_look_yaw = 0.0f;
+                    struct InputService* input_service = game_input_get_service();
+                    if (input_service) {
+                        camera_look_yaw = input_service->get_action_value(input_service, INPUT_ACTION_CAMERA_YAW);
+                    }
+                    
+                    // Apply camera look offset (limited to ±60 degrees)
+                    float max_camera_angle = 60.0f * (M_PI / 180.0f);  // 60 degrees in radians
+                    float camera_yaw_angle = camera_look_yaw * max_camera_angle;
+                    
+                    // Rotate the base offset by target orientation first
                     Vector3 rotated_offset = quaternion_rotate_vector(target_transform->rotation, camera->follow_offset);
+                    
+                    // Then apply additional yaw rotation for camera look
+                    // Simple approximation using sin/cos for yaw rotation around Y axis
+                    if (fabsf(camera_look_yaw) > 0.01f) {
+                        float cos_yaw = cosf(camera_yaw_angle);
+                        float sin_yaw = sinf(camera_yaw_angle);
+                        
+                        Vector3 temp_offset = rotated_offset;
+                        rotated_offset.x = temp_offset.x * cos_yaw - temp_offset.z * sin_yaw;
+                        rotated_offset.z = temp_offset.x * sin_yaw + temp_offset.z * cos_yaw;
+                    }
                     
                     Vector3 desired_pos = {
                         target_pos.x + rotated_offset.x,
@@ -246,10 +274,21 @@ static void camera_update_behavior(struct World* world, RenderConfig* render_con
                     camera->position.y += (desired_pos.y - camera->position.y) * lerp;
                     camera->position.z += (desired_pos.z - camera->position.z) * lerp;
 
-                    // Update target - look slightly ahead of the ship to reduce pivot effect
+                    // Update target - look slightly ahead of the ship with camera yaw offset
                     // Get ship's forward direction
                     Vector3 forward = quaternion_rotate_vector(target_transform->rotation, 
                                                               (Vector3){0.0f, 0.0f, 5.0f});
+                    
+                    // Apply camera look yaw to the forward vector
+                    if (fabsf(camera_look_yaw) > 0.01f) {
+                        float cos_yaw = cosf(camera_yaw_angle);
+                        float sin_yaw = sinf(camera_yaw_angle);
+                        
+                        Vector3 temp_forward = forward;
+                        forward.x = temp_forward.x * cos_yaw - temp_forward.z * sin_yaw;
+                        forward.z = temp_forward.x * sin_yaw + temp_forward.z * cos_yaw;
+                    }
+                    
                     camera->target.x = target_pos.x + forward.x;
                     camera->target.y = target_pos.y + forward.y;
                     camera->target.z = target_pos.z + forward.z;

@@ -181,7 +181,7 @@ static void list_available_cameras(struct World* world)
 
 static void init(void)
 {
-    printf("🎮 CGGame - Sokol-based Component Engine\n");
+    printf("🎮 SIGNAL Engine - Component-Based Game Engine\n");
     printf("==========================================\n\n");
 
     // Initialize configuration system
@@ -731,15 +731,15 @@ sapp_desc sokol_main(int argc, char* argv[])
         }
         else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
         {
-            printf("CGame Engine Usage:\n");
+            printf("SIGNAL Engine Usage:\n");
             printf("  --scene NAME, -s NAME     Launch directly into specified scene\n");
             printf("  --list-scenes, -l         List all available scenes\n");
             printf("  --golden-reference, -g    Capture golden reference screenshot of loading cube\n");
             printf("  --help, -h                Show this help message\n");
             printf("\nExamples:\n");
-            printf("  ./cgame --scene derelict_alpha    # Launch into magnetic navigation scene\n");
-            printf("  ./cgame -s navigation_menu        # Launch into FTL navigation\n");
-            printf("  ./cgame --list-scenes             # Show all available scenes\n");
+            printf("  ./signal --scene derelict_alpha    # Launch into magnetic navigation scene\n");
+            printf("  ./signal -s navigation_menu        # Launch into FTL navigation\n");
+            printf("  ./signal --list-scenes             # Show all available scenes\n");
             printf("\nGame Controls:\n");
             printf("  ESC        Exit game / Return to navigation menu\n");
             printf("  TAB        Switch between related scenes\n");
@@ -762,7 +762,7 @@ sapp_desc sokol_main(int argc, char* argv[])
         .width = 1280,
         .height = 720,
         .sample_count = 1,  // Must match render layer sample counts
-        .window_title = "CGame - Entity-Component-System Engine (Sokol)",
+        .window_title = "SIGNAL - Entity-Component-System Engine (Sokol)",
         .icon.sokol_default = true,
         .logger.func = slog_func,
     };

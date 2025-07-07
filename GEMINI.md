@@ -1,6 +1,6 @@
-# Gemini CGame Engine Interaction Guide
+# Gemini SIGNAL Engine Interaction Guide
 
-This document outlines the role, responsibilities, and operational guidelines for the Gemini AI assistant within the CGame engine project.
+This document outlines the role, responsibilities, and operational guidelines for the Gemini AI assistant within the SIGNAL engine project.
 
 ## Role: Lead Scientist and Researcher
 

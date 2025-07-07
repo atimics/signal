@@ -1,6 +1,6 @@
-# CGame Development Tools
+# SIGNAL Development Tools
 
-This directory contains various tools for developing and managing assets in the CGame engine.
+This directory contains various tools for developing and managing assets in the SIGNAL engine.
 
 ## Tools Overview
 

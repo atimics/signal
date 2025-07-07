@@ -1,0 +1,207 @@
+# Controller Configuration Database
+# Auto-generated and user-customizable controller calibrations
+version: "1.0"
+last_updated: "2025-01-07"
+
+# Global controller defaults
+defaults:
+  deadzone:
+    stick: 0.15        # Default stick deadzone (15%)
+    trigger: 0.05      # Default trigger deadzone (5%)
+  sensitivity:
+    linear: 1.0        # Linear movement sensitivity
+    angular: 1.0       # Angular movement sensitivity
+  response_curve:
+    type: "linear"     # linear, quadratic, cubic, custom
+    exponent: 1.0      # For power curves
+  auto_calibration:
+    enabled: true      # Enable automatic deadzone detection
+    samples: 100       # Number of samples for auto-calibration
+
+# Controller-specific configurations
+controllers:
+  # Xbox Series X|S Controller
+  - id: "045E:0B13"
+    name: "Xbox Series X|S Controller"
+    type: "xbox_wireless"
+    vendor: "Microsoft"
+    verified: true     # Officially tested configuration
+    created: "2025-01-07"
+    last_calibrated: "2025-01-07"
+    
+    # Hardware layout
+    axes:
+      - index: 0
+        name: "Right Stick X"
+        type: "analog"
+        range: [-1.0, 1.0]
+        deadzone: 0.12
+        sensitivity: 1.0
+        invert: false
+        response_curve: "linear"
+        
+      - index: 1
+        name: "Right Stick Y"
+        type: "analog"
+        range: [-1.0, 1.0]
+        deadzone: 0.12
+        sensitivity: 1.0
+        invert: true     # Inverted for flight controls
+        response_curve: "linear"
+        
+      - index: 2
+        name: "Left Stick X"
+        type: "analog"
+        range: [-1.0, 1.0]
+        deadzone: 0.15
+        sensitivity: 1.0
+        invert: false
+        response_curve: "linear"
+        
+      - index: 3
+        name: "Left Stick Y"
+        type: "analog"
+        range: [-1.0, 1.0]
+        deadzone: 0.15
+        sensitivity: 1.0
+        invert: true     # Inverted for flight controls
+        response_curve: "linear"
+        
+      - index: 4
+        name: "Left Trigger"
+        type: "trigger"
+        range: [0.0, 1.0]
+        deadzone: 0.05
+        sensitivity: 1.0
+        invert: false
+        response_curve: "linear"
+        
+      - index: 5
+        name: "Right Trigger"
+        type: "trigger"
+        range: [0.0, 1.0]
+        deadzone: 0.05
+        sensitivity: 1.0
+        invert: false
+        response_curve: "linear"
+    
+    buttons:
+      - index: 0
+        name: "A"
+        type: "action"
+        
+      - index: 1
+        name: "B"
+        type: "action"
+        
+      - index: 2
+        name: "X"
+        type: "action"
+        
+      - index: 3
+        name: "Y"
+        type: "action"
+        
+      - index: 4
+        name: "Left Bumper"
+        type: "shoulder"
+        
+      - index: 5
+        name: "Right Bumper"
+        type: "shoulder"
+        
+      - index: 6
+        name: "View"
+        type: "system"
+        
+      - index: 7
+        name: "Menu"
+        type: "system"
+        
+      - index: 8
+        name: "Left Stick Click"
+        type: "stick"
+        
+      - index: 9
+        name: "Right Stick Click"
+        type: "stick"
+        
+      - index: 10
+        name: "D-Pad Up"
+        type: "dpad"
+        
+      - index: 11
+        name: "D-Pad Down"
+        type: "dpad"
+        
+      - index: 12
+        name: "D-Pad Left"
+        type: "dpad"
+        
+      - index: 13
+        name: "D-Pad Right"
+        type: "dpad"
+    
+    # Flight control mapping
+    flight_mapping:
+      thrust_forward: { type: "axis", index: 5 }      # Right Trigger
+      thrust_back: { type: "axis", index: 4 }         # Left Trigger
+      pitch_up: { type: "axis", index: 3, scale: -1.0 }   # Left Stick Y (inverted)
+      pitch_down: { type: "axis", index: 3, scale: 1.0 }
+      yaw_left: { type: "axis", index: 2, scale: -1.0 }   # Left Stick X
+      yaw_right: { type: "axis", index: 2, scale: 1.0 }
+      roll_left: { type: "axis", index: 0, scale: -1.0 }  # Right Stick X
+      roll_right: { type: "axis", index: 0, scale: 1.0 }
+      vertical_up: { type: "axis", index: 1, scale: -1.0 } # Right Stick Y (inverted)
+      vertical_down: { type: "axis", index: 1, scale: 1.0 }
+      boost: { type: "button", index: 0 }             # A Button
+      brake: { type: "button", index: 1 }             # B Button
+      
+    # Calibration data
+    calibration:
+      status: "verified"
+      method: "manual"
+      date: "2025-01-07"
+      samples: 1000
+      raw_ranges:
+        axis_0: [-0.95, 0.95]    # Measured actual ranges
+        axis_1: [-0.98, 0.98]
+        axis_2: [-0.97, 0.97]
+        axis_3: [-0.96, 0.96]
+        axis_4: [0.0, 0.99]
+        axis_5: [0.0, 0.99]
+      center_drift:
+        axis_0: 0.001            # Center position drift
+        axis_1: -0.002
+        axis_2: 0.000
+        axis_3: 0.001
+      
+# Generic controller template for unknown controllers
+generic_template:
+  id: "unknown"
+  name: "Generic Controller"
+  type: "generic"
+  vendor: "Unknown"
+  verified: false
+  
+  axes:
+    - index: 0
+      name: "Axis 0"
+      type: "analog"
+      range: [-1.0, 1.0]
+      deadzone: 0.15
+      sensitivity: 1.0
+      invert: false
+      response_curve: "linear"
+      
+  buttons:
+    - index: 0
+      name: "Button 0"
+      type: "action"
+      
+  flight_mapping:
+    # Will be configured during calibration wizard
+    
+  calibration:
+    status: "needs_calibration"
+    method: "wizard"

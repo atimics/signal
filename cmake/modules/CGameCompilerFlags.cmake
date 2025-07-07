@@ -1,4 +1,4 @@
-# CGame Engine - Compiler Flags Configuration
+# SIGNAL Engine - Compiler Flags Configuration
 # ============================================================================
 # Centralized compiler flags and warnings configuration
 # Supports: Clang, GCC, and future compiler additions
@@ -114,7 +114,7 @@ endif()
 # FUNCTION TO APPLY FLAGS TO TARGETS
 # ============================================================================
 
-function(cgame_apply_compiler_flags target)
+function(signal_apply_compiler_flags target)
     # Apply base flags
     target_compile_options(${target} PRIVATE ${CGAME_BASE_FLAGS})
     target_compile_options(${target} PRIVATE ${CGAME_WARNING_FLAGS})
@@ -127,7 +127,7 @@ function(cgame_apply_compiler_flags target)
     )
 endfunction()
 
-function(cgame_apply_test_flags target)
+function(signal_apply_test_flags target)
     # Apply test-specific flags
     target_compile_options(${target} PRIVATE ${CGAME_BASE_FLAGS})
     target_compile_options(${target} PRIVATE ${CGAME_TEST_FLAGS})
@@ -161,7 +161,7 @@ if(CGAME_ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 endif()
 
-function(cgame_apply_sanitizers target)
+function(signal_apply_sanitizers target)
     if(CGAME_SANITIZER_FLAGS)
         target_compile_options(${target} PRIVATE ${CGAME_SANITIZER_FLAGS})
         target_link_options(${target} PRIVATE ${CGAME_SANITIZER_FLAGS})
@@ -182,7 +182,7 @@ if(CGAME_ENABLE_PROFILING)
     message(STATUS "Profiling enabled")
 endif()
 
-function(cgame_apply_profiling target)
+function(signal_apply_profiling target)
     if(CGAME_PROFILING_FLAGS)
         target_compile_options(${target} PRIVATE ${CGAME_PROFILING_FLAGS})
         target_link_options(${target} PRIVATE ${CGAME_PROFILING_FLAGS})
@@ -208,7 +208,7 @@ if(CGAME_ENABLE_COVERAGE)
     endif()
 endif()
 
-function(cgame_apply_coverage target)
+function(signal_apply_coverage target)
     if(CGAME_COVERAGE_FLAGS)
         target_compile_options(${target} PRIVATE ${CGAME_COVERAGE_FLAGS})
         target_link_options(${target} PRIVATE ${CGAME_COVERAGE_FLAGS})
@@ -219,26 +219,26 @@ endfunction()
 # CONVENIENCE FUNCTION FOR ALL FLAGS
 # ============================================================================
 
-function(cgame_configure_target target)
+function(signal_configure_target target)
     cmake_parse_arguments(ARG "TEST;PROFILING;SANITIZERS;COVERAGE" "" "" ${ARGN})
     
     # Apply base compiler flags
     if(ARG_TEST)
-        cgame_apply_test_flags(${target})
+        signal_apply_test_flags(${target})
     else()
-        cgame_apply_compiler_flags(${target})
+        signal_apply_compiler_flags(${target})
     endif()
     
     # Apply optional features
     if(ARG_SANITIZERS OR (CMAKE_BUILD_TYPE STREQUAL "Debug" AND CGAME_ENABLE_SANITIZERS))
-        cgame_apply_sanitizers(${target})
+        signal_apply_sanitizers(${target})
     endif()
     
     if(ARG_PROFILING OR CGAME_ENABLE_PROFILING)
-        cgame_apply_profiling(${target})
+        signal_apply_profiling(${target})
     endif()
     
     if(ARG_COVERAGE OR CGAME_ENABLE_COVERAGE)
-        cgame_apply_coverage(${target})
+        signal_apply_coverage(${target})
     endif()
 endfunction()

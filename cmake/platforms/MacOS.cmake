@@ -1,4 +1,4 @@
-# CGame Engine - macOS Platform Configuration
+# SIGNAL Engine - macOS Platform Configuration
 # ============================================================================
 # Platform-specific settings for macOS builds
 
@@ -100,7 +100,7 @@ if(CMAKE_GENERATOR STREQUAL "Xcode")
     set(CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "")
     
     # Set bundle identifier
-    set(CMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.cgame.engine")
+    set(CMAKE_XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.signal.engine")
     
     # Debug information format
     set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym")
@@ -159,7 +159,7 @@ endif()
 # ============================================================================
 
 # Prepare for future app bundle support
-set(CGAME_BUNDLE_IDENTIFIER "com.cgame.engine")
+set(CGAME_BUNDLE_IDENTIFIER "com.signal.engine")
 set(CGAME_BUNDLE_VERSION "${PROJECT_VERSION}")
 set(CGAME_BUNDLE_SHORT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 

@@ -1,6 +1,6 @@
 # Shader Directory
 
-This directory contains the shader files used by the CGame engine's Sokol-based rendering system.
+This directory contains the shader files used by the SIGNAL engine's Sokol-based rendering system.
 
 ## Structure
 

@@ -1,4 +1,4 @@
-# CGame Engine - Modular Makefile System
+# SIGNAL Engine - Modular Makefile System
 # ============================================================================
 # Component-Based Game Engine Build System
 # Supports: macOS, Linux, WebAssembly
@@ -36,7 +36,7 @@ test: test-parallel
 # ============================================================================
 
 $(info )
-$(info CGame Engine - Modular Build System)
+$(info SIGNAL Engine - Modular Build System)
 $(info ===================================)
 $(info Platform: $(PLATFORM))
 $(info Build Type: $(BUILD_TYPE))

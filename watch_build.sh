@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# CGame Auto-Build Watcher
+# SIGNAL Auto-Build Watcher
 # Watches for file changes and automatically builds the project
 # Updates .build_status file with current build state
 
@@ -8,7 +8,7 @@ BUILD_STATUS_FILE=".build_status"
 WATCH_DIRS="src/ assets/ data/ Makefile"
 WATCH_EXTENSIONS="c,h,json,txt,glsl,metal,frag,vert"
 
-echo "CGame Auto-Build Watcher Started"
+echo "SIGNAL Auto-Build Watcher Started"
 echo "Watching: $WATCH_DIRS"
 echo "Extensions: $WATCH_EXTENSIONS"
 echo "Build status file: $BUILD_STATUS_FILE"

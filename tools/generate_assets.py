@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CGame Asset Generator - DEPRECATED
+SIGNAL Asset Generator - DEPRECATED
 
 ⚠️  DEPRECATION NOTICE ⚠️
 This script is deprecated in favor of the clean asset pipeline.

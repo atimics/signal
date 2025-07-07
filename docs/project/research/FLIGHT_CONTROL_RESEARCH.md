@@ -9,7 +9,7 @@
 
 ## 🎯 Overview
 
-This document consolidates research from multiple sources to provide comprehensive guidance for implementing semi-autonomous flight control systems in CGame. It combines control theory, game industry best practices, and real-world aerospace concepts.
+This document consolidates research from multiple sources to provide comprehensive guidance for implementing semi-autonomous flight control systems in SIGNAL. It combines control theory, game industry best practices, and real-world aerospace concepts.
 
 ---
 
@@ -24,7 +24,7 @@ This document consolidates research from multiple sources to provide comprehensi
 - **Flight Assist Off**: Pure Newtonian mode for skilled pilots
 - **Rotational Damping**: Automatic spin control while preserving player intent
 
-**Lessons for CGame**:
+**Lessons for SIGNAL**:
 - Provide multiple assistance levels
 - Make assist optional but default enabled
 - Preserve player agency while reducing complexity
@@ -38,7 +38,7 @@ This document consolidates research from multiple sources to provide comprehensi
 - **ESP (Enhanced Stick Precision)**: Subtle aim assistance
 - **G-Force Simulation**: Pilot blackout based on acceleration
 
-**Lessons for CGame**:
+**Lessons for SIGNAL**:
 - Clear mode distinctions help player understanding
 - Visual feedback essential for mode awareness
 - G-force limits add realism without complexity
@@ -51,7 +51,7 @@ This document consolidates research from multiple sources to provide comprehensi
 - **Boost Ramping**: Non-linear acceleration for dramatic effect
 - **Drift Mode**: Maintain velocity vector during rotation
 
-**Lessons for CGame**:
+**Lessons for SIGNAL**:
 - User-configurable assistance levels
 - Dramatic acceleration curves enhance game feel
 - Separate translation and rotation controls
@@ -68,7 +68,7 @@ This document consolidates research from multiple sources to provide comprehensi
 - **Fault Tolerance**: Continues operation with partial system failure
 - **Predictive Guidance**: Optimal trajectory calculation with constraints
 
-**Application to CGame**:
+**Application to SIGNAL**:
 - Adaptive PID gains based on ship mass and thruster configuration
 - Graceful degradation when thrusters are damaged
 - Predictive flight paths for smooth cornering
@@ -81,7 +81,7 @@ This document consolidates research from multiple sources to provide comprehensi
 - **Constraint Handling**: Respects physical limits (thrust, g-force)
 - **Redundant Systems**: Multiple independent control paths
 
-**Application to CGame**:
+**Application to SIGNAL**:
 - Look-ahead control for smooth trajectories
 - Respect ship-specific performance limits
 - Fallback modes when primary systems fail
@@ -152,7 +152,7 @@ Vector3 pd_controller_update(PDController* controller,
 
 ---
 
-## 💡 Recommended Hybrid Approach for CGame
+## 💡 Recommended Hybrid Approach for SIGNAL
 
 ### Core Architecture: Intent-Based Control
 

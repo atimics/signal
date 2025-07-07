@@ -81,14 +81,14 @@ if(CGAME_ENABLE_UBSAN)
     endif()
 endif()
 
-# Apply flags to cgame_engine target
-target_compile_options(cgame_engine PRIVATE ${CGAME_COMMON_FLAGS})
+# Apply flags to signal_engine target
+target_compile_options(signal_engine PRIVATE ${CGAME_COMMON_FLAGS})
 
 # Platform-specific include paths
 if(CGAME_PLATFORM_MACOS)
-    target_include_directories(cgame_engine PUBLIC /opt/homebrew/include)
+    target_include_directories(signal_engine PUBLIC /opt/homebrew/include)
 elseif(CGAME_PLATFORM_LINUX)
-    target_include_directories(cgame_engine PUBLIC /usr/local/include)
+    target_include_directories(signal_engine PUBLIC /usr/local/include)
 endif()
 
 # Output configuration

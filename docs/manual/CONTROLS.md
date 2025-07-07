@@ -1,10 +1,10 @@
-# CGame Flight Controls Manual
+# SIGNAL Flight Controls Manual
 
 **Sprint 25 Implementation** - Direct Keyboard Flight Controls
 
 ## Overview
 
-CGame features a sophisticated 6-degrees-of-freedom (6DOF) flight control system that allows precise maneuvering in a 3D space. The controls are designed for intuitive flight with banking turns and responsive control authority.
+SIGNAL features a sophisticated 6-degrees-of-freedom (6DOF) flight control system that allows precise maneuvering in a 3D space. The controls are designed for intuitive flight with banking turns and responsive control authority.
 
 ## Flight Controls
 

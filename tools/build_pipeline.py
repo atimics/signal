@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CGame Asset Pipeline - Binary Mesh Compiler
+SIGNAL Asset Pipeline - Binary Mesh Compiler
 
 This script finds all source .obj files, compiles them into the binary
 .cobj format, and generates the necessary metadata and index files
@@ -92,7 +92,7 @@ def copy_supplementary_files(source_prop_dir, build_prop_dir):
             print(f"   Copied {source_file.name} to {build_prop_dir}")
 
 def main():
-    parser = argparse.ArgumentParser(description="CGame Asset Pipeline - Binary Compiler")
+    parser = argparse.ArgumentParser(description="SIGNAL Asset Pipeline - Binary Compiler")
     
     parser.add_argument("--source_dir", default="assets/meshes", help="Source directory containing .obj files")
     parser.add_argument("--build_dir", default="build/assets/meshes", help="Output directory for .cobj files")
@@ -107,7 +107,7 @@ def main():
         print(f"❌ Source directory not found: {source_dir}")
         return 1
         
-    print(f"🚀 CGame Asset Pipeline")
+    print(f"🚀 SIGNAL Asset Pipeline")
     print(f"   Source: {source_dir}")
     print(f"   Build:  {build_dir}")
     print("-" * 40)

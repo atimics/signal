@@ -1,4 +1,4 @@
-# CGame Engine Test Suite
+# SIGNAL Engine Test Suite
 
 ## Test Organization Philosophy
 

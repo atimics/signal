@@ -1,4 +1,4 @@
-# CGame Engine - CMake Transition Compatibility Makefile
+# SIGNAL Engine - CMake Transition Compatibility Makefile
 # ============================================================================
 # This Makefile provides backward compatibility during the CMake transition
 # All existing `make` commands will continue to work by delegating to CMake
@@ -57,7 +57,7 @@ cmake-clean:
 
 # Default target - build the game
 all: cmake-build
-	@echo "✅ Build complete! Executable: $(CMAKE_BUILD_DIR)/cgame"
+	@echo "✅ Build complete! Executable: $(CMAKE_BUILD_DIR)/signal"
 
 # Alternative explicit build target
 build: all
@@ -67,8 +67,8 @@ clean: cmake-clean
 
 # Run the game
 run: cmake-build
-	@echo "🚀 Starting CGame..."
-	@cd $(CMAKE_BUILD_DIR) && ./cgame
+	@echo "🚀 Starting SIGNAL..."
+	@cd $(CMAKE_BUILD_DIR) && ./signal
 
 # ============================================================================
 # ASSET PIPELINE COMPATIBILITY
@@ -95,7 +95,7 @@ clean-assets: cmake-configure
 
 # Main test target - runs all tests
 test: cmake-build
-	@echo "🧪 Running comprehensive CGame test suite..."
+	@echo "🧪 Running comprehensive SIGNAL test suite..."
 	@cd $(CMAKE_BUILD_DIR) && ctest --output-on-failure --progress
 
 # All tests (comprehensive)
@@ -181,7 +181,7 @@ endif
 # Override specific targets to use CMake where appropriate
 .PHONY: test-help
 test-help:
-	@echo "🧪 CGame Test Suite - CMake Transition Version"
+	@echo "🧪 SIGNAL Test Suite - CMake Transition Version"
 	@echo "=============================================="
 	@echo ""
 	@echo "🎯 PRIMARY TEST TARGETS (CMake-based):"
@@ -272,7 +272,7 @@ wasm:
 
 # Show build status
 status:
-	@echo "📊 CGame Build Status:"
+	@echo "📊 SIGNAL Build Status:"
 	@echo "====================="
 	@echo "Platform: $(CMAKE_PLATFORM)"
 	@echo "Build Type: $(CMAKE_BUILD_TYPE)"
@@ -280,7 +280,7 @@ status:
 	@echo "CMake Generator: $(CMAKE_GENERATOR)"
 	@if [ -d $(CMAKE_BUILD_DIR) ]; then \
 		echo "Build Configured: ✅"; \
-		if [ -f $(CMAKE_BUILD_DIR)/cgame ]; then \
+		if [ -f $(CMAKE_BUILD_DIR)/signal ]; then \
 			echo "Executable Built: ✅"; \
 		else \
 			echo "Executable Built: ❌"; \

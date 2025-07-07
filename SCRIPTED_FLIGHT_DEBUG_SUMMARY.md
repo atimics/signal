@@ -52,7 +52,7 @@ I've added comprehensive debugging to trace why scripted flight isn't moving the
 ## How to Test
 
 1. Build and run: `make clean && make`
-2. Run with test flight: `./build/cgame --test-flight`
+2. Run with test flight: `./build/signal --test-flight`
 3. Press '1' to activate circuit flight
 4. Watch the debug output for:
    - "=== '1' KEY PRESSED - CIRCUIT FLIGHT DEBUG ==="

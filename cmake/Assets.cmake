@@ -104,8 +104,8 @@ add_custom_target(assets ALL
     DEPENDS ${CGAME_ASSET_BUILD_DIR}/meshes/index.json
 )
 
-# Make sure cgame depends on assets
-add_dependencies(cgame assets)
+# Make sure signal depends on assets
+add_dependencies(signal assets)
 
 # Asset cleaning
 add_custom_target(clean-assets

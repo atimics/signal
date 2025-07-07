@@ -14,6 +14,7 @@
 #include "../graphics_api.h"
 #include "../game_input.h"
 #include "../services/input_service.h"
+#include "../systems.h"  // For get_asset_registry()
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -67,6 +68,7 @@ static FlightObstacle obstacles[OBSTACLE_COUNT];
 
 // Forward declarations
 void diagnose_gamepad_issues(void);  // Defined in derelict_navigation_scene.c
+static void create_solar_system(struct World* world, EntityID parent);
 
 // Visual thruster system
 typedef struct {
@@ -134,7 +136,7 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         if (thrusters) {
             // Configure as RACER class with balanced thrust values
             thrusters->max_linear_force = (Vector3){ 7000.0f, 5000.0f, 10000.0f };   // 25 m/s² forward acceleration
-            thrusters->max_angular_torque = (Vector3){ 5000.0f, 6000.0f, 3000.0f };   // ~2 rad/s² rotation
+            thrusters->max_angular_torque = (Vector3){ 5000.0f, 8500.0f, 3000.0f };   // Increased yaw torque for more responsive turning
             thrusters->thrust_response_time = 0.02f;  // Near-instant response
             thrusters->thrusters_enabled = true;
             thrusters->auto_deceleration = true;
@@ -218,31 +220,111 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         }
     }
     
+    // Create mini solar system with lots of reference points
+    create_solar_system(world, INVALID_ENTITY);
+    
+    // Add scattered suns throughout the playground for better visibility
+    printf("☀️ Adding %d scattered suns for better navigation...\n", 50);
+    for (int i = 0; i < 50; i++) {
+        EntityID sun = entity_create(world);
+        if (sun == INVALID_ENTITY) continue;
+        
+        entity_add_component(world, sun, COMPONENT_TRANSFORM);
+        entity_add_component(world, sun, COMPONENT_RENDERABLE);
+        
+        struct Transform* transform = entity_get_transform(world, sun);
+        struct Renderable* renderable = entity_get_renderable(world, sun);
+        
+        if (transform && renderable) {
+            // Random position in a large 3D grid
+            float x = (((float)rand() / RAND_MAX) - 0.5f) * PLAIN_SIZE * 0.8f;
+            float y = (((float)rand() / RAND_MAX) - 0.5f) * 2000.0f + 500.0f;  // -500 to +1500 height
+            float z = (((float)rand() / RAND_MAX) - 0.5f) * PLAIN_SIZE * 0.8f;
+            
+            transform->position = (Vector3){x, y, z};
+            
+            // Varied sizes for depth perception
+            float size = 8.0f + ((float)rand() / RAND_MAX) * 25.0f;  // 8-33 units
+            transform->scale = (Vector3){size, size, size};
+            transform->rotation = (Quaternion){0, 0, 0, 1};
+            transform->dirty = true;
+            
+            // Use sun mesh if available, fallback to logo_cube
+            AssetRegistry* assets = get_asset_registry();
+            if (assets && assets_create_renderable_from_mesh(assets, "sun", renderable)) {
+                renderable->visible = true;
+                renderable->lod_level = LOD_HIGH;
+            } else {
+                assets_create_renderable_from_mesh(assets, "logo_cube", renderable);
+                renderable->visible = true;
+                renderable->lod_level = LOD_MEDIUM;
+            }
+        }
+    }
+    
+    // Add grid reference markers for better spatial awareness
+    printf("📍 Adding grid reference markers...\n");
+    for (int grid_x = -2; grid_x <= 2; grid_x++) {
+        for (int grid_z = -2; grid_z <= 2; grid_z++) {
+            if (grid_x == 0 && grid_z == 0) continue; // Skip center (where player starts)
+            
+            EntityID marker = entity_create(world);
+            if (marker == INVALID_ENTITY) continue;
+            
+            entity_add_component(world, marker, COMPONENT_TRANSFORM);
+            entity_add_component(world, marker, COMPONENT_RENDERABLE);
+            
+            struct Transform* transform = entity_get_transform(world, marker);
+            struct Renderable* renderable = entity_get_renderable(world, marker);
+            
+            if (transform && renderable) {
+                // Grid spacing of 1000 units
+                float x = grid_x * 1000.0f;
+                float z = grid_z * 1000.0f;
+                float y = 20.0f; // Just above ground level
+                
+                transform->position = (Vector3){x, y, z};
+                transform->scale = (Vector3){15, 40, 15}; // Tall, visible markers
+                transform->rotation = (Quaternion){0, 0, 0, 1};
+                transform->dirty = true;
+                
+                // Use control tower for grid markers
+                AssetRegistry* assets = get_asset_registry();
+                if (assets && assets_create_renderable_from_mesh(assets, "control_tower", renderable)) {
+                    renderable->visible = true;
+                    renderable->lod_level = LOD_HIGH;
+                } else {
+                    assets_create_renderable_from_mesh(assets, "logo_cube", renderable);
+                    renderable->visible = true;
+                    renderable->lod_level = LOD_HIGH;
+                }
+            }
+        }
+    }
+    
     // Set up camera for flight testing
     current_camera_mode = CAMERA_MODE_CHASE_NEAR;
     
     printf("🚀 Flight test initialized\n");
-    printf("🌍 Plain size: %.0fx%.0f units\n", PLAIN_SIZE, PLAIN_SIZE);
-    printf("🏎️ CANYON RACER Flight Controls:\n");
-    printf("   KEYBOARD (Banking Flight Model):\n");
-    printf("     W/S - Pitch control (dive/climb)\n");
-    printf("     A/D - BANKING TURNS (coordinated turn)\n");
-    printf("     Space/X - Forward/Backward thrust\n");
-    printf("     R/F - Vertical up/down\n");
-    printf("     Q/E - Pure roll (barrel roll)\n");
-    printf("     ARROW KEYS - Direct pitch/yaw for fine control\n");
+    printf("🌍 Space size: %.0fx%.0f units\n", PLAIN_SIZE, PLAIN_SIZE);
+    printf("🏎️ LAYERED FLIGHT Controls (Aircraft-style):\n");
+    printf("   KEYBOARD:\n");
+    printf("     W/S - Forward/Backward thrust\n");
+    printf("     A/D - BANKING TURNS (120%% roll + yaw)\n");
+    printf("     Q/E - Descend/Ascend (vertical movement)\n");
+    printf("     Space/LCtrl - Pitch Up/Down (dive/climb)\n");
+    printf("     ←/→ - Pure roll (barrel roll)\n");
     printf("     Shift - Boost (%.1fx multiplier)\n", FLIGHT_BOOST_MULTIPLIER);
     printf("     Alt - Brake + Auto-deceleration\n");
     printf("     Tab - Cycle camera modes\n");
-    printf("   XBOX CONTROLLER (Canyon Racer Layout):\n");
-    printf("     Left Stick - Pitch/Yaw (primary flight control)\n");
-    printf("     Right Stick X - BANKING TURNS (zippy turning)\n");
-    printf("     Right Stick Y - Vertical thrust\n");
-    printf("     Right Trigger - Forward thrust\n");
-    printf("     Left Trigger - Reverse thrust\n");
-    printf("     Bumpers - Aerobatic roll\n");
-    printf("     A Button - Boost, B Button - Brake\n");
-    printf("\n🏎️ CANYON RACING: Use A/D or Right Stick X for banking turns!\n");
+    printf("   XBOX CONTROLLER:\n");
+    printf("     Right Trigger - Accelerate\n");
+    printf("     Left Stick Y - Up/Down (vertical movement)\n");
+    printf("     Left Stick X - BANKING TURNS (120%% roll)\n");
+    printf("     Right Stick X - Camera Look (±60°)\n");
+    printf("     Left Trigger - Brake\n");
+    printf("     LB/RB - Pitch Up/Down\n");
+    printf("\n🏎️ LAYERED FLIGHT: Ships bank heavily into turns for dynamic maneuvering!\n");
     printf("🛩️  SCRIPTED FLIGHT CONTROLS:\n");
     printf("     1 - Start circuit flight pattern\n");
     printf("     2 - Start figure-8 flight pattern\n");
@@ -777,6 +859,152 @@ void update_visual_thrusters(struct World* world, float delta_time) {
                                  linear_command.y < 0 ? vertical_intensity : 0.0f); // Down thruster
     update_thruster_glow_intensity(world, visual_thrusters.vertical_thrusters[1], 
                                  linear_command.y > 0 ? vertical_intensity : 0.0f); // Up thruster
+}
+
+// ============================================================================
+
+// Create a mini solar system
+static void create_solar_system(struct World* world, EntityID parent) {
+    (void)parent;  // Unused for now
+    if (!world) return;
+    
+    printf("☀️ Creating mini solar system...\n");
+    
+    // Get the asset registry to load meshes
+    AssetRegistry* assets = get_asset_registry();
+    if (!assets) {
+        printf("❌ Failed to get asset registry for solar system\n");
+        return;
+    }
+    
+    // Central sun
+    EntityID sun = entity_create(world);
+    if (sun == INVALID_ENTITY) {
+        printf("❌ Failed to create sun entity\n");
+        return;
+    }
+    
+    entity_add_component(world, sun, COMPONENT_TRANSFORM);
+    entity_add_component(world, sun, COMPONENT_RENDERABLE);
+    
+    struct Transform* sun_transform = entity_get_transform(world, sun);
+    struct Renderable* sun_renderable = entity_get_renderable(world, sun);
+    
+    if (sun_transform && sun_renderable) {
+        sun_transform->position = (Vector3){0, 500, 0};  // 500 units up from origin
+        sun_transform->scale = (Vector3){50, 50, 50};    // Large sun
+        sun_transform->rotation = (Quaternion){0, 0, 0, 1};
+        sun_transform->dirty = true;
+        
+        // Set up renderable for the sun mesh
+        if (assets_create_renderable_from_mesh(assets, "sun", sun_renderable)) {
+            sun_renderable->visible = true;
+            sun_renderable->lod_level = LOD_HIGH;
+            printf("☀️ Created sun at (0, 500, 0) with scale 50\n");
+        } else {
+            printf("⚠️ Failed to load sun mesh, using logo_cube fallback\n");
+            assets_create_renderable_from_mesh(assets, "logo_cube", sun_renderable);
+            sun_renderable->visible = true;
+        }
+    }
+    
+    // Planet positions and properties
+    struct {
+        const char* name;
+        float distance;
+        float size;
+        int material_id;
+        float orbit_speed;
+        Vector3 color_tint;
+    } planets[] = {
+        {"Mercury", 300.0f, 5.0f, 1, 0.02f, {0.7f, 0.7f, 0.7f}},
+        {"Venus", 500.0f, 12.0f, 2, 0.015f, {1.0f, 0.9f, 0.6f}},
+        {"Earth", 800.0f, 15.0f, 3, 0.01f, {0.3f, 0.5f, 1.0f}},
+        {"Mars", 1200.0f, 10.0f, 4, 0.008f, {1.0f, 0.4f, 0.2f}},
+        {"Jupiter", 2000.0f, 40.0f, 5, 0.005f, {0.9f, 0.7f, 0.5f}},
+        {"Saturn", 3000.0f, 35.0f, 6, 0.003f, {1.0f, 0.9f, 0.7f}},
+    };
+    
+    // Create planets
+    for (int i = 0; i < 6; i++) {
+        EntityID planet = entity_create(world);
+        if (planet == INVALID_ENTITY) {
+            printf("❌ Failed to create planet %s\n", planets[i].name);
+            continue;
+        }
+        
+        entity_add_component(world, planet, COMPONENT_TRANSFORM);
+        entity_add_component(world, planet, COMPONENT_RENDERABLE);
+        
+        struct Transform* transform = entity_get_transform(world, planet);
+        struct Renderable* renderable = entity_get_renderable(world, planet);
+        
+        if (transform && renderable) {
+            // Position in orbit
+            float angle = ((float)i / 6.0f) * 2.0f * M_PI;
+            transform->position = (Vector3){
+                cosf(angle) * planets[i].distance,
+                500.0f,  // Same height as sun
+                sinf(angle) * planets[i].distance
+            };
+            transform->scale = (Vector3){planets[i].size, planets[i].size, planets[i].size};
+            transform->rotation = (Quaternion){0, 0, 0, 1};
+            transform->dirty = true;
+            
+            // Use logo_cube mesh for all planets (it's the only sphere-like mesh available)
+            assets_create_renderable_from_mesh(assets, "logo_cube", renderable);
+            renderable->visible = true;
+            renderable->lod_level = LOD_HIGH;
+            renderable->material_id = planets[i].material_id;
+            
+            printf("🪐 Created %s at distance %.0f with size %.0f\n", 
+                   planets[i].name, planets[i].distance, planets[i].size);
+        }
+    }
+    
+    // Create asteroid belt between Mars and Jupiter
+    int asteroid_count = 50;
+    float inner_radius = 1500.0f;
+    float outer_radius = 1800.0f;
+    
+    printf("   ☄️ Creating asteroid belt with %d asteroids\n", asteroid_count);
+    
+    for (int i = 0; i < asteroid_count; i++) {
+        EntityID asteroid = entity_create(world);
+        if (asteroid == INVALID_ENTITY) continue;
+        
+        entity_add_component(world, asteroid, COMPONENT_TRANSFORM);
+        entity_add_component(world, asteroid, COMPONENT_RENDERABLE);
+        
+        struct Transform* transform = entity_get_transform(world, asteroid);
+        struct Renderable* renderable = entity_get_renderable(world, asteroid);
+        
+        if (transform && renderable) {
+            // Random position in belt
+            float angle = ((float)rand() / RAND_MAX) * 2.0f * M_PI;
+            float radius = inner_radius + ((float)rand() / RAND_MAX) * (outer_radius - inner_radius);
+            float height_offset = (((float)rand() / RAND_MAX) - 0.5f) * 100.0f;
+            
+            transform->position = (Vector3){
+                cosf(angle) * radius,
+                500.0f + height_offset,
+                sinf(angle) * radius
+            };
+            
+            float size = 2.0f + ((float)rand() / RAND_MAX) * 5.0f;
+            transform->scale = (Vector3){size, size, size};
+            transform->rotation = (Quaternion){0, 0, 0, 1};
+            transform->dirty = true;
+            
+            // Use logo_cube mesh for asteroids
+            assets_create_renderable_from_mesh(assets, "logo_cube", renderable);
+            renderable->visible = true;
+            renderable->lod_level = LOD_MEDIUM;  // Lower LOD for performance
+            renderable->material_id = 0;  // Default material
+        }
+    }
+    
+    printf("☀️ Solar system created!\n");
 }
 
 // ============================================================================

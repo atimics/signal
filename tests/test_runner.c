@@ -247,7 +247,7 @@ static void generate_html_report(TestSuiteResult* results, int count) {
     }
     
     fprintf(f, "<!DOCTYPE html>\n<html>\n<head>\n");
-    fprintf(f, "<title>CGame Test Results</title>\n");
+    fprintf(f, "<title>SIGNAL Test Results</title>\n");
     fprintf(f, "<style>\n");
     fprintf(f, "body { font-family: Arial, sans-serif; margin: 20px; }\n");
     fprintf(f, ".header { background: #f0f0f0; padding: 20px; border-radius: 5px; }\n");
@@ -264,7 +264,7 @@ static void generate_html_report(TestSuiteResult* results, int count) {
     // Header
     time_t now = time(NULL);
     fprintf(f, "<div class='header'>\n");
-    fprintf(f, "<h1>CGame Test Results</h1>\n");
+    fprintf(f, "<h1>SIGNAL Test Results</h1>\n");
     fprintf(f, "<p>Generated: %s</p>\n", ctime(&now));
     fprintf(f, "</div>\n");
     
@@ -346,7 +346,7 @@ static void generate_junit_xml(TestSuiteResult* results, int count) {
     }
     
     fprintf(f, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    fprintf(f, "<testsuites name=\"CGame Tests\" tests=\"%d\" failures=\"%d\" time=\"%.3f\">\n", 
+    fprintf(f, "<testsuites name=\"SIGNAL Tests\" tests=\"%d\" failures=\"%d\" time=\"%.3f\">\n", 
             total_tests, total_failures, total_time / 1000.0);
     
     for (int i = 0; i < count; i++) {
@@ -473,7 +473,7 @@ static void parse_arguments(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
     parse_arguments(argc, argv);
     
-    printf("🚀 CGame Test Runner\n");
+    printf("🚀 SIGNAL Test Runner\n");
     printf("═══════════════════════════════════════════════════════════════\n");
     
     if (config.filter_enabled) {

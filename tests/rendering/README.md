@@ -1,6 +1,6 @@
 # Comprehensive Rendering and UI Pipeline Test Suite
 
-This directory contains comprehensive tests for CGame's rendering and UI systems, addressing critical stability issues and providing thorough validation of the graphics pipeline.
+This directory contains comprehensive tests for SIGNAL's rendering and UI systems, addressing critical stability issues and providing thorough validation of the graphics pipeline.
 
 ## Overview
 

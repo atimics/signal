@@ -1,10 +1,10 @@
-# CGame Rendering Pipeline Architecture
+# SIGNAL Rendering Pipeline Architecture
 
-This document provides a comprehensive overview of the CGame engine's rendering pipeline, from frame initialization through final presentation.
+This document provides a comprehensive overview of the SIGNAL engine's rendering pipeline, from frame initialization through final presentation.
 
 ## Overview
 
-The CGame rendering pipeline is a sophisticated multi-pass system built on top of Sokol GFX, featuring:
+The SIGNAL rendering pipeline is a sophisticated multi-pass system built on top of Sokol GFX, featuring:
 - Layered rendering with offscreen render targets
 - Separate 3D scene and UI rendering passes
 - Compositor-based final frame assembly

@@ -1,6 +1,6 @@
 # System Reference
 
-This document provides a comprehensive reference for all systems in the CGame engine. Systems contain the game logic that operates on component data.
+This document provides a comprehensive reference for all systems in the SIGNAL engine. Systems contain the game logic that operates on component data.
 
 ## Core Systems
 

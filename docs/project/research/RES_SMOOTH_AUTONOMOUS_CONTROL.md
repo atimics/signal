@@ -6,7 +6,7 @@
 
 ## 1. Introduction
 
-The perceived quality of an autonomous vehicle, whether a drone, a spaceship, or a character in a game, is heavily influenced by the smoothness of its motion. Abrupt, jerky movements can feel unnatural and unprofessional. This document explores modern control system techniques that can be applied to the CGame engine to achieve fluid, believable, and aesthetically pleasing autonomous behavior.
+The perceived quality of an autonomous vehicle, whether a drone, a spaceship, or a character in a game, is heavily influenced by the smoothness of its motion. Abrupt, jerky movements can feel unnatural and unprofessional. This document explores modern control system techniques that can be applied to the SIGNAL engine to achieve fluid, believable, and aesthetically pleasing autonomous behavior.
 
 ## 2. Core Concepts & Techniques
 
@@ -30,9 +30,9 @@ Our research has identified three key areas of modern control theory that are di
 -   **Relevance**: BTs are a powerful tool for creating complex and reactive AI. They are more flexible and scalable than Finite State Machines (FSMs) and are well-suited for controlling autonomous vehicles that need to react to a changing environment.
 -   **Example**: A behavior tree for an autonomous spaceship could have branches for "Patrol," "Attack," and "Flee." The tree would then decide which branch to execute based on the current state of the game world (e.g., presence of enemies, ship's health).
 
-## 3. Application to the CGame Engine
+## 3. Application to the SIGNAL Engine
 
-Based on this research, I propose a three-pronged approach to implementing a next-generation control system in CGame:
+Based on this research, I propose a three-pronged approach to implementing a next-generation control system in SIGNAL:
 
 1.  **Foundation**: Use PID controllers within the `physics_system` to handle low-level stability and control tasks (e.g., maintaining a stable hover, damping angular velocity).
 2.  **Smooth Motion**: Implement a new `motion_system` that uses jerk minimization for all planned movements. This system will be used for scripted flight, camera control, and any other non-interactive motion.
@@ -46,4 +46,4 @@ To begin implementing this vision, I recommend the following for Sprint 26:
 2.  **Prototype a Jerk-Minimized Trajectory Planner**: Based on the research, a human developer will implement a prototype of the trajectory planner in C.
 3.  **Integrate with Scripted Flight**: As a proof of concept, integrate the new trajectory planner into the existing `scripted_flight_system` to achieve smoother flight paths.
 
-By following this plan, we can incrementally build a sophisticated and modern control system that will be a key feature of the CGame engine.
+By following this plan, we can incrementally build a sophisticated and modern control system that will be a key feature of the SIGNAL engine.

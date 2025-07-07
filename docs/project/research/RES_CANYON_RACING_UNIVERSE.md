@@ -6,7 +6,7 @@ This document outlines procedural generation systems aligned with the **actual c
 
 ## 1. Current Game State Analysis
 
-Based on the player manual and implementation, CGame is currently:
+Based on the player manual and implementation, SIGNAL is currently:
 
 * **High-speed canyon racing** with precision flying controls
 * **Checkpoint-based time trials** with medal progression system

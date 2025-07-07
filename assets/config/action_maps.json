@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "description": "CGame Input Action Maps - Sprint 25 Implementation",
+  "description": "SIGNAL Input Action Maps - Sprint 25 Implementation",
   "maps": [
     {
       "name": "flight_controls",

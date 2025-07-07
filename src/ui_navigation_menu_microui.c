@@ -153,6 +153,7 @@ void navigation_menu_on_select(int item_index, void* user_data) {
     
     const char* scene_names[] = {
         "flight_test", 
+        "controller_calibration",
         "template"
     };
     
