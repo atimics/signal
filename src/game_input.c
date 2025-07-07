@@ -5,6 +5,7 @@
 
 #include "game_input.h"
 #include "services/input_service.h"
+#include "services/controller_config.h"
 #include "hal/input_hal.h"
 #include "scene_state.h"
 #include <stdio.h>
@@ -19,8 +20,15 @@
 static struct {
     InputService* service;
     InputHAL* hal;
+    ControllerConfigService* controller_config;
     bool initialized;
     bool new_system_enabled;
+    
+    // Controller detection state
+    int last_controller_count;
+    char detected_controller_ids[4][32];  // Track up to 4 controllers
+    bool calibration_requested;
+    char pending_calibration_id[32];
 } g_game_input = {0};
 
 // Check if new input system should be enabled
@@ -47,12 +55,24 @@ bool game_input_init(void) {
         return false;
     }
     
+    // Create Controller Config Service
+    g_game_input.controller_config = controller_config_service_create();
+    if (!g_game_input.controller_config) {
+        printf("❌ Failed to create controller config service\n");
+        free(g_game_input.hal);
+        g_game_input.hal = NULL;
+        return false;
+    }
+    
     // Create Input Service
     g_game_input.service = input_service_create();
     if (!g_game_input.service) {
         printf("❌ Failed to create input service\n");
+        controller_config_service_destroy(g_game_input.controller_config);
         free(g_game_input.hal);
+        g_game_input.service = NULL;
         g_game_input.hal = NULL;
+        g_game_input.controller_config = NULL;
         return false;
     }
     
@@ -108,6 +128,9 @@ void game_input_process_frame(float delta_time) {
         return;
     }
     
+    // Check for new controllers
+    game_input_check_new_controllers();
+    
     // Process input through the service
     g_game_input.service->process_frame(g_game_input.service, delta_time);
 }
@@ -118,5 +141,52 @@ bool game_input_is_new_system_enabled(void) {
 
 InputService* game_input_get_service(void) {
     return g_game_input.service;
+}
+
+ControllerConfigService* game_input_get_controller_config_service(void) {
+    return g_game_input.controller_config;
+}
+
+void game_input_check_new_controllers(void) {
+    if (!g_game_input.hal || !g_game_input.controller_config) return;
+    
+    // Get current controller info from HAL
+    // For now, this is a simplified implementation
+    // In a full version, this would query the HAL for connected controllers
+    
+    static int check_counter = 0;
+    if (++check_counter % 60 != 0) return;  // Check once per second
+    
+    // TODO: Implement actual controller detection via HAL
+    // This would check for new controller connections and generate IDs
+    
+    // Example of how it would work:
+    // 1. Query HAL for connected controllers
+    // 2. Compare with last known state
+    // 3. For new controllers, check if they have configurations
+    // 4. If not, request calibration scene
+}
+
+bool game_input_has_pending_calibration(void) {
+    return g_game_input.calibration_requested;
+}
+
+const char* game_input_get_pending_calibration_id(void) {
+    return g_game_input.calibration_requested ? g_game_input.pending_calibration_id : NULL;
+}
+
+void game_input_clear_pending_calibration(void) {
+    g_game_input.calibration_requested = false;
+    g_game_input.pending_calibration_id[0] = '\0';
+}
+
+void game_input_request_controller_calibration(const char* controller_id) {
+    if (!controller_id) return;
+    
+    g_game_input.calibration_requested = true;
+    strncpy(g_game_input.pending_calibration_id, controller_id, sizeof(g_game_input.pending_calibration_id) - 1);
+    g_game_input.pending_calibration_id[sizeof(g_game_input.pending_calibration_id) - 1] = '\0';
+    
+    printf("🎮 Controller calibration requested for: %s\n", controller_id);
 }
 
