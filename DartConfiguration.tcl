@@ -4,8 +4,8 @@
 
 
 # Configuration directories and files
-SourceDirectory: /Users/ratimics/develop/cgame
-BuildDirectory: /Users/ratimics/develop/cgame
+SourceDirectory: /Users/ratimics/develop/signal
+BuildDirectory: /Users/ratimics/develop/signal
 
 # Where to place the cost data store
 CostDataFile: 
@@ -27,7 +27,7 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/opt/homebrew/bin/cmake" "/Users/ratimics/develop/cgame"
+ConfigureCommand: "/opt/homebrew/bin/cmake" "/Users/ratimics/develop/signal"
 MakeCommand: /opt/homebrew/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 

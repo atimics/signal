@@ -114,7 +114,7 @@ ALL_TEST_TARGETS = $(TEST_CORE_TARGETS) $(TEST_RENDERING_TARGETS)
 # Sequential test execution (current)
 .PHONY: test-sequential
 test-sequential: $(ALL_TEST_TARGETS)
-	@echo "🧪 Running CGame Test Suite (Sequential)"
+	@echo "🧪 Running SIGNAL Test Suite (Sequential)"
 	@echo "========================================"
 	@for test in $(ALL_TEST_TARGETS); do \
 		echo "Running $$test..."; \
@@ -125,7 +125,7 @@ test-sequential: $(ALL_TEST_TARGETS)
 # Parallel test execution (new)
 .PHONY: test-parallel
 test-parallel: $(ALL_TEST_TARGETS)
-	@echo "🧪 Running CGame Test Suite (Parallel)"
+	@echo "🧪 Running SIGNAL Test Suite (Parallel)"
 	@echo "======================================"
 	@$(MAKE) -j$(shell nproc 2>/dev/null || echo 4) run-tests-parallel
 

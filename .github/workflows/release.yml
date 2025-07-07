@@ -22,7 +22,7 @@ on:
           - major
 
 env:
-  PROJECT_NAME: cgame
+  PROJECT_NAME: signal
   
 jobs:
   version-and-tag:
@@ -154,16 +154,16 @@ jobs:
         include:
           - os: macos-latest
             platform: macos
-            artifact_name: cgame-macos
-            executable: cgame
+            artifact_name: signal-macos
+            executable: signal
           - os: ubuntu-latest
             platform: linux
-            artifact_name: cgame-linux
-            executable: cgame
+            artifact_name: signal-linux
+            executable: signal
           - os: ubuntu-latest
             platform: wasm
-            artifact_name: cgame-wasm
-            executable: cgame.html
+            artifact_name: signal-wasm
+            executable: signal.html
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
@@ -234,26 +234,26 @@ jobs:
           mkdir -p dist
           if [[ "${{ matrix.platform }}" == "wasm" ]]; then
             # WebAssembly artifacts
-            if [[ -f build/cgame.html ]]; then
-              cp build/cgame.html dist/
+            if [[ -f build/signal.html ]]; then
+              cp build/signal.html dist/
             else
-              echo "❌ cgame.html not found"
+              echo "❌ signal.html not found"
               exit 1
             fi
-            if [[ -f build/cgame.js ]]; then
-              cp build/cgame.js dist/
+            if [[ -f build/signal.js ]]; then
+              cp build/signal.js dist/
             else
-              echo "❌ cgame.js not found"
+              echo "❌ signal.js not found"
               exit 1
             fi
-            if [[ -f build/cgame.wasm ]]; then
-              cp build/cgame.wasm dist/
+            if [[ -f build/signal.wasm ]]; then
+              cp build/signal.wasm dist/
             else
-              echo "❌ cgame.wasm not found"
+              echo "❌ signal.wasm not found"
               exit 1
             fi
             # Optional data file
-            cp build/cgame.data dist/ 2>/dev/null || echo "⚠️  Data file not found (optional)"
+            cp build/signal.data dist/ 2>/dev/null || echo "⚠️  Data file not found (optional)"
             
             echo "✅ WebAssembly artifacts prepared:"
             ls -la dist/
@@ -300,16 +300,16 @@ jobs:
           
           # Package each platform
           cd artifacts
-          for dir in cgame-*-v${{ needs.version-and-tag.outputs.new_version }}; do
+          for dir in signal-*-v${{ needs.version-and-tag.outputs.new_version }}; do
             if [[ -d "$dir" ]]; then
-              platform=$(echo $dir | sed 's/cgame-\(.*\)-v.*/\1/')
+              platform=$(echo $dir | sed 's/signal-\(.*\)-v.*/\1/')
               if [[ "$platform" == "wasm" ]]; then
                 cd "$dir"
-                zip -r "../../release-assets/cgame-${{ needs.version-and-tag.outputs.new_version }}-$platform.zip" .
+                zip -r "../../release-assets/signal-${{ needs.version-and-tag.outputs.new_version }}-$platform.zip" .
                 cd ..
               else
                 cd "$dir"
-                tar -czf "../../release-assets/cgame-${{ needs.version-and-tag.outputs.new_version }}-$platform.tar.gz" .
+                tar -czf "../../release-assets/signal-${{ needs.version-and-tag.outputs.new_version }}-$platform.tar.gz" .
                 cd ..
               fi
             fi
@@ -332,7 +332,7 @@ jobs:
           
           # Format changelog
           cat > CHANGELOG.md << EOF
-          # CGame Engine v${{ needs.version-and-tag.outputs.new_version }}
+          # SIGNAL Engine v${{ needs.version-and-tag.outputs.new_version }}
           
           ## What's Changed
           
@@ -360,14 +360,14 @@ jobs:
           ## Installation
           
           ### Native Builds
-          Download the appropriate archive for your platform and extract it. The \`cgame\` executable can be run directly.
+          Download the appropriate archive for your platform and extract it. The \`signal\` executable can be run directly.
           
           ### WebAssembly
-          Extract the WebAssembly archive and serve the files from a web server. Open \`cgame.html\` in a browser.
+          Extract the WebAssembly archive and serve the files from a web server. Open \`signal.html\` in a browser.
           
           ## Development
           
-          For development builds, see the [Build Instructions](https://github.com/atimics/cgame#building) in the README.
+          For development builds, see the [Build Instructions](https://github.com/atimics/signal#building) in the README.
           EOF
           
           echo "changelog_file=CHANGELOG.md" >> $GITHUB_OUTPUT
@@ -376,7 +376,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.version-and-tag.outputs.new_version }}
-          name: CGame Engine v${{ needs.version-and-tag.outputs.new_version }}
+          name: SIGNAL Engine v${{ needs.version-and-tag.outputs.new_version }}
           body_path: ${{ steps.changelog.outputs.changelog_file }}
           draft: false
           prerelease: false
@@ -401,8 +401,8 @@ jobs:
           echo "- WebAssembly Build (zip)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 Links:" >> $GITHUB_STEP_SUMMARY
-          echo "- [View Release](https://github.com/atimics/cgame/releases/tag/v${{ needs.version-and-tag.outputs.new_version }})" >> $GITHUB_STEP_SUMMARY
-          echo "- [Download Assets](https://github.com/atimics/cgame/releases/latest)" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Release](https://github.com/atimics/signal/releases/tag/v${{ needs.version-and-tag.outputs.new_version }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Download Assets](https://github.com/atimics/signal/releases/latest)" >> $GITHUB_STEP_SUMMARY
 
   manual-verification:
     name: Manual Verification Required

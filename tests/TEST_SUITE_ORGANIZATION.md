@@ -1,4 +1,4 @@
-# CGame Test Suite Organization & Quality Assurance
+# SIGNAL Test Suite Organization & Quality Assurance
 
 ## 🎯 Test Organization Philosophy
 

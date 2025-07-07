@@ -41,7 +41,7 @@ test: test-sequential
 # Run the game (builds everything first)
 .PHONY: run
 run: default
-	@echo "Running CGame..."
+	@echo "Running SIGNAL..."
 	@$(TARGET)
 
 # Clean build artifacts
@@ -54,7 +54,7 @@ clean:
 # Help target
 .PHONY: help
 help:
-	@echo "CGame Build System"
+	@echo "SIGNAL Build System"
 	@echo "=================="
 	@echo "Available targets:"
 	@echo "  make          - Build everything (assets, run tests, build game)"

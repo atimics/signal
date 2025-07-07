@@ -1,11 +1,11 @@
-# CGame Engine - Unified CMake Build System
+# SIGNAL Engine - Unified CMake Build System
 # ============================================================================
 # Component-Based Game Engine with ECS Architecture
 # Created: July 6, 2025
 # ============================================================================
 
 cmake_minimum_required(VERSION 3.20)
-project(CGame 
+project(SIGNAL 
     VERSION 1.0.0
     DESCRIPTION "Component-based Game Engine with ECS Architecture"
     LANGUAGES C
@@ -106,6 +106,7 @@ set(CGAME_SOURCES
     src/scripts/navigation_menu_scene.c
     src/scripts/flight_test_scene.c
     src/scripts/template_scene.c
+    src/scripts/controller_calibration_scene_simple.c
     src/game_input.c
     src/hal/input_hal_sokol.c
     src/hal/input_hal_mock.c
@@ -137,23 +138,23 @@ set(CGAME_MAIN_SOURCE src/main.c)
 # ============================================================================
 # ENGINE LIBRARY
 # ============================================================================
-add_library(cgame_engine STATIC ${CGAME_SOURCES})
+add_library(signal_engine STATIC ${CGAME_SOURCES})
 
 # Include compiler flags after target is created
 include(cmake/CompilerFlags.cmake)
 
-target_include_directories(cgame_engine PUBLIC
+target_include_directories(signal_engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/third_party
 )
 
 # Platform-specific definitions
 if(APPLE)
-    target_compile_definitions(cgame_engine PUBLIC SOKOL_METAL)
+    target_compile_definitions(signal_engine PUBLIC SOKOL_METAL)
 elseif(UNIX)
-    target_compile_definitions(cgame_engine PUBLIC SOKOL_GLCORE33)
+    target_compile_definitions(signal_engine PUBLIC SOKOL_GLCORE33)
 elseif(EMSCRIPTEN)
-    target_compile_definitions(cgame_engine PUBLIC SOKOL_GLES3)
+    target_compile_definitions(signal_engine PUBLIC SOKOL_GLES3)
 endif()
 
 # ============================================================================
@@ -161,7 +162,7 @@ endif()
 # ============================================================================
 
 # Math library
-target_link_libraries(cgame_engine PUBLIC m)
+target_link_libraries(signal_engine PUBLIC m)
 
 # Platform libraries
 if(APPLE)
@@ -172,7 +173,7 @@ if(APPLE)
     find_library(IOKIT_FRAMEWORK IOKit REQUIRED)
     find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
     
-    target_link_libraries(cgame_engine PUBLIC
+    target_link_libraries(signal_engine PUBLIC
         ${METAL_FRAMEWORK}
         ${METALKIT_FRAMEWORK}
         ${APPKIT_FRAMEWORK}
@@ -183,7 +184,7 @@ if(APPLE)
 elseif(UNIX AND NOT EMSCRIPTEN)
     find_package(OpenGL REQUIRED)
     find_package(X11 REQUIRED)
-    target_link_libraries(cgame_engine PUBLIC
+    target_link_libraries(signal_engine PUBLIC
         OpenGL::GL
         ${X11_LIBRARIES}
         dl
@@ -196,23 +197,23 @@ include(cmake/FindODE.cmake)
 include(cmake/FindYAML.cmake)
 
 if(ODE_FOUND)
-    target_include_directories(cgame_engine PUBLIC ${ODE_INCLUDE_DIRS})
-    target_link_libraries(cgame_engine PUBLIC ${ODE_LIBRARIES})
+    target_include_directories(signal_engine PUBLIC ${ODE_INCLUDE_DIRS})
+    target_link_libraries(signal_engine PUBLIC ${ODE_LIBRARIES})
 endif()
 
 if(YAML_FOUND)
-    target_include_directories(cgame_engine PUBLIC ${YAML_INCLUDE_DIRS})
-    target_link_libraries(cgame_engine PUBLIC ${YAML_LIBRARIES})
+    target_include_directories(signal_engine PUBLIC ${YAML_INCLUDE_DIRS})
+    target_link_libraries(signal_engine PUBLIC ${YAML_LIBRARIES})
 endif()
 
 # ============================================================================
 # EXECUTABLE
 # ============================================================================
-add_executable(cgame ${CGAME_MAIN_SOURCE})
-target_link_libraries(cgame PRIVATE cgame_engine)
+add_executable(signal ${CGAME_MAIN_SOURCE})
+target_link_libraries(signal PRIVATE signal_engine)
 
 # Set output directory
-set_target_properties(cgame PROPERTIES
+set_target_properties(signal PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
@@ -239,7 +240,7 @@ if(CGAME_BUILD_TESTS)
     # Compatibility targets
     add_custom_target(run-tests
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-        DEPENDS cgame_engine
+        DEPENDS signal_engine
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Running all tests..."
     )
@@ -247,7 +248,7 @@ if(CGAME_BUILD_TESTS)
     if(CGAME_PARALLEL_TESTS)
         add_custom_target(test-parallel
             COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure --parallel
-            DEPENDS cgame_engine
+            DEPENDS signal_engine
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Running tests in parallel..."
         )
@@ -290,18 +291,18 @@ endif()
 
 # Run target
 add_custom_target(run
-    COMMAND ${CMAKE_BINARY_DIR}/cgame
-    DEPENDS cgame
+    COMMAND ${CMAKE_BINARY_DIR}/signal
+    DEPENDS signal
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMENT "Running CGame..."
+    COMMENT "Running SIGNAL..."
 )
 
 # Run with scene
 add_custom_target(run-scene
-    COMMAND ${CMAKE_BINARY_DIR}/cgame --scene ${SCENE}
-    DEPENDS cgame
+    COMMAND ${CMAKE_BINARY_DIR}/signal --scene ${SCENE}
+    DEPENDS signal
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    COMMENT "Running CGame with scene..."
+    COMMENT "Running SIGNAL with scene..."
 )
 
 # Clean all
@@ -318,8 +319,8 @@ if(UNIX AND NOT APPLE)
     if(VALGRIND)
         add_custom_target(memcheck
             COMMAND ${VALGRIND} --leak-check=full --show-leak-kinds=all 
-                    --track-origins=yes ${CMAKE_BINARY_DIR}/cgame
-            DEPENDS cgame
+                    --track-origins=yes ${CMAKE_BINARY_DIR}/signal
+            DEPENDS signal
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         )
     endif()
@@ -327,9 +328,9 @@ endif()
 
 # Help target
 add_custom_target(show-help
-    COMMAND ${CMAKE_COMMAND} -E echo "CGame Engine Build Targets:"
+    COMMAND ${CMAKE_COMMAND} -E echo "SIGNAL Engine Build Targets:"
     COMMAND ${CMAKE_COMMAND} -E echo "  all          - Build everything"
-    COMMAND ${CMAKE_COMMAND} -E echo "  cgame        - Build the game executable"
+    COMMAND ${CMAKE_COMMAND} -E echo "  signal        - Build the game executable"
     COMMAND ${CMAKE_COMMAND} -E echo "  test         - Run all tests"
     COMMAND ${CMAKE_COMMAND} -E echo "  test-parallel- Run tests in parallel"
     COMMAND ${CMAKE_COMMAND} -E echo "  assets       - Build game assets"
@@ -344,7 +345,7 @@ add_custom_target(show-help
 # STATUS MESSAGES
 # ============================================================================
 message(STATUS "")
-message(STATUS "CGame Engine Configuration:")
+message(STATUS "SIGNAL Engine Configuration:")
 message(STATUS "  Version: ${PROJECT_VERSION}")
 message(STATUS "  Build Type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  Platform: ${CMAKE_SYSTEM_NAME}")

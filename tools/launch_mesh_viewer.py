@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CGame Mesh Viewer Launcher
+SIGNAL Mesh Viewer Launcher
 
 Starts a local web server and opens the mesh viewer in the default browser.
 """
@@ -19,7 +19,7 @@ def main():
     project_root = script_dir.parent
     
     if not (project_root / "assets" / "meshes").exists():
-        print("❌ Error: Must run from the cgame project root directory")
+        print("❌ Error: Must run from the signal project root directory")
         print(f"   Current directory: {os.getcwd()}")
         print(f"   Expected assets at: {project_root / 'assets' / 'meshes'}")
         return 1
@@ -27,7 +27,7 @@ def main():
     # Change to project root
     os.chdir(project_root)
     
-    print("🚀 CGame Mesh Viewer Launcher")
+    print("🚀 SIGNAL Mesh Viewer Launcher")
     print("=" * 40)
     print(f"📁 Project root: {project_root}")
     print(f"🌐 Starting web server...")

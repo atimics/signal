@@ -39,7 +39,7 @@ float apply_boost(float thrust_input, float boost_input) {
 }
 
 int main(void) {
-    printf("🎮 CGame Control Scheme Validation\n");
+    printf("🎮 SIGNAL Control Scheme Validation\n");
     printf("===================================\n\n");
     
     // Test 1: Banking system

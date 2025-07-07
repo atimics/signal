@@ -63,14 +63,14 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cgame-macos
-          path: build/cgame
+          name: signal-macos
+          path: build/signal
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: test-results-macos
-          path: build/cgame_tests_math
+          path: build/signal_tests_math
 
   build-linux:
     name: Build (Linux)
@@ -117,14 +117,14 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cgame-linux
-          path: build/cgame
+          name: signal-linux
+          path: build/signal
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: test-results-linux
-          path: build/cgame_tests_math
+          path: build/signal_tests_math
 
   # Temporarily disabled due to compilation issues
   # TODO: Fix WebAssembly build compatibility
@@ -151,13 +151,13 @@ jobs:
   #     - name: Upload Artifact
   #       uses: actions/upload-artifact@v4
   #       with:
-  #         name: cgame-wasm
+  #         name: signal-wasm
   #         path: build/
   #         glob: |
-  #           build/cgame.html
-  #           build/cgame.js
-  #           build/cgame.wasm
-  #           build/cgame.data
+  #           build/signal.html
+  #           build/signal.js
+  #           build/signal.wasm
+  #           build/signal.data
 
   test-suite:
     name: Unity Test Suite
@@ -180,19 +180,19 @@ jobs:
         if: always()
         with:
           name: unity-test-suite
-          path: build/cgame_tests
+          path: build/signal_tests
 
       - name: Test Summary
         if: always()
         run: |
           echo "## Unity Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f build/cgame_tests ]; then
+          if [ -f build/signal_tests ]; then
             echo "✅ Test executable built successfully" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Test Output:" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
-            ./build/cgame_tests 2>&1 || echo "Tests completed with exit code $?"
+            ./build/signal_tests 2>&1 || echo "Tests completed with exit code $?"
             echo '```' >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ Test executable build failed" >> $GITHUB_STEP_SUMMARY
@@ -206,7 +206,7 @@ jobs:
       - name: Validate Main Branch Push
         run: |
           echo "❌ Direct push to main branch detected!"
-          echo "According to CGame Release Standards, direct commits to main are prohibited."
+          echo "According to SIGNAL Release Standards, direct commits to main are prohibited."
           echo "Please use pull requests for all changes to main branch."
           echo ""
           echo "Required workflow for main branch:"

@@ -1,6 +1,6 @@
 # Component Reference
 
-This document provides a comprehensive reference for all components available in the CGame engine. Components are pure data containers that define entity properties.
+This document provides a comprehensive reference for all components available in the SIGNAL engine. Components are pure data containers that define entity properties.
 
 ## Core Components
 

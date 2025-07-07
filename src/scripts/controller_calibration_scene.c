@@ -5,10 +5,12 @@
 
 #include "controller_calibration_scene.h"
 #include "../ui.h"
+#include "../ui_microui.h"
 #include "../game_input.h"
 #include "../hal/input_hal.h"
 #include "../services/input_service.h"
 #include "../services/input_constants.h"
+#include "../microui/microui.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -222,7 +224,7 @@ void controller_calibration_render_ui(ControllerCalibrationState* calib_state) {
     if (!calib_state) return;
     
     // Get UI context
-    mu_Context* ctx = ui_get_context();
+    mu_Context* ctx = ui_microui_get_mu_context();
     if (!ctx) return;
     
     // Main calibration window

@@ -324,7 +324,7 @@ void test_component_access_performance(void) {
 int main(void) {
     UNITY_BEGIN();
     
-    printf("🚀 CGame Engine Performance Tests - Sprint 19 REFACTOR Phase\n");
+    printf("🚀 SIGNAL Engine Performance Tests - Sprint 19 REFACTOR Phase\n");
     printf("============================================================\n");
     
     // Memory performance tests

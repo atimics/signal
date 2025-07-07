@@ -1,6 +1,6 @@
 # Mesh Asset Format and Schema
 
-This document outlines the structure, format, and standards for mesh assets used in the CGame engine, as well as the pipeline for generating and managing them.
+This document outlines the structure, format, and standards for mesh assets used in the SIGNAL engine, as well as the pipeline for generating and managing them.
 
 ## Asset Pipeline Overview
 

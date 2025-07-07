@@ -417,7 +417,7 @@ bool performance_export_to_file(const char* filename) {
         return false;
     }
     
-    fprintf(file, "# CGame Performance Data Export\n");
+    fprintf(file, "# SIGNAL Performance Data Export\n");
     fprintf(file, "# Timestamp,FrameTime(ms),FPS,EntitiesRendered,DrawCalls\n");
     
     for (uint32_t i = 0; i < performance_state.snapshot_count; i++) {

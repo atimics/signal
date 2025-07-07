@@ -1,11 +1,11 @@
-# CGame Do**[📊 Sprint Status Dashboard](SPRINT_STATUS.md)** - Current sprint overview and tracking  
+# SIGNAL Do**[📊 Sprint Status Dashboard](SPRINT_STATUS.md)** - Current sprint overview and tracking  
 **[🔧 Documentation Improvements](DOCUMENTATION_IMPROVEMENTS_SUMMARY.md)** - Recent improvements and standardsumentation
 
 **Document ID**: DOC_README_MAIN  
 **Date**: July 6, 2025  
 **Author**: Development Team
 
-Welcome to the CGame project documentation. This directory contains all project documentation organized for easy navigation and maintenance.
+Welcome to the SIGNAL project documentation. This directory contains all project documentation organized for easy navigation and maintenance.
 
 ## 📚 Documentation Structure
 

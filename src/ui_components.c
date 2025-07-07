@@ -1,6 +1,6 @@
 /**
  * @file ui_components.c
- * @brief MicroUI widget implementations for the CGame UI system
+ * @brief MicroUI widget implementations for the SIGNAL UI system
  */
 
 #include "ui_components.h"

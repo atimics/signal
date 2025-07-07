@@ -2,20 +2,20 @@
 ==========================================
 
 ⚙️  Initializing configuration...
-📝 Config: Loaded 6 configuration values from cgame_config.txt
+📝 Config: Loaded 6 configuration values from signal_config.txt
 🎯 Startup scene: thruster_test (auto-start: enabled)
 ⚙️  Config system initialized
 🔧 Initializing graphics...
 🌍 Setting up world...
 🌍 World initialized - ready for 4096 entities
 ⚙️ Starting systems...
-📁 Asset root: /Users/ratimics/develop/cgame/build/assets
+📁 Asset root: /Users/ratimics/develop/signal/build/assets
 📋 Data registry initialized
-   Data root: /Users/ratimics/develop/cgame/data
-📝 Loading entity templates from /Users/ratimics/develop/cgame/data/templates/entities.txt
+   Data root: /Users/ratimics/develop/signal/data
+📝 Loading entity templates from /Users/ratimics/develop/signal/data/templates/entities.txt
    ✅ Loaded 13 entity templates
-🏗️  Dynamically loading all scene templates from /Users/ratimics/develop/cgame/data/scenes
-🏗️  Loading scene templates from /Users/ratimics/develop/cgame/data/scenes/ode_simple.txt
+🏗️  Dynamically loading all scene templates from /Users/ratimics/develop/signal/data/scenes
+🏗️  Loading scene templates from /Users/ratimics/develop/signal/data/scenes/ode_simple.txt
    ✅ Loaded 0 scene templates
 ✅ Dynamically loaded 1 scene template files
 📦 Created memory pool 'Meshes' (ID: 0, limit: 128.00 MB)
@@ -38,13 +38,13 @@
 ✅ Sokol rendering pipeline initialized with external shaders
 ✅ Render system initialized successfully
 🔍 Loading assets...
-📋 Loading asset index: /Users/ratimics/develop/cgame/build/assets/meshes/index.json
-📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/metadata.json
+📋 Loading asset index: /Users/ratimics/develop/signal/build/assets/meshes/index.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship_mk2/metadata.json
 🔍 DEBUG: Parsed metadata - name='wedge_ship_mk2', geometry='geometry.cobj'
-🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj'
-🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', name='wedge_ship_mk2'
-🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', mesh_name='wedge_ship_mk2'
-🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', name='wedge_ship_mk2'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj', mesh_name='wedge_ship_mk2'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship_mk2/geometry.cobj
 🔍 Loading binary mesh: 9 vertices, 30 indices
 🔍 DEBUG: Creating GPU buffers for wedge_ship_mk2 - VB=288 bytes, IB=120 bytes
 ✅ GPU resources created successfully for mesh wedge_ship_mk2
@@ -53,12 +53,12 @@
 🔍 DEBUG: Updated material 'wedge_ship_mk2' texture reference from 'texture.png' to 'wedge_ship_mk2_texture'
 ✅ Loaded texture: wedge_ship_mk2_texture (1024x1024)
 ✅ wedge_ship_mk2
-📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/metadata.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/signal/build/assets/meshes/props/sun/metadata.json
 🔍 DEBUG: Parsed metadata - name='sun', geometry='geometry.cobj'
-🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj'
-🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', name='sun'
-🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj', mesh_name='sun'
-🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/sun/geometry.cobj
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/signal/build/assets/meshes/props/sun/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/signal/build/assets/meshes/props/sun/geometry.cobj', name='sun'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/signal/build/assets/meshes/props/sun/geometry.cobj', mesh_name='sun'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/signal/build/assets/meshes/props/sun/geometry.cobj
 🔍 Loading binary mesh: 56 vertices, 288 indices
 🔍 DEBUG: Creating GPU buffers for sun - VB=1792 bytes, IB=1152 bytes
 ✅ GPU resources created successfully for mesh sun
@@ -67,12 +67,12 @@
 🔍 DEBUG: Updated material 'sun' texture reference from 'texture.png' to 'sun_texture'
 ✅ Loaded texture: sun_texture (1024x1024)
 ✅ sun
-📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/metadata.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship/metadata.json
 🔍 DEBUG: Parsed metadata - name='wedge_ship', geometry='geometry.cobj'
-🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj'
-🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', name='wedge_ship'
-🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj', mesh_name='wedge_ship'
-🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/wedge_ship/geometry.cobj
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship/geometry.cobj', name='wedge_ship'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship/geometry.cobj', mesh_name='wedge_ship'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/signal/build/assets/meshes/props/wedge_ship/geometry.cobj
 🔍 Loading binary mesh: 7 vertices, 24 indices
 🔍 DEBUG: Creating GPU buffers for wedge_ship - VB=224 bytes, IB=96 bytes
 ✅ GPU resources created successfully for mesh wedge_ship
@@ -81,12 +81,12 @@
 🔍 DEBUG: Updated material 'wedge_ship' texture reference from 'texture.png' to 'wedge_ship_texture'
 ✅ Loaded texture: wedge_ship_texture (1024x1024)
 ✅ wedge_ship
-📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/metadata.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/signal/build/assets/meshes/props/control_tower/metadata.json
 🔍 DEBUG: Parsed metadata - name='control_tower', geometry='geometry.cobj'
-🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj'
-🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', name='control_tower'
-🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj', mesh_name='control_tower'
-🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/control_tower/geometry.cobj
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/signal/build/assets/meshes/props/control_tower/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/signal/build/assets/meshes/props/control_tower/geometry.cobj', name='control_tower'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/signal/build/assets/meshes/props/control_tower/geometry.cobj', mesh_name='control_tower'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/signal/build/assets/meshes/props/control_tower/geometry.cobj
 🔍 Loading binary mesh: 39 vertices, 204 indices
 🔍 DEBUG: Creating GPU buffers for control_tower - VB=1248 bytes, IB=816 bytes
 ✅ GPU resources created successfully for mesh control_tower
@@ -95,12 +95,12 @@
 🔍 DEBUG: Updated material 'control_tower' texture reference from 'texture.png' to 'control_tower_texture'
 ✅ Loaded texture: control_tower_texture (1024x1024)
 ✅ control_tower
-📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/metadata.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/signal/build/assets/meshes/props/logo_cube/metadata.json
 🔍 DEBUG: Parsed metadata - name='logo_cube', geometry='geometry.cobj'
-🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj'
-🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj', name='logo_cube'
-🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj', mesh_name='logo_cube'
-🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/logo_cube/geometry.cobj
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/signal/build/assets/meshes/props/logo_cube/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/signal/build/assets/meshes/props/logo_cube/geometry.cobj', name='logo_cube'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/signal/build/assets/meshes/props/logo_cube/geometry.cobj', mesh_name='logo_cube'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/signal/build/assets/meshes/props/logo_cube/geometry.cobj
 🔍 Loading binary mesh: 24 vertices, 36 indices
 🔍 DEBUG: Creating GPU buffers for logo_cube - VB=768 bytes, IB=144 bytes
 ✅ GPU resources created successfully for mesh logo_cube
@@ -109,12 +109,12 @@
 🔍 DEBUG: Updated material 'logo_cube' texture reference from 'logo.png' to 'logo_cube_texture'
 ✅ Loaded texture: logo_cube_texture (1024x1024)
 ✅ logo_cube
-📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/metadata.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/signal/build/assets/meshes/props/landing_pad/metadata.json
 🔍 DEBUG: Parsed metadata - name='landing_pad', geometry='geometry.cobj'
-🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj'
-🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj', name='landing_pad'
-🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj', mesh_name='landing_pad'
-🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/landing_pad/geometry.cobj
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/signal/build/assets/meshes/props/landing_pad/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/signal/build/assets/meshes/props/landing_pad/geometry.cobj', name='landing_pad'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/signal/build/assets/meshes/props/landing_pad/geometry.cobj', mesh_name='landing_pad'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/signal/build/assets/meshes/props/landing_pad/geometry.cobj
 🔍 Loading binary mesh: 14 vertices, 72 indices
 🔍 DEBUG: Creating GPU buffers for landing_pad - VB=448 bytes, IB=288 bytes
 ✅ GPU resources created successfully for mesh landing_pad
@@ -123,12 +123,12 @@
 🔍 DEBUG: Updated material 'landing_pad' texture reference from 'texture.png' to 'landing_pad_texture'
 ✅ Loaded texture: landing_pad_texture (1024x1024)
 ✅ landing_pad
-📋 Loading mesh from metadata: /Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/metadata.json
+📋 Loading mesh from metadata: /Users/ratimics/develop/signal/build/assets/meshes/props/planet_surface/metadata.json
 🔍 DEBUG: Parsed metadata - name='planet_surface', geometry='geometry.cobj'
-🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj'
-🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj', name='planet_surface'
-🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj', mesh_name='planet_surface'
-🔍 Detected binary .cobj format for /Users/ratimics/develop/cgame/build/assets/meshes/props/planet_surface/geometry.cobj
+🔍 DEBUG: Full mesh path: '/Users/ratimics/develop/signal/build/assets/meshes/props/planet_surface/geometry.cobj'
+🔍 DEBUG: Calling load_mesh_from_file with: registry=0x1047b4890, path='/Users/ratimics/develop/signal/build/assets/meshes/props/planet_surface/geometry.cobj', name='planet_surface'
+🔍 DEBUG load_mesh_from_file: filepath='/Users/ratimics/develop/signal/build/assets/meshes/props/planet_surface/geometry.cobj', mesh_name='planet_surface'
+🔍 Detected binary .cobj format for /Users/ratimics/develop/signal/build/assets/meshes/props/planet_surface/geometry.cobj
 🔍 Loading binary mesh: 4 vertices, 6 indices
 🔍 DEBUG: Creating GPU buffers for planet_surface - VB=128 bytes, IB=24 bytes
 ✅ GPU resources created successfully for mesh planet_surface

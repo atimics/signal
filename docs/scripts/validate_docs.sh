@@ -1,7 +1,7 @@
 #!/bin/bash
-# filepath: /Users/ratimics/develop/cgame/docs/scripts/validate_docs.sh
+# filepath: /Users/ratimics/develop/signal/docs/scripts/validate_docs.sh
 
-echo "🔍 Validating CGame documentation..."
+echo "🔍 Validating SIGNAL documentation..."
 
 # Check for required metadata headers
 echo "Checking metadata headers..."

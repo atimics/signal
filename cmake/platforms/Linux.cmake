@@ -1,4 +1,4 @@
-# CGame Engine - Linux Platform Configuration
+# SIGNAL Engine - Linux Platform Configuration
 # ============================================================================
 # Platform-specific settings for Linux builds
 
@@ -251,7 +251,7 @@ endif()
 # ============================================================================
 
 # Prepare for future packaging support
-set(CGAME_PACKAGE_NAME "cgame-engine")
+set(CGAME_PACKAGE_NAME "signal-engine")
 set(CGAME_PACKAGE_VERSION "${PROJECT_VERSION}")
 
 # ============================================================================

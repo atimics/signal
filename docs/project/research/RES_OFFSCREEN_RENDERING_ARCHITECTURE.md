@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document presents a comprehensive architecture for implementing offscreen rendering and compositing in CGame. The proposed system solves current pipeline state conflicts by rendering different content types (3D scenes, UI, effects) to separate offscreen targets, then compositing them in a final pass. This approach provides complete isolation between rendering pipelines while enabling advanced visual effects.
+This document presents a comprehensive architecture for implementing offscreen rendering and compositing in SIGNAL. The proposed system solves current pipeline state conflicts by rendering different content types (3D scenes, UI, effects) to separate offscreen targets, then compositing them in a final pass. This approach provides complete isolation between rendering pipelines while enabling advanced visual effects.
 
 ## Problem Analysis
 

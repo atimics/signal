@@ -72,7 +72,7 @@ def generate_reference_cube_obj(output_path):
     
     with open(output_path, 'w') as f:
         f.write("# Reference Logo Cube - Gold Standard Mesh\n")
-        f.write("# Generated for CGame Asset Pipeline Testing\n")
+        f.write("# Generated for SIGNAL Asset Pipeline Testing\n")
         f.write("# Perfect geometry with correct normals and UVs\n\n")
         
         # Write vertices
@@ -136,7 +136,7 @@ def generate_reference_metadata(output_path):
         "material": "material.mtl",
         "texture": "texture.png",
         "tags": ["reference", "cube", "logo", "test"],
-        "created_by": "CGame Asset Generator",
+        "created_by": "SIGNAL Asset Generator",
         "validation": {
             "expected_vertices": 8,
             "expected_faces": 12,

@@ -1,4 +1,4 @@
-# CGame Flight Control Manual
+# SIGNAL Flight Control Manual
 
 **Document ID**: CONTROLS_V1  
 **Date**: July 6, 2025  
@@ -10,7 +10,7 @@
 
 ## 🎮 Control Schemes Overview
 
-CGame features a sophisticated unified flight control system designed for intuitive 6-degree-of-freedom (6DOF) spacecraft control. The system supports multiple input devices with primary optimization for Xbox-style controllers.
+SIGNAL features a sophisticated unified flight control system designed for intuitive 6-degree-of-freedom (6DOF) spacecraft control. The system supports multiple input devices with primary optimization for Xbox-style controllers.
 
 ### Primary Control Device: Xbox Controller
 
@@ -233,4 +233,4 @@ control->input_config.use_quadratic_curve = true;
 
 ---
 
-*This document is part of the CGame technical documentation suite. For updates and revisions, see the project repository.*
+*This document is part of the SIGNAL technical documentation suite. For updates and revisions, see the project repository.*

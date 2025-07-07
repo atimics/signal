@@ -41,7 +41,7 @@ SOURCES = core.c systems.c system/physics.c system/collision.c system/ai.c syste
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)
 
 # Target executable
-TARGET = $(BUILD_DIR)/cgame
+TARGET = $(BUILD_DIR)/signal
 
 # Default target - try to build assets, then executable
 all: assets $(TARGET)
@@ -51,7 +51,7 @@ with-assets: assets $(TARGET)
 
 # Help target - show available commands
 help:
-	@echo "🎮 CGame Engine - Available Make Targets"
+	@echo "🎮 SIGNAL Engine - Available Make Targets"
 	@echo "========================================"
 	@echo ""
 	@echo "🏗️  BUILD TARGETS:"
@@ -212,8 +212,8 @@ wasm: assets-wasm | $(BUILD_DIR)
 		--preload-file $(BUILD_ASSETS_DIR)@/assets \
 		--shell-file src/shell.html \
 		$(addprefix src/,$(SOURCES)) \
-		-o $(BUILD_DIR)/cgame.html
-	@echo "✅ WebAssembly build complete: $(BUILD_DIR)/cgame.html"
+		-o $(BUILD_DIR)/signal.html
+	@echo "✅ WebAssembly build complete: $(BUILD_DIR)/signal.html"
 	@echo "📋 Serve with: python3 -m http.server 8000 (from build/ directory)"
 
 # Compile assets for WASM (simplified)
@@ -278,7 +278,7 @@ build/test_physics_critical: tests/unit/test_physics_critical.c $(PHYSICS_TEST_S
 
 # Main test target - runs all essential tests including new comprehensive tests
 test: $(TEST_MATH_TARGET) $(TEST_UI_TARGET) $(TEST_PERFORMANCE_TARGET) $(TEST_PHYSICS_TARGET) $(TEST_THRUSTERS_TARGET) $(TEST_CONTROL_TARGET) $(TEST_CAMERA_TARGET) $(TEST_INPUT_TARGET) $(TEST_FLIGHT_INTEGRATION_TARGET)
-	@echo "🧪 Running Comprehensive CGame Test Suite"
+	@echo "🧪 Running Comprehensive SIGNAL Test Suite"
 	@echo "=========================================="
 	@echo "📐 Core Math Tests..."
 	./$(TEST_MATH_TARGET)

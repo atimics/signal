@@ -1,4 +1,4 @@
-# CGame Vision Alignment Summary
+# SIGNAL Vision Alignment Summary
 
 This document clarifies the relationship between the various vision and design documents in the project.
 
@@ -8,7 +8,7 @@ This document clarifies the relationship between the various vision and design d
 
 ### What's Actually Implemented (2025)
 
-**CGame: Canyon Racing** - The current working game
+**SIGNAL: Canyon Racing** - The current working game
 
 * **Core Gameplay:** High-speed precision flying through canyon courses
 * **Progression:** Medal-based track unlocking (Bronze → Silver → Gold → Platinum)

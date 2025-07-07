@@ -1,4 +1,4 @@
-# CGame Tests - Simplified Configuration
+# SIGNAL Tests - Simplified Configuration
 # ============================================================================
 
 # Unity test framework

@@ -1,4 +1,4 @@
-# CGame Engine - CMake Wrapper Makefile
+# SIGNAL Engine - CMake Wrapper Makefile
 # ============================================================================
 # This Makefile provides familiar make commands that delegate to CMake
 # All existing `make` commands work seamlessly with the new CMake backend
@@ -28,21 +28,21 @@ endif
 
 # Default target - build the game
 all: configure
-	@echo "🔨 Building CGame Engine..."
-	@cmake --build $(CMAKE_BUILD_DIR) --target cgame --parallel
-	@echo "✅ Build complete! Executable: $(CMAKE_BUILD_DIR)/cgame"
+	@echo "🔨 Building SIGNAL Engine..."
+	@cmake --build $(CMAKE_BUILD_DIR) --target signal --parallel
+	@echo "✅ Build complete! Executable: $(CMAKE_BUILD_DIR)/signal"
 
 # Explicit build target (same as all)
 build: all
 
 # Run the game
 run: all
-	@echo "🚀 Starting CGame..."
-	@$(CMAKE_BUILD_DIR)/cgame
+	@echo "🚀 Starting SIGNAL..."
+	@$(CMAKE_BUILD_DIR)/signal
 
 # Test target - build and run all tests
 test: configure
-	@echo "🧪 Running CGame test suite..."
+	@echo "🧪 Running SIGNAL test suite..."
 	@cmake --build $(CMAKE_BUILD_DIR) --target build_all_tests --parallel
 	@cd $(CMAKE_BUILD_DIR) && ctest --output-on-failure --progress
 
@@ -118,14 +118,14 @@ release: reconfigure all
 
 # Show build status
 status:
-	@echo "📊 CGame Build Status:"
+	@echo "📊 SIGNAL Build Status:"
 	@echo "====================="
 	@echo "Platform: $(CMAKE_PLATFORM)"
 	@echo "Build Type: $(CMAKE_BUILD_TYPE)"
 	@echo "Build Directory: $(CMAKE_BUILD_DIR)"
 	@if [ -d $(CMAKE_BUILD_DIR) ]; then \
 		echo "Build Configured: ✅"; \
-		if [ -f $(CMAKE_BUILD_DIR)/cgame ]; then \
+		if [ -f $(CMAKE_BUILD_DIR)/signal ]; then \
 			echo "Executable Built: ✅"; \
 		else \
 			echo "Executable Built: ❌"; \
@@ -139,7 +139,7 @@ status:
 # ============================================================================
 
 help:
-	@echo "🎮 CGame Engine - Make Commands"
+	@echo "🎮 SIGNAL Engine - Make Commands"
 	@echo "==============================="
 	@echo ""
 	@echo "🔨 BUILD COMMANDS:"

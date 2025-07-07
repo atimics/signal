@@ -10,7 +10,7 @@
 
 ## 🏗️ System Overview
 
-The CGame control system uses a unified architecture that eliminates competing systems and provides a clean, predictable input flow from hardware to physics simulation.
+The SIGNAL control system uses a unified architecture that eliminates competing systems and provides a clean, predictable input flow from hardware to physics simulation.
 
 ### Design Principles
 
@@ -411,4 +411,4 @@ void unified_flight_control_set_sensitivity(UnifiedFlightControl* control, float
 
 ---
 
-*This document serves as the authoritative reference for the CGame control system architecture. All development should follow these specifications to ensure consistency and maintainability.*
+*This document serves as the authoritative reference for the SIGNAL control system architecture. All development should follow these specifications to ensure consistency and maintainability.*

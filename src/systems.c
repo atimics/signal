@@ -38,14 +38,14 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
     memset(scheduler, 0, sizeof(struct SystemScheduler));
 
     // Initialize asset system first
-    if (!assets_init(&g_asset_registry, "/Users/ratimics/develop/cgame/build/assets"))
+    if (!assets_init(&g_asset_registry, "/Users/ratimics/develop/signal/build/assets"))
     {
         printf("❌ Failed to initialize asset system\n");
         return false;
     }
 
     // Initialize data system
-    if (!data_registry_init(&g_data_registry, "/Users/ratimics/develop/cgame/data"))
+    if (!data_registry_init(&g_data_registry, "/Users/ratimics/develop/signal/data"))
     {
         printf("❌ Failed to initialize data system\n");
         return false;

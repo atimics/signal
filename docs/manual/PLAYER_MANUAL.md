@@ -1,13 +1,13 @@
-# CGame: Player Manual
+# SIGNAL: Player Manual
 
-Welcome to CGame - Master the canyons, race against time, and become a legend!
+Welcome to SIGNAL - Master the canyons, race against time, and become a legend!
 
 ## 1. Getting Started
 
-CGame is a high-speed canyon racing game where precision flying meets white-knuckle racing. Navigate treacherous canyon courses, beat checkpoint times, and climb the leaderboards.
+SIGNAL is a high-speed canyon racing game where precision flying meets white-knuckle racing. Navigate treacherous canyon courses, beat checkpoint times, and climb the leaderboards.
 
 ### Quick Start
-1. Launch the game: `./build/cgame`
+1. Launch the game: `./build/signal`
 2. Select "Canyon Racing" from the main menu
 3. Choose your track (Tutorial recommended for first-time players)
 4. Race through checkpoints to complete the course!

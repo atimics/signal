@@ -1,7 +1,7 @@
 # SIGNAL
 
-[![Build and Test](https://github.com/ratimics/cgame/actions/workflows/build.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/build.yml)
-[![Test Suite](https://github.com/ratimics/cgame/actions/workflows/test.yml/badge.svg)](https://github.com/ratimics/cgame/actions/workflows/test.yml)
+[![Build and Test](https://github.com/ratimics/signal/actions/workflows/build.yml/badge.svg)](https://github.com/ratimics/signal/actions/workflows/build.yml)
+[![Test Suite](https://github.com/ratimics/signal/actions/workflows/test.yml/badge.svg)](https://github.com/ratimics/signal/actions/workflows/test.yml)
 
 **In the silent graveyards of space, a ghost signal is calling. And you are the only one who can answer.**
 
@@ -56,7 +56,7 @@ make test-physics
 make test-thrusters
 
 # Run with flight test scene
-./build/cgame --test-flight
+./build/signal --test-flight
 ```
 
 ### 🎮 Flight Controls
