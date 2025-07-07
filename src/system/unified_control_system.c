@@ -283,30 +283,68 @@ static void apply_control_to_thrusters(struct Entity* entity, const UnifiedFligh
     Vector3 linear_command = unified_flight_control_get_linear_command(control);
     Vector3 angular_command = unified_flight_control_get_angular_command(control);
     
-    // Apply stability assist for angular control
+    // Apply stability assist and gyroscopic stabilization
     if (control->flight_assist_enabled && control->stability_assist > 0.0f && entity->physics) {
         struct Physics* physics = entity->physics;
+        struct Transform* transform = entity->transform;
         
-        // Apply per-axis stabilization only when there's no input on that axis
+        // Check if all inputs are near zero (ship is coasting)
+        bool no_input = (fabsf(linear_command.x) < 0.01f && 
+                       fabsf(linear_command.y) < 0.01f && 
+                       fabsf(linear_command.z) < 0.01f &&
+                       fabsf(angular_command.x) < 0.01f && 
+                       fabsf(angular_command.y) < 0.01f && 
+                       fabsf(angular_command.z) < 0.01f);
+        
+        // Apply per-axis stabilization
         Vector3 damping_torque = {0, 0, 0};
         
-        // X-axis (pitch)
-        if (fabsf(angular_command.x) < 0.01f && fabsf(physics->angular_velocity.x) > 0.01f) {
-            damping_torque.x = -physics->angular_velocity.x * control->stability_assist * 0.3f;
+        // Check if we're banking BEFORE applying damping
+        float yaw_magnitude = fabsf(angular_command.y);
+        bool is_banking = yaw_magnitude > 0.1f;  // Are we in a banking turn?
+        
+        // Angular velocity damping - reduce roll damping during banking
+        damping_torque.x = -physics->angular_velocity.x * control->stability_assist * 0.5f;
+        damping_torque.y = -physics->angular_velocity.y * control->stability_assist * 0.5f;
+        
+        // For roll (Z axis), reduce damping significantly during banking
+        if (is_banking) {
+            damping_torque.z = -physics->angular_velocity.z * control->stability_assist * 0.05f; // Very light damping
+        } else {
+            damping_torque.z = -physics->angular_velocity.z * control->stability_assist * 0.4f;  // Normal damping
         }
         
-        // Y-axis (yaw)
-        if (fabsf(angular_command.y) < 0.01f && fabsf(physics->angular_velocity.y) > 0.01f) {
-            damping_torque.y = -physics->angular_velocity.y * control->stability_assist * 0.3f;
+        // Gyroscopic stabilization - level the ship when no input
+        if (no_input && transform && !is_banking) {
+            // Get current orientation
+            Vector3 up = quaternion_rotate_vector(transform->rotation, (Vector3){0, 1, 0});
+            Vector3 forward = quaternion_rotate_vector(transform->rotation, (Vector3){0, 0, 1});
+            
+            // Calculate error from level flight (up should be [0,1,0])
+            float pitch_error = atan2f(forward.y, sqrtf(forward.x*forward.x + forward.z*forward.z));
+            float roll_error = atan2f(up.x, up.y);
+            
+            // Apply corrective torque to level out
+            damping_torque.x -= pitch_error * 0.5f;  // Pitch correction
+            damping_torque.z -= roll_error * 0.5f;   // Roll correction
+        } else if (is_banking && transform) {
+            // During banking, only correct pitch, let roll happen naturally
+            Vector3 forward = quaternion_rotate_vector(transform->rotation, (Vector3){0, 0, 1});
+            float pitch_error = atan2f(forward.y, sqrtf(forward.x*forward.x + forward.z*forward.z));
+            damping_torque.x -= pitch_error * 0.3f;  // Gentler pitch correction during banking
+            // NO roll correction during banking - let the banking happen!
         }
         
-        // Z-axis (roll) - less aggressive damping for smoother banking
-        if (fabsf(angular_command.z) < 0.01f && fabsf(physics->angular_velocity.z) > 0.01f) {
-            damping_torque.z = -physics->angular_velocity.z * control->stability_assist * 0.2f;
+        // Linear velocity damping when no input (auto-brake)
+        if (no_input && thrusters->auto_deceleration) {
+            float brake_strength = 0.02f;  // 2% velocity reduction per frame
+            linear_command.x = -physics->velocity.x * brake_strength;
+            linear_command.y = -physics->velocity.y * brake_strength;
+            linear_command.z = -physics->velocity.z * brake_strength;
         }
         
         // Clamp damping to prevent overcorrection
-        float max_damping = 0.2f;
+        float max_damping = 0.3f;
         damping_torque.x = fmaxf(-max_damping, fminf(max_damping, damping_torque.x));
         damping_torque.y = fmaxf(-max_damping, fminf(max_damping, damping_torque.y));
         damping_torque.z = fmaxf(-max_damping, fminf(max_damping, damping_torque.z));

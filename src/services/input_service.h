@@ -45,6 +45,8 @@ typedef enum {
     INPUT_ACTION_ROLL_RIGHT,
     INPUT_ACTION_THRUST_FORWARD,
     INPUT_ACTION_THRUST_BACK,
+    INPUT_ACTION_VERTICAL_UP,
+    INPUT_ACTION_VERTICAL_DOWN,
     
     // Camera actions
     INPUT_ACTION_CAMERA_PITCH,
@@ -90,7 +92,9 @@ typedef struct {
         } mouse;
         struct {
             uint8_t button;
+            uint8_t axis;
             uint8_t gamepad_id;
+            bool is_axis;  // true for axis, false for button
         } gamepad;
     } binding;
     float scale;      // For analog scaling

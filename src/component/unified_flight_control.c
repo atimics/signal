@@ -169,7 +169,8 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     // Get linear input
     float thrust = input_service->get_action_value(input_service, config->thrust_forward) - 
                    input_service->get_action_value(input_service, config->thrust_back);
-    float vertical = 0.0f; // TODO: Add vertical input actions
+    float vertical = input_service->get_action_value(input_service, INPUT_ACTION_VERTICAL_UP) - 
+                     input_service->get_action_value(input_service, INPUT_ACTION_VERTICAL_DOWN);
     float strafe = 0.0f;   // TODO: Add strafe input actions
     
     // Get angular input
@@ -180,13 +181,12 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     float roll = input_service->get_action_value(input_service, config->roll_right) - 
                  input_service->get_action_value(input_service, config->roll_left);
     
-    // Debug: Log raw input values (always log every second, even if zero)
+    // Debug: Log raw input values only when there's actual input
     static uint32_t input_debug_counter = 0;
-    if (++input_debug_counter % 60 == 0) {
-        printf("🎮 INPUT DEBUG: thrust=%.2f, pitch=%.2f, yaw=%.2f, roll=%.2f\n",
+    bool has_input = (fabsf(thrust) > 0.01f || fabsf(pitch) > 0.01f || fabsf(yaw) > 0.01f || fabsf(roll) > 0.01f);
+    if (has_input && ++input_debug_counter % 30 == 0) {
+        printf("🎮 INPUT: thrust=%.2f, pitch=%.2f, yaw=%.2f, roll=%.2f\n",
                thrust, pitch, yaw, roll);
-        printf("   Mode=%d, Authority=%d, Enabled=%d\n",
-               control->mode, control->authority_level, control->enabled);
     }
     
     // Apply inversion
@@ -212,7 +212,7 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     // Add banking (coordinated turn) - automatically roll when yawing
     if (control->flight_assist_enabled && fabsf(yaw) > 0.01f) {
         // Banking ratio: how much to roll for each unit of yaw
-        float banking_ratio = 0.4f;  // 40% roll for each unit of yaw (tilt into the turn)
+        float banking_ratio = 1.2f;  // 120% roll for each unit of yaw (very strong banking)
         roll -= yaw * banking_ratio;  // Negative because we want to roll into the turn
         
         // Debug banking

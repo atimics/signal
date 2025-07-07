@@ -117,13 +117,22 @@ static float get_binding_value(const HardwareInputEvent* hw_event, const InputBi
             break;
             
         case INPUT_DEVICE_GAMEPAD:
-            // Check if this specific button is pressed
-            if (hw_event->data.gamepad.buttons & (1 << binding->binding.gamepad.button)) {
-                value = 1.0f;
+            if (binding->binding.gamepad.is_axis) {
+                // Handle analog axis
+                int axis_index = binding->binding.gamepad.axis;
+                if (axis_index >= 0 && axis_index < 4) {  // Xbox controller has 4 axes
+                    value = hw_event->data.gamepad.axes[axis_index];
+                    // Apply dead zone
+                    if (fabsf(value) < 0.1f) value = 0.0f;
+                }
             } else {
-                value = 0.0f;
+                // Handle digital button
+                if (hw_event->data.gamepad.buttons & (1 << binding->binding.gamepad.button)) {
+                    value = 1.0f;
+                } else {
+                    value = 0.0f;
+                }
             }
-            // TODO: Add analog axis support using hw_event->data.gamepad.axes[]
             break;
             
         case INPUT_DEVICE_TOUCH:
@@ -514,7 +523,8 @@ void input_service_destroy(InputService* service) {
     InputBinding binding = {0}; \
     binding.device = INPUT_DEVICE_GAMEPAD; \
     binding.binding.gamepad.gamepad_id = 0; \
-    binding.binding.gamepad.button = (axis); \
+    binding.binding.gamepad.axis = (axis); \
+    binding.binding.gamepad.is_axis = true; \
     binding.scale = (scale_factor); \
     (service)->bind_action((service), (action), (context), &binding); \
 } while(0)
@@ -524,6 +534,7 @@ void input_service_destroy(InputService* service) {
     binding.device = INPUT_DEVICE_GAMEPAD; \
     binding.binding.gamepad.gamepad_id = 0; \
     binding.binding.gamepad.button = (button); \
+    binding.binding.gamepad.is_axis = false; \
     binding.scale = 1.0f; \
     (service)->bind_action((service), (action), (context), &binding); \
 } while(0)
@@ -583,12 +594,14 @@ void input_service_setup_default_bindings(InputService* service) {
     } flight_bindings[] = {
         { INPUT_ACTION_THRUST_FORWARD, KEY_W,    "W - Forward Thrust" },
         { INPUT_ACTION_THRUST_BACK,    KEY_S,    "S - Backward Thrust" },
-        { INPUT_ACTION_YAW_RIGHT,      KEY_A,    "A - Yaw Right" },
-        { INPUT_ACTION_YAW_LEFT,       KEY_D,    "D - Yaw Left" },
-        { INPUT_ACTION_ROLL_LEFT,      KEY_Q,    "Q - Roll Left" },
-        { INPUT_ACTION_ROLL_RIGHT,     KEY_E,    "E - Roll Right" },
-        { INPUT_ACTION_PITCH_UP,       KEY_UP,   "↑ - Pitch Up" },
-        { INPUT_ACTION_PITCH_DOWN,     KEY_DOWN, "↓ - Pitch Down" },
+        { INPUT_ACTION_YAW_RIGHT,      KEY_A,    "A - Banking Turn Left" },   // A/D now do banking turns
+        { INPUT_ACTION_YAW_LEFT,       KEY_D,    "D - Banking Turn Right" },
+        { INPUT_ACTION_VERTICAL_DOWN,  KEY_Q,    "Q - Descend" },             // Q/E now control vertical
+        { INPUT_ACTION_VERTICAL_UP,    KEY_E,    "E - Ascend" },
+        { INPUT_ACTION_PITCH_UP,       KEY_SPACE,"Space - Pitch Up" },        // Space for pitch up
+        { INPUT_ACTION_PITCH_DOWN,     KEY_LEFT_CONTROL, "LCtrl - Pitch Down" },
+        { INPUT_ACTION_ROLL_LEFT,      KEY_LEFT, "← - Roll Left" },           // Arrow keys for pure roll
+        { INPUT_ACTION_ROLL_RIGHT,     KEY_RIGHT,"→ - Roll Right" },
     };
     
     // Apply all flight control bindings
@@ -599,34 +612,76 @@ void input_service_setup_default_bindings(InputService* service) {
                flight_bindings[i].action, flight_bindings[i].keycode, flight_bindings[i].description);
     }
     
-    // Gamepad bindings for flight controls (Sprint 25)
-    // Standard Xbox controller layout
-    static const struct {
-        InputActionID action;
-        uint8_t button_or_axis;
-        float scale;
-        const char* description;
-    } gamepad_bindings[] = {
-        // Triggers for thrust (RT = forward, LT = backward)
-        { INPUT_ACTION_THRUST_FORWARD, 5, 1.0f,  "RT - Forward Thrust" },    // Right Trigger
-        { INPUT_ACTION_THRUST_BACK,    4, 1.0f,  "LT - Backward Thrust" },   // Left Trigger
-        
-        // Right stick for pitch/yaw (primary flight control)
-        { INPUT_ACTION_PITCH_UP,       1, -1.0f, "Right Stick Y↑ - Pitch Up" },   // Right stick Y (inverted)
-        { INPUT_ACTION_PITCH_DOWN,     1, 1.0f,  "Right Stick Y↓ - Pitch Down" }, // Right stick Y
-        { INPUT_ACTION_YAW_LEFT,       0, -1.0f, "Right Stick X← - Yaw Left" },   // Right stick X (inverted)
-        { INPUT_ACTION_YAW_RIGHT,      0, 1.0f,  "Right Stick X→ - Yaw Right" },  // Right stick X
-        
-        // Shoulder buttons for roll
-        { INPUT_ACTION_ROLL_LEFT,      6, 1.0f,  "LB - Roll Left" },         // Left Bumper
-        { INPUT_ACTION_ROLL_RIGHT,     7, 1.0f,  "RB - Roll Right" },        // Right Bumper
-    };
+    // Gamepad bindings are set up manually below with proper axis support
     
-    // Apply gamepad bindings
-    for (size_t i = 0; i < ARRAY_SIZE(gamepad_bindings); ++i) {
-        PAD_AXIS(service, gamepad_bindings[i].action, INPUT_CONTEXT_GAMEPLAY, 
-                 gamepad_bindings[i].button_or_axis, gamepad_bindings[i].scale);
-    }
+    // Apply gamepad bindings manually
+    // Xbox Controller Mapping:
+    // Axes: 0=Right X, 1=Right Y, 2=Left X, 3=Left Y, 4=LT, 5=RT
+    // Buttons: 6=LB, 7=RB
+    
+    InputBinding gamepad_binding;
+    
+    // RT - Forward thrust (axis 5)
+    gamepad_binding = (InputBinding){0};
+    gamepad_binding.device = INPUT_DEVICE_GAMEPAD;
+    gamepad_binding.binding.gamepad.axis = 5;
+    gamepad_binding.binding.gamepad.is_axis = true;
+    gamepad_binding.scale = 1.0f;
+    service->bind_action(service, INPUT_ACTION_THRUST_FORWARD, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    // LT - Brake (axis 4)
+    gamepad_binding = (InputBinding){0};
+    gamepad_binding.device = INPUT_DEVICE_GAMEPAD;
+    gamepad_binding.binding.gamepad.axis = 4;
+    gamepad_binding.binding.gamepad.is_axis = true;
+    gamepad_binding.scale = 1.0f;
+    service->bind_action(service, INPUT_ACTION_BRAKE, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    // Left stick Y - Vertical movement (axis 3)
+    gamepad_binding = (InputBinding){0};
+    gamepad_binding.device = INPUT_DEVICE_GAMEPAD;
+    gamepad_binding.binding.gamepad.axis = 3;
+    gamepad_binding.binding.gamepad.is_axis = true;
+    gamepad_binding.scale = -1.0f;  // Inverted
+    service->bind_action(service, INPUT_ACTION_VERTICAL_UP, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    gamepad_binding.scale = 1.0f;
+    service->bind_action(service, INPUT_ACTION_VERTICAL_DOWN, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    // Left stick X - Banking turns (axis 2)
+    gamepad_binding = (InputBinding){0};
+    gamepad_binding.device = INPUT_DEVICE_GAMEPAD;
+    gamepad_binding.binding.gamepad.axis = 2;
+    gamepad_binding.binding.gamepad.is_axis = true;
+    gamepad_binding.scale = -1.0f;
+    service->bind_action(service, INPUT_ACTION_YAW_LEFT, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    gamepad_binding.scale = 1.0f;
+    service->bind_action(service, INPUT_ACTION_YAW_RIGHT, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    // Right stick X - Camera look (axis 0)
+    gamepad_binding = (InputBinding){0};
+    gamepad_binding.device = INPUT_DEVICE_GAMEPAD;
+    gamepad_binding.binding.gamepad.axis = 0;
+    gamepad_binding.binding.gamepad.is_axis = true;
+    gamepad_binding.scale = 1.0f;
+    service->bind_action(service, INPUT_ACTION_CAMERA_YAW, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    // LB - Pitch up (button 6)
+    gamepad_binding = (InputBinding){0};
+    gamepad_binding.device = INPUT_DEVICE_GAMEPAD;
+    gamepad_binding.binding.gamepad.button = 6;
+    gamepad_binding.binding.gamepad.is_axis = false;
+    gamepad_binding.scale = 1.0f;
+    service->bind_action(service, INPUT_ACTION_PITCH_UP, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
+    
+    // RB - Pitch down (button 7)
+    gamepad_binding = (InputBinding){0};
+    gamepad_binding.device = INPUT_DEVICE_GAMEPAD;
+    gamepad_binding.binding.gamepad.button = 7;
+    gamepad_binding.binding.gamepad.is_axis = false;
+    gamepad_binding.scale = 1.0f;
+    service->bind_action(service, INPUT_ACTION_PITCH_DOWN, INPUT_CONTEXT_GAMEPLAY, &gamepad_binding);
     
     printf("✅ Default input bindings configured (keyboard + gamepad flight controls)\n");
 }
