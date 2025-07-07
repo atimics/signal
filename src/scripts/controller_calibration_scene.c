@@ -7,6 +7,8 @@
 #include "../ui.h"
 #include "../game_input.h"
 #include "../hal/input_hal.h"
+#include "../services/input_service.h"
+#include "../services/input_constants.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,7 +37,7 @@ static const struct {
     {INPUT_ACTION_BRAKE, "Brake", "Emergency brake"}
 };
 
-#define FLIGHT_ACTION_COUNT (sizeof(FLIGHT_ACTIONS) / sizeof(FLIGHT_ACTIONS[0]))
+#define FLIGHT_ACTION_COUNT 12
 
 // ============================================================================
 // SCENE LIFECYCLE
@@ -103,44 +105,45 @@ void controller_calibration_update(struct World* world, SceneStateManager* state
     // Update current state logic
     switch (g_calibration_state->state) {
         case CALIBRATION_STATE_AXIS_TEST:
-            // Read current axis values and update test data
+            // Read current axis values through the input service
             if (g_calibration_state->selected_gamepad >= 0) {
-                InputHAL* hal = input_hal_sokol_get_instance();
-                if (hal) {
-                    HardwareInputEvent event;
-                    while (hal->get_next_event(hal, &event)) {
-                        if (event.device == INPUT_DEVICE_GAMEPAD && 
-                            event.data.gamepad.id == g_calibration_state->selected_gamepad) {
-                            
-                            // Update axis tests
-                            for (int i = 0; i < MAX_CONTROLLER_AXES; i++) {
-                                if (i < 6) {  // Xbox controller has 6 axes
-                                    float value = event.data.gamepad.axes[i];
-                                    controller_calibration_update_axis_test(g_calibration_state, i, value);
-                                }
-                            }
-                        }
+                InputService* service = game_input_get_service();
+                if (service) {
+                    // Test common gamepad axes through the action system
+                    float values[] = {
+                        service->get_action_value(service, INPUT_ACTION_YAW_LEFT),    // Left stick X
+                        service->get_action_value(service, INPUT_ACTION_PITCH_UP),   // Left stick Y  
+                        service->get_action_value(service, INPUT_ACTION_ROLL_LEFT),  // Right stick X
+                        service->get_action_value(service, INPUT_ACTION_VERTICAL_UP), // Right stick Y
+                        service->get_action_value(service, INPUT_ACTION_THRUST_BACK), // Left trigger
+                        service->get_action_value(service, INPUT_ACTION_THRUST_FORWARD) // Right trigger
+                    };
+                    
+                    // Update axis test data
+                    for (int i = 0; i < 6 && i < MAX_CONTROLLER_AXES; i++) {
+                        float value = values[i];
+                        controller_calibration_update_axis_test(g_calibration_state, i, value);
                     }
                 }
             }
             break;
             
         case CALIBRATION_STATE_BUTTON_TEST:
-            // Read current button states
+            // Read current button states through the input service
             if (g_calibration_state->selected_gamepad >= 0) {
-                InputHAL* hal = input_hal_sokol_get_instance();
-                if (hal) {
-                    HardwareInputEvent event;
-                    while (hal->get_next_event(hal, &event)) {
-                        if (event.device == INPUT_DEVICE_GAMEPAD && 
-                            event.data.gamepad.id == g_calibration_state->selected_gamepad) {
-                            
-                            // Check each button
-                            for (int i = 0; i < MAX_CONTROLLER_BUTTONS; i++) {
-                                bool pressed = (event.data.gamepad.buttons & (1 << i)) != 0;
-                                controller_calibration_update_button_test(g_calibration_state, i, pressed);
-                            }
-                        }
+                InputService* service = game_input_get_service();
+                if (service) {
+                    // Test common gamepad buttons through the action system
+                    bool buttons[] = {
+                        service->is_action_pressed(service, INPUT_ACTION_BOOST),      // A button
+                        service->is_action_pressed(service, INPUT_ACTION_BRAKE),     // B button
+                        service->is_action_pressed(service, INPUT_ACTION_UI_CANCEL), // X button (if mapped)
+                        service->is_action_pressed(service, INPUT_ACTION_UI_CONFIRM) // Y button (if mapped)
+                    };
+                    
+                    // Update button test data
+                    for (int i = 0; i < 4 && i < MAX_CONTROLLER_BUTTONS; i++) {
+                        controller_calibration_update_button_test(g_calibration_state, i, buttons[i]);
                     }
                 }
             }
@@ -187,40 +190,25 @@ void controller_calibration_cleanup(struct World* world, SceneStateManager* stat
 bool controller_calibration_input(struct World* world, SceneStateManager* state, const void* event) {
     (void)world;
     (void)state;
+    (void)event;
     
     if (!g_calibration_state) return false;
     
-    const sapp_event* ev = (const sapp_event*)event;
+    // Use the input service instead of direct event handling
+    InputService* service = game_input_get_service();
+    if (!service) return false;
     
-    if (ev->type == SAPP_EVENTTYPE_KEY_DOWN) {
-        if (ev->key_code == SAPP_KEYCODE_ESCAPE) {
-            // Exit calibration
-            scene_state_request_transition(state, "navigation_menu");
-            return true;
-        }
-        
-        if (ev->key_code == SAPP_KEYCODE_SPACE || ev->key_code == SAPP_KEYCODE_ENTER) {
-            // Advance to next state
-            controller_calibration_next_state(g_calibration_state);
-            return true;
-        }
-        
-        // Number keys for controller selection
-        if (ev->key_code >= SAPP_KEYCODE_1 && ev->key_code <= SAPP_KEYCODE_9) {
-            if (g_calibration_state->state == CALIBRATION_STATE_CONTROLLER_SELECT) {
-                int gamepad_index = ev->key_code - SAPP_KEYCODE_1;
-                g_calibration_state->selected_gamepad = gamepad_index;
-                
-                // Generate controller ID
-                snprintf(g_calibration_state->controller_id, sizeof(g_calibration_state->controller_id), 
-                         "unknown_%d", gamepad_index);
-                snprintf(g_calibration_state->controller_name, sizeof(g_calibration_state->controller_name), 
-                         "Controller %d", gamepad_index + 1);
-                
-                controller_calibration_next_state(g_calibration_state);
-                return true;
-            }
-        }
+    // Check for UI navigation commands
+    if (service->is_action_just_pressed(service, INPUT_ACTION_UI_CANCEL)) {
+        // Exit calibration
+        scene_state_request_transition(state, "navigation_menu");
+        return true;
+    }
+    
+    if (service->is_action_just_pressed(service, INPUT_ACTION_UI_CONFIRM)) {
+        // Advance to next state
+        controller_calibration_next_state(g_calibration_state);
+        return true;
     }
     
     return false;
