@@ -612,8 +612,6 @@ void layer_manager_composite(LayerManager* manager) {
     for (int i = 0; i < manager->layer_count; i++) {
         RenderLayer* layer = &manager->layers[i];
         if (!layer->enabled || layer->opacity <= 0.0f) {
-            printf("🔍 Layer '%s': skipped (enabled=%d, opacity=%.2f)\n", 
-                   layer->name, layer->enabled, layer->opacity);
             continue;
         }
         

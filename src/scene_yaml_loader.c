@@ -44,14 +44,7 @@ static bool parse_bool(const char* str) {
 
 // Process a key-value pair in the current context
 static void process_yaml_value(YAMLParseState* state, const char* value) {
-    printf("🔍 DEBUG process_yaml_value: key='%s' value='%s' entity=%d in_components=%d\n", 
-           state->current_key, value, state->current_entity, state->in_components);
-    
     if (!state->current_entity || state->current_entity == INVALID_ENTITY) {
-        // Handle global settings
-        if (strcmp(state->current_key, "name") == 0) {
-            printf("Loading scene: %s\n", value);
-        }
         return;
     }
     
@@ -238,10 +231,6 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                 break;
                 
             case YAML_MAPPING_START_EVENT:
-                // Debug output
-                if (state.in_entities) {
-                    printf("   🔍 New entity mapping started\n");
-                }
                 state.expecting_value = false; // Reset for new mapping
                 
                 // If we're in the entities sequence, this starts a new entity
@@ -347,9 +336,7 @@ bool scene_load_from_yaml(struct World* world, AssetRegistry* assets, const char
                 
             case YAML_SCALAR_EVENT: {
                 char* value = (char*)event.data.scalar.value;
-                printf("   🔍 SCALAR: '%s' (expecting_value=%d, in_array=%d)\n", 
-                       value, state.expecting_value, state.in_array);
-                
+
                 // If we're in an array, all scalars are values
                 if (state.in_array) {
                     if (state.in_position || state.in_rotation || state.in_scale ||

@@ -137,6 +137,12 @@ bool load_texture(AssetRegistry* registry, const char* texture_path, const char*
         strncpy(full_path, texture_path, sizeof(full_path) - 1);
         full_path[sizeof(full_path) - 1] = '\0';
     }
+    else if (strstr(texture_path, registry->asset_root) == texture_path)
+    {
+        // Path already contains asset_root - use as is
+        strncpy(full_path, texture_path, sizeof(full_path) - 1);
+        full_path[sizeof(full_path) - 1] = '\0';
+    }
     else
     {
         // Relative path - first try as-is from asset root
