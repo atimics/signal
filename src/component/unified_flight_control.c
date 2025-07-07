@@ -221,14 +221,18 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     
     // Add banking (coordinated turn) - automatically roll when yawing
     if (control->flight_assist_enabled && fabsf(yaw) > 0.01f) {
-        // Banking ratio: how much to roll for each unit of yaw  
-        float banking_ratio = 1.8f;  // Increased from 1.2f for stronger banking turns
+        // Banking ratio: configurable per mode, default 1.8f for stronger banking turns
+        float banking_ratio = (control->mode == FLIGHT_CONTROL_AUTONOMOUS) ? 1.2f : 1.8f;
         roll -= yaw * banking_ratio;  // Negative because we want to roll into the turn
+        
+        // Clamp total roll to prevent over-rotation
+        roll = fmaxf(-1.0f, fminf(1.0f, roll));
         
         // Debug banking
         static uint32_t bank_debug = 0;
         if (++bank_debug % 60 == 0 && fabsf(yaw) > 0.1f) {
-            printf("🏁 Banking: yaw=%.2f → added roll=%.2f\n", yaw, -yaw * banking_ratio);
+            printf("🏁 Banking: mode=%d, yaw=%.2f → added roll=%.2f (ratio=%.1f)\n", 
+                   control->mode, yaw, -yaw * banking_ratio, banking_ratio);
         }
     }
     
