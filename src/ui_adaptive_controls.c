@@ -46,6 +46,31 @@ const ControlHint UI_HINT_PAUSE = {
     "Pause", "ESC", "Start", SAPP_KEYCODE_ESCAPE, 7
 };
 
+// Flight control hints (Sprint 25)
+const ControlHint UI_HINT_THRUST = {
+    "Thrust", "W/S", "LS Up/Down", SAPP_KEYCODE_W, 1
+};
+
+const ControlHint UI_HINT_PITCH = {
+    "Pitch", "↑/↓", "RS Up/Down", SAPP_KEYCODE_UP, 2
+};
+
+const ControlHint UI_HINT_YAW = {
+    "Yaw", "←/→", "RS Left/Right", SAPP_KEYCODE_LEFT, 3
+};
+
+const ControlHint UI_HINT_ROLL = {
+    "Roll", "Q/E", "LB/RB", SAPP_KEYCODE_Q, 4
+};
+
+const ControlHint UI_HINT_BOOST = {
+    "Boost", "Shift", "RT", SAPP_KEYCODE_LEFT_SHIFT, 5
+};
+
+const ControlHint UI_HINT_BRAKE = {
+    "Brake", "Ctrl", "LT", SAPP_KEYCODE_LEFT_CONTROL, 6
+};
+
 // Public API implementation
 void ui_adaptive_init(void) {
     // For now, always show keyboard controls

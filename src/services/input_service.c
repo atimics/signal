@@ -480,14 +480,34 @@ void input_service_destroy(InputService* service) {
     }
 }
 
-// Helper function for cleaner binding syntax (Sprint 25)
-static void bind(InputService* service, InputActionID action, InputContextID context, uint32_t key) {
-    InputBinding binding = {0};
-    binding.device = INPUT_DEVICE_KEYBOARD;
-    binding.binding.keyboard.key = key;
-    binding.scale = 1.0f;
-    service->bind_action(service, action, context, &binding);
-}
+// Utility macros for cleaner input binding (Sprint 25)
+#define KEY_BIND(service, action, context, keycode) do { \
+    InputBinding binding = {0}; \
+    binding.device = INPUT_DEVICE_KEYBOARD; \
+    binding.binding.keyboard.key = (keycode); \
+    binding.scale = 1.0f; \
+    (service)->bind_action((service), (action), (context), &binding); \
+} while(0)
+
+#define PAD_AXIS(service, action, context, axis, scale_factor) do { \
+    InputBinding binding = {0}; \
+    binding.device = INPUT_DEVICE_GAMEPAD; \
+    binding.binding.gamepad.gamepad_id = 0; \
+    binding.binding.gamepad.button = (axis); \
+    binding.scale = (scale_factor); \
+    (service)->bind_action((service), (action), (context), &binding); \
+} while(0)
+
+#define PAD_BTN(service, action, context, button) do { \
+    InputBinding binding = {0}; \
+    binding.device = INPUT_DEVICE_GAMEPAD; \
+    binding.binding.gamepad.gamepad_id = 0; \
+    binding.binding.gamepad.button = (button); \
+    binding.scale = 1.0f; \
+    (service)->bind_action((service), (action), (context), &binding); \
+} while(0)
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 // Default bindings setup
 void input_service_setup_default_bindings(InputService* service) {
@@ -534,14 +554,55 @@ void input_service_setup_default_bindings(InputService* service) {
     service->bind_action(service, INPUT_ACTION_UI_CONFIRM, INPUT_CONTEXT_MENU, &binding);
     
     // Flight control bindings for gameplay context (Sprint 25)
-    bind(service, INPUT_ACTION_THRUST_FORWARD, INPUT_CONTEXT_GAMEPLAY, 87);   // W
-    bind(service, INPUT_ACTION_THRUST_BACK, INPUT_CONTEXT_GAMEPLAY, 83);      // S
-    bind(service, INPUT_ACTION_YAW_LEFT, INPUT_CONTEXT_GAMEPLAY, 65);         // A
-    bind(service, INPUT_ACTION_YAW_RIGHT, INPUT_CONTEXT_GAMEPLAY, 68);        // D
-    bind(service, INPUT_ACTION_ROLL_LEFT, INPUT_CONTEXT_GAMEPLAY, 81);        // Q
-    bind(service, INPUT_ACTION_ROLL_RIGHT, INPUT_CONTEXT_GAMEPLAY, 69);       // E
-    bind(service, INPUT_ACTION_PITCH_UP, INPUT_CONTEXT_GAMEPLAY, 265);        // Up arrow
-    bind(service, INPUT_ACTION_PITCH_DOWN, INPUT_CONTEXT_GAMEPLAY, 264);      // Down arrow
+    // Declarative bindings table for easier maintenance
+    static const struct {
+        InputActionID action;
+        uint32_t keycode;
+        const char* description;
+    } flight_bindings[] = {
+        { INPUT_ACTION_THRUST_FORWARD, 87,  "W - Forward Thrust" },
+        { INPUT_ACTION_THRUST_BACK,    83,  "S - Backward Thrust" },
+        { INPUT_ACTION_YAW_LEFT,       65,  "A - Yaw Left" },
+        { INPUT_ACTION_YAW_RIGHT,      68,  "D - Yaw Right" },
+        { INPUT_ACTION_ROLL_LEFT,      81,  "Q - Roll Left" },
+        { INPUT_ACTION_ROLL_RIGHT,     69,  "E - Roll Right" },
+        { INPUT_ACTION_PITCH_UP,       265, "↑ - Pitch Up" },
+        { INPUT_ACTION_PITCH_DOWN,     264, "↓ - Pitch Down" },
+    };
     
-    printf("✅ Default input bindings configured (including Tab->UI_MENU and flight controls)\n");
+    // Apply all flight control bindings
+    for (size_t i = 0; i < ARRAY_SIZE(flight_bindings); ++i) {
+        KEY_BIND(service, flight_bindings[i].action, INPUT_CONTEXT_GAMEPLAY, flight_bindings[i].keycode);
+    }
+    
+    // Gamepad bindings for flight controls (Sprint 25)
+    // Standard Xbox controller layout
+    static const struct {
+        InputActionID action;
+        uint8_t button_or_axis;
+        float scale;
+        const char* description;
+    } gamepad_bindings[] = {
+        // Triggers for thrust (RT = forward, LT = backward)
+        { INPUT_ACTION_THRUST_FORWARD, 5, 1.0f,  "RT - Forward Thrust" },    // Right Trigger
+        { INPUT_ACTION_THRUST_BACK,    4, 1.0f,  "LT - Backward Thrust" },   // Left Trigger
+        
+        // Right stick for pitch/yaw (primary flight control)
+        { INPUT_ACTION_PITCH_UP,       1, -1.0f, "Right Stick Y↑ - Pitch Up" },   // Right stick Y (inverted)
+        { INPUT_ACTION_PITCH_DOWN,     1, 1.0f,  "Right Stick Y↓ - Pitch Down" }, // Right stick Y
+        { INPUT_ACTION_YAW_LEFT,       0, -1.0f, "Right Stick X← - Yaw Left" },   // Right stick X (inverted)
+        { INPUT_ACTION_YAW_RIGHT,      0, 1.0f,  "Right Stick X→ - Yaw Right" },  // Right stick X
+        
+        // Shoulder buttons for roll
+        { INPUT_ACTION_ROLL_LEFT,      6, 1.0f,  "LB - Roll Left" },         // Left Bumper
+        { INPUT_ACTION_ROLL_RIGHT,     7, 1.0f,  "RB - Roll Right" },        // Right Bumper
+    };
+    
+    // Apply gamepad bindings
+    for (size_t i = 0; i < ARRAY_SIZE(gamepad_bindings); ++i) {
+        PAD_AXIS(service, gamepad_bindings[i].action, INPUT_CONTEXT_GAMEPLAY, 
+                 gamepad_bindings[i].button_or_axis, gamepad_bindings[i].scale);
+    }
+    
+    printf("✅ Default input bindings configured (keyboard + gamepad flight controls)\n");
 }

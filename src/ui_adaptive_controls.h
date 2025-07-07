@@ -46,6 +46,14 @@ extern const ControlHint UI_HINT_BACK;
 extern const ControlHint UI_HINT_NAVIGATE;
 extern const ControlHint UI_HINT_PAUSE;
 
+// Flight control hints (Sprint 25)
+extern const ControlHint UI_HINT_THRUST;
+extern const ControlHint UI_HINT_PITCH;
+extern const ControlHint UI_HINT_YAW;
+extern const ControlHint UI_HINT_ROLL;
+extern const ControlHint UI_HINT_BOOST;
+extern const ControlHint UI_HINT_BRAKE;
+
 // Menu navigation with adaptive controls
 bool ui_adaptive_menu_navigate(int* selected_index, int menu_item_count);
 bool ui_adaptive_menu_select(void);

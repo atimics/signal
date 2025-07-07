@@ -21,7 +21,9 @@ typedef struct InputState {
     
     // Action buttons
     float boost;          // Boost multiplier
+    bool boost_pressed;   // Boost just pressed this frame
     bool brake;           // Brake active
+    bool brake_pressed;   // Brake just pressed this frame
     float brake_intensity;// Brake intensity (0-1)
     
     // UI/System controls
@@ -36,5 +38,9 @@ typedef struct InputState {
 
 // Get current input state from the new input service
 const InputState* input_get_state(void);
+
+// Debug functions (Sprint 25)
+void input_set_debug_enabled(bool enabled);
+bool input_is_debug_enabled(void);
 
 #endif // INPUT_STATE_H
