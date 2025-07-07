@@ -1,6 +1,8 @@
 #ifndef INPUT_ACTION_MAPS_H
 #define INPUT_ACTION_MAPS_H
 
+#include "../hal/input_hal.h"
+#include "input_service.h"
 #include <stdbool.h>
 #include <stdint.h>
 
