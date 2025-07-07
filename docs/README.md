@@ -4,18 +4,20 @@ Welcome to the CGame project documentation. This directory contains all project 
 
 ## 📚 Documentation Structure
 
-**[📍 Complete Documentation Map](DOCUMENTATION_MAP.md)** - Visual overview of all documentation
+**[� Sprint Status Dashboard](SPRINT_STATUS.md)** - Current sprint overview and tracking
 
 ### 🎯 Active Development
 - **[`sprints/active/`](sprints/active/)** - Current sprint work
-  - [Current Sprint Status](sprints/active/CURRENT_SPRINT_STATUS.md) - Sprint 24 MicroUI Improvements
-  - [Sprint 24 Plan](sprints/active/SPRINT_24_MICROUI_IMPROVEMENTS.md) - UI system fixes
+  - [Sprint Status Dashboard](SPRINT_STATUS.md) - Sprint 26 Semi-Autonomous Flight
+  - [Sprint 26 Plan](sprints/active/SPRINT_26_SEMI_AUTONOMOUS_FLIGHT.md) - Flight assist system
 
-### 🔧 Development Guides
-- **[`development/`](development/)** - Developer resources
-  - [Contributing Guide](development/CONTRIBUTING.md) - How to contribute
-  - [Asset Pipeline](development/ASSET_PIPELINE_VALIDATION.md) - Asset validation
-  - [Memory Testing](development/MEMORY_TESTING.md) - Memory testing guidelines
+### 🔧 Technical Documentation
+- **[`technical/`](technical/)** - Architecture and system documentation
+  - [Architecture Overview](technical/ARCHITECTURE_OVERVIEW.md) - System architecture guide
+  - [Component Catalog](technical/COMPONENT_CATALOG.md) - All available components
+- **[`project/`](project/)** - Project-level documentation
+  - [Research](project/research/FLIGHT_CONTROL_RESEARCH.md) - Consolidated research
+  - [Game Vision](project/GAME_VISION.md) - Project vision and goals
 - **[`guides/`](guides/)** - Technical guides
   - [ECS Architecture](guides/ECS_ARCHITECTURE.md) - Entity Component System patterns
   - [Component Reference](guides/COMPONENT_REFERENCE.md) - All available components
