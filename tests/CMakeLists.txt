@@ -112,6 +112,7 @@ add_executable(test_input_action_maps
     services/test_input_action_maps.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/services/input_action_maps.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/services/input_service.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/hal/input_hal_mock.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
 )
