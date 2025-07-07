@@ -18,6 +18,9 @@ void suite_graphics_pipeline(void);
 void suite_render_3d_pipeline(void);
 void suite_rendering_integration(void);
 
+// Control scheme test suite
+void suite_unified_control_scheme(void);
+
 // These are required by Unity, but we can leave them empty if no
 // global setup/teardown is needed for most tests.
 void setUp(void)

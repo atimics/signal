@@ -220,8 +220,87 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         }
     }
     
-    // Create mini solar system
+    // Create mini solar system with lots of reference points
     create_solar_system(world, INVALID_ENTITY);
+    
+    // Add scattered suns throughout the playground for better visibility
+    printf("☀️ Adding %d scattered suns for better navigation...\n", 50);
+    for (int i = 0; i < 50; i++) {
+        EntityID sun = entity_create(world);
+        if (sun == INVALID_ENTITY) continue;
+        
+        entity_add_component(world, sun, COMPONENT_TRANSFORM);
+        entity_add_component(world, sun, COMPONENT_RENDERABLE);
+        
+        struct Transform* transform = entity_get_transform(world, sun);
+        struct Renderable* renderable = entity_get_renderable(world, sun);
+        
+        if (transform && renderable) {
+            // Random position in a large 3D grid
+            float x = (((float)rand() / RAND_MAX) - 0.5f) * PLAIN_SIZE * 0.8f;
+            float y = (((float)rand() / RAND_MAX) - 0.5f) * 2000.0f + 500.0f;  // -500 to +1500 height
+            float z = (((float)rand() / RAND_MAX) - 0.5f) * PLAIN_SIZE * 0.8f;
+            
+            transform->position = (Vector3){x, y, z};
+            
+            // Varied sizes for depth perception
+            float size = 8.0f + ((float)rand() / RAND_MAX) * 25.0f;  // 8-33 units
+            transform->scale = (Vector3){size, size, size};
+            transform->rotation = (Quaternion){0, 0, 0, 1};
+            transform->dirty = true;
+            
+            // Use sun mesh if available, fallback to logo_cube
+            AssetRegistry* assets = get_asset_registry();
+            if (assets && assets_create_renderable_from_mesh(assets, "sun", renderable)) {
+                renderable->visible = true;
+                renderable->lod_level = LOD_HIGH;
+            } else {
+                assets_create_renderable_from_mesh(assets, "logo_cube", renderable);
+                renderable->visible = true;
+                renderable->lod_level = LOD_MEDIUM;
+            }
+        }
+    }
+    
+    // Add grid reference markers for better spatial awareness
+    printf("📍 Adding grid reference markers...\n");
+    for (int grid_x = -2; grid_x <= 2; grid_x++) {
+        for (int grid_z = -2; grid_z <= 2; grid_z++) {
+            if (grid_x == 0 && grid_z == 0) continue; // Skip center (where player starts)
+            
+            EntityID marker = entity_create(world);
+            if (marker == INVALID_ENTITY) continue;
+            
+            entity_add_component(world, marker, COMPONENT_TRANSFORM);
+            entity_add_component(world, marker, COMPONENT_RENDERABLE);
+            
+            struct Transform* transform = entity_get_transform(world, marker);
+            struct Renderable* renderable = entity_get_renderable(world, marker);
+            
+            if (transform && renderable) {
+                // Grid spacing of 1000 units
+                float x = grid_x * 1000.0f;
+                float z = grid_z * 1000.0f;
+                float y = 20.0f; // Just above ground level
+                
+                transform->position = (Vector3){x, y, z};
+                transform->scale = (Vector3){15, 40, 15}; // Tall, visible markers
+                transform->rotation = (Quaternion){0, 0, 0, 1};
+                transform->dirty = true;
+                
+                // Use control tower for grid markers
+                AssetRegistry* assets = get_asset_registry();
+                if (assets && assets_create_renderable_from_mesh(assets, "control_tower", renderable)) {
+                    renderable->visible = true;
+                    renderable->lod_level = LOD_HIGH;
+                } else {
+                    assets_create_renderable_from_mesh(assets, "logo_cube", renderable);
+                    renderable->visible = true;
+                    renderable->lod_level = LOD_HIGH;
+                }
+            }
+        }
+    }
     
     // Set up camera for flight testing
     current_camera_mode = CAMERA_MODE_CHASE_NEAR;

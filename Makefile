@@ -46,6 +46,12 @@ test: configure
 	@cmake --build $(CMAKE_BUILD_DIR) --target build_all_tests --parallel
 	@cd $(CMAKE_BUILD_DIR) && ctest --output-on-failure --progress
 
+# Control scheme tests
+test-controls: configure
+	@echo "🎮 Running Control Scheme tests..."
+	@cmake --build $(CMAKE_BUILD_DIR) --target test_unified_control_scheme --parallel
+	@$(CMAKE_BUILD_DIR)/tests/test_unified_control_scheme
+
 # Asset compilation (if enabled)
 assets: configure
 	@echo "🎨 Compiling assets..."
@@ -148,6 +154,7 @@ help:
 	@echo "  make test-core   - Run core component tests"
 	@echo "  make test-rendering - Run rendering tests"
 	@echo "  make test-ui     - Run UI tests"
+	@echo "  make test-controls - Run control scheme tests"
 	@echo ""
 	@echo "⚙️  BUILD TYPES:"
 	@echo "  make debug       - Debug build"

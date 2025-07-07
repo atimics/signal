@@ -169,24 +169,34 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     // Get linear input
     float thrust = input_service->get_action_value(input_service, config->thrust_forward) - 
                    input_service->get_action_value(input_service, config->thrust_back);
-    float vertical = input_service->get_action_value(input_service, INPUT_ACTION_VERTICAL_UP) - 
-                     input_service->get_action_value(input_service, INPUT_ACTION_VERTICAL_DOWN);
+    float vertical_up = input_service->get_action_value(input_service, INPUT_ACTION_VERTICAL_UP);
+    float vertical_down = input_service->get_action_value(input_service, INPUT_ACTION_VERTICAL_DOWN);
+    float vertical = (fabsf(vertical_up) > fabsf(vertical_down)) ? vertical_up : -vertical_down;
     float strafe = 0.0f;   // TODO: Add strafe input actions
     
-    // Get angular input
-    float pitch = input_service->get_action_value(input_service, config->pitch_up) - 
-                  input_service->get_action_value(input_service, config->pitch_down);
-    float yaw = input_service->get_action_value(input_service, config->yaw_right) - 
-                input_service->get_action_value(input_service, config->yaw_left);
-    float roll = input_service->get_action_value(input_service, config->roll_right) - 
-                 input_service->get_action_value(input_service, config->roll_left);
+    // Get angular input - for analog axes, use single action (gamepad gives -1 to +1)
+    // For digital input (keyboard), use difference between actions
+    float pitch_up = input_service->get_action_value(input_service, config->pitch_up);
+    float pitch_down = input_service->get_action_value(input_service, config->pitch_down);
+    float yaw_left = input_service->get_action_value(input_service, config->yaw_left);
+    float yaw_right = input_service->get_action_value(input_service, config->yaw_right);
+    float roll_left = input_service->get_action_value(input_service, config->roll_left);
+    float roll_right = input_service->get_action_value(input_service, config->roll_right);
+    
+    // For analog input (gamepad), the axis gives both directions
+    // For digital input (keyboard), calculate difference
+    float pitch = (fabsf(pitch_up) > fabsf(pitch_down)) ? pitch_up : -pitch_down;
+    float yaw = (fabsf(yaw_right) > fabsf(yaw_left)) ? yaw_right : -yaw_left;
+    float roll = (fabsf(roll_right) > fabsf(roll_left)) ? roll_right : -roll_left;
     
     // Debug: Log raw input values only when there's actual input
     static uint32_t input_debug_counter = 0;
-    bool has_input = (fabsf(thrust) > 0.01f || fabsf(pitch) > 0.01f || fabsf(yaw) > 0.01f || fabsf(roll) > 0.01f);
+    bool has_input = (fabsf(thrust) > 0.01f || fabsf(pitch) > 0.01f || fabsf(yaw) > 0.01f || fabsf(roll) > 0.01f || fabsf(vertical) > 0.01f);
     if (has_input && ++input_debug_counter % 30 == 0) {
-        printf("🎮 INPUT: thrust=%.2f, pitch=%.2f, yaw=%.2f, roll=%.2f\n",
-               thrust, pitch, yaw, roll);
+        printf("🎮 INPUT: thrust=%.2f, pitch=%.2f, yaw=%.2f, roll=%.2f, vertical=%.2f\n",
+               thrust, pitch, yaw, roll, vertical);
+        printf("🎮 Raw values: P[↑%.2f ↓%.2f] Y[←%.2f →%.2f] R[←%.2f →%.2f] V[↑%.2f ↓%.2f]\n",
+               pitch_up, pitch_down, yaw_left, yaw_right, roll_left, roll_right, vertical_up, vertical_down);
     }
     
     // Apply inversion
