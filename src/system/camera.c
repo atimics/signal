@@ -157,7 +157,7 @@ static void camera_initialize_from_transform(struct World* world, EntityID camer
     // Set default camera properties if not already set
     if (camera->fov == 0.0f) camera->fov = 95.0f;  // Wider FOV to prevent clipping
     if (camera->near_plane == 0.0f) camera->near_plane = 0.5f;  // Further near plane for stability
-    if (camera->far_plane == 0.0f) camera->far_plane = 2000.0f;  // Further far plane for large scenes
+    if (camera->far_plane == 0.0f) camera->far_plane = 20000.0f;  // Very far plane for infinite space
     if (camera->aspect_ratio == 0.0f) camera->aspect_ratio = 16.0f / 9.0f;
 
     // Initialize position from transform if available and camera pos is zero

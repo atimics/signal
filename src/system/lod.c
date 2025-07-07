@@ -11,12 +11,12 @@
 // INTERNAL STRUCTURES AND GLOBALS
 // ============================================================================
 
-// Default LOD configuration
+// Default LOD configuration - increased for space scenes
 static const LODConfig DEFAULT_LOD_CONFIG = {
-    .high_detail_distance = 20.0f,    // High detail within 20 units
-    .medium_detail_distance = 50.0f,  // Medium detail within 50 units
-    .low_detail_distance = 100.0f,    // Low detail within 100 units
-    .cull_distance = 200.0f           // Cull beyond 200 units
+    .high_detail_distance = 100.0f,    // High detail within 100 units
+    .medium_detail_distance = 500.0f,  // Medium detail within 500 units
+    .low_detail_distance = 1500.0f,    // Low detail within 1500 units
+    .cull_distance = 10000.0f          // Cull beyond 10000 units (effectively infinite for space)
 };
 
 // Current LOD system state

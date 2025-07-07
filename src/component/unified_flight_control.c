@@ -209,6 +209,19 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     if (fabsf(yaw) < config->dead_zone) yaw = 0.0f;
     if (fabsf(roll) < config->dead_zone) roll = 0.0f;
     
+    // Add banking (coordinated turn) - automatically roll when yawing
+    if (control->flight_assist_enabled && fabsf(yaw) > 0.01f) {
+        // Banking ratio: how much to roll for each unit of yaw
+        float banking_ratio = 0.4f;  // 40% roll for each unit of yaw (tilt into the turn)
+        roll -= yaw * banking_ratio;  // Negative because we want to roll into the turn
+        
+        // Debug banking
+        static uint32_t bank_debug = 0;
+        if (++bank_debug % 60 == 0 && fabsf(yaw) > 0.1f) {
+            printf("🏁 Banking: yaw=%.2f → added roll=%.2f\n", yaw, -yaw * banking_ratio);
+        }
+    }
+    
     // Apply response curve
     if (config->use_quadratic_curve) {
         thrust = thrust * fabsf(thrust);

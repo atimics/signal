@@ -52,7 +52,7 @@ static FlightCameraMode current_camera_mode = CAMERA_MODE_CHASE_NEAR;
 
 // Obstacle and environment setup
 #define OBSTACLE_COUNT 12
-#define PLAIN_SIZE 300.0f
+#define PLAIN_SIZE 10000.0f  // Massive space area (10km x 10km)
 
 typedef struct {
     Vector3 position;
