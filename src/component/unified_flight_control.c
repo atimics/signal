@@ -145,7 +145,7 @@ bool unified_flight_control_can_switch_mode(const UnifiedFlightControl* control,
 // INPUT PROCESSING
 // ============================================================================
 
-void unified_flight_control_process_input(UnifiedFlightControl* control, const InputService* input_service) {
+void unified_flight_control_process_input(UnifiedFlightControl* control, InputService* input_service) {
     if (!control || !input_service || !control->enabled) return;
     
     // Only process manual input in manual and assisted modes

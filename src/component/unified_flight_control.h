@@ -199,7 +199,7 @@ bool unified_flight_control_has_authority(const UnifiedFlightControl* control, E
 
 // System integration
 void unified_flight_control_update(UnifiedFlightControl* control, float delta_time);
-void unified_flight_control_process_input(UnifiedFlightControl* control, const InputService* input_service);
+void unified_flight_control_process_input(UnifiedFlightControl* control, InputService* input_service);
 
 // Preset configurations
 void unified_flight_control_setup_manual_flight(UnifiedFlightControl* control);

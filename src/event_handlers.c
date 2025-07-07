@@ -6,10 +6,13 @@
 #include "event_handlers.h"
 #include "hal/input_hal.h"
 #include "ui.h"
+#include "ui_api.h"
 #include "scene_script.h"
 #include "services/input_service.h"
 #include "game_input.h"
+#include "graphics_api.h"  // For sokol_app.h
 #include <stdio.h>
+#include <string.h>
 
 // ============================================================================
 // HAL EVENT HANDLER (Priority 0 - Always gets events first)

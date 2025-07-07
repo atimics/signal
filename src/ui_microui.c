@@ -889,7 +889,7 @@ void ui_microui_end_frame(void) {
     
     // Log command breakdown - ALWAYS for debugging
     if (render_state.command_count > 0) {
-        printf("📊 UI COMMANDS: %d commands (%d rect, %d text, %d clip, %d icon) → %d vertices (capacity=%d)\n", 
+        // printf("📊 UI COMMANDS: %d commands (%d rect, %d text, %d clip, %d icon) → %d vertices (capacity=%d)\n", 
                render_state.command_count, rect_count, text_count, clip_count, icon_count, 
                render_state.vertex_count, render_state.vertex_capacity);
         
@@ -1033,7 +1033,7 @@ void ui_microui_upload_vertices(void) {
     
     // Log upload attempt
     static int upload_id = 0;
-    printf("📤 UI UPLOAD #%d: Uploading %d vertices (%zu bytes) to GPU buffer (size=%zu)\n",
+    // printf("📤 UI UPLOAD #%d: Uploading %d vertices (%zu bytes) to GPU buffer (size=%zu)\n",
            ++upload_id, render_state.vertex_count, upload_size, render_state.vbuf_size);
     
     // CRITICAL: Ensure buffer is large enough BEFORE any validation
@@ -1079,7 +1079,7 @@ void ui_microui_upload_vertices(void) {
     }
     
     // ALWAYS log upload attempts for debugging
-    printf("📤 UI UPLOAD: Uploading %d vertices (%zu bytes to %zu byte buffer, id=%u)\n", 
+    // printf("📤 UI UPLOAD: Uploading %d vertices (%zu bytes to %zu byte buffer, id=%u)\n", 
            render_state.vertex_count, final_upload_size, render_state.vbuf_size,
            render_state.bind.vertex_buffers[0].id);
     

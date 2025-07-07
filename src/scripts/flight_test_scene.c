@@ -7,7 +7,7 @@
 #include "../render.h"
 #include "../system/material.h"
 // Note: Now using InputService directly instead of legacy InputState
-#include "../system/control.h"
+#include "../system/unified_control_system.h"
 #include "../system/thrusters.h"
 #include "../system/scripted_flight.h"
 #include "../hidapi.h"
@@ -120,16 +120,11 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
             entity_add_component(world, player_ship_id, COMPONENT_THRUSTER_SYSTEM);
         }
         
-        // Add ControlAuthority component  
-        if (!entity_has_component(world, player_ship_id, COMPONENT_CONTROL_AUTHORITY)) {
-            entity_add_component(world, player_ship_id, COMPONENT_CONTROL_AUTHORITY);
-        }
+        // Add UnifiedFlightControl component
+        unified_control_system_configure_as_player_ship(world, player_ship_id);
         
-        // Configure ship using unified preset for canyon racing
-        control_configure_ship(world, player_ship_id, SHIP_CONFIG_RACER);
-        
-        // Set this as the player entity for the control system
-        control_set_player_entity(world, player_ship_id);
+        // Set this as the player entity for the unified control system
+        unified_control_system_set_player_entity(player_ship_id);
         
         // Get components for any scene-specific adjustments
         struct Physics* physics = entity_get_physics(world, player_ship_id);
@@ -451,11 +446,11 @@ static bool flight_test_input(struct World* world, SceneStateManager* state, con
                         printf("   ✅ Started circuit flight pattern\n");
                         printf("   Flight active: %d\n", player_scripted_flight->active);
                         
-                        // Check control system state
-                        struct ControlAuthority* control = entity_get_control_authority(world, player_ship_id);
+                        // Check unified control system state
+                        struct UnifiedFlightControl* control = entity_get_unified_flight_control(world, player_ship_id);
                         if (control) {
-                            printf("   Control: controlled_by=%d, player_entity=%d\n", 
-                                   control->controlled_by, player_ship_id);
+                            printf("   Control: controlled_by=%d, mode=%d\n", 
+                                   control->controlled_by, control->mode);
                         }
                     } else {
                         printf("   ❌ Failed to create circuit path\n");
@@ -712,28 +707,32 @@ void update_visual_thrusters(struct World* world, float delta_time) {
         return;
     }
     
-    // Visual thrusters use processed input from control authority
+    // Visual thrusters use processed input from unified flight control
     
-    // Get control authority to access processed input
-    struct ControlAuthority* control = entity_get_control_authority(world, player_ship_id);
+    // Get unified flight control to access processed input
+    struct UnifiedFlightControl* control = entity_get_unified_flight_control(world, player_ship_id);
     if (!control) {
         static uint32_t control_debug_counter = 0;
         if (++control_debug_counter % 120 == 0) {
-            printf("🔥 No control authority for player ship %d\n", player_ship_id);
+            printf("🔥 No unified flight control for player ship %d\n", player_ship_id);
         }
         return;
     }
+    
+    // Get linear and angular commands from unified control
+    Vector3 linear_command = unified_flight_control_get_linear_command(control);
+    Vector3 angular_command = unified_flight_control_get_angular_command(control);
     
     // Debug input values
     static uint32_t thruster_input_debug = 0;
     if (++thruster_input_debug % 60 == 0) {
         printf("🔥 Input: linear[%.2f,%.2f,%.2f] angular[%.2f,%.2f,%.2f]\n",
-               control->input_linear.x, control->input_linear.y, control->input_linear.z,
-               control->input_angular.x, control->input_angular.y, control->input_angular.z);
+               linear_command.x, linear_command.y, linear_command.z,
+               angular_command.x, angular_command.y, angular_command.z);
     }
     
     // Update main engines based on forward/backward thrust
-    float main_thrust_intensity = fabsf(control->input_linear.z);  // Z is forward/backward
+    float main_thrust_intensity = fabsf(linear_command.z);  // Z is forward/backward
     
     // Debug main thrust
     static uint32_t main_debug = 0;
@@ -745,26 +744,26 @@ void update_visual_thrusters(struct World* world, float delta_time) {
     update_thruster_glow_intensity(world, visual_thrusters.main_engines[1], main_thrust_intensity);
     
     // Update RCS thrusters based on strafe and directional movement
-    float strafe_intensity = fabsf(control->input_linear.x);
-    float vertical_intensity = fabsf(control->input_linear.y);
+    float strafe_intensity = fabsf(linear_command.x);
+    float vertical_intensity = fabsf(linear_command.y);
     
     // Left/Right RCS based on strafe
     update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[2], 
-                                 control->input_linear.x < 0 ? strafe_intensity : 0.0f); // Left RCS
+                                 linear_command.x < 0 ? strafe_intensity : 0.0f); // Left RCS
     update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[3], 
-                                 control->input_linear.x > 0 ? strafe_intensity : 0.0f); // Right RCS
+                                 linear_command.x > 0 ? strafe_intensity : 0.0f); // Right RCS
     
     // Forward/Backward RCS for maneuvering
     update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[0], 
-                                 control->input_linear.z > 0 ? main_thrust_intensity * 0.3f : 0.0f); // Forward RCS
+                                 linear_command.z > 0 ? main_thrust_intensity * 0.3f : 0.0f); // Forward RCS
     update_thruster_glow_intensity(world, visual_thrusters.rcs_thrusters[1], 
-                                 control->input_linear.z < 0 ? main_thrust_intensity * 0.3f : 0.0f); // Rear RCS
+                                 linear_command.z < 0 ? main_thrust_intensity * 0.3f : 0.0f); // Rear RCS
     
     // Vertical thrusters
     update_thruster_glow_intensity(world, visual_thrusters.vertical_thrusters[0], 
-                                 control->input_linear.y < 0 ? vertical_intensity : 0.0f); // Down thruster
+                                 linear_command.y < 0 ? vertical_intensity : 0.0f); // Down thruster
     update_thruster_glow_intensity(world, visual_thrusters.vertical_thrusters[1], 
-                                 control->input_linear.y > 0 ? vertical_intensity : 0.0f); // Up thruster
+                                 linear_command.y > 0 ? vertical_intensity : 0.0f); // Up thruster
 }
 
 // ============================================================================

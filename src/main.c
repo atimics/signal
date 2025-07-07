@@ -309,7 +309,6 @@ static void init(void)
     strcpy(app_state.scene_state.current_scene_name, scene_to_load);
     
     // Register standard event handlers now that scene state is ready
-    EventRouter* router = event_router_get_instance();
     register_standard_event_handlers(router, &app_state.scene_state, &app_state.world);
     
     // Initialize offscreen rendering layers
@@ -561,11 +560,11 @@ static void frame(void)
             }
             
             // Now safe to upload vertices
-            printf("🎨 PRE-UPLOAD: encoder_active=%d, context_valid=%d\n", 
-                   layer_is_encoder_active(), sg_isvalid());
+            // printf("🎨 PRE-UPLOAD: encoder_active=%d, context_valid=%d\n", 
+            //        layer_is_encoder_active(), sg_isvalid());
             ui_microui_upload_vertices();
-            printf("🎨 POST-UPLOAD: encoder_active=%d, context_valid=%d\n", 
-                   layer_is_encoder_active(), sg_isvalid());
+            // printf("🎨 POST-UPLOAD: encoder_active=%d, context_valid=%d\n", 
+            //        layer_is_encoder_active(), sg_isvalid());
             ui_rendered = true;
         } else {
             printf("⚠️ Skipping UI upload - renderer not ready\n");

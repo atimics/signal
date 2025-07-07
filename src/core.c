@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gpu_resources.h"
+#include "component/unified_flight_control.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -324,6 +325,18 @@ bool entity_add_component(struct World* world, EntityID entity_id, ComponentType
             world->components.controllables[world->components.controllable_count++] = NULL;
             break;
 
+        case COMPONENT_UNIFIED_FLIGHT_CONTROL:
+            if (world->components.unified_flight_control_count >= MAX_ENTITIES) return false;
+            // UnifiedFlightControl uses dynamic allocation since it's an incomplete type
+            entity->unified_flight_control = unified_flight_control_create();
+            if (entity->unified_flight_control) {
+                world->components.unified_flight_controls[world->components.unified_flight_control_count++] = entity->unified_flight_control;
+            } else {
+                entity->component_mask &= ~type;  // Remove flag on failure
+                return false;
+            }
+            break;
+
         default:
             entity->component_mask &= ~type;  // Remove flag
             return false;
@@ -387,6 +400,12 @@ bool entity_remove_component(struct World* world, EntityID entity_id, ComponentT
             break;
         case COMPONENT_CONTROLLABLE:
             entity->controllable = NULL;
+            break;
+        case COMPONENT_UNIFIED_FLIGHT_CONTROL:
+            if (entity->unified_flight_control) {
+                unified_flight_control_destroy(entity->unified_flight_control);
+                entity->unified_flight_control = NULL;
+            }
             break;
     }
     return true;
@@ -466,6 +485,12 @@ struct Controllable* entity_get_controllable(struct World* world, EntityID entit
 {
     struct Entity* entity = entity_get(world, entity_id);
     return entity ? entity->controllable : NULL;
+}
+
+struct UnifiedFlightControl* entity_get_unified_flight_control(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    return entity ? entity->unified_flight_control : NULL;
 }
 
 // ============================================================================
@@ -1076,7 +1101,7 @@ bool entity_add_components(struct World* world, EntityID entity_id, ComponentTyp
         COMPONENT_TRANSFORM | COMPONENT_PHYSICS | COMPONENT_COLLISION | 
         COMPONENT_AI | COMPONENT_RENDERABLE | COMPONENT_PLAYER | 
         COMPONENT_CAMERA | COMPONENT_SCENENODE | COMPONENT_THRUSTER_SYSTEM |
-        COMPONENT_CONTROL_AUTHORITY;
+        COMPONENT_CONTROL_AUTHORITY | COMPONENT_UNIFIED_FLIGHT_CONTROL;
     
     // Check if components contains any invalid bits
     if (components & ~VALID_COMPONENTS) {
@@ -1136,6 +1161,12 @@ bool entity_add_components(struct World* world, EntityID entity_id, ComponentTyp
     
     if (components & COMPONENT_CONTROL_AUTHORITY && !(entity->component_mask & COMPONENT_CONTROL_AUTHORITY)) {
         if (!entity_add_component(world, entity_id, COMPONENT_CONTROL_AUTHORITY)) {
+            all_success = false;
+        }
+    }
+    
+    if (components & COMPONENT_UNIFIED_FLIGHT_CONTROL && !(entity->component_mask & COMPONENT_UNIFIED_FLIGHT_CONTROL)) {
+        if (!entity_add_component(world, entity_id, COMPONENT_UNIFIED_FLIGHT_CONTROL)) {
             all_success = false;
         }
     }

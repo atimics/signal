@@ -63,8 +63,12 @@ set(CGAME_SOURCES
     src/system/thrusters.c
     src/system/thruster_points_system.c
     src/system/control.c
+    src/system/unified_control_system.c
     src/system/scripted_flight.c
+    src/event_router.c
+    src/event_handlers.c
     src/component/look_target.c
+    src/component/unified_flight_control.c
     src/component/thruster_points_component.c
     src/thruster_points.c
     src/render_thrust_cones.c

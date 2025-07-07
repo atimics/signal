@@ -11,6 +11,10 @@
 #include "physics.h"
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+
+// Forward declaration for helper function
+static void apply_control_to_thrusters(struct Entity* entity, const UnifiedFlightControl* control);
 
 // System state
 static EntityID g_player_entity = INVALID_ENTITY;
@@ -40,7 +44,7 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
     
     // Reset frame stats
     memset(&g_stats, 0, sizeof(g_stats));
-    float frame_start_time = 0.0f; // TODO: Add timing
+    // float frame_start_time = 0.0f; // TODO: Add timing
     
     // Get input service for manual control
     InputService* input_service = game_input_get_service();
@@ -49,72 +53,51 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
     for (uint32_t i = 0; i < world->entity_count; i++) {
         struct Entity* entity = &world->entities[i];
         
-        // Check if entity has unified flight control component
-        // TODO: Add COMPONENT_UNIFIED_FLIGHT_CONTROL to component mask system
-        // For now, skip entities without thruster systems
-        if (!(entity->component_mask & COMPONENT_THRUSTER_SYSTEM)) {
+        // Skip entities without unified flight control component
+        if (!(entity->component_mask & COMPONENT_UNIFIED_FLIGHT_CONTROL)) {
             continue;
         }
         
-        struct ThrusterSystem* thrusters = entity->thruster_system;
-        if (!thrusters) continue;
+        UnifiedFlightControl* control = entity->unified_flight_control;
+        if (!control) continue;
         
         g_stats.entities_updated++;
-        
-        // TODO: Get UnifiedFlightControl component from entity
-        // For now, create a temporary one to demonstrate the system
-        UnifiedFlightControl temp_control;
-        unified_flight_control_reset(&temp_control);
         
         // Determine if this is the player entity
         bool is_player = (entity->id == g_player_entity);
         if (is_player) {
-            unified_control_system_request_entity_control(world, entity->id, AUTHORITY_PLAYER, g_player_entity);
-            temp_control.mode = FLIGHT_CONTROL_MANUAL;
+            unified_flight_control_request_authority(control, AUTHORITY_PLAYER, g_player_entity);
         }
         
-        // Process based on control mode
-        switch (temp_control.mode) {
-            case FLIGHT_CONTROL_MANUAL:
-                g_stats.manual_controls++;
-                if (is_player && input_service) {
-                    unified_flight_control_process_input(&temp_control, input_service);
-                }
-                break;
-                
-            case FLIGHT_CONTROL_ASSISTED:
-                g_stats.assisted_controls++;
-                if (is_player && input_service) {
-                    unified_flight_control_process_input(&temp_control, input_service);
-                    // TODO: Add flight computer assistance
-                }
-                break;
-                
-            case FLIGHT_CONTROL_SCRIPTED:
-                g_stats.scripted_controls++;
-                // TODO: Process scripted flight path
-                break;
-                
-            case FLIGHT_CONTROL_AUTONOMOUS:
-                g_stats.autonomous_controls++;
-                // TODO: Process autonomous flight (Sprint 26)
-                break;
-                
-            case FLIGHT_CONTROL_FORMATION:
-                g_stats.autonomous_controls++;
-                // TODO: Process formation flying
-                break;
+        // Process input for player entity
+        if (is_player && input_service) {
+            unified_flight_control_process_input(control, input_service);
         }
         
         // Update the control component
-        unified_flight_control_update(&temp_control, delta_time);
+        unified_flight_control_update(control, delta_time);
         
-        // Apply control commands to thrusters
-        Vector3 linear_command = unified_flight_control_get_linear_command(&temp_control);
-        Vector3 angular_command = unified_flight_control_get_angular_command(&temp_control);
+        // Track stats by mode
+        switch (unified_flight_control_get_mode(control)) {
+            case FLIGHT_CONTROL_MANUAL:
+                g_stats.manual_controls++;
+                break;
+            case FLIGHT_CONTROL_ASSISTED:
+                g_stats.assisted_controls++;
+                break;
+            case FLIGHT_CONTROL_SCRIPTED:
+                g_stats.scripted_controls++;
+                break;
+            case FLIGHT_CONTROL_AUTONOMOUS:
+            case FLIGHT_CONTROL_FORMATION:
+                g_stats.autonomous_controls++;
+                break;
+        }
         
-        thruster_set_linear_command(thrusters, linear_command);
-        thruster_set_angular_command(thrusters, angular_command);
+        // Apply control commands to thrusters if entity has them
+        if (entity->component_mask & COMPONENT_THRUSTER_SYSTEM && entity->thruster_system) {
+            apply_control_to_thrusters(entity, control);
+        }
     }
     
     // Update performance stats
@@ -138,18 +121,23 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
 void unified_control_system_add_entity(struct World* world, EntityID entity_id) {
     if (!world) return;
     
-    // TODO: Add UnifiedFlightControl component to entity
-    // TODO: Set appropriate component mask
-    
-    printf("🎮 Added entity %d to unified control system\n", entity_id);
+    // Add UnifiedFlightControl component to entity
+    if (entity_add_component(world, entity_id, COMPONENT_UNIFIED_FLIGHT_CONTROL)) {
+        printf("🎮 Added entity %d to unified control system\n", entity_id);
+    } else {
+        printf("❌ Failed to add entity %d to unified control system\n", entity_id);
+    }
 }
 
 void unified_control_system_remove_entity(struct World* world, EntityID entity_id) {
     if (!world) return;
     
-    // TODO: Remove UnifiedFlightControl component from entity
-    
-    printf("🎮 Removed entity %d from unified control system\n", entity_id);
+    // Remove UnifiedFlightControl component from entity
+    if (entity_remove_component(world, entity_id, COMPONENT_UNIFIED_FLIGHT_CONTROL)) {
+        printf("🎮 Removed entity %d from unified control system\n", entity_id);
+    } else {
+        printf("⚠️ Entity %d was not in unified control system\n", entity_id);
+    }
 }
 
 // ============================================================================
@@ -172,17 +160,20 @@ EntityID unified_control_system_get_player_entity(void) {
 void unified_control_system_set_entity_mode(struct World* world, EntityID entity_id, FlightControlMode mode) {
     if (!world) return;
     
-    // TODO: Get UnifiedFlightControl component and set mode
-    
-    printf("🎮 Entity %d control mode set to %d\n", entity_id, mode);
+    UnifiedFlightControl* control = entity_get_unified_flight_control(world, entity_id);
+    if (control) {
+        unified_flight_control_set_mode(control, mode);
+        printf("🎮 Entity %d control mode set to %d\n", entity_id, mode);
+    } else {
+        printf("⚠️ Entity %d does not have unified flight control\n", entity_id);
+    }
 }
 
 FlightControlMode unified_control_system_get_entity_mode(struct World* world, EntityID entity_id) {
     if (!world) return FLIGHT_CONTROL_MANUAL;
     
-    // TODO: Get UnifiedFlightControl component and return mode
-    
-    return FLIGHT_CONTROL_MANUAL;
+    UnifiedFlightControl* control = entity_get_unified_flight_control(world, entity_id);
+    return control ? unified_flight_control_get_mode(control) : FLIGHT_CONTROL_MANUAL;
 }
 
 // ============================================================================
@@ -193,17 +184,23 @@ void unified_control_system_request_entity_control(struct World* world, EntityID
                                                   ControlAuthority authority, EntityID requester) {
     if (!world) return;
     
-    // TODO: Get UnifiedFlightControl component and request authority
-    
-    printf("🎮 Entity %d: Authority level %d requested by entity %d\n", entity_id, authority, requester);
+    UnifiedFlightControl* control = entity_get_unified_flight_control(world, entity_id);
+    if (control) {
+        unified_flight_control_request_authority(control, authority, requester);
+    } else {
+        printf("⚠️ Entity %d does not have unified flight control\n", entity_id);
+    }
 }
 
 void unified_control_system_release_entity_control(struct World* world, EntityID entity_id, EntityID releaser) {
     if (!world) return;
     
-    // TODO: Get UnifiedFlightControl component and release authority
-    
-    printf("🎮 Entity %d: Control released by entity %d\n", entity_id, releaser);
+    UnifiedFlightControl* control = entity_get_unified_flight_control(world, entity_id);
+    if (control) {
+        unified_flight_control_release_authority(control, releaser);
+    } else {
+        printf("⚠️ Entity %d does not have unified flight control\n", entity_id);
+    }
 }
 
 // ============================================================================
@@ -213,28 +210,49 @@ void unified_control_system_release_entity_control(struct World* world, EntityID
 void unified_control_system_configure_as_player_ship(struct World* world, EntityID entity_id) {
     if (!world) return;
     
-    // TODO: Get or create UnifiedFlightControl component
-    // unified_flight_control_setup_manual_flight(control);
+    // Ensure entity has UnifiedFlightControl component
+    if (!(entity_get_unified_flight_control(world, entity_id))) {
+        unified_control_system_add_entity(world, entity_id);
+    }
     
-    printf("🎮 Entity %d configured as player ship\n", entity_id);
+    UnifiedFlightControl* control = entity_get_unified_flight_control(world, entity_id);
+    if (control) {
+        unified_flight_control_setup_manual_flight(control);
+        unified_flight_control_request_authority(control, AUTHORITY_PLAYER, entity_id);
+        printf("🎮 Entity %d configured as player ship\n", entity_id);
+    }
 }
 
 void unified_control_system_configure_as_ai_ship(struct World* world, EntityID entity_id) {
     if (!world) return;
     
-    // TODO: Get or create UnifiedFlightControl component  
-    // unified_flight_control_setup_autonomous_flight(control);
+    // Ensure entity has UnifiedFlightControl component
+    if (!(entity_get_unified_flight_control(world, entity_id))) {
+        unified_control_system_add_entity(world, entity_id);
+    }
     
-    printf("🎮 Entity %d configured as AI ship\n", entity_id);
+    UnifiedFlightControl* control = entity_get_unified_flight_control(world, entity_id);
+    if (control) {
+        unified_flight_control_setup_autonomous_flight(control);
+        unified_flight_control_request_authority(control, AUTHORITY_AI, entity_id);
+        printf("🎮 Entity %d configured as AI ship\n", entity_id);
+    }
 }
 
 void unified_control_system_configure_as_scripted_ship(struct World* world, EntityID entity_id) {
     if (!world) return;
     
-    // TODO: Get or create UnifiedFlightControl component
-    // unified_flight_control_set_mode(control, FLIGHT_CONTROL_SCRIPTED);
+    // Ensure entity has UnifiedFlightControl component
+    if (!(entity_get_unified_flight_control(world, entity_id))) {
+        unified_control_system_add_entity(world, entity_id);
+    }
     
-    printf("🎮 Entity %d configured as scripted ship\n", entity_id);
+    UnifiedFlightControl* control = entity_get_unified_flight_control(world, entity_id);
+    if (control) {
+        unified_flight_control_set_mode(control, FLIGHT_CONTROL_SCRIPTED);
+        unified_flight_control_request_authority(control, AUTHORITY_SCRIPT, entity_id);
+        printf("🎮 Entity %d configured as scripted ship\n", entity_id);
+    }
 }
 
 // ============================================================================
@@ -243,4 +261,22 @@ void unified_control_system_configure_as_scripted_ship(struct World* world, Enti
 
 const UnifiedControlSystemStats* unified_control_system_get_stats(void) {
     return &g_stats;
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+static void apply_control_to_thrusters(struct Entity* entity, const UnifiedFlightControl* control) {
+    if (!entity || !entity->thruster_system || !control) return;
+    
+    struct ThrusterSystem* thrusters = entity->thruster_system;
+    
+    // Get control commands
+    Vector3 linear_command = unified_flight_control_get_linear_command(control);
+    Vector3 angular_command = unified_flight_control_get_angular_command(control);
+    
+    // Apply commands to thruster system
+    thruster_set_linear_command(thrusters, linear_command);
+    thruster_set_angular_command(thrusters, angular_command);
 }

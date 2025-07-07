@@ -7,6 +7,14 @@
 #include <stdio.h>
 #include <math.h>
 
+// ============================================================================
+// DEPRECATED: This legacy control system is deprecated
+// Use unified_control_system.h instead
+// ============================================================================
+#ifdef __GNUC__
+#pragma GCC warning "control.c is deprecated. Use unified_control_system instead."
+#endif
+
 // Control system constants
 #define AUTO_STOP_STRENGTH 0.05f      // Gentle auto-stop to prevent oscillations
 #define VELOCITY_THRESHOLD 1.0f       // Minimum velocity for auto-stop

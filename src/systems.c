@@ -19,7 +19,7 @@
 #include "system/memory.h"
 #include "system/material.h"
 #include "system/thrusters.h"
-#include "system/control.h"
+#include "system/unified_control_system.h"
 #include "entity_yaml_loader.h"
 #include "scene_yaml_loader.h"
 
@@ -132,13 +132,16 @@ bool scheduler_init(SystemScheduler* scheduler, RenderConfig* render_config)
                                                          .enabled = true,
                                                          .update_func = thruster_system_update };
 
-    scheduler->systems[SYSTEM_CONTROL] = (SystemInfo){ .name = "Control",
+    scheduler->systems[SYSTEM_CONTROL] = (SystemInfo){ .name = "Unified Control",
                                                        .frequency = 60.0f,  // Match physics frequency for responsive controls
                                                        .enabled = true,
-                                                       .update_func = control_system_update };
+                                                       .update_func = unified_control_system_update };
 
     // Initialize performance monitoring
     performance_init();
+    
+    // Initialize unified control system
+    unified_control_system_init();
     
     printf("🎯 System scheduler initialized\n");
     printf("   Physics: %.1f Hz\n", scheduler->systems[SYSTEM_PHYSICS].frequency);
@@ -160,6 +163,7 @@ void scheduler_destroy(struct SystemScheduler* scheduler, RenderConfig* config)
 
     // Shutdown our new systems
     material_system_shutdown();
+    unified_control_system_shutdown();
 
     if (config)
     {
