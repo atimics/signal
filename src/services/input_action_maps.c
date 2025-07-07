@@ -59,12 +59,8 @@ static bool manager_load_from_file(ActionMapManager* manager, const char* file_p
     // Stub implementation - in a real system this would parse JSON
     printf("INFO: Loading action maps from %s (stub implementation)\n", file_path);
     
-    // Add a default flight map for testing
-    manager_add_map(manager, "flight");
-    manager_add_binding(manager, "flight", INPUT_ACTION_THRUST_FORWARD, INPUT_DEVICE_KEYBOARD, 87, 0); // W key
-    manager_add_binding(manager, "flight", INPUT_ACTION_THRUST_BACK, INPUT_DEVICE_KEYBOARD, 83, 0);    // S key
-    
-    return true;
+    // Return false to trigger fallback to default bindings
+    return false;
 }
 
 static bool manager_save_to_file(ActionMapManager* manager, const char* file_path) {
@@ -119,8 +115,44 @@ static bool manager_add_binding(ActionMapManager* manager, const char* map_name,
 static bool manager_apply_to_service(ActionMapManager* manager, InputService* service) {
     if (!manager || !service) return false;
     
-    // Stub implementation - would apply bindings to the service
-    printf("INFO: Applying action maps to input service (stub implementation)\n");
+    printf("INFO: Applying action maps to input service\n");
+    
+    // Apply all loaded action maps to the service
+    for (int i = 0; i < manager->collection->map_count; i++) {
+        ActionMap* map = &manager->collection->maps[i];
+        if (!map->is_active) continue;
+        
+        // Determine which context this map belongs to
+        InputContextID context = INPUT_CONTEXT_MENU;
+        if (strcmp(map->name, "gameplay") == 0 || strcmp(map->name, "flight") == 0) {
+            context = INPUT_CONTEXT_GAMEPLAY;
+        }
+        
+        printf("  Applying %d bindings from map '%s' to context %d\n", 
+               map->binding_count, map->name, context);
+        
+        // Apply each binding
+        for (int b = 0; b < map->binding_count; b++) {
+            InputBinding binding = {0};
+            binding.device = map->bindings[b].device_type;
+            binding.scale = 1.0f;
+            
+            switch (binding.device) {
+                case INPUT_DEVICE_KEYBOARD:
+                    binding.binding.keyboard.key = map->bindings[b].key_or_button;
+                    break;
+                case INPUT_DEVICE_GAMEPAD:
+                    binding.binding.gamepad.gamepad_id = map->bindings[b].device_id;
+                    binding.binding.gamepad.button = map->bindings[b].key_or_button;
+                    break;
+                default:
+                    continue;
+            }
+            
+            service->bind_action(service, map->bindings[b].action, context, &binding);
+        }
+    }
+    
     return true;
 }
 

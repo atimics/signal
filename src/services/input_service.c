@@ -148,6 +148,16 @@ static void process_hardware_event(InputServiceData* data, const HardwareInputEv
     InputContextID active_context = data->context_stack[data->context_stack_size - 1];
     ContextBindings* context = &data->contexts[active_context];
     
+    // Debug: Log key presses and releases
+    static uint32_t event_debug_counter = 0;
+    if (hw_event->device == INPUT_DEVICE_KEYBOARD) {
+        if (++event_debug_counter % 10 == 1) {  // Log every 10th key event
+            printf("🎮 Key %s: %d, Active context: %d (0=MENU, 1=GAMEPLAY)\n", 
+                   hw_event->data.keyboard.pressed ? "pressed" : "released",
+                   hw_event->data.keyboard.key, active_context);
+        }
+    }
+    
     // Check all actions in the active context
     for (int action_id = 0; action_id < INPUT_ACTION_COUNT; action_id++) {
         float new_value = 0.0f;
@@ -158,15 +168,15 @@ static void process_hardware_event(InputServiceData* data, const HardwareInputEv
             InputBinding* binding = &context->bindings[action_id][b];
             
             if (matches_binding(hw_event, binding)) {
-                float binding_value = get_binding_value(hw_event, binding);
+                float binding_value = get_binding_value(hw_event, binding) * binding->scale;
+                
+                // Always process matched bindings, including releases (value 0.0)
+                matched = true;
                 
                 // For digital inputs, take the max (any pressed = pressed)
                 // For analog inputs, sum them (allows WASD + gamepad stick)
-                if (binding_value != 0.0f) {
-                    if (fabsf(binding_value) > fabsf(new_value)) {
-                        new_value = binding_value;
-                    }
-                    matched = true;
+                if (fabsf(binding_value) > fabsf(new_value)) {
+                    new_value = binding_value;
                 }
             }
         }
@@ -573,8 +583,8 @@ void input_service_setup_default_bindings(InputService* service) {
     } flight_bindings[] = {
         { INPUT_ACTION_THRUST_FORWARD, KEY_W,    "W - Forward Thrust" },
         { INPUT_ACTION_THRUST_BACK,    KEY_S,    "S - Backward Thrust" },
-        { INPUT_ACTION_YAW_LEFT,       KEY_A,    "A - Yaw Left" },
-        { INPUT_ACTION_YAW_RIGHT,      KEY_D,    "D - Yaw Right" },
+        { INPUT_ACTION_YAW_RIGHT,      KEY_A,    "A - Yaw Right" },
+        { INPUT_ACTION_YAW_LEFT,       KEY_D,    "D - Yaw Left" },
         { INPUT_ACTION_ROLL_LEFT,      KEY_Q,    "Q - Roll Left" },
         { INPUT_ACTION_ROLL_RIGHT,     KEY_E,    "E - Roll Right" },
         { INPUT_ACTION_PITCH_UP,       KEY_UP,   "↑ - Pitch Up" },
@@ -582,8 +592,11 @@ void input_service_setup_default_bindings(InputService* service) {
     };
     
     // Apply all flight control bindings
+    printf("🎮 Setting up flight control bindings for GAMEPLAY context:\n");
     for (size_t i = 0; i < ARRAY_SIZE(flight_bindings); ++i) {
         KEY_BIND(service, flight_bindings[i].action, INPUT_CONTEXT_GAMEPLAY, flight_bindings[i].keycode);
+        printf("   Bound action %d to key %d: %s\n", 
+               flight_bindings[i].action, flight_bindings[i].keycode, flight_bindings[i].description);
     }
     
     // Gamepad bindings for flight controls (Sprint 25)

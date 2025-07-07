@@ -246,8 +246,13 @@ static void camera_update_behavior(struct World* world, RenderConfig* render_con
                     camera->position.y += (desired_pos.y - camera->position.y) * lerp;
                     camera->position.z += (desired_pos.z - camera->position.z) * lerp;
 
-                    // Update target
-                    camera->target = target_pos;
+                    // Update target - look slightly ahead of the ship to reduce pivot effect
+                    // Get ship's forward direction
+                    Vector3 forward = quaternion_rotate_vector(target_transform->rotation, 
+                                                              (Vector3){0.0f, 0.0f, 5.0f});
+                    camera->target.x = target_pos.x + forward.x;
+                    camera->target.y = target_pos.y + forward.y;
+                    camera->target.z = target_pos.z + forward.z;
 
                     // Mark as dirty if position changed significantly
                     if (vector3_distance(old_pos, camera->position) > 0.001f)

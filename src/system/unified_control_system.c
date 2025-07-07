@@ -69,6 +69,13 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
             unified_flight_control_request_authority(control, AUTHORITY_PLAYER, g_player_entity);
         }
         
+        // Debug: Log player entity check
+        static uint32_t player_debug_counter = 0;
+        if (++player_debug_counter % 300 == 0) { // Every 5 seconds
+            printf("🎮 DEBUG: Entity %d, g_player_entity=%d, is_player=%d, has_input=%d\n",
+                   entity->id, g_player_entity, is_player, (input_service != NULL));
+        }
+        
         // Process input for player entity
         if (is_player && input_service) {
             unified_flight_control_process_input(control, input_service);

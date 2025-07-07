@@ -124,6 +124,7 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         unified_control_system_configure_as_player_ship(world, player_ship_id);
         
         // Set this as the player entity for the unified control system
+        printf("🎮 Setting player entity ID: %d\n", player_ship_id);
         unified_control_system_set_player_entity(player_ship_id);
         
         // Get components for any scene-specific adjustments
@@ -131,7 +132,11 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         struct ThrusterSystem* thrusters = entity_get_thruster_system(world, player_ship_id);
         
         if (thrusters) {
-            // Enable auto-deceleration for arcade feel
+            // Configure as RACER class with balanced thrust values
+            thrusters->max_linear_force = (Vector3){ 7000.0f, 5000.0f, 10000.0f };   // 25 m/s² forward acceleration
+            thrusters->max_angular_torque = (Vector3){ 5000.0f, 6000.0f, 3000.0f };   // ~2 rad/s² rotation
+            thrusters->thrust_response_time = 0.02f;  // Near-instant response
+            thrusters->thrusters_enabled = true;
             thrusters->auto_deceleration = true;
             
             printf("   ✅ Ship configured as RACER class\n");
@@ -142,10 +147,18 @@ void flight_test_init(struct World* world, SceneStateManager* state) {
         }
         
         if (physics) {
-            physics->drag_linear = 0.02f;   // Space drag (2% velocity loss per frame)
-            physics->drag_angular = 0.10f;  // Moderate angular damping for stability
+            physics->drag_linear = 0.01f;   // Reduced drag (1% velocity loss per frame) for better acceleration
+            physics->drag_angular = 0.08f;  // Slightly less angular damping for quicker turns
             physics->environment = PHYSICS_SPACE; // Zero gravity space flight
-            printf("   ✅ 6DOF Physics enabled with reduced drag\n");
+            
+            // Set realistic moment of inertia for a 5x3x8m ship
+            // This prevents unrealistic spinning speeds
+            physics->moment_of_inertia = (Vector3){ 2400.0f, 3000.0f, 1100.0f };
+            physics->has_6dof = true;  // Ensure 6DOF physics is enabled
+            
+            printf("   ✅ 6DOF Physics enabled with realistic inertia\n");
+            printf("   📐 Moment of inertia: [%.0f, %.0f, %.0f] kg⋅m²\n",
+                   physics->moment_of_inertia.x, physics->moment_of_inertia.y, physics->moment_of_inertia.z);
         }
         
         printf("🚀 Player ship upgrade complete - Enhanced 6DOF flight mechanics ready!\n");

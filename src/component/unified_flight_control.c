@@ -39,7 +39,7 @@ void unified_flight_control_reset(UnifiedFlightControl* control) {
     control->controlled_by = INVALID_ENTITY;
     control->enabled = true;
     
-    // Default input configuration
+    // Default input configuration - using InputActionID enum values
     control->input_config.thrust_forward = INPUT_ACTION_THRUST_FORWARD;
     control->input_config.thrust_back = INPUT_ACTION_THRUST_BACK;
     control->input_config.pitch_up = INPUT_ACTION_PITCH_UP;
@@ -146,10 +146,21 @@ bool unified_flight_control_can_switch_mode(const UnifiedFlightControl* control,
 // ============================================================================
 
 void unified_flight_control_process_input(UnifiedFlightControl* control, InputService* input_service) {
-    if (!control || !input_service || !control->enabled) return;
+    if (!control || !input_service || !control->enabled) {
+        static uint32_t null_debug = 0;
+        if (++null_debug % 300 == 0) {
+            printf("🎮 PROCESS_INPUT: control=%p, input_service=%p, enabled=%d\n",
+                   (void*)control, (void*)input_service, control ? control->enabled : -1);
+        }
+        return;
+    }
     
     // Only process manual input in manual and assisted modes
     if (control->mode != FLIGHT_CONTROL_MANUAL && control->mode != FLIGHT_CONTROL_ASSISTED) {
+        static uint32_t mode_debug = 0;
+        if (++mode_debug % 300 == 0) {
+            printf("🎮 PROCESS_INPUT: Wrong mode %d (need MANUAL or ASSISTED)\n", control->mode);
+        }
         return;
     }
     
@@ -168,6 +179,15 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
                 input_service->get_action_value(input_service, config->yaw_left);
     float roll = input_service->get_action_value(input_service, config->roll_right) - 
                  input_service->get_action_value(input_service, config->roll_left);
+    
+    // Debug: Log raw input values (always log every second, even if zero)
+    static uint32_t input_debug_counter = 0;
+    if (++input_debug_counter % 60 == 0) {
+        printf("🎮 INPUT DEBUG: thrust=%.2f, pitch=%.2f, yaw=%.2f, roll=%.2f\n",
+               thrust, pitch, yaw, roll);
+        printf("   Mode=%d, Authority=%d, Enabled=%d\n",
+               control->mode, control->authority_level, control->enabled);
+    }
     
     // Apply inversion
     if (config->invert_pitch) pitch = -pitch;
