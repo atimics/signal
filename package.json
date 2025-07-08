@@ -1,6 +1,6 @@
 {
   "name": "signal",
-  "version": "0.2.0",
+  "version": "0.0.1",
   "description": "High-Performance C Game Engine with Entity-Component-System Architecture",
   "repository": {
     "type": "git",
