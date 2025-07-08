@@ -71,6 +71,21 @@ void unified_flight_control_reset(UnifiedFlightControl* control) {
     control->mass_scaling = 1.0f;
     control->thruster_efficiency = 1.0f;
     control->moment_of_inertia = (Vector3){1.0f, 1.0f, 1.0f};
+    
+    // Flight Assist defaults (Sprint 26)
+    control->assist_enabled = false;  // Off by default, player enables when ready
+    control->assist_target_position = (Vector3){0, 0, 0};
+    control->assist_target_velocity = (Vector3){0, 0, 0};
+    control->assist_sphere_radius = 50.0f;  // 50m default sphere
+    control->assist_responsiveness = 0.7f;  // 70% responsiveness
+    control->assist_bank_angle = 0.0f;
+    control->assist_target_bank_angle = 0.0f;
+    control->assist_computation_time = 0.0f;
+    
+    // PD Controller defaults - tuned for good response
+    control->assist_kp = 2.0f;  // Position gain
+    control->assist_kd = 0.5f;  // Velocity damping
+    control->assist_max_acceleration = 30.0f;  // 30 m/s² max
 }
 
 // ============================================================================
@@ -90,10 +105,12 @@ void unified_flight_control_set_mode(UnifiedFlightControl* control, FlightContro
         switch (mode) {
             case FLIGHT_CONTROL_MANUAL:
                 control->state.assistance_level = 0.0f;
+                control->assist_enabled = false;  // Disable flight assist in manual mode
                 break;
                 
             case FLIGHT_CONTROL_ASSISTED:
                 control->state.assistance_level = 0.8f;
+                control->assist_enabled = true;  // Enable flight assist in this mode
                 break;
                 
             case FLIGHT_CONTROL_SCRIPTED:
@@ -435,4 +452,90 @@ void unified_flight_control_migrate_from_scripted_flight(UnifiedFlightControl* u
     // TODO: Implement migration from old ScriptedFlight component
     (void)unified;
     (void)old_scripted;
+}
+
+// ============================================================================
+// FLIGHT ASSIST FUNCTIONS (Sprint 26)
+// ============================================================================
+
+void unified_flight_control_enable_assist(UnifiedFlightControl* control, bool enabled) {
+    if (!control) return;
+    
+    control->assist_enabled = enabled;
+    
+    // Reset assist state when toggling
+    if (!enabled) {
+        control->assist_target_position = (Vector3){0, 0, 0};
+        control->assist_target_velocity = (Vector3){0, 0, 0};
+        control->assist_bank_angle = 0.0f;
+        control->assist_target_bank_angle = 0.0f;
+    }
+}
+
+void unified_flight_control_set_assist_params(UnifiedFlightControl* control, float kp, float kd, float max_accel) {
+    if (!control) return;
+    
+    control->assist_kp = fmaxf(0.0f, kp);
+    control->assist_kd = fmaxf(0.0f, kd);
+    control->assist_max_acceleration = fmaxf(1.0f, max_accel);
+}
+
+void unified_flight_control_set_assist_responsiveness(UnifiedFlightControl* control, float responsiveness) {
+    if (!control) return;
+    
+    control->assist_responsiveness = fmaxf(0.0f, fminf(1.0f, responsiveness));
+}
+
+Vector3 unified_flight_control_calculate_assist_target(const UnifiedFlightControl* control, 
+                                                      const struct Transform* transform,
+                                                      Vector3 input_direction) {
+    if (!control || !transform) {
+        return (Vector3){0, 0, 0};
+    }
+    
+    // Normalize input direction
+    float input_magnitude = vector3_length(input_direction);
+    if (input_magnitude < 0.001f) {
+        // No input - target current position (station keeping)
+        return transform->position;
+    }
+    
+    // Scale by sphere radius (adjusted by responsiveness)
+    float effective_radius = control->assist_sphere_radius * control->assist_responsiveness;
+    Vector3 normalized_input = vector3_multiply(input_direction, 1.0f / input_magnitude);
+    Vector3 scaled_input = vector3_multiply(normalized_input, effective_radius);
+    
+    // Transform to world space using ship's rotation
+    Vector3 world_direction = quaternion_rotate_vector(transform->rotation, scaled_input);
+    
+    // Target position is current position + world space offset
+    return vector3_add(transform->position, world_direction);
+}
+
+Vector3 unified_flight_control_get_assist_acceleration(const UnifiedFlightControl* control,
+                                                       const struct Transform* transform,
+                                                       const struct Physics* physics) {
+    if (!control || !transform || !physics || !control->assist_enabled) {
+        return (Vector3){0, 0, 0};
+    }
+    
+    // Calculate position error
+    Vector3 position_error = vector3_subtract(control->assist_target_position, transform->position);
+    
+    // Calculate velocity error (we want to match target velocity)
+    Vector3 velocity_error = vector3_subtract(control->assist_target_velocity, physics->velocity);
+    
+    // PD control law: acceleration = Kp * position_error + Kd * velocity_error
+    Vector3 p_term = vector3_multiply(position_error, control->assist_kp);
+    Vector3 d_term = vector3_multiply(velocity_error, control->assist_kd);
+    Vector3 desired_acceleration = vector3_add(p_term, d_term);
+    
+    // Clamp to maximum acceleration
+    float accel_magnitude = vector3_length(desired_acceleration);
+    if (accel_magnitude > control->assist_max_acceleration && accel_magnitude > 0.001f) {
+        desired_acceleration = vector3_multiply(desired_acceleration, 
+                                              control->assist_max_acceleration / accel_magnitude);
+    }
+    
+    return desired_acceleration;
 }

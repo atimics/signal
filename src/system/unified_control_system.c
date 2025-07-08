@@ -79,6 +79,18 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
         // Process input for player entity
         if (is_player && input_service) {
             unified_flight_control_process_input(control, input_service);
+            
+            // Debug: Check if we're getting any input
+            static uint32_t input_check_counter = 0;
+            if (++input_check_counter % 120 == 0) { // Every 2 seconds
+                const ControlState* state = unified_flight_control_get_state(control);
+                if (state) {
+                    printf("🎮 Control Debug: linear=(%.2f,%.2f,%.2f) angular=(%.2f,%.2f,%.2f) mode=%d enabled=%d\n",
+                           state->linear_input.x, state->linear_input.y, state->linear_input.z,
+                           state->angular_input.x, state->angular_input.y, state->angular_input.z,
+                           control->mode, control->enabled);
+                }
+            }
         }
         
         // Update the control component
@@ -283,6 +295,47 @@ static void apply_control_to_thrusters(struct Entity* entity, const UnifiedFligh
     Vector3 linear_command = unified_flight_control_get_linear_command(control);
     Vector3 angular_command = unified_flight_control_get_angular_command(control);
     
+    // Sprint 26: Flight Assist System
+    if (control->assist_enabled && entity->physics && entity->transform) {
+        // Get current control state for input processing
+        const ControlState* state = unified_flight_control_get_state(control);
+        
+        // Build input direction from control state
+        Vector3 input_direction = {
+            state->linear_input.x,    // Strafe
+            state->linear_input.y,    // Vertical
+            state->linear_input.z     // Thrust
+        };
+        
+        // Calculate target position based on input
+        Vector3 target_position = unified_flight_control_calculate_assist_target(
+            control, entity->transform, input_direction
+        );
+        
+        // Update control's target position for tracking
+        ((UnifiedFlightControl*)control)->assist_target_position = target_position;
+        
+        // Get desired acceleration from flight assist
+        Vector3 assist_acceleration = unified_flight_control_get_assist_acceleration(
+            control, entity->transform, entity->physics
+        );
+        
+        // Convert acceleration to normalized thruster commands
+        // Assuming max acceleration = max_linear_acceleration from control state
+        float max_accel = state->max_linear_acceleration;
+        if (max_accel > 0.0f) {
+            linear_command = vector3_multiply(assist_acceleration, 1.0f / max_accel);
+            
+            // Clamp to valid range [-1, 1]
+            linear_command.x = fmaxf(-1.0f, fminf(1.0f, linear_command.x));
+            linear_command.y = fmaxf(-1.0f, fminf(1.0f, linear_command.y));
+            linear_command.z = fmaxf(-1.0f, fminf(1.0f, linear_command.z));
+        }
+        
+        // Keep manual angular control for now (can enhance later)
+        // This allows player to orient ship while assist handles translation
+    }
+    
     // Simple flight assist - minimal interference for manual control
     if (control->flight_assist_enabled && control->stability_assist > 0.0f && entity->physics) {
         struct Physics* physics = entity->physics;
@@ -318,4 +371,13 @@ static void apply_control_to_thrusters(struct Entity* entity, const UnifiedFligh
     // Apply commands to thruster system
     thruster_set_linear_command(thrusters, linear_command);
     thruster_set_angular_command(thrusters, angular_command);
+    
+    // Debug: Log commands being sent to thrusters
+    static uint32_t thruster_debug_counter = 0;
+    bool has_command = (vector3_length(linear_command) > 0.01f || vector3_length(angular_command) > 0.01f);
+    if (has_command && ++thruster_debug_counter % 60 == 0) { // Every second when there's input
+        printf("🚀 Thruster Commands: linear=(%.2f,%.2f,%.2f) angular=(%.2f,%.2f,%.2f)\n",
+               linear_command.x, linear_command.y, linear_command.z,
+               angular_command.x, angular_command.y, angular_command.z);
+    }
 }

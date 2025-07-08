@@ -164,6 +164,21 @@ typedef struct UnifiedFlightControl {
     
     // Future: Autonomous flight data (Sprint 26)
     void* autonomous_data;      // Opaque pointer for AI/autonomous systems
+    
+    // Flight Assist Data (Sprint 26)
+    bool assist_enabled;                    // Quick toggle for flight assist
+    Vector3 assist_target_position;         // World space target position
+    Vector3 assist_target_velocity;         // Target velocity for smooth following
+    float assist_sphere_radius;             // Input scaling (50m default)
+    float assist_responsiveness;            // 0.0-1.0 user preference
+    float assist_bank_angle;                // Current banking angle for visual feedback
+    float assist_target_bank_angle;         // Target banking angle
+    float assist_computation_time;          // Performance tracking
+    
+    // PD Controller gains for flight assist
+    float assist_kp;                        // Position gain (2.0 default)
+    float assist_kd;                        // Velocity gain (0.5 default)
+    float assist_max_acceleration;          // Max assist acceleration (30 m/s² default)
 } UnifiedFlightControl;
 
 // Component management functions
@@ -210,5 +225,16 @@ void unified_flight_control_setup_autonomous_flight(UnifiedFlightControl* contro
 void unified_flight_control_migrate_from_control_authority(UnifiedFlightControl* unified, const void* old_control);
 void unified_flight_control_migrate_from_controllable(UnifiedFlightControl* unified, const void* old_controllable);
 void unified_flight_control_migrate_from_scripted_flight(UnifiedFlightControl* unified, const void* old_scripted);
+
+// Flight Assist Functions (Sprint 26)
+void unified_flight_control_enable_assist(UnifiedFlightControl* control, bool enabled);
+void unified_flight_control_set_assist_params(UnifiedFlightControl* control, float kp, float kd, float max_accel);
+void unified_flight_control_set_assist_responsiveness(UnifiedFlightControl* control, float responsiveness);
+Vector3 unified_flight_control_calculate_assist_target(const UnifiedFlightControl* control, 
+                                                      const struct Transform* transform,
+                                                      Vector3 input_direction);
+Vector3 unified_flight_control_get_assist_acceleration(const UnifiedFlightControl* control,
+                                                       const struct Transform* transform,
+                                                       const struct Physics* physics);
 
 #endif // UNIFIED_FLIGHT_CONTROL_H

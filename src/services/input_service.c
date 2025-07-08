@@ -82,10 +82,19 @@ static bool matches_binding(const HardwareInputEvent* hw_event, const InputBindi
     }
     
     switch (hw_event->device) {
-        case INPUT_DEVICE_KEYBOARD:
-            return hw_event->data.keyboard.key == binding->binding.keyboard.key &&
-                   (binding->binding.keyboard.modifiers == 0 || 
-                    (hw_event->data.keyboard.modifiers & binding->binding.keyboard.modifiers) != 0);
+        case INPUT_DEVICE_KEYBOARD: {
+            bool key_match = hw_event->data.keyboard.key == binding->binding.keyboard.key;
+            bool mod_match = (binding->binding.keyboard.modifiers == 0 || 
+                             (hw_event->data.keyboard.modifiers & binding->binding.keyboard.modifiers) != 0);
+            if (!key_match && hw_event->data.keyboard.pressed) {
+                static int debug_counter = 0;
+                if (++debug_counter % 10 == 0) {
+                    printf("🔍 Key mismatch: event_key=%d, binding_key=%d\n", 
+                           hw_event->data.keyboard.key, binding->binding.keyboard.key);
+                }
+            }
+            return key_match && mod_match;
+        }
             
         case INPUT_DEVICE_MOUSE:
             return (hw_event->data.mouse.buttons & (1 << binding->binding.mouse.button)) != 0;
@@ -171,6 +180,16 @@ static void process_hardware_event(InputServiceData* data, const HardwareInputEv
         float new_value = 0.0f;
         bool matched = false;
         
+        // Debug: Log binding count for movement actions
+        if (hw_event->device == INPUT_DEVICE_KEYBOARD && hw_event->data.keyboard.pressed &&
+            action_id >= INPUT_ACTION_THRUST_FORWARD && action_id <= INPUT_ACTION_YAW_RIGHT &&
+            context->binding_count[action_id] == 0) {
+            static int binding_debug = 0;
+            if (++binding_debug % 20 == 0) {
+                printf("⚠️  No bindings for action %d in context %d\n", action_id, active_context);
+            }
+        }
+        
         // Check all bindings for this action
         for (int b = 0; b < context->binding_count[action_id]; b++) {
             InputBinding* binding = &context->bindings[action_id][b];
@@ -197,6 +216,12 @@ static void process_hardware_event(InputServiceData* data, const HardwareInputEv
             state->value = new_value;
             state->was_pressed = state->pressed;
             state->pressed = (fabsf(new_value) > 0.1f);  // Dead zone
+            
+            // Debug successful updates
+            if (fabsf(new_value) > 0.01f && action_id < INPUT_ACTION_THRUST_FORWARD + 10) {
+                printf("🎯 Action %d updated: value=%.2f (was %.2f)\n", 
+                       action_id, new_value, state->previous_value);
+            }
             
             // Generate events
             if (state->pressed && !state->was_pressed) {
@@ -544,6 +569,8 @@ void input_service_destroy(InputService* service) {
 void input_service_setup_default_bindings(InputService* service) {
     if (!service) return;
     
+    printf("🎮 Setting up default input bindings...\n");
+    
     // Clear all existing bindings first
     for (int i = 0; i < INPUT_ACTION_COUNT; i++) {
         for (int j = 0; j < INPUT_CONTEXT_COUNT; j++) {
@@ -619,15 +646,19 @@ void input_service_setup_default_bindings(InputService* service) {
     
     // WASD movement
     key_binding.binding.keyboard.key = 'W';
+    printf("🎮 Binding W (key %d) to THRUST_FORWARD (action %d)\n", 'W', INPUT_ACTION_THRUST_FORWARD);
     service->bind_action(service, INPUT_ACTION_THRUST_FORWARD, INPUT_CONTEXT_GAMEPLAY, &key_binding);
     
     key_binding.binding.keyboard.key = 'S';
+    printf("🎮 Binding S (key %d) to THRUST_BACK (action %d)\n", 'S', INPUT_ACTION_THRUST_BACK);
     service->bind_action(service, INPUT_ACTION_THRUST_BACK, INPUT_CONTEXT_GAMEPLAY, &key_binding);
     
     key_binding.binding.keyboard.key = 'A';
+    printf("🎮 Binding A (key %d) to YAW_LEFT (action %d)\n", 'A', INPUT_ACTION_YAW_LEFT);
     service->bind_action(service, INPUT_ACTION_YAW_LEFT, INPUT_CONTEXT_GAMEPLAY, &key_binding);
     
     key_binding.binding.keyboard.key = 'D';
+    printf("🎮 Binding D (key %d) to YAW_RIGHT (action %d)\n", 'D', INPUT_ACTION_YAW_RIGHT);
     service->bind_action(service, INPUT_ACTION_YAW_RIGHT, INPUT_CONTEXT_GAMEPLAY, &key_binding);
     
     // Arrow keys for pitch

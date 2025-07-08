@@ -51,6 +51,7 @@ include(cmake/Dependencies.cmake)
 # Main source files (from sources.mk)
 set(SIGNAL_SOURCES
     src/core.c
+    src/math/pd_controller.c
     src/systems.c
     src/system/physics.c
     src/system/collision.c

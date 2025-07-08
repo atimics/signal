@@ -46,6 +46,7 @@ set(CORE_TEST_SOURCES
 add_executable(test_core_math 
     core/test_math.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
 )
 target_include_directories(test_core_math PRIVATE ${TEST_INCLUDE_DIRS})
 target_compile_options(test_core_math PRIVATE ${TEST_COMPILE_FLAGS})
@@ -56,6 +57,7 @@ add_executable(test_core_components
     core/test_components.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/physics.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
 )
 target_include_directories(test_core_components PRIVATE ${TEST_INCLUDE_DIRS})
 target_compile_options(test_core_components PRIVATE ${TEST_COMPILE_FLAGS})
@@ -66,6 +68,7 @@ add_executable(test_core_world
     core/test_world.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/physics.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
 )
 target_include_directories(test_core_world PRIVATE ${TEST_INCLUDE_DIRS})
 target_compile_options(test_core_world PRIVATE ${TEST_COMPILE_FLAGS})
@@ -81,6 +84,7 @@ add_executable(test_rendering
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_lighting.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_mesh.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_pass_guard.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
 )
 target_include_directories(test_rendering PRIVATE ${TEST_INCLUDE_DIRS})
 target_compile_options(test_rendering PRIVATE ${TEST_COMPILE_FLAGS})
@@ -92,6 +96,7 @@ add_executable(test_render_layers
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_layers.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/render_pass_guard.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
 )
 target_include_directories(test_render_layers PRIVATE ${TEST_INCLUDE_DIRS})
 target_compile_options(test_render_layers PRIVATE ${TEST_COMPILE_FLAGS})
@@ -101,6 +106,7 @@ add_test(NAME test_render_layers COMMAND test_render_layers)
 add_executable(test_ui_rendering_pipeline 
     rendering/test_ui_rendering_pipeline.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
 )
 target_include_directories(test_ui_rendering_pipeline PRIVATE ${TEST_INCLUDE_DIRS})
 target_compile_options(test_ui_rendering_pipeline PRIVATE ${TEST_COMPILE_FLAGS})
@@ -121,6 +127,29 @@ target_compile_options(test_input_action_maps PRIVATE ${TEST_COMPILE_FLAGS})
 target_link_libraries(test_input_action_maps PRIVATE unity test_support m)
 add_test(NAME test_input_action_maps COMMAND test_input_action_maps)
 
+# PD Controller tests
+add_executable(test_pd_controller 
+    math/test_pd_controller.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/math/pd_controller.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
+)
+target_include_directories(test_pd_controller PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_pd_controller PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_pd_controller PRIVATE unity test_support m)
+add_test(NAME test_pd_controller COMMAND test_pd_controller)
+
+# Flight Assist integration tests
+add_executable(test_flight_assist 
+    integration/test_flight_assist.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/component/unified_flight_control.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/core.c
+)
+target_include_directories(test_flight_assist PRIVATE ${TEST_INCLUDE_DIRS})
+target_compile_options(test_flight_assist PRIVATE ${TEST_COMPILE_FLAGS})
+target_link_libraries(test_flight_assist PRIVATE unity test_support m)
+add_test(NAME test_flight_assist COMMAND test_flight_assist)
+
 # All tests target
 add_custom_target(build_all_tests
     DEPENDS
@@ -131,4 +160,6 @@ add_custom_target(build_all_tests
         test_render_layers
         test_ui_rendering_pipeline
         test_input_action_maps
+        test_pd_controller
+        test_flight_assist
 )
