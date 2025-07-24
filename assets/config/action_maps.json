@@ -1,228 +1,105 @@
 {
   "version": "1.0",
   "description": "SIGNAL Input Action Maps - Sprint 25 Implementation",
-  "maps": [
-    {
-      "name": "flight_controls",
+  "contexts": {
+    "gameplay": {
       "description": "6DOF spaceship flight controls",
-      "context": "gameplay",
-      "bindings": [
-        {
-          "comment": "Thrust Controls",
-          "key": "KEY_W",
-          "action": "THRUST_FORWARD",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_S",
-          "action": "THRUST_BACK", 
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "comment": "Yaw Controls",
-          "key": "KEY_A",
-          "action": "YAW_LEFT",
-          "device": "keyboard", 
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_D",
-          "action": "YAW_RIGHT",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "comment": "Roll Controls",
-          "key": "KEY_Q",
-          "action": "ROLL_LEFT",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_E", 
-          "action": "ROLL_RIGHT",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "comment": "Pitch Controls",
-          "key": "KEY_UP",
-          "action": "PITCH_UP",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_DOWN",
-          "action": "PITCH_DOWN",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "comment": "Additional Controls", 
-          "key": "KEY_SPACE",
-          "action": "BOOST",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_LEFT_SHIFT",
-          "action": "BRAKE",
-          "device": "keyboard", 
-          "scale": 1.0
-        }
-      ]
+      "actions": {
+        "thrust_forward": [
+          {"device": "keyboard", "key": "W"},
+          {"device": "gamepad", "axis": 5, "scale": 1.0}
+        ],
+        "thrust_back": [
+          {"device": "keyboard", "key": "S"},
+          {"device": "gamepad", "axis": 4, "scale": 1.0}
+        ],
+        "pitch_up": [
+          {"device": "keyboard", "key": "up"},
+          {"device": "gamepad", "axis": 3, "scale": -1.0}
+        ],
+        "pitch_down": [
+          {"device": "keyboard", "key": "down"},
+          {"device": "gamepad", "axis": 3, "scale": -1.0}
+        ],
+        "yaw_left": [
+          {"device": "keyboard", "key": "A"},
+          {"device": "gamepad", "axis": 2, "scale": 1.0}
+        ],
+        "yaw_right": [
+          {"device": "keyboard", "key": "D"},
+          {"device": "gamepad", "axis": 2, "scale": 1.0}
+        ],
+        "roll_left": [
+          {"device": "keyboard", "key": "Q"},
+          {"device": "gamepad", "axis": 0, "scale": 1.0},
+          {"device": "gamepad", "button": 4}
+        ],
+        "roll_right": [
+          {"device": "keyboard", "key": "E"},
+          {"device": "gamepad", "axis": 0, "scale": 1.0},
+          {"device": "gamepad", "button": 5}
+        ],
+        "vertical_up": [
+          {"device": "keyboard", "key": "space"},
+          {"device": "gamepad", "axis": 1, "scale": -1.0}
+        ],
+        "vertical_down": [
+          {"device": "keyboard", "key": "ctrl"},
+          {"device": "gamepad", "axis": 1, "scale": -1.0}
+        ],
+        "boost": [
+          {"device": "keyboard", "key": "shift"},
+          {"device": "gamepad", "button": 0}
+        ],
+        "brake": [
+          {"device": "keyboard", "key": "X"},
+          {"device": "gamepad", "button": 1}
+        ]
+      }
     },
-    {
-      "name": "menu_controls",
+    "menu": {
       "description": "Menu navigation controls",
-      "context": "menu",
-      "bindings": [
-        {
-          "comment": "Navigation",
-          "key": "KEY_UP",
-          "action": "UI_UP",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_W",
-          "action": "UI_UP", 
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_DOWN",
-          "action": "UI_DOWN",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_S",
-          "action": "UI_DOWN",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_LEFT",
-          "action": "UI_LEFT", 
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_A",
-          "action": "UI_LEFT",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_RIGHT",
-          "action": "UI_RIGHT",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_D",
-          "action": "UI_RIGHT",
-          "device": "keyboard", 
-          "scale": 1.0
-        },
-        {
-          "comment": "Actions",
-          "key": "KEY_ENTER",
-          "action": "UI_CONFIRM",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_SPACE",
-          "action": "UI_CONFIRM",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_ESCAPE",
-          "action": "UI_CANCEL",
-          "device": "keyboard",
-          "scale": 1.0
-        },
-        {
-          "key": "KEY_TAB",
-          "action": "UI_MENU",
-          "device": "keyboard",
-          "scale": 1.0
-        }
-      ]
-    },
-    {
-      "name": "gamepad_flight",
-      "description": "Gamepad flight controls (Xbox controller layout)",
-      "context": "gameplay", 
-      "bindings": [
-        {
-          "comment": "Left Stick - Movement",
-          "axis": "LEFT_STICK_Y",
-          "action": "THRUST_FORWARD", 
-          "device": "gamepad",
-          "scale": 1.0,
-          "deadzone": 0.15
-        },
-        {
-          "axis": "LEFT_STICK_X",
-          "action": "YAW_RIGHT",
-          "device": "gamepad",
-          "scale": 1.0,
-          "deadzone": 0.15
-        },
-        {
-          "comment": "Right Stick - Look",
-          "axis": "RIGHT_STICK_Y", 
-          "action": "PITCH_UP",
-          "device": "gamepad",
-          "scale": -1.0,
-          "deadzone": 0.15
-        },
-        {
-          "axis": "RIGHT_STICK_X",
-          "action": "YAW_RIGHT",
-          "device": "gamepad", 
-          "scale": 1.0,
-          "deadzone": 0.15
-        },
-        {
-          "comment": "Triggers",
-          "axis": "RIGHT_TRIGGER",
-          "action": "BOOST",
-          "device": "gamepad",
-          "scale": 1.0
-        },
-        {
-          "axis": "LEFT_TRIGGER", 
-          "action": "BRAKE",
-          "device": "gamepad",
-          "scale": 1.0
-        },
-        {
-          "comment": "Shoulder Buttons - Roll",
-          "button": "LEFT_SHOULDER",
-          "action": "ROLL_LEFT",
-          "device": "gamepad",
-          "scale": 1.0
-        },
-        {
-          "button": "RIGHT_SHOULDER",
-          "action": "ROLL_RIGHT",
-          "device": "gamepad",
-          "scale": 1.0
-        }
-      ]
+      "actions": {
+        "ui_up": [
+          {"device": "keyboard", "key": "up"},
+          {"device": "keyboard", "key": "W"},
+          {"device": "gamepad", "axis": 3, "scale": -1.0}
+        ],
+        "ui_down": [
+          {"device": "keyboard", "key": "down"},
+          {"device": "keyboard", "key": "S"},
+          {"device": "gamepad", "axis": 3, "scale": 1.0}
+        ],
+        "ui_left": [
+          {"device": "keyboard", "key": "left"},
+          {"device": "keyboard", "key": "A"},
+          {"device": "gamepad", "axis": 2, "scale": -1.0}
+        ],
+        "ui_right": [
+          {"device": "keyboard", "key": "right"},
+          {"device": "keyboard", "key": "D"},
+          {"device": "gamepad", "axis": 2, "scale": 1.0}
+        ],
+        "ui_confirm": [
+          {"device": "keyboard", "key": "enter"},
+          {"device": "keyboard", "key": "space"},
+          {"device": "gamepad", "button": 0}
+        ],
+        "ui_cancel": [
+          {"device": "keyboard", "key": "escape"},
+          {"device": "gamepad", "button": 1}
+        ],
+        "ui_menu": [
+          {"device": "keyboard", "key": "tab"},
+          {"device": "gamepad", "button": 7}
+        ]
+      }
     }
-  ],
+  },
   "user_customizations": {
     "comment": "User can override bindings here",
     "version": "1.0",
-    "last_modified": "2025-07-06",
+    "last_modified": "2025-07-08",
     "overrides": []
   }
 }

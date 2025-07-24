@@ -73,6 +73,7 @@ set(SIGNAL_SOURCES
     src/component/thruster_points_component.c
     src/thruster_points.c
     src/render_thrust_cones.c
+    src/render_thrust_simple.c
     src/assets.c
     src/asset_loader/asset_loader_index.c
     src/asset_loader/asset_loader_mesh.c
@@ -116,6 +117,7 @@ set(SIGNAL_SOURCES
     src/services/controller_config.c
     src/input_state.c
     src/config.c
+    src/utils/json_parser.c
 )
 
 # Platform-specific sources

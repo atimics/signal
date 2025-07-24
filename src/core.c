@@ -109,6 +109,7 @@ EntityID entity_create(struct World* world)
 
     entity->id = id;
     entity->component_mask = 0;
+    entity->name[0] = '\0';  // Initialize name to empty string
 
     // Clear component pointers
     entity->transform = NULL;
@@ -117,6 +118,12 @@ EntityID entity_create(struct World* world)
     entity->ai = NULL;
     entity->renderable = NULL;
     entity->player = NULL;
+    entity->camera = NULL;
+    entity->scene_node = NULL;
+    entity->thruster_system = NULL;
+    entity->control_authority = NULL;
+    entity->controllable = NULL;
+    entity->unified_flight_control = NULL;
 
     return id;
 }
@@ -186,6 +193,43 @@ struct Entity* entity_get(struct World* world, EntityID entity_id)
         }
     }
     return NULL;
+}
+
+// ============================================================================
+// ENTITY NAMING
+// ============================================================================
+
+bool entity_set_name(struct World* world, EntityID entity_id, const char* name)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    if (!entity || !name) return false;
+    
+    strncpy(entity->name, name, sizeof(entity->name) - 1);
+    entity->name[sizeof(entity->name) - 1] = '\0';
+    return true;
+}
+
+const char* entity_get_name(struct World* world, EntityID entity_id)
+{
+    struct Entity* entity = entity_get(world, entity_id);
+    if (!entity) return NULL;
+    
+    return entity->name;
+}
+
+EntityID entity_find_by_name(struct World* world, const char* name)
+{
+    if (!world || !name) return INVALID_ENTITY;
+    
+    for (uint32_t i = 0; i < world->entity_count; i++)
+    {
+        if (strcmp(world->entities[i].name, name) == 0)
+        {
+            return world->entities[i].id;
+        }
+    }
+    
+    return INVALID_ENTITY;
 }
 
 // ============================================================================
@@ -629,11 +673,15 @@ bool scene_node_remove_child(struct World* world, EntityID parent_id, EntityID c
 
 EntityID scene_node_find_by_name(struct World* world, const char* name)
 {
-    // TODO: Implement entity name system
-    // For now, this is a placeholder that returns INVALID_ENTITY
-    // This will be implemented when we add entity names/tags
-    (void)world; // Suppress unused parameter warning
-    (void)name;
+    // Use the new entity naming system to find entities with scene nodes
+    EntityID entity_id = entity_find_by_name(world, name);
+    
+    // Verify the entity has a scene node component
+    if (entity_id != INVALID_ENTITY && entity_has_component(world, entity_id, COMPONENT_SCENENODE))
+    {
+        return entity_id;
+    }
+    
     return INVALID_ENTITY;
 }
 

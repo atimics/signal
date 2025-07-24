@@ -6,6 +6,7 @@ description: "Open space flight test environment"
 
 entities:
   - type: player_ship
+    name: "player_ship"
     position: [0, 20, 0]
     rotation: [0, 0, 0, 1]
     components:
@@ -23,6 +24,7 @@ entities:
 
   # Large landing platform
   - type: landing_pad
+    name: "main_landing_pad"
     position: [0, 0, 0]
     scale: [20, 1, 20]
     material: metal
@@ -34,12 +36,14 @@ entities:
 
   # Navigation markers
   - type: marker
+    name: "marker_east"
     position: [50, 10, 0]
     scale: [3, 3, 3]
     material: emissive_blue
     mesh: logo_cube
 
   - type: marker
+    name: "marker_west"
     position: [-50, 10, 0]
     scale: [3, 3, 3]
     material: emissive_red

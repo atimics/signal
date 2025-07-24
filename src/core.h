@@ -321,6 +321,7 @@ struct Entity
 {
     EntityID id;
     uint32_t component_mask;
+    char name[64];  // Entity name for identification and debugging
 
     // Optional component pointers
     struct Transform* transform;
@@ -406,6 +407,11 @@ void world_update(struct World* world, float delta_time);
 EntityID entity_create(struct World* world);
 bool entity_destroy(struct World* world, EntityID entity_id);
 struct Entity* entity_get(struct World* world, EntityID entity_id);
+
+// Entity naming
+bool entity_set_name(struct World* world, EntityID entity_id, const char* name);
+const char* entity_get_name(struct World* world, EntityID entity_id);
+EntityID entity_find_by_name(struct World* world, const char* name);
 
 // Component management
 bool entity_add_component(struct World* world, EntityID entity_id, ComponentType type);

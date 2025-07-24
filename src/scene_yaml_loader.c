@@ -104,6 +104,10 @@ static void process_yaml_value(YAMLParseState* state, const char* value) {
         // Top-level entity properties
         if (strcmp(state->current_key, "type") == 0) {
             // Entity type handled during creation
+        } else if (strcmp(state->current_key, "name") == 0) {
+            // Set entity name
+            entity_set_name(state->world, state->current_entity, value);
+            printf("📝 Entity %d named: %s\n", state->current_entity, value);
         } else if (strcmp(state->current_key, "material") == 0) {
             MaterialProperties* material = material_get_by_name(value);
             if (material && entity->renderable) {
