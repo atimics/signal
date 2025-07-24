@@ -56,6 +56,14 @@ void unified_flight_control_reset(UnifiedFlightControl* control) {
     control->input_config.angular_sensitivity = 1.0f;
     control->input_config.dead_zone = 0.1f;
     
+    // Progressive input configuration (keyboard feels like controller)
+    control->input_config.enable_progressive_input = true;
+    control->input_config.yaw_acceleration_rate = 2.5f;     // Start slow, build up speed
+    control->input_config.roll_acceleration_rate = 2.0f;    // Slightly slower for roll
+    control->input_config.max_yaw_velocity = 3.0f;          // Maximum turn rate multiplier
+    control->input_config.max_roll_velocity = 2.5f;         // Maximum roll rate multiplier  
+    control->input_config.decay_rate = 8.0f;                // Fast decay when released
+    
     // Default assistance settings
     control->stability_assist = 0.3f;
     control->inertia_dampening = 0.2f;
@@ -86,6 +94,12 @@ void unified_flight_control_reset(UnifiedFlightControl* control) {
     control->assist_kp = 2.0f;  // Position gain
     control->assist_kd = 0.5f;  // Velocity damping
     control->assist_max_acceleration = 30.0f;  // 30 m/s² max
+    
+    // Initialize progressive input state
+    control->state.current_yaw_velocity = 0.0f;
+    control->state.current_roll_velocity = 0.0f;
+    control->state.yaw_input_duration = 0.0f;
+    control->state.roll_input_duration = 0.0f;
 }
 
 // ============================================================================
@@ -162,7 +176,7 @@ bool unified_flight_control_can_switch_mode(const UnifiedFlightControl* control,
 // INPUT PROCESSING
 // ============================================================================
 
-void unified_flight_control_process_input(UnifiedFlightControl* control, InputService* input_service) {
+void unified_flight_control_process_input(UnifiedFlightControl* control, InputService* input_service, float delta_time) {
     if (!control || !input_service || !control->enabled) {
         static uint32_t null_debug = 0;
         if (++null_debug % 300 == 0) {
@@ -203,8 +217,8 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     // For analog input (gamepad), the axis gives both directions
     // For digital input (keyboard), calculate difference
     float pitch = (fabsf(pitch_up) > fabsf(pitch_down)) ? pitch_up : -pitch_down;
-    float yaw = (fabsf(yaw_right) > fabsf(yaw_left)) ? yaw_right : -yaw_left;
-    float roll = (fabsf(roll_right) > fabsf(roll_left)) ? roll_right : -roll_left;
+    float yaw = yaw_left - yaw_right;  // Fixed: A (left) = positive, D (right) = negative  
+    float roll = roll_right - roll_left;
     
     // Debug: Log raw input values only when there's actual input
     static uint32_t input_debug_counter = 0;
@@ -219,6 +233,41 @@ void unified_flight_control_process_input(UnifiedFlightControl* control, InputSe
     // Apply inversion
     if (config->invert_pitch) pitch = -pitch;
     if (config->invert_yaw) yaw = -yaw;
+    
+    // Progressive input acceleration for keyboard (simulate controller dynamic range)
+    if (config->enable_progressive_input) {
+        float dt = delta_time;
+        
+        // Track yaw input duration and build up velocity
+        if (fabsf(yaw) > 0.01f) {
+            control->state.yaw_input_duration += dt;
+            // Accelerate towards target, starting slow and building up
+            float target_yaw_velocity = yaw * config->max_yaw_velocity;
+            control->state.current_yaw_velocity += (target_yaw_velocity - control->state.current_yaw_velocity) * 
+                                                   config->yaw_acceleration_rate * dt;
+        } else {
+            // Decay when no input
+            control->state.current_yaw_velocity *= expf(-config->decay_rate * dt);
+            control->state.yaw_input_duration = 0.0f;
+        }
+        
+        // Track roll input duration and build up velocity  
+        if (fabsf(roll) > 0.01f) {
+            control->state.roll_input_duration += dt;
+            // Accelerate towards target, starting slow and building up
+            float target_roll_velocity = roll * config->max_roll_velocity;
+            control->state.current_roll_velocity += (target_roll_velocity - control->state.current_roll_velocity) * 
+                                                    config->roll_acceleration_rate * dt;
+        } else {
+            // Decay when no input
+            control->state.current_roll_velocity *= expf(-config->decay_rate * dt);
+            control->state.roll_input_duration = 0.0f;
+        }
+        
+        // Apply progressive velocities (normalized to -1 to +1 range)
+        yaw = fmaxf(-1.0f, fminf(1.0f, control->state.current_yaw_velocity));
+        roll = fmaxf(-1.0f, fminf(1.0f, control->state.current_roll_velocity));
+    }
     
     // Apply sensitivity
     thrust *= config->linear_sensitivity;

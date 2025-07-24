@@ -78,7 +78,7 @@ void unified_control_system_update(struct World* world, RenderConfig* render_con
         
         // Process input for player entity
         if (is_player && input_service) {
-            unified_flight_control_process_input(control, input_service);
+            unified_flight_control_process_input(control, input_service, delta_time);
             
             // Debug: Check if we're getting any input
             static uint32_t input_check_counter = 0;

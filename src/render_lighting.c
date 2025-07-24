@@ -16,14 +16,14 @@ void lighting_init(LightingSystem* lighting)
 
     memset(lighting, 0, sizeof(LightingSystem));
 
-    // Set default ambient lighting
-    lighting->ambient_color = (Vector3){ 0.2f, 0.2f, 0.3f };  // Slight blue tint
-    lighting->ambient_intensity = 0.3f;
+    // Set default ambient lighting - made brighter
+    lighting->ambient_color = (Vector3){ 0.4f, 0.5f, 0.6f };  // Brighter blue tint
+    lighting->ambient_intensity = 0.6f;  // Doubled intensity
 
-    // Add a default sun light
+    // Add a default sun light - made brighter
     lighting_add_directional_light(lighting, (Vector3){ -0.5f, -1.0f, -0.3f },  // From upper left
                                    (Vector3){ 1.0f, 0.95f, 0.8f },              // Warm white
-                                   0.8f);                                       // Strong intensity
+                                   1.2f);                                       // Stronger intensity
 
     printf("💡 Lighting system initialized with %d lights\n", lighting->light_count);
 }

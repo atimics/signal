@@ -89,6 +89,14 @@ typedef struct {
     bool use_quadratic_curve;
     bool invert_pitch;
     bool invert_yaw;
+    
+    // Progressive input acceleration (keyboard feel like controller)
+    bool enable_progressive_input;      // Enable progressive acceleration
+    float yaw_acceleration_rate;        // How fast yaw input builds up
+    float roll_acceleration_rate;       // How fast roll input builds up
+    float max_yaw_velocity;             // Maximum yaw input velocity
+    float max_roll_velocity;            // Maximum roll input velocity
+    float decay_rate;                   // How fast input decays when released
 } InputConfiguration;
 
 // Control state and commands
@@ -98,6 +106,12 @@ typedef struct {
     Vector3 angular_input;      // X=pitch, Y=yaw, Z=roll
     float boost_input;          // 0-1 boost intensity
     float brake_input;          // 0-1 brake intensity
+    
+    // Progressive input state (for smooth keyboard acceleration)
+    float current_yaw_velocity;         // Current yaw input velocity
+    float current_roll_velocity;        // Current roll input velocity
+    float yaw_input_duration;           // How long yaw key has been held
+    float roll_input_duration;          // How long roll key has been held
     
     // Flight computer assistance (Sprint 26)
     Vector3 target_position;    // Where we want to go
@@ -214,7 +228,7 @@ bool unified_flight_control_has_authority(const UnifiedFlightControl* control, E
 
 // System integration
 void unified_flight_control_update(UnifiedFlightControl* control, float delta_time);
-void unified_flight_control_process_input(UnifiedFlightControl* control, InputService* input_service);
+void unified_flight_control_process_input(UnifiedFlightControl* control, InputService* input_service, float delta_time);
 
 // Preset configurations
 void unified_flight_control_setup_manual_flight(UnifiedFlightControl* control);

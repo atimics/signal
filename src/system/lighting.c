@@ -9,9 +9,9 @@ LightingSystem g_lighting;
 void lighting_system_init(void) {
     memset(&g_lighting, 0, sizeof(LightingSystem));
     
-    // Default ambient lighting
-    g_lighting.ambient_color = (float3){0.2f, 0.3f, 0.4f};
-    g_lighting.ambient_intensity = 0.3f;
+    // Default ambient lighting - made brighter
+    g_lighting.ambient_color = (float3){0.4f, 0.5f, 0.6f};  // Brighter blueish ambient
+    g_lighting.ambient_intensity = 0.6f;  // Doubled ambient intensity for brighter scenes
     g_lighting.pbr_enabled = true;
     g_lighting.ground_lighting = true;
     g_lighting.time = 0.0f;
@@ -209,11 +209,11 @@ void lighting_setup_outdoor_scene(void) {
     // Clear existing lights
     g_lighting.light_count = 0;
     
-    // Sun light
-    lighting_add_directional((float3){0.3f, -0.7f, 0.2f}, (float3){1.0f, 0.95f, 0.8f}, 0.8f);
+    // Sun light - made brighter
+    lighting_add_directional((float3){0.3f, -0.7f, 0.2f}, (float3){1.0f, 0.95f, 0.8f}, 1.2f);
     
-    // Ambient sky light
-    lighting_set_ambient((float3){0.4f, 0.6f, 0.8f}, 0.3f);
+    // Ambient sky light - much brighter
+    lighting_set_ambient((float3){0.5f, 0.7f, 0.9f}, 0.5f);
     
     printf("💡 Outdoor scene lighting configured\n");
 }
@@ -222,14 +222,14 @@ void lighting_setup_racing_scene(void) {
     // Clear existing lights
     g_lighting.light_count = 0;
     
-    // Strong sun for racing visibility
-    lighting_add_directional((float3){0.2f, -0.8f, 0.3f}, (float3){1.0f, 0.9f, 0.7f}, 1.0f);
+    // Strong sun for racing visibility - made even brighter
+    lighting_add_directional((float3){0.2f, -0.8f, 0.3f}, (float3){1.0f, 0.9f, 0.7f}, 1.4f);
     
-    // Additional fill light
-    lighting_add_directional((float3){-0.4f, -0.3f, -0.2f}, (float3){0.6f, 0.7f, 0.9f}, 0.3f);
+    // Additional fill light - brighter
+    lighting_add_directional((float3){-0.4f, -0.3f, -0.2f}, (float3){0.6f, 0.7f, 0.9f}, 0.5f);
     
-    // Warm ambient for racing atmosphere
-    lighting_set_ambient((float3){0.5f, 0.4f, 0.3f}, 0.2f);
+    // Warm ambient for racing atmosphere - increased 
+    lighting_set_ambient((float3){0.6f, 0.5f, 0.4f}, 0.4f);
     
     // Enable ground effects for racing ships
     lighting_enable_ground_effects(true);
@@ -241,11 +241,11 @@ void lighting_setup_logo_scene(void) {
     // Clear existing lights
     g_lighting.light_count = 0;
     
-    // Dramatic directional light
-    lighting_add_directional((float3){0.3f, -0.7f, 0.2f}, (float3){0.4f, 0.5f, 0.6f}, 0.4f);
+    // Dramatic directional light - made brighter
+    lighting_add_directional((float3){0.3f, -0.7f, 0.2f}, (float3){0.6f, 0.7f, 0.8f}, 0.8f);
     
-    // Cool ambient
-    lighting_set_ambient((float3){0.1f, 0.15f, 0.2f}, 0.3f);
+    // Cool ambient - made brighter
+    lighting_set_ambient((float3){0.3f, 0.4f, 0.5f}, 0.5f);
     
     printf("🎨 Logo scene lighting configured\n");
 }
