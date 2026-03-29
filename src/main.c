@@ -426,19 +426,13 @@ static void draw_ui_panel(float x, float y, float width, float height, float acc
 static void draw_hud_panels(void) {
     float screen_w = sapp_widthf();
     float screen_h = sapp_heightf();
-    bool compact = screen_w < 780.0f;
+    bool compact = screen_w < 760.0f;
     float hud_margin = compact ? 16.0f : HUD_MARGIN;
     float bottom_height = compact ? 30.0f : 34.0f;
+    float top_width = compact ? (screen_w - (hud_margin * 2.0f)) : 360.0f;
+    float top_height = compact ? 92.0f : 106.0f;
 
-    if (compact) {
-        draw_ui_panel(hud_margin, hud_margin, screen_w - (hud_margin * 2.0f), 92.0f, 0.03f);
-    } else {
-        float left_width = fminf(320.0f, screen_w - (hud_margin * 2.0f));
-        float right_width = fminf(360.0f, screen_w - (hud_margin * 2.0f));
-        float right_x = screen_w - hud_margin - right_width;
-        draw_ui_panel(hud_margin, hud_margin, left_width, 122.0f, 0.00f);
-        draw_ui_panel(right_x, hud_margin, right_width, 122.0f, 0.06f);
-    }
+    draw_ui_panel(hud_margin, hud_margin, top_width, top_height, 0.03f);
 
     draw_ui_panel(hud_margin, screen_h - hud_margin - bottom_height, screen_w - (hud_margin * 2.0f), bottom_height, 0.02f);
 }
@@ -446,13 +440,10 @@ static void draw_hud_panels(void) {
 static void draw_hud(void) {
     float screen_w = sapp_widthf();
     float screen_h = sapp_heightf();
-    bool compact = screen_w < 780.0f;
+    bool compact = screen_w < 760.0f;
     float hud_margin = compact ? 16.0f : HUD_MARGIN;
-    float right_width = fminf(360.0f, screen_w - (hud_margin * 2.0f));
-    float right_x = screen_w - hud_margin - right_width;
     float left_text_x = (hud_margin + 18.0f) / HUD_CELL;
     float top_text_y = (hud_margin + 18.0f) / HUD_CELL;
-    float right_text_x = (right_x + 18.0f) / HUD_CELL;
     float bottom_text_y = (screen_h - hud_margin - 20.0f) / HUD_CELL;
     int cargo_units = (int)lroundf(g.ship.cargo);
     int credits = (int)lroundf(g.ship.credits);
@@ -477,80 +468,60 @@ static void draw_hud(void) {
     sdtx_origin(0.0f, 0.0f);
     sdtx_home();
 
+    sdtx_pos(left_text_x, top_text_y);
+    sdtx_color3b(232, 241, 255);
+    sdtx_puts("SHIP STATUS");
+    sdtx_crlf();
+
+    sdtx_color3b(203, 220, 248);
     if (compact) {
-        sdtx_pos(left_text_x, top_text_y);
-        sdtx_color3b(232, 241, 255);
-        sdtx_printf("SPACE MINER\n");
-        sdtx_printf("CR %d | CARGO %d/%d\n", credits, cargo_units, cargo_capacity);
+        sdtx_printf("CR %d  CARGO %d/%d", credits, cargo_units, cargo_capacity);
+    } else {
+        sdtx_printf("Credits %d cr   Cargo %d/%d ore", credits, cargo_units, cargo_capacity);
+    }
+    sdtx_crlf();
 
-        if (g.docked) {
-            sdtx_color3b(112, 255, 214);
-            sdtx_printf("Station: docked, press E to sell\n");
+    if (g.docked) {
+        sdtx_color3b(112, 255, 214);
+        if (compact) {
+            sdtx_puts("Station docked, press E to sell");
         } else {
-            sdtx_color3b(199, 222, 255);
-            sdtx_printf("Station: %d units, %d deg %s\n", station_distance, bearing_degrees, bearing_side);
-        }
-
-        if (g.hover_asteroid >= 0) {
-            const asteroid_t* asteroid = &g.asteroids[g.hover_asteroid];
-            int ore_left = (int)lroundf(asteroid->ore);
-            sdtx_color3b(130, 255, 235);
-            sdtx_printf("Target: asteroid, %d ore\n", ore_left);
-        } else {
-            sdtx_color3b(169, 179, 204);
-            sdtx_printf("Target: line up an asteroid\n");
-        }
-
-        if (cargo_units >= cargo_capacity) {
-            sdtx_color3b(255, 221, 119);
-            sdtx_printf("Status: cargo hold full\n");
-        } else if (g.notice_timer > 0.0f) {
-            sdtx_color3b(114, 255, 192);
-            sdtx_printf("Status: %s\n", g.notice);
-        } else {
-            sdtx_color3b(164, 177, 205);
-            sdtx_printf("Status: mine, return, sell\n");
+            sdtx_puts("Station docked. Press E to sell cargo.");
         }
     } else {
-        sdtx_pos(left_text_x, top_text_y);
-        sdtx_color3b(232, 241, 255);
-        sdtx_printf("SPACE MINER\n");
-        sdtx_printf("Credits: %d\n", credits);
-        sdtx_printf("Cargo:   %d / %d ore\n", cargo_units, cargo_capacity);
-
-        if (g.docked) {
-            sdtx_color3b(112, 255, 214);
-            sdtx_printf("Station: docked, press E to sell cargo\n");
+        sdtx_color3b(199, 222, 255);
+        if (compact) {
+            sdtx_printf("Station %d units, %d deg %s", station_distance, bearing_degrees, bearing_side);
         } else {
-            sdtx_color3b(199, 222, 255);
-            sdtx_printf("Station: %d units, %d deg %s\n", station_distance, bearing_degrees, bearing_side);
+            sdtx_printf("Station %d units away, %d deg %s", station_distance, bearing_degrees, bearing_side);
         }
+    }
+    sdtx_crlf();
 
-        sdtx_pos(right_text_x, top_text_y);
-        sdtx_color3b(235, 243, 255);
-        sdtx_printf("TARGETING\n");
-        if (g.hover_asteroid >= 0) {
-            const asteroid_t* asteroid = &g.asteroids[g.hover_asteroid];
-            int ore_left = (int)lroundf(asteroid->ore);
-            sdtx_color3b(130, 255, 235);
-            sdtx_printf("Target: asteroid\n");
-            sdtx_printf("Ore:    %d remaining\n", ore_left);
+    if (g.hover_asteroid >= 0) {
+        const asteroid_t* asteroid = &g.asteroids[g.hover_asteroid];
+        int ore_left = (int)lroundf(asteroid->ore);
+        sdtx_color3b(130, 255, 235);
+        if (compact) {
+            sdtx_printf("Target asteroid, %d ore", ore_left);
         } else {
-            sdtx_color3b(169, 179, 204);
-            sdtx_printf("Target: no lock\n");
-            sdtx_printf("Tip: line up an asteroid\n");
+            sdtx_printf("Target asteroid, %d ore remaining", ore_left);
         }
+    } else {
+        sdtx_color3b(169, 179, 204);
+        sdtx_puts("No target lock. Line up an asteroid.");
+    }
+    sdtx_crlf();
 
-        if (cargo_units >= cargo_capacity) {
-            sdtx_color3b(255, 221, 119);
-            sdtx_printf("Status: cargo hold full\n");
-        } else if (g.notice_timer > 0.0f) {
-            sdtx_color3b(114, 255, 192);
-            sdtx_printf("Status: %s\n", g.notice);
-        } else {
-            sdtx_color3b(164, 177, 205);
-            sdtx_printf("Status: mine, return, sell\n");
-        }
+    if (cargo_units >= cargo_capacity) {
+        sdtx_color3b(255, 221, 119);
+        sdtx_puts("Cargo hold full. Return to station.");
+    } else if (g.notice_timer > 0.0f) {
+        sdtx_color3b(114, 255, 192);
+        sdtx_puts(g.notice);
+    } else {
+        sdtx_color3b(164, 177, 205);
+        sdtx_puts("Mine ore, dock, sell.");
     }
 
     sdtx_pos(left_text_x, bottom_text_y);
