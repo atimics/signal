@@ -346,8 +346,11 @@ static int spawn_npc(world_t *w, int station_idx, npc_role_t role) {
     npc->role = role;
     npc->hull_class = hc;
     npc->state = NPC_STATE_DOCKED;
-    npc->pos = v2_add(st->pos, v2(30.0f * (float)(slot % 3 - 1), -(st->radius + HULL_DEFS[hc].ship_radius + 50.0f)));
-    npc->angle = PI_F * 0.5f;
+    {
+        float spawn_angle = TWO_PI_F * (float)(slot % 6) / 6.0f;
+        npc->pos = v2_add(st->pos, v2_scale(v2_from_angle(spawn_angle), st->radius + HULL_DEFS[hc].ship_radius + 40.0f));
+        npc->angle = spawn_angle + PI_F; /* face toward station */
+    }
     npc->target_asteroid = -1;
     npc->home_station = station_idx;
     npc->dest_station = station_idx;
@@ -1170,12 +1173,14 @@ static void step_hauler(world_t *w, npc_ship_t *npc, int n, float dt) {
     }
     case NPC_STATE_TRAVEL_TO_DEST: {
         station_t *dest = &w->stations[npc->dest_station];
-        npc_steer_toward(npc, dest->pos, hull->accel, hull->turn_speed, dt);
+        /* Steer toward a dock approach point outside the station body */
+        float approach_angle = TWO_PI_F * (float)(n % 6) / 6.0f;
+        vec2 dock_point = v2_add(dest->pos, v2_scale(v2_from_angle(approach_angle), dest->radius + hull->ship_radius + 40.0f));
+        npc_steer_toward(npc, dock_point, hull->accel, hull->turn_speed, dt);
         npc_apply_physics(npc, hull->drag, dt, w);
         float dock_r = dest->dock_radius * 0.7f;
         if (v2_dist_sq(npc->pos, dest->pos) < dock_r * dock_r) {
             npc->vel = v2(0.0f, 0.0f);
-            npc->pos = v2_add(dest->pos, v2(30.0f * (float)(n % 2 == 0 ? -1 : 1), -(dest->radius + hull->ship_radius + 50.0f)));
             npc->state = NPC_STATE_UNLOADING;
             npc->state_timer = HAULER_LOAD_TIME;
         }
@@ -1221,12 +1226,13 @@ static void step_hauler(world_t *w, npc_ship_t *npc, int n, float dt) {
     }
     case NPC_STATE_RETURN_TO_STATION: {
         station_t *home = &w->stations[npc->home_station];
-        npc_steer_toward(npc, home->pos, hull->accel, hull->turn_speed, dt);
+        float approach_angle = TWO_PI_F * (float)(n % 6) / 6.0f;
+        vec2 dock_point = v2_add(home->pos, v2_scale(v2_from_angle(approach_angle), home->radius + hull->ship_radius + 40.0f));
+        npc_steer_toward(npc, dock_point, hull->accel, hull->turn_speed, dt);
         npc_apply_physics(npc, hull->drag, dt, w);
         float dock_r = home->dock_radius * 0.7f;
         if (v2_dist_sq(npc->pos, home->pos) < dock_r * dock_r) {
             npc->vel = v2(0.0f, 0.0f);
-            npc->pos = v2_add(home->pos, v2(50.0f * (float)(n % 2 == 0 ? -1 : 1), -(home->radius + hull->ship_radius + 70.0f)));
             npc->state = NPC_STATE_DOCKED;
             npc->state_timer = HAULER_DOCK_TIME;
         }
@@ -1344,12 +1350,13 @@ static void step_npc_ships(world_t *w, float dt) {
         }
         case NPC_STATE_RETURN_TO_STATION: {
             station_t *home = &w->stations[npc->home_station];
-            npc_steer_toward(npc, home->pos, hull->accel, hull->turn_speed, dt);
+            float approach_angle = TWO_PI_F * (float)(n % 6) / 6.0f;
+            vec2 dock_point = v2_add(home->pos, v2_scale(v2_from_angle(approach_angle), home->radius + hull->ship_radius + 40.0f));
+            npc_steer_toward(npc, dock_point, hull->accel, hull->turn_speed, dt);
             npc_apply_physics(npc, hull->drag, dt, w);
             float dock_r = home->dock_radius * 0.7f;
             if (v2_dist_sq(npc->pos, home->pos) < dock_r * dock_r) {
                 npc->vel = v2(0.0f, 0.0f);
-                npc->pos = v2_add(home->pos, v2(30.0f * (float)(n % 3 - 1), -(home->radius + hull->ship_radius + 50.0f)));
                 if (station_has_module(home, MODULE_FURNACE) || station_has_module(home, MODULE_FURNACE_CU) || station_has_module(home, MODULE_FURNACE_CR)) {
                     for (int i = 0; i < COMMODITY_RAW_ORE_COUNT; i++) {
                         float space = REFINERY_HOPPER_CAPACITY - home->inventory[i];
