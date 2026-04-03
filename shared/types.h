@@ -142,6 +142,7 @@ static inline const char* module_type_name(module_type_t type) {
     }
 }
 
+
 typedef struct {
     module_type_t type;
     uint8_t ring;           /* which ring tier (0xFF=core, 1=inner, 2=mid, 3=outer) */
@@ -312,16 +313,6 @@ typedef struct {
     float noise_mix;
 } audio_voice_t;
 
-typedef struct frontier_synth frontier_synth_t;
-
-/* Ship engine hum — always running, masked by music */
-typedef struct {
-    float phase1;       /* ~48 Hz fundamental */
-    float phase2;       /* ~51 Hz detuned */
-    float phase3;       /* ~96 Hz harmonic */
-    float lfo_phase;    /* slow amplitude throb */
-} engine_hum_t;
-
 typedef struct {
     bool valid;
     uint32_t rng;
@@ -330,8 +321,6 @@ typedef struct {
     float mining_tick_cooldown;
     audio_voice_t voices[AUDIO_VOICE_COUNT];
     float mix_buffer[AUDIO_MIX_FRAMES * 2];
-    frontier_synth_t* frontier_synth; /* optional: set by client for frontier music */
-    engine_hum_t hum;
 } audio_state_t;
 
 /* Economy constants (shared between client and server) */
