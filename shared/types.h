@@ -116,6 +116,7 @@ typedef enum {
     MODULE_ORE_SILO,
     MODULE_BLUEPRINT_DESK,
     MODULE_RING,            /* physical ring truss structure */
+    MODULE_SHIPYARD,        /* builds ship blueprints */
     MODULE_COUNT
 } module_type_t;
 
@@ -136,6 +137,7 @@ static inline const char* module_type_name(module_type_t type) {
         case MODULE_ORE_SILO:       return "Ore Silo";
         case MODULE_BLUEPRINT_DESK: return "Blueprint Desk";
         case MODULE_RING:           return "Ring Truss";
+        case MODULE_SHIPYARD:       return "Shipyard";
         default:                    return "Unknown";
     }
 }
@@ -174,6 +176,13 @@ typedef struct {
     float arm_rotation[MAX_ARMS];     /* per-ring rotation angle (radians) */
     float arm_speed[MAX_ARMS];        /* per-ring rotation speed (rad/s) */
     char hail_message[256];           /* AI-authored station message of the day */
+    /* Economy ledger: per-player supply tracking for passive income */
+    struct {
+        uint8_t player_token[8];      /* session token of the supplier */
+        float pending_credits;        /* uncollected earnings */
+        float lifetime_supply;        /* total ore contributed */
+    } ledger[16];
+    int ledger_count;
 } station_t;
 
 /* ------------------------------------------------------------------ */
